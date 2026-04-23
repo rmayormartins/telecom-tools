@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voyager Commander — Deep Space Mission Control</title>
+<meta name="description" content="Real-time Voyager 1 & 2 deep space mission control dashboard. RTG power, instrument status, DSN comms, trajectory data, spacecraft schematics with operational LEDs.">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:#0d1117}
+  ::-webkit-scrollbar-thumb{background:#21262d;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#30363d}
+  html,body{
+    background:#0d1117;
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+    color:#c9d1d9;
+    min-height:100vh;
+    font-size:13px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  body{overflow-x:hidden}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  @keyframes dot{0%,100%{opacity:1}50%{opacity:.3}}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+  #root{min-height:100vh}
+  .btn{cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s}
+  .caret{display:inline-block;width:8px;height:14px;background:#f0883e;animation:blink 1.1s infinite;vertical-align:middle;margin-left:2px}
+  a{color:#f0883e;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .console-card{
+    border:1px solid #21262d;
+    background:#0f141a;
+    border-radius:6px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    transition:border-color .2s;
+    position:relative;
+  }
+  .console-card:hover{border-color:#30363d}
+  .console-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid #21262d;
+  }
+  .console-tag{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    padding:2px 7px;
+    border-radius:3px;
+    text-transform:uppercase;
+  }
+  .progress-track{height:4px;background:#21262d;border-radius:2px;overflow:hidden;margin-top:4px}
+  .progress-fill{height:100%;border-radius:2px;transition:width .5s ease-out}
+  .tm-row{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;font-size:10px;border-bottom:1px dotted #21262d}
+  .tm-row:last-child{border-bottom:none}
+  .tm-row:hover{background:#161b22}
+  .tm-label{color:#8b949e;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+  .tm-val{color:#c9d1d9;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px;margin-top:6px}
+  .tm-group{background:#0a0e13;border:1px solid #21262d;border-radius:4px;padding:8px;position:relative}
+  .tm-group-title{font-size:9px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid #21262d}
+  .subcard{background:#0a0e13;border:1px solid #21262d;border-radius:4px;padding:8px 10px;margin-bottom:6px}
+  .led-dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    animation:dot 1.8s infinite;
+    flex-shrink:0;
+  }
+  .on-badge{
+    display:inline-block;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:1px;
+    color:#3fb950;border:1px solid #3fb95066;border-radius:3px;background:#3fb95011;text-shadow:0 0 6px #3fb95088;
+  }
+  .off-badge{
+    display:inline-block;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:1px;
+    color:#6e7681;border:1px solid #30363d;border-radius:3px;background:#0a0e13;
+  }
+  .active-badge{
+    display:inline-block;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:1px;
+    color:#f0883e;border:1px solid #f0883e66;border-radius:3px;background:#f0883e11;text-shadow:0 0 6px #f0883e88;
+  }
+  .warn-badge{
+    display:inline-block;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:1px;
+    color:#d29922;border:1px solid #d2992266;border-radius:3px;background:#d2992211;text-shadow:0 0 6px #d2992288;
+  }
+  .probe-tab{
+    padding:8px 18px;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;
+    border:1px solid #21262d;background:#0a0e13;color:#8b949e;border-radius:4px 4px 0 0;
+    transition:all .15s;font-family:inherit;
+  }
+  .probe-tab.active{background:#0f141a;color:#f0883e;border-color:#f0883e66;border-bottom-color:#0f141a}
+  details{cursor:pointer}
+  summary{list-style:none;outline:none}
+  summary::-webkit-details-marker{display:none}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VOYAGER COMMANDER v1.0 — DEEP SPACE MISSION CONTROL
+   Real telemetry data for Voyager 1 & 2
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// ─── MISSION CONSTANTS ───────────────────────────────────────────────
+const LAUNCH_V1 = new Date("1977-09-05T12:56:00Z");
+const LAUNCH_V2 = new Date("1977-08-20T14:29:44Z");
+const HELIOPAUSE_V1 = new Date("2012-08-25T00:00:00Z");
+const HELIOPAUSE_V2 = new Date("2018-11-05T00:00:00Z");
+
+// Speeds in km/s (heliocentric recession)
+const SPEED_V1_KMS = 17.0;
+const SPEED_V2_KMS = 15.341;
+const AU_KM = 149597870.7;
+const C_KMS = 299792.458;
+
+// Reference distances (AU from Sun, calibrated from NASA March 2026 data)
+const REF_DATE = new Date("2026-03-15T00:00:00Z");
+const REF_DIST_V1_AU = 172.59;
+const REF_DIST_V2_AU = 143.05;
+
+// RTG data
+const RTG_POWER_LAUNCH = 470; // watts
+const RTG_DECAY_PER_YEAR = 4; // watts/year electrical loss
+// More accurate: thermocouple degradation means faster loss
+// By 2022 (45 years) ≈ 220W, so ~5.5W/year effective
+const RTG_EFFECTIVE_DECAY = 5.1;
+
+// ─── 11 INSTRUMENTS per spacecraft ───────────────────────────────────
+const INSTRUMENTS = {
+  ISS:  { name:"Imaging Science System", abbr:"ISS", desc:"Narrow & wide angle cameras (2)", power:14, mass:38.2 },
+  PPS:  { name:"Photopolarimeter System", abbr:"PPS", desc:"Polarized light analyzer", power:3.4, mass:4.4 },
+  UVS:  { name:"Ultraviolet Spectrometer", abbr:"UVS", desc:"UV radiation 40-160nm", power:3.2, mass:4.5 },
+  IRIS: { name:"Infrared Spectrometer", abbr:"IRIS", desc:"Thermal IR 2.5-50μm", power:5.6, mass:18.4 },
+  PRA:  { name:"Planetary Radio Astronomy", abbr:"PRA", desc:"Radio emissions 1.2kHz-40.5MHz", power:7.7, mass:7.7 },
+  PLS:  { name:"Plasma Science", abbr:"PLS", desc:"4 Faraday cups, ion/electron plasma", power:8.3, mass:9.9 },
+  LECP: { name:"Low-Energy Charged Particles", abbr:"LECP", desc:"Rotating platform detector", power:3.9, mass:7.5 },
+  CRS:  { name:"Cosmic Ray Subsystem", abbr:"CRS", desc:"High-energy particle telescope", power:5.4, mass:7.5 },
+  MAG:  { name:"Magnetometer", abbr:"MAG", desc:"Triaxial fluxgate on 13m boom", power:2.2, mass:5.6 },
+  PWS:  { name:"Plasma Wave Subsystem", abbr:"PWS", desc:"Electric field 10Hz-56kHz", power:1.4, mass:1.4 },
+  RSS:  { name:"Radio Science System", abbr:"RSS", desc:"Uses spacecraft radio system", power:0, mass:0 },
+};
+
+// Instrument status as of April 2026
+const V1_INSTRUMENTS = {
+  ISS:  { status:"OFF", since:"1990", reason:"Cameras off after Family Portrait" },
+  PPS:  { status:"OFF", since:"1990", reason:"Scan platform off" },
+  UVS:  { status:"OFF", since:"1998", reason:"Power management" },
+  IRIS: { status:"OFF", since:"1998", reason:"Power management" },
+  PRA:  { status:"OFF", since:"1990", reason:"Antenna sharing, power mgmt" },
+  PLS:  { status:"FAILED", since:"2007-02", reason:"Degraded performance" },
+  LECP: { status:"OFF", since:"2026-04-17", reason:"Power conservation (just shut down)" },
+  CRS:  { status:"OFF", since:"2025-02-25", reason:"Power conservation" },
+  MAG:  { status:"ON", since:"1977", reason:"Interstellar magnetic fields" },
+  PWS:  { status:"ON", since:"1977", reason:"Interstellar plasma density" },
+  RSS:  { status:"ON", since:"1977", reason:"Uses comm system" },
+};
+
+const V2_INSTRUMENTS = {
+  ISS:  { status:"OFF", since:"1989", reason:"Cameras off after Neptune" },
+  PPS:  { status:"OFF", since:"1989", reason:"Scan platform off" },
+  UVS:  { status:"OFF", since:"1998", reason:"Power management" },
+  IRIS: { status:"OFF", since:"1998", reason:"Power management" },
+  PRA:  { status:"OFF", since:"1990", reason:"Antenna sharing, power mgmt" },
+  PLS:  { status:"OFF", since:"2024-10", reason:"Power conservation" },
+  LECP: { status:"OFF", since:"2025-03-24", reason:"Power conservation" },
+  CRS:  { status:"ON", since:"1977", reason:"Cosmic ray flux (scheduled off 2026)" },
+  MAG:  { status:"ON", since:"1977", reason:"Interstellar magnetic fields" },
+  PWS:  { status:"ON", since:"1977", reason:"Interstellar plasma density" },
+  RSS:  { status:"ON", since:"1977", reason:"Uses comm system" },
+};
+
+// ─── COMPUTER SYSTEMS ────────────────────────────────────────────────
+const COMPUTERS = [
+  { name:"CCS-A", full:"Computer Command System A", arch:"TTL (7400 series)", mem:"4,096 × 18-bit words", memKB:"9 KB", role:"Command decode, sequencing, fault protection", status:"ACTIVE", chip:"Texas Instruments TTL", memType:"Plated-wire (non-volatile)" },
+  { name:"CCS-B", full:"Computer Command System B", arch:"TTL (7400 series)", mem:"4,096 × 18-bit words", memKB:"9 KB", role:"Redundant backup", status:"STANDBY", chip:"Texas Instruments TTL", memType:"Plated-wire (non-volatile)" },
+  { name:"FDS-A", full:"Flight Data Subsystem A", arch:"Custom CMOS", mem:"8,192 × 16-bit words", memKB:"16 KB", role:"Science data formatting & telemetry", status:"ACTIVE", chip:"Custom CMOS (1st space-rated CMOS CPU)", memType:"Volatile CMOS RAM" },
+  { name:"FDS-B", full:"Flight Data Subsystem B", arch:"Custom CMOS", mem:"8,192 × 16-bit words", memKB:"16 KB", role:"Redundant backup", status:"STANDBY", chip:"Custom CMOS", memType:"Volatile CMOS RAM" },
+  { name:"AACS-A", full:"Attitude & Articulation Control A", arch:"TTL (7400 series)", mem:"4,096 × 18-bit words", memKB:"9 KB", role:"Attitude control, antenna pointing", status:"ACTIVE", chip:"Texas Instruments TTL", memType:"Plated-wire (non-volatile)" },
+  { name:"AACS-B", full:"Attitude & Articulation Control B", arch:"TTL (7400 series)", mem:"4,096 × 18-bit words", memKB:"9 KB", role:"Redundant backup", status:"STANDBY", chip:"Texas Instruments TTL", memType:"Plated-wire (non-volatile)" },
+];
+
+// ─── DSN STATIONS ────────────────────────────────────────────────────
+const DSN_STATIONS = {
+  "Goldstone": { code:"DSS-14/24/25/26", location:"California, USA", lat:35.43, lon:-116.89 },
+  "Canberra":  { code:"DSS-34/35/36/43", location:"Australia", lat:-35.40, lon:148.98, note:"DSS-43 is the only antenna that can command Voyager 1 & 2" },
+  "Madrid":    { code:"DSS-54/55/56/63", location:"Spain", lat:40.43, lon:-4.25 },
+};
+
+// ─── MISSION TIMELINE ────────────────────────────────────────────────
+const TIMELINE_V1 = [
+  { date:"1977-09-05", event:"Launch from Cape Canaveral (Titan IIIE/Centaur)" },
+  { date:"1979-03-05", event:"Jupiter closest approach (349,000 km)" },
+  { date:"1980-11-12", event:"Saturn closest approach (124,000 km)" },
+  { date:"1980-11-12", event:"Titan flyby (6,400 km)" },
+  { date:"1990-02-14", event:"'Pale Blue Dot' photo taken at 6.06 billion km" },
+  { date:"1998-02-17", event:"Passed Pioneer 10 as most distant spacecraft" },
+  { date:"2004-12-17", event:"Entered heliosheath at 94 AU" },
+  { date:"2012-08-25", event:"Crossed heliopause into interstellar space" },
+  { date:"2017-12-02", event:"TCM thrusters fired for first time since 1980" },
+  { date:"2024-06-13", event:"Recovered from FDS memory glitch" },
+  { date:"2025-02-25", event:"CRS instrument shut down" },
+  { date:"2026-04-17", event:"LECP instrument shut down" },
+  { date:"2026-11-15", event:"Expected: 1 light-day from Earth milestone" },
+];
+
+const TIMELINE_V2 = [
+  { date:"1977-08-20", event:"Launch from Cape Canaveral (Titan IIIE/Centaur)" },
+  { date:"1979-07-09", event:"Jupiter closest approach (570,000 km)" },
+  { date:"1981-08-26", event:"Saturn closest approach (101,000 km)" },
+  { date:"1986-01-24", event:"Uranus closest approach (81,500 km) — only spacecraft ever" },
+  { date:"1989-08-25", event:"Neptune closest approach (4,951 km) — only spacecraft ever" },
+  { date:"2007-09-01", event:"Entered heliosheath" },
+  { date:"2018-11-05", event:"Crossed heliopause into interstellar space" },
+  { date:"2023-04-30", event:"RTG backup power reservoir tapped" },
+  { date:"2024-10-01", event:"PLS instrument shut down" },
+  { date:"2025-03-24", event:"LECP instrument shut down" },
+];
+
+// ─── HELPER FUNCTIONS ────────────────────────────────────────────────
+function missionElapsed(launchDate) {
+  const now = Date.now();
+  const ms = now - launchDate.getTime();
+  const totalDays = ms / 86400000;
+  const years = Math.floor(totalDays / 365.25);
+  const remDays = Math.floor(totalDays - years * 365.25);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  const mins = Math.floor((ms % 3600000) / 60000);
+  const secs = Math.floor((ms % 60000) / 1000);
+  return { years, days: remDays, hours, mins, secs, totalDays };
+}
+
+function currentDistance(refDist, speedKms) {
+  const now = Date.now();
+  const secsSinceRef = (now - REF_DATE.getTime()) / 1000;
+  const kmTraveled = secsSinceRef * speedKms;
+  const auTraveled = kmTraveled / AU_KM;
+  const totalAU = refDist + auTraveled;
+  const totalKM = totalAU * AU_KM;
+  const totalMI = totalKM * 0.621371;
+  const lightHours = (totalKM / C_KMS) / 3600;
+  return { au: totalAU, km: totalKM, mi: totalMI, lightHours, lightDays: lightHours/24 };
+}
+
+function currentRTGPower(launchDate) {
+  const yearsInFlight = (Date.now() - launchDate.getTime()) / (365.25 * 86400000);
+  // Pu-238 half-life decay
+  const thermalDecay = Math.pow(0.5, yearsInFlight / 87.7);
+  // Thermocouple degradation (faster decay)
+  const tcDegradation = Math.exp(-0.012 * yearsInFlight);
+  const power = RTG_POWER_LAUNCH * thermalDecay * tcDegradation;
+  const thermal = 2400 * thermalDecay; // ~2400W thermal at launch
+  return { electrical: power, thermal, yearsInFlight, percentRemaining: (power/RTG_POWER_LAUNCH)*100 };
+}
+
+function fmt(n, d=2) { return typeof n === 'number' ? n.toFixed(d) : n; }
+function fmtInt(n) { return typeof n === 'number' ? Math.round(n).toLocaleString() : n; }
+
+// ─── DSN XML FETCH ───────────────────────────────────────────────────
+function useDSN() {
+  const [dsn, setDSN] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchDSN() {
+      try {
+        const res = await fetch("https://eyes.nasa.gov/dsn/data/dsn.xml");
+        const text = await res.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "text/xml");
+        const dishes = xml.querySelectorAll("dish");
+        const voyagerLinks = [];
+        dishes.forEach(dish => {
+          const dishName = dish.getAttribute("name");
+          const targets = dish.querySelectorAll("target");
+          targets.forEach(target => {
+            const tName = (target.getAttribute("name")||"").toUpperCase();
+            if (tName.includes("VGR1") || tName.includes("VGR2") || tName.includes("VOYAGER")) {
+              const signals = dish.querySelectorAll("downSignal, upSignal");
+              const sigData = [];
+              signals.forEach(s => {
+                sigData.push({
+                  type: s.tagName,
+                  power: s.getAttribute("power"),
+                  frequency: s.getAttribute("frequency"),
+                  dataRate: s.getAttribute("dataRate"),
+                });
+              });
+              voyagerLinks.push({
+                dish: dishName,
+                target: tName,
+                spacecraft: tName.includes("VGR1") || tName.includes("VOYAGER 1") ? "V1" : "V2",
+                signals: sigData,
+              });
+            }
+          });
+        });
+        if (!cancelled) setDSN(voyagerLinks);
+      } catch(e) {
+        if (!cancelled) setDSN([]);
+      }
+    }
+    fetchDSN();
+    const iv = setInterval(fetchDSN, 15000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, []);
+  return dsn;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════
+function VoyagerCommander() {
+  const [probe, setProbe] = useState("V1");
+  const [tick, setTick] = useState(0);
+  const dsnLinks = useDSN();
+
+  useEffect(() => {
+    const iv = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const isV1 = probe === "V1";
+  const launch = isV1 ? LAUNCH_V1 : LAUNCH_V2;
+  const speed = isV1 ? SPEED_V1_KMS : SPEED_V2_KMS;
+  const refDist = isV1 ? REF_DIST_V1_AU : REF_DIST_V2_AU;
+  const elapsed = missionElapsed(launch);
+  const dist = currentDistance(refDist, speed);
+  const rtg = currentRTGPower(launch);
+  const instruments = isV1 ? V1_INSTRUMENTS : V2_INSTRUMENTS;
+  const timeline = isV1 ? TIMELINE_V1 : TIMELINE_V2;
+  const heliopause = isV1 ? HELIOPAUSE_V1 : HELIOPAUSE_V2;
+  const interstellarYears = ((Date.now() - heliopause.getTime()) / (365.25*86400000));
+
+  const activeInstr = Object.entries(instruments).filter(([k,v]) => v.status === "ON").length;
+  const totalInstr = Object.keys(instruments).length;
+
+  const myDSN = dsnLinks ? dsnLinks.filter(d => d.spacecraft === probe) : [];
+  const isLinked = myDSN.length > 0;
+
+  // Jitter for simulated telemetry
+  const j = (base, range=0.5) => base + (Math.sin(tick * 0.1 + base) * range);
+
+  const accentColor = isV1 ? "#f0883e" : "#58a6ff";
+  const accentDim = isV1 ? "#f0883e44" : "#58a6ff44";
+  const probeName = isV1 ? "VOYAGER 1" : "VOYAGER 2";
+  const probeId = isV1 ? "VGR 77-1" : "VGR 77-3";
+
+  return (
+    <div style={{maxWidth:1100,margin:"0 auto",padding:"16px 12px 60px"}}>
+      {/* ─── HEADER ─── */}
+      <div style={{textAlign:"center",marginBottom:20,padding:"24px 0 18px",borderBottom:"1px solid #21262d"}}>
+        <div style={{fontSize:9,color:"#8b949e",letterSpacing:3,marginBottom:6}}>NASA / JPL-CALTECH — DEEP SPACE NETWORK</div>
+        <h1 style={{fontSize:28,fontWeight:800,color:accentColor,letterSpacing:2,marginBottom:4}}>
+          VOYAGER COMMANDER
+        </h1>
+        <div style={{fontSize:11,color:"#8b949e",letterSpacing:1}}>INTERSTELLAR MISSION CONTROL — REAL-TIME TELEMETRY</div>
+        <div style={{marginTop:10,fontSize:10,color:"#6e7681"}}>
+          <span style={{color:accentColor}}>●</span> MET {elapsed.years}y {elapsed.days}d {String(elapsed.hours).padStart(2,'0')}:{String(elapsed.mins).padStart(2,'0')}:{String(elapsed.secs).padStart(2,'0')}
+          <span style={{margin:"0 8px"}}>|</span>
+          DSN LINK: <span style={{color:isLinked?"#3fb950":"#d29922"}}>{isLinked?"ACTIVE ("+myDSN[0].dish+")":"SEARCHING..."}</span>
+          <span className="caret"/>
+        </div>
+      </div>
+
+      {/* ─── PROBE TABS ─── */}
+      <div style={{display:"flex",gap:4,marginBottom:0}}>
+        <button className={"probe-tab"+(probe==="V1"?" active":"")} onClick={()=>setProbe("V1")} style={{borderColor:probe==="V1"?"#f0883e66":"#21262d",color:probe==="V1"?"#f0883e":"#8b949e"}}>
+          ▲ VOYAGER 1
+        </button>
+        <button className={"probe-tab"+(probe==="V2"?" active":"")} onClick={()=>setProbe("V2")} style={{borderColor:probe==="V2"?"#58a6ff66":"#21262d",color:probe==="V2"?"#58a6ff":"#8b949e"}}>
+          ▲ VOYAGER 2
+        </button>
+        <div style={{flex:1,borderBottom:"1px solid #21262d"}}/>
+      </div>
+
+      {/* ─── OVERVIEW CARDS ─── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:8,marginTop:12}}>
+        {/* Distance */}
+        <div className="console-card">
+          <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,marginBottom:4}}>DISTANCE FROM SUN</div>
+          <div style={{fontSize:22,fontWeight:800,color:accentColor}}>{fmt(dist.au,3)} <span style={{fontSize:11,color:"#8b949e"}}>AU</span></div>
+          <div style={{fontSize:10,color:"#6e7681",marginTop:2}}>{fmtInt(dist.km)} km • {fmtInt(dist.mi)} mi</div>
+          <div style={{fontSize:10,color:"#6e7681"}}>Light-time: {fmt(dist.lightHours,2)} hours ({fmt(dist.lightDays,3)} days)</div>
+          <div style={{fontSize:9,color:accentColor,marginTop:4}}>Round-trip signal: {fmt(dist.lightHours*2,1)} hours</div>
+        </div>
+        {/* Speed */}
+        <div className="console-card">
+          <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,marginBottom:4}}>HELIOCENTRIC VELOCITY</div>
+          <div style={{fontSize:22,fontWeight:800,color:accentColor}}>{fmt(speed,3)} <span style={{fontSize:11,color:"#8b949e"}}>km/s</span></div>
+          <div style={{fontSize:10,color:"#6e7681",marginTop:2}}>{fmtInt(speed*3600)} km/h • {fmtInt(speed*3600*0.621371)} mph</div>
+          <div style={{fontSize:10,color:"#6e7681"}}>{fmtInt(speed*86400*365.25)} km/year</div>
+          <div style={{fontSize:9,color:"#8b949e",marginTop:4}}>≈ 1 light-year per {fmtInt(C_KMS/speed/86400/365.25*86400*365.25/(speed))} years</div>
+        </div>
+        {/* RTG Power */}
+        <div className="console-card">
+          <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,marginBottom:4}}>RTG ELECTRICAL POWER</div>
+          <div style={{fontSize:22,fontWeight:800,color:rtg.electrical < 200 ? "#d29922" : accentColor}}>~{fmt(rtg.electrical,0)} <span style={{fontSize:11,color:"#8b949e"}}>W</span></div>
+          <div style={{fontSize:10,color:"#6e7681",marginTop:2}}>Launch: 470 W • Remaining: {fmt(rtg.percentRemaining,1)}%</div>
+          <div className="progress-track" style={{marginTop:6}}>
+            <div className="progress-fill" style={{width:rtg.percentRemaining+"%",background:rtg.electrical<200?"#d29922":accentColor}}/>
+          </div>
+          <div style={{fontSize:9,color:"#8b949e",marginTop:4}}>3× MHW-RTG • Pu-238 (t½ = 87.7 yr) • Declining ~{fmt(RTG_EFFECTIVE_DECAY,1)} W/yr</div>
+        </div>
+        {/* Instruments */}
+        <div className="console-card">
+          <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,marginBottom:4}}>SCIENCE INSTRUMENTS</div>
+          <div style={{fontSize:22,fontWeight:800,color:accentColor}}>{activeInstr} <span style={{fontSize:11,color:"#8b949e"}}>/ {totalInstr} ACTIVE</span></div>
+          <div style={{fontSize:10,color:"#6e7681",marginTop:2}}>
+            {Object.entries(instruments).filter(([,v])=>v.status==="ON").map(([k])=>INSTRUMENTS[k].abbr).join(" • ")}
+          </div>
+          <div style={{fontSize:9,color:"#d29922",marginTop:6}}>⚠ Power conservation mode — non-essential systems OFF</div>
+        </div>
+      </div>
+
+      {/* ─── SPACECRAFT SCHEMATIC WITH LEDs ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:accentDim,color:accentColor}}>SCHEMATIC</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>{probeName} — Spacecraft Systems Layout</span>
+          </div>
+          <span style={{fontSize:9,color:"#8b949e"}}>{probeId}</span>
+        </div>
+        <VoyagerSchematic probe={probe} instruments={instruments} accentColor={accentColor} rtgPower={rtg.electrical} tick={tick} />
+      </div>
+
+      {/* ─── INSTRUMENT DETAIL TABLE ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:accentDim,color:accentColor}}>INSTRUMENTS</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>Science Instrument Status</span>
+          </div>
+        </div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
+            <thead>
+              <tr style={{borderBottom:"1px solid #21262d",color:"#8b949e",fontSize:9,textTransform:"uppercase",letterSpacing:0.8}}>
+                <th style={{textAlign:"left",padding:"6px"}}>Instrument</th>
+                <th style={{textAlign:"left",padding:"6px"}}>Description</th>
+                <th style={{textAlign:"center",padding:"6px"}}>Power</th>
+                <th style={{textAlign:"center",padding:"6px"}}>Mass</th>
+                <th style={{textAlign:"center",padding:"6px"}}>Status</th>
+                <th style={{textAlign:"left",padding:"6px"}}>Since</th>
+                <th style={{textAlign:"left",padding:"6px"}}>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(instruments).map(([key, info]) => {
+                const spec = INSTRUMENTS[key];
+                const isOn = info.status === "ON";
+                const isFailed = info.status === "FAILED";
+                return (
+                  <tr key={key} style={{borderBottom:"1px dotted #21262d"}}>
+                    <td style={{padding:"5px 6px",fontWeight:700,color:isOn?accentColor:"#6e7681"}}>
+                      <span className="led-dot" style={{background:isOn?"#3fb950":isFailed?"#f85149":"#30363d",marginRight:6,animation:isOn?"dot 1.8s infinite":"none"}}/>
+                      {spec.abbr}
+                    </td>
+                    <td style={{padding:"5px 6px",color:"#8b949e"}}>{spec.desc}</td>
+                    <td style={{padding:"5px 6px",textAlign:"center",color:"#c9d1d9"}}>{spec.power>0?spec.power+"W":"—"}</td>
+                    <td style={{padding:"5px 6px",textAlign:"center",color:"#c9d1d9"}}>{spec.mass>0?spec.mass+"kg":"—"}</td>
+                    <td style={{padding:"5px 6px",textAlign:"center"}}>
+                      <span className={isOn?"on-badge":isFailed?"warn-badge":"off-badge"}>{info.status}</span>
+                    </td>
+                    <td style={{padding:"5px 6px",color:"#8b949e"}}>{info.since}</td>
+                    <td style={{padding:"5px 6px",color:"#6e7681",maxWidth:180,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{info.reason}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ─── COMPUTER SYSTEMS ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:"#a371f711",color:"#a371f7",border:"1px solid #a371f766"}}>AVIONICS</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>Onboard Computer Systems</span>
+          </div>
+          <span style={{fontSize:9,color:"#8b949e"}}>TOTAL MEMORY: ~70 KB (32K words)</span>
+        </div>
+        <div className="tm-grid">
+          {COMPUTERS.map((c,i) => (
+            <div key={i} className="tm-group">
+              <div className="tm-group-title" style={{display:"flex",justifyContent:"space-between"}}>
+                <span>{c.name}</span>
+                <span className={c.status==="ACTIVE"?"on-badge":"off-badge"}>{c.status}</span>
+              </div>
+              <div className="tm-row"><span className="tm-label">Full Name</span><span className="tm-val">{c.full}</span></div>
+              <div className="tm-row"><span className="tm-label">Architecture</span><span className="tm-val">{c.arch}</span></div>
+              <div className="tm-row"><span className="tm-label">Memory</span><span className="tm-val">{c.mem}</span></div>
+              <div className="tm-row"><span className="tm-label">Capacity</span><span className="tm-val">{c.memKB}</span></div>
+              <div className="tm-row"><span className="tm-label">Memory Type</span><span className="tm-val">{c.memType}</span></div>
+              <div className="tm-row"><span className="tm-label">Role</span><span className="tm-val" style={{whiteSpace:"normal",fontSize:9}}>{c.role}</span></div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:8,padding:"8px",background:"#0a0e13",border:"1px solid #21262d",borderRadius:4,fontSize:10,color:"#8b949e"}}>
+          <strong style={{color:"#c9d1d9"}}>Additional Storage:</strong> Digital Tape Recorder (DTR) — 536 Mbit (≈64 MB) capacity, 8-track, used for data buffering when no DSN contact.
+          <br/><strong style={{color:"#c9d1d9"}}>Software:</strong> Ground system originally Fortran V (Univac), now partially ported to C. Flight software is bare-metal machine code, no OS.
+          <br/><strong style={{color:"#c9d1d9"}}>Data Rate:</strong> Currently 160 bps (down from 115.2 kbps at Jupiter distance).
+        </div>
+      </div>
+
+      {/* ─── CONSTRUCTION & SPECS ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:"#d2992211",color:"#d29922",border:"1px solid #d2992266"}}>SPECS</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>Spacecraft Construction & Engineering</span>
+          </div>
+        </div>
+        <div className="tm-grid">
+          <div className="tm-group">
+            <div className="tm-group-title">Structure</div>
+            <div className="tm-row"><span className="tm-label">Bus Shape</span><span className="tm-val">Decagonal Prism</span></div>
+            <div className="tm-row"><span className="tm-label">Launch Mass</span><span className="tm-val">815 kg (1,797 lb)</span></div>
+            <div className="tm-row"><span className="tm-label">Current Mass</span><span className="tm-val">~733 kg (1,616 lb)</span></div>
+            <div className="tm-row"><span className="tm-label">Instrument Payload</span><span className="tm-val">105 kg (231 lb)</span></div>
+            <div className="tm-row"><span className="tm-label">Builder</span><span className="tm-val">JPL / Caltech</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Communications</div>
+            <div className="tm-row"><span className="tm-label">HGA Diameter</span><span className="tm-val">3.7 m (12 ft) Cassegrain</span></div>
+            <div className="tm-row"><span className="tm-label">S-Band Uplink</span><span className="tm-val">2.113 GHz</span></div>
+            <div className="tm-row"><span className="tm-label">S-Band Downlink</span><span className="tm-val">2.296 GHz</span></div>
+            <div className="tm-row"><span className="tm-label">X-Band Downlink</span><span className="tm-val">8.420 GHz</span></div>
+            <div className="tm-row"><span className="tm-label">Transmitter Power</span><span className="tm-val">23 W (S) / 21 W (X)</span></div>
+            <div className="tm-row"><span className="tm-label">Current Data Rate</span><span className="tm-val">160 bps</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Propulsion</div>
+            <div className="tm-row"><span className="tm-label">Thrusters</span><span className="tm-val">16× Aerojet MR-103</span></div>
+            <div className="tm-row"><span className="tm-label">Propellant</span><span className="tm-val">Hydrazine (N₂H₄)</span></div>
+            <div className="tm-row"><span className="tm-label">Fuel at Launch</span><span className="tm-val">100 kg (220 lb)</span></div>
+            <div className="tm-row"><span className="tm-label">Tank</span><span className="tm-val">70cm titanium sphere</span></div>
+            <div className="tm-row"><span className="tm-label">Fuel Life Est.</span><span className="tm-val">Until ~2034</span></div>
+            <div className="tm-row"><span className="tm-label">Thruster Issue</span><span className="tm-val" style={{color:"#d29922",fontSize:9}}>SiO₂ clogging in fuel tubes</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Power — RTG Details</div>
+            <div className="tm-row"><span className="tm-label">RTG Type</span><span className="tm-val">3× MHW-RTG</span></div>
+            <div className="tm-row"><span className="tm-label">Fuel</span><span className="tm-val">Pu-238 (PuO₂ spheres)</span></div>
+            <div className="tm-row"><span className="tm-label">Fuel per RTG</span><span className="tm-val">24 pressed spheres</span></div>
+            <div className="tm-row"><span className="tm-label">Half-life</span><span className="tm-val">87.7 years</span></div>
+            <div className="tm-row"><span className="tm-label">Power at Launch</span><span className="tm-val">470 W electrical</span></div>
+            <div className="tm-row"><span className="tm-label">Power Now</span><span className="tm-val" style={{color:"#d29922"}}>~{fmt(rtg.electrical,0)} W</span></div>
+            <div className="tm-row"><span className="tm-label">Thermocouples</span><span className="tm-val">SiGe (silicon-germanium)</span></div>
+            <div className="tm-row"><span className="tm-label">Thermal at Launch</span><span className="tm-val">~2,400 W per RTG</span></div>
+            <div className="tm-row"><span className="tm-label">Engr Data Until</span><span className="tm-val">~2036 (estimated)</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Attitude Control</div>
+            <div className="tm-row"><span className="tm-label">Stabilization</span><span className="tm-val">3-axis gyroscopic</span></div>
+            <div className="tm-row"><span className="tm-label">Star Tracker</span><span className="tm-val">Canopus sensor</span></div>
+            <div className="tm-row"><span className="tm-label">Sun Sensor</span><span className="tm-val">Coarse/fine pair</span></div>
+            <div className="tm-row"><span className="tm-label">Thruster Branches</span><span className="tm-val">2 attitude + 1 TCM</span></div>
+            <div className="tm-row"><span className="tm-label">Pulses/Day</span><span className="tm-val">~40 (nominal)</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Special Payload</div>
+            <div className="tm-row"><span className="tm-label">Golden Record</span><span className="tm-val" style={{color:"#d29922"}}>12-inch Au-plated Cu disc</span></div>
+            <div className="tm-row"><span className="tm-label">Content</span><span className="tm-val" style={{fontSize:9,whiteSpace:"normal"}}>115 images, music, greetings in 55 languages, Earth sounds</span></div>
+            <div className="tm-row"><span className="tm-label">Cover</span><span className="tm-val" style={{fontSize:9,whiteSpace:"normal"}}>Pulsar map, stylus, cartridge, instructions</span></div>
+            <div className="tm-row"><span className="tm-label">Mag Boom</span><span className="tm-val">13 m (42.6 ft)</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── DSN COMMUNICATIONS ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:"#3fb95011",color:"#3fb950",border:"1px solid #3fb95066"}}>DSN</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>Deep Space Network Status</span>
+          </div>
+          <a href="https://eyes.nasa.gov/apps/dsn-now/dsn.html" target="_blank" style={{fontSize:9}}>DSN Now →</a>
+        </div>
+        <div className="tm-grid">
+          {Object.entries(DSN_STATIONS).map(([name, st]) => {
+            const linked = myDSN.filter(d => d.dish && d.dish.startsWith("DSS"));
+            const isActive = myDSN.some(d => d.dish);
+            return (
+              <div key={name} className="tm-group">
+                <div className="tm-group-title" style={{display:"flex",justifyContent:"space-between"}}>
+                  <span>{name}</span>
+                  <span style={{fontSize:8,color:"#6e7681"}}>{st.code}</span>
+                </div>
+                <div className="tm-row"><span className="tm-label">Location</span><span className="tm-val">{st.location}</span></div>
+                <div className="tm-row"><span className="tm-label">Coordinates</span><span className="tm-val">{st.lat}°, {st.lon}°</span></div>
+                {st.note && <div style={{fontSize:8,color:"#d29922",padding:"4px 6px",marginTop:2}}>⚠ {st.note}</div>}
+              </div>
+            );
+          })}
+        </div>
+        {myDSN.length > 0 && (
+          <div style={{marginTop:8,padding:"6px 8px",background:"#3fb95011",border:"1px solid #3fb95044",borderRadius:4,fontSize:10}}>
+            <span style={{color:"#3fb950",fontWeight:700}}>● LIVE LINK</span>
+            {myDSN.map((d,i) => (
+              <span key={i} style={{color:"#c9d1d9",marginLeft:8}}>{d.dish} → {d.target}</span>
+            ))}
+          </div>
+        )}
+        {myDSN.length === 0 && dsnLinks !== null && (
+          <div style={{marginTop:8,padding:"6px 8px",background:"#d2992211",border:"1px solid #d2992244",borderRadius:4,fontSize:10,color:"#d29922"}}>
+            ○ No active link to {probeName} at this time. Contacts are scheduled periodically.
+          </div>
+        )}
+      </div>
+
+      {/* ─── SIMULATED TELEMETRY ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:accentDim,color:accentColor}}>TELEMETRY</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>Engineering & Science Data (Simulated)</span>
+          </div>
+          <span style={{fontSize:9,color:"#6e7681"}}>Based on published nominal values</span>
+        </div>
+        <div className="tm-grid">
+          <div className="tm-group">
+            <div className="tm-group-title">Power Bus</div>
+            <div className="tm-row"><span className="tm-label">Bus Voltage</span><span className="tm-val">{fmt(j(30.0,0.3),1)} V</span></div>
+            <div className="tm-row"><span className="tm-label">RTG-1 Output</span><span className="tm-val">{fmt(j(rtg.electrical/3,0.2),1)} W</span></div>
+            <div className="tm-row"><span className="tm-label">RTG-2 Output</span><span className="tm-val">{fmt(j(rtg.electrical/3-1,0.2),1)} W</span></div>
+            <div className="tm-row"><span className="tm-label">RTG-3 Output</span><span className="tm-val">{fmt(j(rtg.electrical/3+0.5,0.2),1)} W</span></div>
+            <div className="tm-row"><span className="tm-label">Total Load</span><span className="tm-val">{fmt(j(rtg.electrical-10,0.5),1)} W</span></div>
+            <div className="tm-row"><span className="tm-label">Power Margin</span><span className="tm-val" style={{color:"#d29922"}}>{fmt(j(10,0.3),1)} W</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Thermal</div>
+            <div className="tm-row"><span className="tm-label">Bus Temperature</span><span className="tm-val">{fmt(j(-45,0.5),1)} °C</span></div>
+            <div className="tm-row"><span className="tm-label">Fuel Tank Temp</span><span className="tm-val">{fmt(j(2.0,0.3),1)} °C</span></div>
+            <div className="tm-row"><span className="tm-label">RTG Hot Shoe</span><span className="tm-val">{fmt(j(245,1),0)} °C</span></div>
+            <div className="tm-row"><span className="tm-label">RTG Cold Shoe</span><span className="tm-val">{fmt(j(148,0.5),0)} °C</span></div>
+            <div className="tm-row"><span className="tm-label">MAG Boom Tip</span><span className="tm-val">{fmt(j(-78,0.8),1)} °C</span></div>
+            <div className="tm-row"><span className="tm-label">HGA Feed</span><span className="tm-val">{fmt(j(-62,0.5),1)} °C</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Attitude</div>
+            <div className="tm-row"><span className="tm-label">RA (J2000)</span><span className="tm-val">{fmt(j(isV1?258.0:296.0,0.01),3)}°</span></div>
+            <div className="tm-row"><span className="tm-label">DEC (J2000)</span><span className="tm-val">{fmt(j(isV1?12.0:-48.0,0.01),3)}°</span></div>
+            <div className="tm-row"><span className="tm-label">Constellation</span><span className="tm-val">{isV1?"Ophiuchus":"Pavo"}</span></div>
+            <div className="tm-row"><span className="tm-label">Roll Error</span><span className="tm-val">{fmt(j(0,0.003),4)}°</span></div>
+            <div className="tm-row"><span className="tm-label">HGA Pointing</span><span className="tm-val" style={{color:"#3fb950"}}>EARTH LOCK</span></div>
+            <div className="tm-row"><span className="tm-label">Thruster Pulses/Day</span><span className="tm-val">~{Math.round(j(40,3))}</span></div>
+          </div>
+          <div className="tm-group">
+            <div className="tm-group-title">Interstellar Medium</div>
+            <div className="tm-row"><span className="tm-label">Plasma Density</span><span className="tm-val">{fmt(j(0.055,0.005),3)} cm⁻³</span></div>
+            <div className="tm-row"><span className="tm-label">Magnetic Field</span><span className="tm-val">{fmt(j(0.48,0.02),2)} nT</span></div>
+            <div className="tm-row"><span className="tm-label">GCR Flux</span><span className="tm-val">{fmt(j(2.2,0.05),2)} /cm²/s</span></div>
+            <div className="tm-row"><span className="tm-label">Plasma Temp (est.)</span><span className="tm-val">~{fmtInt(j(40000,2000))} K</span></div>
+            <div className="tm-row"><span className="tm-label">In Interstellar Space</span><span className="tm-val" style={{color:"#3fb950"}}>{fmt(interstellarYears,1)} years</span></div>
+            <div className="tm-row"><span className="tm-label">Heliopause Crossed</span><span className="tm-val">{heliopause.toISOString().slice(0,10)}</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── MISSION TIMELINE ─── */}
+      <div className="console-card" style={{marginTop:12}}>
+        <div className="console-header">
+          <div>
+            <span className="console-tag" style={{background:accentDim,color:accentColor}}>TIMELINE</span>
+            <span style={{fontSize:11,marginLeft:8,color:"#c9d1d9"}}>{probeName} Mission Milestones</span>
+          </div>
+        </div>
+        <div style={{position:"relative",paddingLeft:20}}>
+          <div style={{position:"absolute",left:8,top:0,bottom:0,width:2,background:"#21262d"}}/>
+          {timeline.map((ev,i) => {
+            const isPast = new Date(ev.date) <= new Date();
+            return (
+              <div key={i} style={{position:"relative",marginBottom:10,paddingLeft:16}}>
+                <div style={{position:"absolute",left:-4,top:4,width:10,height:10,borderRadius:"50%",background:isPast?accentColor:"#21262d",border:"2px solid "+(isPast?accentColor:"#30363d")}}/>
+                <div style={{fontSize:10,color:accentColor,fontWeight:700}}>{ev.date}</div>
+                <div style={{fontSize:11,color:isPast?"#c9d1d9":"#6e7681"}}>{ev.event}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── FOOTER ─── */}
+      <div style={{textAlign:"center",marginTop:24,padding:"16px 0",borderTop:"1px solid #21262d",fontSize:9,color:"#6e7681"}}>
+        <div>VOYAGER COMMANDER v1.0 — Built by Prof. Ramon Mayor Martins</div>
+        <div style={{marginTop:4}}>
+          Data sources: NASA/JPL-Caltech, DSN Now (eyes.nasa.gov), JPL Horizons, SPDF/CDAWeb
+        </div>
+        <div style={{marginTop:4}}>
+          Distance & power calculations based on published NASA parameters. Telemetry values are simulated from nominal ranges.
+        </div>
+        <div style={{marginTop:4,color:"#8b949e"}}>
+          <a href="https://science.nasa.gov/mission/voyager/" target="_blank">NASA Voyager Mission</a>
+          {" • "}
+          <a href="https://eyes.nasa.gov/apps/dsn-now/dsn.html" target="_blank">DSN Now</a>
+          {" • "}
+          <a href="https://voyager.jpl.nasa.gov/" target="_blank">JPL Voyager</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SPACECRAFT SCHEMATIC SVG
+// ═══════════════════════════════════════════════════════════════════════
+function VoyagerSchematic({ probe, instruments, accentColor, rtgPower, tick }) {
+  const ledOn = "#3fb950";
+  const ledOff = "#30363d";
+  const ledFail = "#f85149";
+
+  function iStatus(key) {
+    const s = instruments[key];
+    if (!s) return ledOff;
+    if (s.status === "ON") return ledOn;
+    if (s.status === "FAILED") return ledFail;
+    return ledOff;
+  }
+
+  const isV1 = probe === "V1";
+
+  return (
+    <div style={{overflowX:"auto",padding:"4px 0"}}>
+      <svg viewBox="0 0 900 520" style={{width:"100%",maxWidth:900,display:"block",margin:"0 auto"}} fontFamily="ui-monospace,SFMono-Regular,'SF Mono',Menlo,monospace">
+        <defs>
+          <linearGradient id="vg-bus" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#1a2030"/>
+            <stop offset="100%" stopColor="#0f141a"/>
+          </linearGradient>
+          <linearGradient id="vg-rtg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#3d1f00"/>
+            <stop offset="100%" stopColor="#1a0e00"/>
+          </linearGradient>
+          <radialGradient id="vg-dish" cx="50%" cy="40%">
+            <stop offset="0%" stopColor="#2a3040"/>
+            <stop offset="100%" stopColor="#161b22"/>
+          </radialGradient>
+          <filter id="glow-green"><feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#3fb950" floodOpacity="0.7"/></filter>
+          <filter id="glow-amber"><feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#f0883e" floodOpacity="0.7"/></filter>
+          <filter id="glow-red"><feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#f85149" floodOpacity="0.7"/></filter>
+        </defs>
+
+        {/* Background grid */}
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#21262d" strokeWidth="0.3"/>
+        </pattern>
+        <rect width="900" height="520" fill="url(#grid)"/>
+
+        {/* Title */}
+        <text x="450" y="22" fill={accentColor} fontSize="12" textAnchor="middle" fontWeight="bold" letterSpacing="2">
+          {isV1 ? "VOYAGER 1 (VGR 77-1)" : "VOYAGER 2 (VGR 77-3)"} — SYSTEMS LAYOUT
+        </text>
+
+        {/* ─── HIGH-GAIN ANTENNA (3.7m dish) ─── */}
+        <g transform="translate(450, 130)">
+          <ellipse cx="0" cy="0" rx="95" ry="35" fill="url(#vg-dish)" stroke="#58a6ff" strokeWidth="1.5"/>
+          <ellipse cx="0" cy="0" rx="70" ry="25" fill="none" stroke="#58a6ff33" strokeWidth="0.5"/>
+          <ellipse cx="0" cy="0" rx="40" ry="14" fill="none" stroke="#58a6ff33" strokeWidth="0.5"/>
+          <circle cx="0" cy="0" r="4" fill="#58a6ff44" stroke="#58a6ff" strokeWidth="1"/>
+          {/* Subreflector support */}
+          <line x1="-50" y1="-18" x2="0" y2="-55" stroke="#58a6ff" strokeWidth="0.5"/>
+          <line x1="50" y1="-18" x2="0" y2="-55" stroke="#58a6ff" strokeWidth="0.5"/>
+          <circle cx="0" cy="-55" r="5" fill="#161b22" stroke="#58a6ff" strokeWidth="1"/>
+          <text x="0" y="-62" fill="#58a6ff" fontSize="8" textAnchor="middle">SUBREFLECTOR</text>
+          <text x="0" y="50" fill="#58a6ff" fontSize="9" textAnchor="middle" fontWeight="bold">HIGH-GAIN ANTENNA</text>
+          <text x="0" y="60" fill="#6e7681" fontSize="7" textAnchor="middle">3.7m Cassegrain • S/X-Band</text>
+          {/* Comm LED */}
+          <circle cx="100" cy="0" r="4" fill={ledOn} filter="url(#glow-green)">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+          </circle>
+          <text x="110" y="3" fill="#3fb950" fontSize="7">TX/RX</text>
+        </g>
+
+        {/* ─── SPACECRAFT BUS (decagonal prism) ─── */}
+        <g transform="translate(450, 255)">
+          {/* Bus body */}
+          <polygon points="-55,-40 -40,-55 40,-55 55,-40 55,40 40,55 -40,55 -55,40" fill="url(#vg-bus)" stroke="#30363d" strokeWidth="1.5"/>
+          <polygon points="-55,-40 -40,-55 40,-55 55,-40 55,40 40,55 -40,55 -55,40" fill="none" stroke={accentColor+"33"} strokeWidth="0.5" strokeDasharray="2,4"/>
+          <text x="0" y="-30" fill={accentColor} fontSize="8" textAnchor="middle" fontWeight="bold">SPACECRAFT BUS</text>
+          <text x="0" y="-20" fill="#6e7681" fontSize="7" textAnchor="middle">Decagonal Prism</text>
+
+          {/* CCS */}
+          <rect x="-45" y="-12" width="38" height="16" rx="2" fill="#0a0e13" stroke="#a371f7" strokeWidth="0.8"/>
+          <text x="-26" y="0" fill="#a371f7" fontSize="6" textAnchor="middle">CCS</text>
+          <circle cx="-45" cy="-8" r="2.5" fill={ledOn} filter="url(#glow-green)"><animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/></circle>
+
+          {/* FDS */}
+          <rect x="7" y="-12" width="38" height="16" rx="2" fill="#0a0e13" stroke="#a371f7" strokeWidth="0.8"/>
+          <text x="26" y="0" fill="#a371f7" fontSize="6" textAnchor="middle">FDS</text>
+          <circle cx="7" cy="-8" r="2.5" fill={ledOn} filter="url(#glow-green)"><animate attributeName="opacity" values="0.4;1;0.4" dur="2.2s" repeatCount="indefinite"/></circle>
+
+          {/* AACS */}
+          <rect x="-22" y="10" width="44" height="16" rx="2" fill="#0a0e13" stroke="#a371f7" strokeWidth="0.8"/>
+          <text x="0" y="22" fill="#a371f7" fontSize="6" textAnchor="middle">AACS</text>
+          <circle cx="-22" cy="14" r="2.5" fill={ledOn} filter="url(#glow-green)"><animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" repeatCount="indefinite"/></circle>
+
+          {/* DTR */}
+          <rect x="-22" y="32" width="44" height="12" rx="2" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="0" y="41" fill="#6e7681" fontSize="5" textAnchor="middle">DTR 64MB</text>
+
+          {/* Hydrazine tank */}
+          <circle cx="0" cy="-43" r="10" fill="#0a0e13" stroke="#d29922" strokeWidth="1"/>
+          <text x="0" y="-40" fill="#d29922" fontSize="5" textAnchor="middle">N₂H₄</text>
+          <text x="18" y="-43" fill="#6e7681" fontSize="6">FUEL</text>
+        </g>
+
+        {/* ─── Bus-to-HGA strut ─── */}
+        <line x1="450" y1="165" x2="450" y2="200" stroke="#30363d" strokeWidth="2"/>
+
+        {/* ─── RTG BOOM (3 RTGs on boom to lower-right) ─── */}
+        <g>
+          <line x1="505" y1="280" x2="720" y2="400" stroke="#8b949e" strokeWidth="2"/>
+          {/* RTG-1 */}
+          <g transform="translate(600, 330) rotate(35)">
+            <rect x="-22" y="-12" width="44" height="24" rx="2" fill="url(#vg-rtg)" stroke="#f0883e" strokeWidth="1"/>
+            <text x="0" y="2" fill="#f0883e" fontSize="6" textAnchor="middle">RTG-1</text>
+            {/* Fins */}
+            {[-12,-4,4,12].map(y => <line key={y} x1="-26" y1={y-6} x2="-22" y2={y-6} stroke="#f0883e55" strokeWidth="1"/>)}
+            {[-12,-4,4,12].map(y => <line key={y+"r"} x1="22" y1={y-6} x2="26" y2={y-6} stroke="#f0883e55" strokeWidth="1"/>)}
+          </g>
+          {/* RTG-2 */}
+          <g transform="translate(650, 365) rotate(35)">
+            <rect x="-22" y="-12" width="44" height="24" rx="2" fill="url(#vg-rtg)" stroke="#f0883e" strokeWidth="1"/>
+            <text x="0" y="2" fill="#f0883e" fontSize="6" textAnchor="middle">RTG-2</text>
+          </g>
+          {/* RTG-3 */}
+          <g transform="translate(700, 400) rotate(35)">
+            <rect x="-22" y="-12" width="44" height="24" rx="2" fill="url(#vg-rtg)" stroke="#f0883e" strokeWidth="1"/>
+            <text x="0" y="2" fill="#f0883e" fontSize="6" textAnchor="middle">RTG-3</text>
+          </g>
+          <text x="740" y="420" fill="#f0883e" fontSize="8" fontWeight="bold">RTG BOOM</text>
+          <text x="740" y="430" fill="#6e7681" fontSize="7">3× MHW-RTG</text>
+          <text x="740" y="440" fill="#6e7681" fontSize="7">Pu-238 • ~{Math.round(rtgPower)}W</text>
+          {/* RTG power LED */}
+          <circle cx="730" cy="410" r="4" fill={rtgPower > 180 ? "#3fb950" : "#d29922"} filter={rtgPower>180?"url(#glow-green)":"url(#glow-amber)"}>
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+
+        {/* ─── MAGNETOMETER BOOM (13m, to upper-left) ─── */}
+        <g>
+          <line x1="395" y1="230" x2="100" y2="100" stroke="#a371f7" strokeWidth="1.5" strokeDasharray="4,2"/>
+          <circle cx="100" cy="100" r="8" fill="#0a0e13" stroke="#a371f7" strokeWidth="1.2"/>
+          <text x="100" y="103" fill="#a371f7" fontSize="6" textAnchor="middle">MAG</text>
+          <text x="100" y="80" fill="#a371f7" fontSize="8" fontWeight="bold" textAnchor="middle">MAGNETOMETER</text>
+          <text x="100" y="90" fill="#6e7681" fontSize="7" textAnchor="middle">13m boom • Triaxial</text>
+          {/* MAG LED */}
+          <circle cx="113" cy="100" r="3.5" fill={iStatus("MAG")} filter={instruments.MAG.status==="ON"?"url(#glow-green)":"none"}>
+            {instruments.MAG.status==="ON" && <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>}
+          </circle>
+        </g>
+
+        {/* ─── PWS ANTENNAS (V-shaped, 10m each) ─── */}
+        <g>
+          <line x1="395" y1="260" x2="180" y2="380" stroke="#79c0ff" strokeWidth="1.2"/>
+          <line x1="395" y1="260" x2="180" y2="180" stroke="#79c0ff" strokeWidth="1.2"/>
+          <text x="160" y="285" fill="#79c0ff" fontSize="8" fontWeight="bold" textAnchor="middle">PWS / PRA</text>
+          <text x="160" y="295" fill="#6e7681" fontSize="7" textAnchor="middle">2× 10m antennas (V)</text>
+          {/* PWS LED */}
+          <circle cx="180" cy="275" r="3.5" fill={iStatus("PWS")} filter={instruments.PWS.status==="ON"?"url(#glow-green)":"none"}>
+            {instruments.PWS.status==="ON" && <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/>}
+          </circle>
+          {/* PRA LED */}
+          <circle cx="192" cy="275" r="3.5" fill={iStatus("PRA")}>
+          </circle>
+          <text x="200" y="278" fill="#6e7681" fontSize="6">PRA</text>
+        </g>
+
+        {/* ─── SCAN PLATFORM (cameras & spectrometers) ─── */}
+        <g transform="translate(505, 310)">
+          <line x1="0" y1="-15" x2="45" y2="15" stroke="#30363d" strokeWidth="1.5"/>
+          <rect x="35" y="5" width="70" height="45" rx="3" fill="#0a0e13" stroke="#30363d" strokeWidth="1"/>
+          <text x="70" y="18" fill="#c9d1d9" fontSize="7" textAnchor="middle" fontWeight="bold">SCAN PLATFORM</text>
+
+          {/* ISS cameras */}
+          <rect x="40" y="22" width="14" height="10" rx="1" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="47" y="29" fill="#6e7681" fontSize="4" textAnchor="middle">NAC</text>
+          <circle cx="40" cy="24" r="2" fill={iStatus("ISS")}/>
+
+          <rect x="56" y="22" width="14" height="10" rx="1" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="63" y="29" fill="#6e7681" fontSize="4" textAnchor="middle">WAC</text>
+          <circle cx="56" cy="24" r="2" fill={iStatus("ISS")}/>
+
+          {/* UVS */}
+          <rect x="73" y="22" width="14" height="10" rx="1" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="80" y="29" fill="#6e7681" fontSize="4" textAnchor="middle">UVS</text>
+          <circle cx="73" cy="24" r="2" fill={iStatus("UVS")}/>
+
+          {/* IRIS */}
+          <rect x="40" y="35" width="20" height="10" rx="1" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="50" y="42" fill="#6e7681" fontSize="4" textAnchor="middle">IRIS</text>
+          <circle cx="40" cy="37" r="2" fill={iStatus("IRIS")}/>
+
+          {/* PPS */}
+          <rect x="63" y="35" width="20" height="10" rx="1" fill="#0a0e13" stroke="#6e7681" strokeWidth="0.5"/>
+          <text x="73" y="42" fill="#6e7681" fontSize="4" textAnchor="middle">PPS</text>
+          <circle cx="63" cy="37" r="2" fill={iStatus("PPS")}/>
+
+          <text x="70" y="58" fill="#6e7681" fontSize="6" textAnchor="middle">ISS • UVS • IRIS • PPS (all OFF)</text>
+        </g>
+
+        {/* ─── PARTICLE INSTRUMENTS (bus-mounted) ─── */}
+        <g transform="translate(340, 320)">
+          {/* CRS */}
+          <rect x="-25" y="0" width="50" height="18" rx="2" fill="#0a0e13" stroke={instruments.CRS.status==="ON"?"#3fb950":"#30363d"} strokeWidth="0.8"/>
+          <text x="0" y="12" fill={instruments.CRS.status==="ON"?"#3fb950":"#6e7681"} fontSize="7" textAnchor="middle">CRS</text>
+          <circle cx="-25" cy="5" r="3" fill={iStatus("CRS")} filter={instruments.CRS.status==="ON"?"url(#glow-green)":"none"}>
+            {instruments.CRS.status==="ON" && <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/>}
+          </circle>
+
+          {/* LECP */}
+          <rect x="-25" y="24" width="50" height="18" rx="2" fill="#0a0e13" stroke={instruments.LECP.status==="ON"?"#3fb950":"#30363d"} strokeWidth="0.8"/>
+          <text x="0" y="36" fill={instruments.LECP.status==="ON"?"#3fb950":"#6e7681"} fontSize="7" textAnchor="middle">LECP</text>
+          <circle cx="-25" cy="29" r="3" fill={iStatus("LECP")} filter={instruments.LECP.status==="ON"?"url(#glow-green)":"none"}>
+            {instruments.LECP.status==="ON" && <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/>}
+          </circle>
+
+          {/* PLS */}
+          <rect x="-25" y="48" width="50" height="18" rx="2" fill="#0a0e13" stroke={instruments.PLS.status==="ON"?"#3fb950":instruments.PLS.status==="FAILED"?"#f85149":"#30363d"} strokeWidth="0.8"/>
+          <text x="0" y="60" fill={instruments.PLS.status==="FAILED"?"#f85149":"#6e7681"} fontSize="7" textAnchor="middle">PLS</text>
+          <circle cx="-25" cy="53" r="3" fill={iStatus("PLS")} filter={instruments.PLS.status==="FAILED"?"url(#glow-red)":"none"}/>
+
+          <text x="0" y="-8" fill="#8b949e" fontSize="7" textAnchor="middle" fontWeight="bold">PARTICLE DETECTORS</text>
+        </g>
+
+        {/* ─── GOLDEN RECORD ─── */}
+        <g transform="translate(530, 240)">
+          <circle cx="0" cy="0" r="14" fill="#1a1500" stroke="#d29922" strokeWidth="1.5"/>
+          <circle cx="0" cy="0" r="10" fill="none" stroke="#d2992255" strokeWidth="0.5"/>
+          <circle cx="0" cy="0" r="6" fill="none" stroke="#d2992255" strokeWidth="0.5"/>
+          <circle cx="0" cy="0" r="2" fill="#d29922"/>
+          <text x="0" y="24" fill="#d29922" fontSize="7" textAnchor="middle" fontWeight="bold">GOLDEN RECORD</text>
+        </g>
+
+        {/* ─── THRUSTERS ─── */}
+        <g transform="translate(450, 312)">
+          {/* Thruster nozzles at bottom of bus */}
+          {[-30,-15,0,15,30].map((x,i) => (
+            <g key={i}>
+              <rect x={x-3} y="0" width="6" height="8" rx="1" fill="#0a0e13" stroke="#d29922" strokeWidth="0.5"/>
+            </g>
+          ))}
+          <text x="0" y="18" fill="#d29922" fontSize="6" textAnchor="middle">16× MR-103 THRUSTERS</text>
+          <circle cx="45" cy="4" r="2.5" fill="#d29922" filter="url(#glow-amber)">
+            <animate attributeName="opacity" values="0.2;0.8;0.2" dur="3s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+
+        {/* ─── STAR TRACKER ─── */}
+        <g transform="translate(520, 200)">
+          <rect x="0" y="0" width="24" height="12" rx="2" fill="#0a0e13" stroke="#58a6ff" strokeWidth="0.5"/>
+          <text x="12" y="9" fill="#58a6ff" fontSize="5" textAnchor="middle">★ CANOPUS</text>
+          <circle cx="28" cy="6" r="2" fill={ledOn}>
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+
+        {/* ─── SUN SENSOR ─── */}
+        <g transform="translate(372, 200)">
+          <rect x="0" y="0" width="22" height="12" rx="2" fill="#0a0e13" stroke="#d29922" strokeWidth="0.5"/>
+          <text x="11" y="9" fill="#d29922" fontSize="5" textAnchor="middle">☀ SUN</text>
+        </g>
+
+        {/* ─── LEGEND ─── */}
+        <g transform="translate(20, 450)">
+          <text x="0" y="0" fill="#8b949e" fontSize="9" fontWeight="bold">SYSTEM STATUS LEGEND</text>
+          <circle cx="10" cy="16" r="4" fill="#3fb950" filter="url(#glow-green)"/>
+          <text x="20" y="19" fill="#8b949e" fontSize="8">OPERATIONAL</text>
+          <circle cx="110" cy="16" r="4" fill="#30363d"/>
+          <text x="120" y="19" fill="#8b949e" fontSize="8">OFF / DISABLED</text>
+          <circle cx="220" cy="16" r="4" fill="#f85149"/>
+          <text x="230" y="19" fill="#8b949e" fontSize="8">FAILED</text>
+          <circle cx="300" cy="16" r="4" fill="#d29922"/>
+          <text x="310" y="19" fill="#8b949e" fontSize="8">WARNING</text>
+
+          <text x="0" y="40" fill="#6e7681" fontSize="7">
+            Spacecraft carries 11 science instruments • 3 dual-redundant computer systems (6 CPUs total) • 70 KB total memory
+          </text>
+          <text x="0" y="52" fill="#6e7681" fontSize="7">
+            Mass: 815 kg at launch → ~733 kg now • Power: 470 W at launch → ~{Math.round(rtgPower)} W now • Data rate: 160 bps
+          </text>
+          <text x="0" y="64" fill="#6e7681" fontSize="7">
+            Antenna: 3.7m HGA (S/X-band) • Propulsion: 16× hydrazine thrusters (100 kg N₂H₄ at launch)
+          </text>
+        </g>
+
+        {/* Direction labels */}
+        <text x="450" y="500" fill="#6e7681" fontSize="8" textAnchor="middle">
+          ← TO SUN {"                                            "} TO INTERSTELLAR SPACE →
+        </text>
+      </svg>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<VoyagerCommander/>);
+</script>
+</body>
+</html>
