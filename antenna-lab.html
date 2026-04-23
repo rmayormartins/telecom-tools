@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Antenna Lab — Laboratório de Antenas e Diagramas de Radiação</title>
+<meta name="description" content="Laboratório interativo de antenas: diagramas de radiação 2D/3D, Carta de Smith, VSWR, impedância, ganho, dimensionamento, matching e análise completa." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+  --orange: #f97316;
+  --teal: #2dd4bf;
+  --magenta: #e879f9;
+  --magenta-soft: #701a7540;
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#1a0d24 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d1a1f 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* HEADER */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:30px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+.brand .logo-mark::before{
+  content:'';position:absolute;inset:0;
+  border:1.5px solid var(--magenta);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite;
+}
+.brand .logo-mark::after{
+  content:'';position:absolute;width:2px;height:14px;
+  background:var(--magenta);border-radius:1px;
+  box-shadow:0 0 10px var(--magenta),0 -8px 0 var(--magenta);
+  top:4px;
+}
+.brand .logo-mark .wave1{
+  position:absolute;width:20px;height:20px;inset:5px;
+  border:1px solid rgba(232,121,249,0.3);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite 0.2s;
+}
+.brand .logo-mark .wave2{
+  position:absolute;inset:-4px;
+  border:1px solid rgba(232,121,249,0.15);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite 0.5s;
+}
+@keyframes pulse-ant{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.15);opacity:0.3;}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--magenta);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#4a1a5e,#2d0f3a);
+  border-color:var(--magenta);color:var(--magenta);
+  box-shadow:0 0 0 1px rgba(232,121,249,0.2),inset 0 1px 0 rgba(232,121,249,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#5e2272,#3a1548);}
+
+/* MAIN */
+main{
+  display:grid;grid-template-columns:330px 1fr 320px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* SECTIONS */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.magenta{background:var(--magenta);box-shadow:0 0 6px var(--magenta);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* FORM */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--magenta);background:#090d13;
+  box-shadow:0 0 0 2px rgba(232,121,249,0.15);
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--magenta);border-color:var(--magenta);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--magenta-soft);border-color:var(--magenta);color:var(--magenta);}
+
+/* VIZ AREA */
+.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;}
+.viz-top{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
+.viz-bottom{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
+.viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.viz-cell .card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);
+  flex-shrink:0;
+}
+.viz-cell .card-header h3{
+  margin:0;font-family:var(--font-display);font-weight:500;
+  font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);
+}
+.viz-cell .card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.viz-cell .card-body{flex:1;position:relative;min-height:0;}
+.viz-cell canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+/* tab controls in viz */
+.viz-tabs{display:flex;gap:1px;padding:0;margin:0;}
+.viz-tab{
+  background:var(--bg-2);color:var(--text-2);border:none;
+  padding:4px 10px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:0.06em;cursor:pointer;transition:all .15s;
+}
+.viz-tab:hover{color:var(--text-0);}
+.viz-tab.active{background:var(--magenta-soft);color:var(--magenta);}
+
+/* RESULTS PANEL */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.mag{color:var(--magenta);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(232,121,249,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--magenta);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+/* dimension diagram */
+.dim-diagram{
+  margin:8px 0;padding:12px;background:var(--bg-0);
+  border:1px solid var(--border);border-radius:var(--radius);
+  text-align:center;
+}
+.dim-diagram canvas{max-width:100%;height:auto;}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--magenta);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"><span class="wave1"></span><span class="wave2"></span></span>
+    <h1>ANTENNA LAB</h1>
+    <span class="tag">Laboratorio de <em>Antenas</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Antena</span>
+      <span class="value" id="hdr-ant">Dipolo &lambda;/2</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Frequencia</span>
+      <span class="value" id="hdr-freq">145.00<span class="unit">MHz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Ganho</span>
+      <span class="value" id="hdr-gain">--<span class="unit">dBi</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">VSWR</span>
+      <span class="value" id="hdr-vswr">--</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runAnalysis()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+      Analisar
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+    <button class="btn" onclick="exportData()">Export</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+<!-- LEFT PANEL -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao</h2>
+    <span class="panel-sub">ANT / FREQ / MATCH</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- ANTENNA TYPE -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot magenta"></span>Tipo de Antena</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Antena <span class="tip" data-tip="Selecione o tipo de antena para simulacao. Cada tipo tem padrao de radiacao, ganho e impedancia caracteristicos.">i</span></label>
+          <select id="antenna-type" onchange="onAntennaChange()">
+            <option value="dipole-half">Dipolo &lambda;/2</option>
+            <option value="dipole-short">Dipolo Curto (&lt;&lambda;/10)</option>
+            <option value="monopole">Monopolo &lambda;/4</option>
+            <option value="yagi">Yagi-Uda</option>
+            <option value="patch">Patch Microstrip</option>
+            <option value="loop-small">Loop Pequeno</option>
+            <option value="loop-full">Loop Full-Wave</option>
+            <option value="helical">Helical (Axial)</option>
+            <option value="horn-pyramidal">Horn Piramidal</option>
+            <option value="horn-conical">Horn Conico</option>
+            <option value="parabolic">Parabolica</option>
+            <option value="collinear">Collinear</option>
+            <option value="logperiodic">Log-Periodica</option>
+            <option value="slot">Slot</option>
+            <option value="turnstile">Turnstile</option>
+            <option value="groundplane">Ground Plane</option>
+          </select>
+        </div>
+        <div id="antenna-desc" class="info-box">
+          <strong>Dipolo &lambda;/2:</strong> Antena de referencia classica. Omnidirecional no plano H, formato "donut". Impedancia ~73 &ohm;, ganho 2.15 dBi.
+        </div>
+        <div class="chips" id="preset-chips">
+          <span class="chip active" onclick="loadPreset('vhf')">VHF 145MHz</span>
+          <span class="chip" onclick="loadPreset('uhf')">UHF 435MHz</span>
+          <span class="chip" onclick="loadPreset('wifi24')">Wi-Fi 2.4G</span>
+          <span class="chip" onclick="loadPreset('wifi5')">Wi-Fi 5.8G</span>
+          <span class="chip" onclick="loadPreset('hf')">HF 14MHz</span>
+          <span class="chip" onclick="loadPreset('ism915')">ISM 915M</span>
+          <span class="chip" onclick="loadPreset('5g')">5G 3.5G</span>
+          <span class="chip" onclick="loadPreset('sat')">Sat L 1.575G</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREQUENCY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Frequencia &amp; Comprimento de Onda</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Frequencia (MHz) <span class="tip" data-tip="Frequencia central de operacao da antena. Determina o comprimento de onda e todas as dimensoes fisicas.">i</span></label>
+          <input type="number" id="freq" value="145" min="0.1" max="100000" step="0.01" oninput="onFreqChange()">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>&lambda; (m)</label>
+            <input type="text" id="wavelength" value="2.069" readonly style="color:var(--cyan);">
+          </div>
+          <div class="field">
+            <label>&lambda;/2 (m)</label>
+            <input type="text" id="half-wave" value="1.034" readonly style="color:var(--cyan);">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>&lambda;/4 (m)</label>
+            <input type="text" id="quarter-wave" value="0.517" readonly style="color:var(--cyan);">
+          </div>
+          <div class="field">
+            <label>Banda</label>
+            <input type="text" id="band-name" value="VHF" readonly style="color:var(--amber);">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTENNA DIMENSIONS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Dimensoes da Antena</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="dim-section">
+        <!-- Dynamic content based on antenna type -->
+        <div class="field" id="dim-length-wrap">
+          <label>Comprimento Total (m)</label>
+          <input type="number" id="dim-length" value="1.034" step="0.001" oninput="onDimChange()">
+          <p class="help">Comprimento fisico do dipolo (tipico: 0.95 * &lambda;/2 para fio)</p>
+        </div>
+        <div class="field" id="dim-wire-wrap">
+          <label>Diametro do Fio (mm)</label>
+          <input type="number" id="dim-wire" value="2.0" step="0.1" min="0.1">
+        </div>
+        <div id="yagi-params" style="display:none;">
+          <div class="field">
+            <label>Numero de Elementos <span class="tip" data-tip="Total de elementos: 1 refletor + 1 driven + N diretores. Mais diretores = maior ganho e diretividade.">i</span></label>
+            <input type="number" id="yagi-elements" value="5" min="2" max="30" step="1" oninput="onDimChange()">
+          </div>
+          <div class="field">
+            <label>Espacamento (frac. &lambda;)</label>
+            <input type="number" id="yagi-spacing" value="0.3" min="0.1" max="0.5" step="0.01">
+          </div>
+        </div>
+        <div id="patch-params" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>Largura W (mm)</label>
+              <input type="number" id="patch-w" value="46.7" step="0.1">
+            </div>
+            <div class="field">
+              <label>Comprimento L (mm)</label>
+              <input type="number" id="patch-l" value="38.0" step="0.1">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>&epsilon;r Substrato</label>
+              <input type="number" id="patch-er" value="4.4" step="0.1" min="1">
+            </div>
+            <div class="field">
+              <label>Altura h (mm)</label>
+              <input type="number" id="patch-h" value="1.6" step="0.1" min="0.1">
+            </div>
+          </div>
+        </div>
+        <div id="horn-params" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>Abertura A (cm)</label>
+              <input type="number" id="horn-a" value="20" step="0.5">
+            </div>
+            <div class="field">
+              <label>Abertura B (cm)</label>
+              <input type="number" id="horn-b" value="15" step="0.5">
+            </div>
+          </div>
+        </div>
+        <div id="parabolic-params" style="display:none;">
+          <div class="field">
+            <label>Diametro (m)</label>
+            <input type="number" id="parab-d" value="1.2" step="0.1" min="0.1">
+          </div>
+          <div class="field">
+            <label>Eficiencia de Abertura (%)</label>
+            <input type="number" id="parab-eff" value="55" step="1" min="10" max="85">
+          </div>
+        </div>
+        <div id="helical-params" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>N. Espiras</label>
+              <input type="number" id="helix-n" value="10" min="3" max="50" step="1">
+            </div>
+            <div class="field">
+              <label>Circunf. (frac. &lambda;)</label>
+              <input type="number" id="helix-c" value="1.0" step="0.05" min="0.7" max="1.3">
+            </div>
+          </div>
+          <div class="field">
+            <label>Espacamento Espira (frac. &lambda;)</label>
+            <input type="number" id="helix-s" value="0.25" step="0.01" min="0.1" max="0.4">
+          </div>
+        </div>
+        <div id="collinear-params" style="display:none;">
+          <div class="field">
+            <label>Numero de Secoes</label>
+            <input type="number" id="coll-n" value="4" min="2" max="16" step="1">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMPEDANCE MATCHING -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Impedancia &amp; Matching</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Z0 Linha (ohm)</label>
+            <input type="number" id="z0" value="50" step="1" min="1">
+          </div>
+          <div class="field">
+            <label>Za Antena R (ohm)</label>
+            <input type="number" id="za-r" value="73" step="0.1">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Za Antena X (ohm)</label>
+            <input type="number" id="za-x" value="42.5" step="0.1">
+          </div>
+          <div class="field">
+            <label>Tipo de Match</label>
+            <select id="match-type">
+              <option value="none">Sem Matching</option>
+              <option value="lnet-lp">L-Network (Low-Pass)</option>
+              <option value="lnet-hp">L-Network (High-Pass)</option>
+              <option value="stub-series">Stub Serie</option>
+              <option value="stub-shunt">Stub Paralelo</option>
+              <option value="quarter">Transformador &lambda;/4</option>
+              <option value="gamma">Gamma Match</option>
+              <option value="balun">Balun 4:1</option>
+            </select>
+          </div>
+        </div>
+        <div id="match-result" class="info-box ok" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ENVIRONMENT -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Ambiente &amp; Solo</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Tipo de Solo</label>
+          <select id="ground-type" onchange="onGroundChange()">
+            <option value="perfect">Solo Perfeito (PEC)</option>
+            <option value="seawater">Agua do Mar (&sigma;=5, &epsilon;r=81)</option>
+            <option value="freshwater">Agua Doce (&sigma;=0.01, &epsilon;r=80)</option>
+            <option value="wet">Solo Umido (&sigma;=0.03, &epsilon;r=20)</option>
+            <option value="dry" selected>Solo Seco (&sigma;=0.001, &epsilon;r=10)</option>
+            <option value="urban">Urbano/Concreto (&sigma;=0.002, &epsilon;r=5)</option>
+            <option value="free">Espaco Livre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Altura sobre Solo (m)</label>
+          <input type="number" id="height-agl" value="10" step="0.5" min="0">
+        </div>
+        <div class="field">
+          <label>Polarizacao</label>
+          <select id="polarization">
+            <option value="linear-v">Linear Vertical</option>
+            <option value="linear-h">Linear Horizontal</option>
+            <option value="circular-r">Circular RHCP</option>
+            <option value="circular-l">Circular LHCP</option>
+            <option value="elliptical">Eliptica</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER: VISUALIZATIONS -->
+<div class="panel viz">
+  <div class="viz-top">
+    <!-- 2D Radiation Pattern -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Diagrama de Radiacao 2D</h3>
+        <div class="viz-tabs">
+          <button class="viz-tab active" onclick="setPlane('E',this)">Plano E</button>
+          <button class="viz-tab" onclick="setPlane('H',this)">Plano H</button>
+          <button class="viz-tab" onclick="setPlane('both',this)">Ambos</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="pattern2d"></canvas>
+      </div>
+    </div>
+    <!-- 3D Radiation Pattern -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Diagrama 3D</h3>
+        <div class="meta" id="lbl-3d">Interativo — arrastar para rotacionar</div>
+      </div>
+      <div class="card-body" id="container3d" style="cursor:grab;"></div>
+    </div>
+  </div>
+  <div class="viz-bottom">
+    <!-- Smith Chart -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Carta de Smith</h3>
+        <div class="meta" id="smith-info">Z = 73 + j42.5 &ohm;</div>
+      </div>
+      <div class="card-body">
+        <canvas id="smithchart"></canvas>
+      </div>
+    </div>
+    <!-- VSWR / Return Loss -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>VSWR &amp; Return Loss</h3>
+        <div class="viz-tabs">
+          <button class="viz-tab active" onclick="setChartMode('vswr',this)">VSWR</button>
+          <button class="viz-tab" onclick="setChartMode('rl',this)">S11 (dB)</button>
+          <button class="viz-tab" onclick="setChartMode('bw',this)">Bandwidth</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="vswrchart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL: RESULTS -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="res-status"><span class="live-dot standby"></span> AGUARDANDO</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot magenta"></span>Parametros da Antena</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Tipo</span><span class="v mag" id="r-type">Dipolo &lambda;/2</span></div>
+        <div class="kv"><span class="k">Ganho</span><span class="v good" id="r-gain">--<span class="unit">dBi</span></span></div>
+        <div class="kv"><span class="k">Ganho (dBd)</span><span class="v" id="r-gain-dbd">--<span class="unit">dBd</span></span></div>
+        <div class="kv"><span class="k">Diretividade</span><span class="v acc" id="r-directivity">--<span class="unit">dBi</span></span></div>
+        <div class="kv"><span class="k">Eficiencia</span><span class="v" id="r-efficiency">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">Abert. -3dB (E)</span><span class="v" id="r-hpbw-e">--<span class="unit">°</span></span></div>
+        <div class="kv"><span class="k">Abert. -3dB (H)</span><span class="v" id="r-hpbw-h">--<span class="unit">°</span></span></div>
+        <div class="kv"><span class="k">F/B Ratio</span><span class="v" id="r-fb">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Area Efetiva</span><span class="v" id="r-ae">--<span class="unit">m²</span></span></div>
+        <div class="kv"><span class="k">Polarizacao</span><span class="v" id="r-pol">Linear V</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Impedancia &amp; VSWR</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Za</span><span class="v mag" id="r-za">--<span class="unit">&ohm;</span></span></div>
+        <div class="kv"><span class="k">Z0 Linha</span><span class="v" id="r-z0">50<span class="unit">&ohm;</span></span></div>
+        <div class="kv"><span class="k">Coef. Reflexao |&Gamma;|</span><span class="v" id="r-gamma">--</span></div>
+        <div class="kv"><span class="k">VSWR</span><span class="v" id="r-vswr">--</span></div>
+        <div class="gauge" id="vswr-gauge"><div class="gauge-fill" id="vswr-fill"></div><div class="gauge-label" id="vswr-label"></div></div>
+        <div class="kv" style="margin-top:6px;"><span class="k">Return Loss (S11)</span><span class="v" id="r-rl">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Mismatch Loss</span><span class="v" id="r-ml">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Pot. Refletida</span><span class="v" id="r-pref">--<span class="unit">%</span></span></div>
+        <div id="match-info"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Dimensoes Fisicas</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="phys-dims">
+        <div class="kv"><span class="k">&lambda;</span><span class="v acc" id="r-lambda">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">Comprimento</span><span class="v" id="r-len">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">Boom (Yagi)</span><span class="v" id="r-boom" style="display:none;">--<span class="unit">m</span></span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Largura de Banda</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">BW (VSWR &lt; 2)</span><span class="v acc" id="r-bw2">--<span class="unit">MHz</span></span></div>
+        <div class="kv"><span class="k">BW (VSWR &lt; 1.5)</span><span class="v" id="r-bw15">--<span class="unit">MHz</span></span></div>
+        <div class="kv"><span class="k">BW Fracional</span><span class="v" id="r-bwf">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">Q Factor</span><span class="v" id="r-q">--</span></div>
+        <div class="kv"><span class="k">f min</span><span class="v" id="r-fmin">--<span class="unit">MHz</span></span></div>
+        <div class="kv"><span class="k">f max</span><span class="v" id="r-fmax">--<span class="unit">MHz</span></span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="author">
+    ANTENNA LAB v1.0 &mdash; Prof. Ramon Mayor Martins &mdash;
+    <a href="https://github.com/rmayormartins" target="_blank">github.com/rmayormartins</a>
+  </div>
+  <div class="ts" id="footer-ts"></div>
+</footer>
+
+</div>
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ============================================================
+//  ANTENNA LAB — Core Engine
+// ============================================================
+const C = 299792458; // speed of light m/s
+const PI = Math.PI;
+const DEG = PI / 180;
+const RAD = 180 / PI;
+
+// State
+let state = {
+  antennaType: 'dipole-half',
+  freq: 145,        // MHz
+  lambda: 0,
+  za: { r: 73, x: 42.5 },
+  z0: 50,
+  plane: 'E',
+  chartMode: 'vswr',
+  groundType: 'dry',
+  heightAGL: 10,
+  pol: 'linear-v',
+  // Yagi
+  yagiN: 5,
+  yagiSpacing: 0.3,
+  // Patch
+  patchW: 46.7,
+  patchL: 38.0,
+  patchEr: 4.4,
+  patchH: 1.6,
+  // Horn
+  hornA: 20,
+  hornB: 15,
+  // Parabolic
+  parabD: 1.2,
+  parabEff: 55,
+  // Helical
+  helixN: 10,
+  helixC: 1.0,
+  helixS: 0.25,
+  // Collinear
+  collN: 4,
+  // computed
+  gain: 0,
+  directivity: 0,
+  efficiency: 95,
+  hpbwE: 0,
+  hpbwH: 0,
+  fbRatio: 0,
+  vswr: 1,
+  gammaCoeff: 0,
+  returnLoss: 0,
+  bw2: 0,
+  bw15: 0,
+  qFactor: 0,
+};
+
+// Antenna database
+const antennaDB = {
+  'dipole-half': {
+    name: 'Dipolo \u03bb/2', gain: 2.15, eff: 97, zaR: 73, zaX: 42.5,
+    hpbwE: 78, hpbwH: 360, fb: 0, bwPct: 15, pol: 'linear',
+    desc: '<strong>Dipolo \u03bb/2:</strong> Antena de referencia classica. Omnidirecional no plano H, formato "donut". Impedancia ~73 \u03a9, ganho 2.15 dBi.'
+  },
+  'dipole-short': {
+    name: 'Dipolo Curto', gain: 1.76, eff: 50, zaR: 5, zaX: -200,
+    hpbwE: 90, hpbwH: 360, fb: 0, bwPct: 2, pol: 'linear',
+    desc: '<strong>Dipolo Curto (&lt;\u03bb/10):</strong> Baixa eficiencia e impedancia muito reativa. Necessita matching network. Padrao similar ao dipolo \u03bb/2.'
+  },
+  'monopole': {
+    name: 'Monopolo \u03bb/4', gain: 5.15, eff: 95, zaR: 36.5, zaX: 21,
+    hpbwE: 78, hpbwH: 360, fb: 0, bwPct: 12, pol: 'linear',
+    desc: '<strong>Monopolo \u03bb/4:</strong> Metade do dipolo sobre plano de terra. Ganho 3 dB acima do dipolo (imagem no solo). Impedancia ~36.5 \u03a9.'
+  },
+  'yagi': {
+    name: 'Yagi-Uda', gain: 10, eff: 92, zaR: 25, zaX: -5,
+    hpbwE: 55, hpbwH: 70, fb: 20, bwPct: 5, pol: 'linear',
+    desc: '<strong>Yagi-Uda:</strong> Antena direcional com refletor e diretores. Ganho tipico 7-15 dBi dependendo do numero de elementos. F/B ~20 dB.'
+  },
+  'patch': {
+    name: 'Patch Microstrip', gain: 7, eff: 85, zaR: 150, zaX: 0,
+    hpbwE: 90, hpbwH: 90, fb: 15, bwPct: 3, pol: 'linear',
+    desc: '<strong>Patch Microstrip:</strong> Antena planar para frequencias altas. Perfil baixo, facil fabricacao em PCB. BW estreita (~3%), ganho ~6-9 dBi.'
+  },
+  'loop-small': {
+    name: 'Loop Pequeno', gain: 1.76, eff: 30, zaR: 0.5, zaX: 100,
+    hpbwE: 360, hpbwH: 90, fb: 0, bwPct: 1, pol: 'linear',
+    desc: '<strong>Loop Pequeno:</strong> Circumferencia &lt; \u03bb/10. Padrao "figure-8" no plano do loop. Impedancia muito baixa, necessita matching.'
+  },
+  'loop-full': {
+    name: 'Loop Full-Wave', gain: 3.4, eff: 90, zaR: 100, zaX: 0,
+    hpbwE: 80, hpbwH: 360, fb: 0, bwPct: 8, pol: 'linear',
+    desc: '<strong>Loop Full-Wave:</strong> Circumferencia = \u03bb. Ganho ~3.4 dBi. Impedancia ~100 \u03a9. Padrao broadside.'
+  },
+  'helical': {
+    name: 'Helical (Axial)', gain: 12, eff: 90, zaR: 140, zaX: 0,
+    hpbwE: 45, hpbwH: 45, fb: 15, bwPct: 70, pol: 'circular',
+    desc: '<strong>Helical (Modo Axial):</strong> Polarizacao circular natural. BW ampla (~70%). Ganho aumenta com numero de espiras. Excelente para comunicacao satelite.'
+  },
+  'horn-pyramidal': {
+    name: 'Horn Piramidal', gain: 15, eff: 95, zaR: 50, zaX: 0,
+    hpbwE: 30, hpbwH: 35, fb: 25, bwPct: 50, pol: 'linear',
+    desc: '<strong>Horn Piramidal:</strong> Antena de abertura com ganho moderado-alto. Padrao de referencia para calibracao. BW ampla, baixo VSWR.'
+  },
+  'horn-conical': {
+    name: 'Horn Conico', gain: 14, eff: 93, zaR: 50, zaX: 0,
+    hpbwE: 32, hpbwH: 32, fb: 22, bwPct: 50, pol: 'linear',
+    desc: '<strong>Horn Conico:</strong> Simetria circular, beamwidths iguais em E e H. Muito usado em feeds de refletores parabolicos.'
+  },
+  'parabolic': {
+    name: 'Parabolica', gain: 30, eff: 55, zaR: 50, zaX: 0,
+    hpbwE: 5, hpbwH: 5, fb: 35, bwPct: 15, pol: 'linear',
+    desc: '<strong>Parabolica:</strong> Altissimo ganho. G = \u03b7(πD/\u03bb)². Usada em micro-ondas, satelite, radioastronomia. Beamwidth muito estreito.'
+  },
+  'collinear': {
+    name: 'Collinear', gain: 6, eff: 90, zaR: 50, zaX: 0,
+    hpbwE: 30, hpbwH: 360, fb: 0, bwPct: 8, pol: 'linear',
+    desc: '<strong>Collinear:</strong> Empilhamento vertical de dipolos \u03bb/2. Omnidirecional no plano H. Ganho aumenta com numero de secoes.'
+  },
+  'logperiodic': {
+    name: 'Log-Periodica', gain: 7, eff: 88, zaR: 50, zaX: 0,
+    hpbwE: 60, hpbwH: 80, fb: 15, bwPct: 300, pol: 'linear',
+    desc: '<strong>Log-Periodica:</strong> BW extremamente ampla (tipico 10:1). Ganho moderado (~7 dBi) e constante em toda a faixa. Padrao direcional.'
+  },
+  'slot': {
+    name: 'Slot', gain: 2.15, eff: 90, zaR: 363, zaX: 0,
+    hpbwE: 360, hpbwH: 78, fb: 0, bwPct: 10, pol: 'linear',
+    desc: '<strong>Slot:</strong> Complementar ao dipolo (Principio de Babinet). Z_slot * Z_dipolo = \u03b7²/4. Padrao omnidirecional no plano perpendicular.'
+  },
+  'turnstile': {
+    name: 'Turnstile', gain: 1.15, eff: 85, zaR: 36, zaX: 0,
+    hpbwE: 90, hpbwH: 360, fb: 0, bwPct: 10, pol: 'circular',
+    desc: '<strong>Turnstile:</strong> Dois dipolos cruzados a 90° com alimentacao em quadratura. Polarizacao circular. Usado em VHF/UHF.'
+  },
+  'groundplane': {
+    name: 'Ground Plane', gain: 3.5, eff: 93, zaR: 50, zaX: 0,
+    hpbwE: 80, hpbwH: 360, fb: 0, bwPct: 10, pol: 'linear',
+    desc: '<strong>Ground Plane:</strong> Monopolo com radiais a 45°. Impedancia ~50 \u03a9 (sem necessidade de matching). Omnidirecional.'
+  },
+};
+
+// ---- UI Helpers ----
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function $(id) { return document.getElementById(id); }
+
+function setPlane(p, btn) {
+  state.plane = p;
+  document.querySelectorAll('.viz-top .viz-cell:first-child .viz-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawPattern2D();
+}
+
+function setChartMode(m, btn) {
+  state.chartMode = m;
+  document.querySelectorAll('.viz-bottom .viz-cell:last-child .viz-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawVSWRChart();
+}
+
+// ---- Frequency ----
+function calcLambda(fMHz) { return C / (fMHz * 1e6); }
+function getBand(fMHz) {
+  if (fMHz < 0.3) return 'ELF/VLF';
+  if (fMHz < 3) return 'MF';
+  if (fMHz < 30) return 'HF';
+  if (fMHz < 300) return 'VHF';
+  if (fMHz < 3000) return 'UHF';
+  if (fMHz < 30000) return 'SHF';
+  return 'EHF';
+}
+
+function onFreqChange() {
+  state.freq = parseFloat($('freq').value) || 145;
+  state.lambda = calcLambda(state.freq);
+  $('wavelength').value = state.lambda.toFixed(4);
+  $('half-wave').value = (state.lambda / 2).toFixed(4);
+  $('quarter-wave').value = (state.lambda / 4).toFixed(4);
+  $('band-name').value = getBand(state.freq);
+  $('hdr-freq').innerHTML = state.freq.toFixed(2) + '<span class="unit">MHz</span>';
+  $('hdr-band') && ($('hdr-band').textContent = getBand(state.freq));
+  // update default dimension
+  updateDefaultDims();
+}
+
+function updateDefaultDims() {
+  const ant = state.antennaType;
+  const lam = state.lambda;
+  if (ant === 'dipole-half') $('dim-length').value = (0.95 * lam / 2).toFixed(4);
+  else if (ant === 'dipole-short') $('dim-length').value = (lam / 20).toFixed(4);
+  else if (ant === 'monopole' || ant === 'groundplane') $('dim-length').value = (0.95 * lam / 4).toFixed(4);
+  else if (ant === 'loop-small') $('dim-length').value = (lam / 15).toFixed(4);
+  else if (ant === 'loop-full') $('dim-length').value = lam.toFixed(4);
+  else if (ant === 'slot') $('dim-length').value = (lam / 2).toFixed(4);
+  else if (ant === 'turnstile') $('dim-length').value = (lam / 2).toFixed(4);
+  else if (ant === 'collinear') $('dim-length').value = (lam / 2 * parseFloat($('coll-n')?.value || 4)).toFixed(4);
+  else if (ant === 'logperiodic') $('dim-length').value = (lam * 1.5).toFixed(4);
+  else $('dim-length').value = (lam / 2).toFixed(4);
+
+  // Patch dimensions
+  if (ant === 'patch') {
+    const er = parseFloat($('patch-er').value) || 4.4;
+    const w = C / (2 * state.freq * 1e6) * Math.sqrt(2 / (er + 1)) * 1000;
+    const erEff = (er + 1) / 2 + (er - 1) / 2 * Math.pow(1 + 12 * (parseFloat($('patch-h').value) || 1.6) / w, -0.5);
+    const l = C / (2 * state.freq * 1e6 * Math.sqrt(erEff)) * 1000;
+    $('patch-w').value = w.toFixed(1);
+    $('patch-l').value = l.toFixed(1);
+  }
+}
+
+function onDimChange() {}
+function onGroundChange() {}
+
+// ---- Antenna type change ----
+function onAntennaChange() {
+  const t = $('antenna-type').value;
+  state.antennaType = t;
+  const db = antennaDB[t];
+  $('antenna-desc').innerHTML = db.desc;
+  $('hdr-ant').textContent = db.name;
+
+  // Show/hide param sections
+  ['yagi-params','patch-params','horn-params','parabolic-params','helical-params','collinear-params'].forEach(id => {
+    $(id).style.display = 'none';
+  });
+  $('dim-length-wrap').style.display = '';
+  $('dim-wire-wrap').style.display = '';
+
+  if (t === 'yagi') $('yagi-params').style.display = '';
+  else if (t === 'patch') { $('patch-params').style.display = ''; $('dim-length-wrap').style.display = 'none'; $('dim-wire-wrap').style.display = 'none'; }
+  else if (t.startsWith('horn')) { $('horn-params').style.display = ''; $('dim-length-wrap').style.display = 'none'; $('dim-wire-wrap').style.display = 'none'; }
+  else if (t === 'parabolic') { $('parabolic-params').style.display = ''; $('dim-length-wrap').style.display = 'none'; $('dim-wire-wrap').style.display = 'none'; }
+  else if (t === 'helical') { $('helical-params').style.display = ''; $('dim-length-wrap').style.display = 'none'; $('dim-wire-wrap').style.display = 'none'; }
+  else if (t === 'collinear') { $('collinear-params').style.display = ''; }
+
+  // Set default impedance
+  $('za-r').value = db.zaR;
+  $('za-x').value = db.zaX;
+
+  updateDefaultDims();
+  onFreqChange();
+}
+
+// ---- Presets ----
+function loadPreset(p) {
+  const presets = {
+    vhf: 145, uhf: 435, wifi24: 2437, wifi5: 5800,
+    hf: 14, ism915: 915, '5g': 3500, sat: 1575.42
+  };
+  $('freq').value = presets[p];
+  document.querySelectorAll('#preset-chips .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  onFreqChange();
+}
+
+// ---- Radiation Pattern Functions ----
+function getPattern(type, theta, phi) {
+  // theta: 0=zenith, pi=nadir; phi: azimuth
+  const st = Math.sin(theta), ct = Math.cos(theta);
+  switch (type) {
+    case 'dipole-half': {
+      const num = Math.cos(PI/2 * ct);
+      const den = st + 1e-10;
+      return Math.abs(num / den);
+    }
+    case 'dipole-short':
+      return Math.abs(st);
+    case 'monopole':
+    case 'groundplane':
+      if (theta > PI/2) return 0;
+      return Math.abs(Math.cos(PI/2 * ct) / (st + 1e-10));
+    case 'yagi': {
+      const n = parseInt($('yagi-elements')?.value) || 5;
+      const d = parseFloat($('yagi-spacing')?.value) || 0.3;
+      const psi = 2 * PI * d * ct;
+      const af = Math.abs(Math.sin(n * psi / 2) / (n * Math.sin(psi / 2 + 1e-10)));
+      const ef = Math.abs(Math.cos(PI/2 * ct) / (st + 1e-10));
+      return af * ef;
+    }
+    case 'patch': {
+      const e_plane = Math.abs(Math.cos(PI/2 * st * Math.cos(phi)));
+      const h_plane = Math.abs(ct * Math.cos(PI/2 * st * Math.sin(phi)));
+      return Math.sqrt(e_plane * e_plane + h_plane * h_plane);
+    }
+    case 'loop-small':
+      return Math.abs(st);
+    case 'loop-full': {
+      const j1approx = Math.abs(Math.sin(PI * st) / (PI * st + 1e-10));
+      return j1approx;
+    }
+    case 'helical': {
+      const n = parseInt($('helix-n')?.value) || 10;
+      const c_lam = parseFloat($('helix-c')?.value) || 1.0;
+      const s_lam = parseFloat($('helix-s')?.value) || 0.25;
+      const psi_h = 2 * PI * s_lam * ct - 2 * PI / n;
+      const ef = Math.abs(Math.cos(theta));
+      const af = Math.abs(Math.sin(n * psi_h / 2) / (n * Math.sin(psi_h / 2 + 1e-10)));
+      return ef * af;
+    }
+    case 'horn-pyramidal':
+    case 'horn-conical': {
+      const a = (parseFloat($('horn-a')?.value) || 20) / 100;
+      const lam = state.lambda;
+      const ka = PI * a / lam;
+      const u = ka * st;
+      const sinc = u === 0 ? 1 : Math.sin(u) / u;
+      return Math.abs(sinc * ct);
+    }
+    case 'parabolic': {
+      const d = parseFloat($('parab-d')?.value) || 1.2;
+      const lam = state.lambda;
+      const u = PI * d / lam * st;
+      if (Math.abs(u) < 1e-6) return 1;
+      const airy = 2 * bessel_j1(u) / u;
+      return Math.abs(airy);
+    }
+    case 'collinear': {
+      const nc = parseInt($('coll-n')?.value) || 4;
+      const psi = PI * ct;
+      const af = Math.abs(Math.sin(nc * psi / 2) / (nc * Math.sin(psi / 2 + 1e-10)));
+      const ef = Math.abs(Math.cos(PI/2 * ct) / (st + 1e-10));
+      return af * ef;
+    }
+    case 'logperiodic': {
+      const ef = Math.abs(Math.cos(PI/2 * ct) / (st + 1e-10));
+      const dir = (1 + ct) / 2;
+      return ef * Math.pow(dir, 1.5);
+    }
+    case 'slot':
+      return Math.abs(ct);
+    case 'turnstile':
+      return Math.sqrt(1 - ct * ct * Math.cos(phi) * Math.cos(phi));
+    default:
+      return Math.abs(st);
+  }
+}
+
+// Bessel J1 approximation
+function bessel_j1(x) {
+  if (Math.abs(x) < 1e-10) return 0;
+  const ax = Math.abs(x);
+  if (ax < 8) {
+    const y = x * x;
+    const r1 = x * (72362614232.0 + y * (-7895059235.0 + y * (242396853.1 + y * (-2972611.439 + y * (15704.48260 + y * (-30.16036606))))));
+    const r2 = 144725228442.0 + y * (2300535178.0 + y * (18583304.74 + y * (99447.43394 + y * (376.9991397 + y))));
+    return r1 / r2;
+  }
+  const z = 8 / ax;
+  const y = z * z;
+  const xx = ax - 2.356194491;
+  const p = 1 + y * (0.183105e-2 + y * (-0.3516396496e-4 + y * (0.2457520174e-5 + y * (-0.240337019e-6))));
+  const q = 0.04687499995 + y * (-0.2002690873e-3 + y * (0.8449199096e-5 + y * (-0.88228987e-6 + y * 0.105787412e-6)));
+  const ans = Math.sqrt(0.636619772 / ax) * (Math.cos(xx) * p - z * Math.sin(xx) * q);
+  return x < 0 ? -ans : ans;
+}
+
+// ---- Calculate Antenna Parameters ----
+function calcAntenna() {
+  const t = state.antennaType;
+  const db = antennaDB[t];
+  state.lambda = calcLambda(state.freq);
+  const lam = state.lambda;
+
+  // Gain calculation
+  let gain = db.gain;
+  if (t === 'yagi') {
+    const n = parseInt($('yagi-elements')?.value) || 5;
+    gain = 2.15 + 10 * Math.log10(n * 0.8);
+    if (n >= 6) gain += 1;
+    if (n >= 10) gain += 1.5;
+  } else if (t === 'parabolic') {
+    const d = parseFloat($('parab-d')?.value) || 1.2;
+    const eff = (parseFloat($('parab-eff')?.value) || 55) / 100;
+    gain = 10 * Math.log10(eff * Math.pow(PI * d / lam, 2));
+  } else if (t === 'helical') {
+    const n = parseInt($('helix-n')?.value) || 10;
+    const c_lam = parseFloat($('helix-c')?.value) || 1.0;
+    const s_lam = parseFloat($('helix-s')?.value) || 0.25;
+    gain = 10 * Math.log10(15 * c_lam * c_lam * n * s_lam);
+  } else if (t === 'horn-pyramidal' || t === 'horn-conical') {
+    const a = (parseFloat($('horn-a')?.value) || 20) / 100;
+    const b = (parseFloat($('horn-b')?.value) || 15) / 100;
+    const ap = t === 'horn-pyramidal' ? a * b : PI * (a/2) * (a/2);
+    gain = 10 * Math.log10(4 * PI * ap * 0.5 / (lam * lam));
+  } else if (t === 'collinear') {
+    const nc = parseInt($('coll-n')?.value) || 4;
+    gain = 2.15 + 10 * Math.log10(nc);
+  }
+  state.gain = gain;
+  state.efficiency = db.eff;
+  state.directivity = gain + 10 * Math.log10(100 / db.eff);
+  state.hpbwE = db.hpbwE;
+  state.hpbwH = db.hpbwH;
+  state.fbRatio = db.fb;
+
+  if (t === 'yagi') {
+    const n = parseInt($('yagi-elements')?.value) || 5;
+    state.hpbwE = Math.max(20, 78 - (n - 2) * 8);
+    state.hpbwH = Math.max(25, 70 - (n - 2) * 6);
+  } else if (t === 'parabolic') {
+    const d = parseFloat($('parab-d')?.value) || 1.2;
+    state.hpbwE = 70 * lam / d * RAD / PI;
+    state.hpbwH = state.hpbwE;
+  } else if (t === 'helical') {
+    const n = parseInt($('helix-n')?.value) || 10;
+    const c_lam = parseFloat($('helix-c')?.value) || 1.0;
+    const s_lam = parseFloat($('helix-s')?.value) || 0.25;
+    state.hpbwE = 52 / (c_lam * Math.sqrt(n * s_lam));
+    state.hpbwH = state.hpbwE;
+  }
+
+  // Impedance
+  state.za.r = parseFloat($('za-r').value) || db.zaR;
+  state.za.x = parseFloat($('za-x').value) || db.zaX;
+  state.z0 = parseFloat($('z0').value) || 50;
+
+  // Reflection coefficient
+  const zr = state.za.r, zx = state.za.x, z0 = state.z0;
+  const numR = zr - z0, numI = zx;
+  const denR = zr + z0, denI = zx;
+  const denMag2 = denR * denR + denI * denI;
+  const gammaR = (numR * denR + numI * denI) / denMag2;
+  const gammaI = (numI * denR - numR * denI) / denMag2;
+  state.gammaCoeff = Math.sqrt(gammaR * gammaR + gammaI * gammaI);
+  state.gammaAngle = Math.atan2(gammaI, gammaR) * RAD;
+  state.gammaR = gammaR;
+  state.gammaI = gammaI;
+
+  // VSWR
+  const g = state.gammaCoeff;
+  state.vswr = g >= 1 ? 999 : (1 + g) / (1 - g);
+  state.returnLoss = g > 0 ? -20 * Math.log10(g) : 99;
+  state.mismatchLoss = -10 * Math.log10(1 - g * g);
+  state.pReflected = g * g * 100;
+
+  // Bandwidth
+  state.bwPct = db.bwPct;
+  state.bw2 = state.freq * state.bwPct / 100;
+  state.bw15 = state.bw2 * 0.6;
+  state.qFactor = state.bwPct > 0 ? 100 / state.bwPct : 999;
+
+  // Effective aperture
+  state.ae = Math.pow(lam, 2) * Math.pow(10, gain / 10) / (4 * PI);
+
+  // Physical length
+  if (t === 'dipole-half') state.physLength = 0.95 * lam / 2;
+  else if (t === 'monopole' || t === 'groundplane') state.physLength = 0.95 * lam / 4;
+  else if (t === 'yagi') {
+    const n = parseInt($('yagi-elements')?.value) || 5;
+    const sp = parseFloat($('yagi-spacing')?.value) || 0.3;
+    state.physLength = (n - 1) * sp * lam;
+  }
+  else state.physLength = parseFloat($('dim-length').value) || lam / 2;
+
+  // Matching
+  calcMatching();
+}
+
+function calcMatching() {
+  const mt = $('match-type').value;
+  const mr = $('match-result');
+  const mi = $('match-info');
+  if (mt === 'none') {
+    mr.style.display = 'none';
+    mi.innerHTML = '';
+    return;
+  }
+  mr.style.display = '';
+  const z0 = state.z0, zr = state.za.r, zx = state.za.x;
+
+  if (mt === 'quarter') {
+    const zMag = Math.sqrt(zr * zr + zx * zx);
+    const zq = Math.sqrt(z0 * zMag);
+    const lq = state.lambda / 4;
+    mr.innerHTML = `<strong>Transformador &lambda;/4:</strong> Z_transf = ${zq.toFixed(1)} &ohm;, L = ${(lq*100).toFixed(1)} cm (a ${state.freq} MHz). Funciona melhor quando Xa &asymp; 0.`;
+    mi.innerHTML = `<div class="info-box ok">Match: Linha de ${zq.toFixed(1)} &ohm; com comprimento ${(lq*100).toFixed(1)} cm</div>`;
+  } else if (mt === 'lnet-lp' || mt === 'lnet-hp') {
+    const rl = zr, xl = zx;
+    const q = Math.sqrt(Math.max(0, rl / z0 - 1));
+    if (q <= 0) {
+      mr.innerHTML = '<strong>L-Network:</strong> Nao e possivel match (R_ant < Z0).';
+      mi.innerHTML = '';
+      return;
+    }
+    if (mt === 'lnet-lp') {
+      const xs = z0 * q;
+      const xp = rl / q;
+      mr.innerHTML = `<strong>L-Network Low-Pass:</strong> Indutor serie: X_L = ${xs.toFixed(1)} &ohm; (L = ${(xs/(2*PI*state.freq*1e6)*1e9).toFixed(1)} nH), Capacitor paralelo: X_C = ${xp.toFixed(1)} &ohm; (C = ${(1e12/(2*PI*state.freq*1e6*xp)).toFixed(1)} pF)`;
+    } else {
+      const xs = z0 * q;
+      const xp = rl / q;
+      mr.innerHTML = `<strong>L-Network High-Pass:</strong> Capacitor serie: X_C = ${xs.toFixed(1)} &ohm; (C = ${(1e12/(2*PI*state.freq*1e6*xs)).toFixed(1)} pF), Indutor paralelo: X_L = ${xp.toFixed(1)} &ohm; (L = ${(xp/(2*PI*state.freq*1e6)*1e9).toFixed(1)} nH)`;
+    }
+  } else if (mt === 'balun') {
+    mr.innerHTML = `<strong>Balun 4:1:</strong> Transforma ${z0} &ohm; para ${z0*4} &ohm;. Util para alimentar dipolo folder (Z &asymp; 300 &ohm;) com cabo coaxial de ${z0} &ohm;.`;
+  } else if (mt === 'gamma') {
+    mr.innerHTML = `<strong>Gamma Match:</strong> Ajuste mecanico da impedancia por acoplamento indutivo parcial. Permite match sem balun para antenas simetricas.`;
+  } else {
+    mr.innerHTML = `<strong>${mt}:</strong> Calculo de stub requer solver iterativo. Use carta de Smith interativa para posicionar o stub.`;
+  }
+}
+
+// ---- Update UI Results ----
+function updateResults() {
+  $('r-type').textContent = antennaDB[state.antennaType].name;
+  $('r-gain').innerHTML = state.gain.toFixed(2) + '<span class="unit">dBi</span>';
+  $('r-gain').className = 'v ' + (state.gain >= 10 ? 'good' : state.gain >= 5 ? 'acc' : '');
+  $('r-gain-dbd').innerHTML = (state.gain - 2.15).toFixed(2) + '<span class="unit">dBd</span>';
+  $('r-directivity').innerHTML = state.directivity.toFixed(2) + '<span class="unit">dBi</span>';
+  $('r-efficiency').innerHTML = state.efficiency + '<span class="unit">%</span>';
+  $('r-efficiency').className = 'v ' + (state.efficiency >= 80 ? 'good' : state.efficiency >= 50 ? 'warn' : 'bad');
+  $('r-hpbw-e').innerHTML = state.hpbwE.toFixed(1) + '<span class="unit">\u00b0</span>';
+  $('r-hpbw-h').innerHTML = state.hpbwH.toFixed(1) + '<span class="unit">\u00b0</span>';
+  $('r-fb').innerHTML = state.fbRatio.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-ae').innerHTML = state.ae.toFixed(4) + '<span class="unit">m\u00b2</span>';
+  $('r-pol').textContent = $('polarization').selectedOptions[0].textContent;
+
+  // Impedance
+  const sign = state.za.x >= 0 ? '+' : '';
+  $('r-za').innerHTML = state.za.r.toFixed(1) + sign + 'j' + state.za.x.toFixed(1) + '<span class="unit">\u03a9</span>';
+  $('r-z0').innerHTML = state.z0 + '<span class="unit">\u03a9</span>';
+  $('r-gamma').textContent = state.gammaCoeff.toFixed(4) + ' \u2220' + state.gammaAngle.toFixed(1) + '\u00b0';
+  const vswrClass = state.vswr <= 1.5 ? 'good' : state.vswr <= 3 ? 'warn' : 'bad';
+  $('r-vswr').innerHTML = state.vswr >= 999 ? '&infin;' : state.vswr.toFixed(2);
+  $('r-vswr').className = 'v ' + vswrClass;
+  $('vswr-fill').style.width = Math.min(100, (1 / state.vswr) * 200) + '%';
+  $('vswr-fill').className = 'gauge-fill ' + vswrClass;
+  $('vswr-label').textContent = 'VSWR ' + (state.vswr >= 999 ? '\u221e' : state.vswr.toFixed(2));
+  $('r-rl').innerHTML = state.returnLoss.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-rl').className = 'v ' + (state.returnLoss >= 20 ? 'good' : state.returnLoss >= 10 ? 'warn' : 'bad');
+  $('r-ml').innerHTML = state.mismatchLoss.toFixed(2) + '<span class="unit">dB</span>';
+  $('r-pref').innerHTML = state.pReflected.toFixed(1) + '<span class="unit">%</span>';
+
+  // Physical
+  $('r-lambda').innerHTML = state.lambda.toFixed(4) + '<span class="unit">m</span>';
+  $('r-len').innerHTML = state.physLength.toFixed(4) + '<span class="unit">m</span>';
+
+  // Bandwidth
+  $('r-bw2').innerHTML = state.bw2.toFixed(2) + '<span class="unit">MHz</span>';
+  $('r-bw15').innerHTML = state.bw15.toFixed(2) + '<span class="unit">MHz</span>';
+  $('r-bwf').innerHTML = state.bwPct.toFixed(1) + '<span class="unit">%</span>';
+  $('r-q').textContent = state.qFactor.toFixed(1);
+  $('r-fmin').innerHTML = (state.freq - state.bw2/2).toFixed(2) + '<span class="unit">MHz</span>';
+  $('r-fmax').innerHTML = (state.freq + state.bw2/2).toFixed(2) + '<span class="unit">MHz</span>';
+
+  // Header
+  $('hdr-gain').innerHTML = state.gain.toFixed(1) + '<span class="unit">dBi</span>';
+  $('hdr-vswr').textContent = state.vswr >= 999 ? '\u221e' : state.vswr.toFixed(2);
+  $('hdr-status').textContent = 'ANALISADO';
+  $('hdr-status').style.color = 'var(--phos)';
+  $('res-status').innerHTML = '<span class="live-dot"></span> ATIVO';
+
+  // Smith info
+  $('smith-info').innerHTML = `Z = ${state.za.r.toFixed(1)} ${state.za.x>=0?'+':''}j${state.za.x.toFixed(1)} \u03a9`;
+}
+
+// ============================================================
+//  DRAWING — 2D Polar Pattern
+// ============================================================
+function drawPattern2D() {
+  const canvas = $('pattern2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const maxR = Math.min(cx, cy) - 30;
+
+  // Background
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid circles (dB scale: 0, -3, -10, -20, -30)
+  const dbLevels = [0, -3, -10, -20, -30];
+  ctx.strokeStyle = '#1e283866';
+  ctx.lineWidth = 0.5;
+  dbLevels.forEach(db => {
+    const r = maxR * Math.pow(10, db / 20);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * PI);
+    ctx.stroke();
+    // label
+    ctx.fillStyle = '#3f4a5b';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(db + ' dB', cx + 3, cy - r - 2);
+  });
+
+  // Radial lines
+  for (let a = 0; a < 360; a += 30) {
+    const rad = a * DEG;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + maxR * Math.cos(rad), cy - maxR * Math.sin(rad));
+    ctx.strokeStyle = '#1e283844';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    // angle label
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const lx = cx + (maxR + 16) * Math.cos(rad);
+    const ly = cy - (maxR + 16) * Math.sin(rad);
+    ctx.fillText(a + '\u00b0', lx, ly);
+  }
+
+  const drawPlanePattern = (planeType, color, alpha) => {
+    ctx.beginPath();
+    for (let i = 0; i <= 360; i++) {
+      const angle = i * DEG;
+      let val;
+      if (planeType === 'E') {
+        // E-plane: theta varies, phi=0
+        val = getPattern(state.antennaType, angle, 0);
+      } else {
+        // H-plane: theta=PI/2, phi varies
+        val = getPattern(state.antennaType, PI / 2, angle);
+        // For omnidirectional patterns in H plane
+        if (['dipole-half','dipole-short','monopole','collinear','groundplane','slot'].includes(state.antennaType)) {
+          val = 1; // uniform in H-plane
+        }
+      }
+      // Normalize and convert to dB scale
+      const dbVal = val > 1e-6 ? 20 * Math.log10(val) : -40;
+      const r = maxR * Math.max(0, (dbVal + 40) / 40);
+      const x = cx + r * Math.cos(-angle + PI/2);
+      const y = cy + r * Math.sin(-angle + PI/2);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = alpha;
+    ctx.stroke();
+    ctx.fillStyle = color.replace(')', ',0.08)').replace('rgb', 'rgba');
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+
+  if (state.plane === 'E' || state.plane === 'both') {
+    drawPlanePattern('E', '#e879f9', state.plane === 'both' ? 0.8 : 1);
+  }
+  if (state.plane === 'H' || state.plane === 'both') {
+    drawPlanePattern('H', '#38bdf8', state.plane === 'both' ? 0.8 : 1);
+  }
+
+  // Legend
+  ctx.globalAlpha = 1;
+  ctx.font = '10px Chakra Petch';
+  if (state.plane === 'both') {
+    ctx.fillStyle = '#e879f9';
+    ctx.fillRect(10, h - 32, 12, 3);
+    ctx.fillText('Plano E', 26, h - 28);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(10, h - 18, 12, 3);
+    ctx.fillText('Plano H', 26, h - 14);
+  } else {
+    const col = state.plane === 'E' ? '#e879f9' : '#38bdf8';
+    ctx.fillStyle = col;
+    ctx.fillRect(10, h - 18, 12, 3);
+    ctx.fillText('Plano ' + state.plane, 26, h - 14);
+  }
+
+  // HPBW marker
+  ctx.strokeStyle = '#fbbf2488';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  const hpbw = state.plane === 'H' ? state.hpbwH : state.hpbwE;
+  if (hpbw < 360) {
+    const a1 = (90 - hpbw / 2) * DEG;
+    const a2 = (90 + hpbw / 2) * DEG;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + maxR * Math.cos(-a1 + PI/2), cy + maxR * Math.sin(-a1 + PI/2));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + maxR * Math.cos(-a2 + PI/2), cy + maxR * Math.sin(-a2 + PI/2));
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // HPBW label
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText('HPBW: ' + hpbw.toFixed(1) + '\u00b0', w - 10, h - 10);
+}
+
+// ============================================================
+//  DRAWING — Smith Chart
+// ============================================================
+function drawSmithChart() {
+  const canvas = $('smithchart');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const R = Math.min(cx, cy) - 20;
+
+  // Outer circle
+  ctx.strokeStyle = '#2a3a52';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, 2 * PI);
+  ctx.stroke();
+
+  // Constant resistance circles
+  const rValues = [0, 0.2, 0.5, 1, 2, 5];
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = '#1e283888';
+  rValues.forEach(r => {
+    const cr = R / (1 + r);
+    const ccx = cx + R - cr;
+    ctx.beginPath();
+    ctx.arc(ccx, cy, cr, 0, 2 * PI);
+    ctx.stroke();
+    // label
+    if (r > 0) {
+      ctx.fillStyle = '#3f4a5b';
+      ctx.font = '8px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(r.toString(), ccx + cr, cy - 4);
+    }
+  });
+
+  // Constant reactance arcs
+  const xValues = [0.2, 0.5, 1, 2, 5];
+  xValues.forEach(x => {
+    const r = R / x;
+    // positive reactance (top)
+    ctx.beginPath();
+    const startAngle = -PI / 2;
+    const endAngle = Math.atan2(-R, 0) - Math.asin(Math.min(1, R / (2 * r)));
+    ctx.arc(cx + R, cy - r, r, PI / 2, PI / 2 + Math.atan2(R, r * x / (1 + x)), false);
+    ctx.strokeStyle = '#1e283866';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    // negative reactance (bottom)
+    ctx.beginPath();
+    ctx.arc(cx + R, cy + r, r, -PI / 2, -PI / 2 - Math.atan2(R, r * x / (1 + x)), true);
+    ctx.stroke();
+  });
+
+  // Better reactance arcs using clipping
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, R, 0, 2 * PI);
+  ctx.clip();
+
+  xValues.forEach(x => {
+    const arcR = R / x;
+    ctx.strokeStyle = '#1e283866';
+    ctx.lineWidth = 0.5;
+    // +jX
+    ctx.beginPath();
+    ctx.arc(cx + R, cy - arcR, arcR, 0, 2 * PI);
+    ctx.stroke();
+    // -jX
+    ctx.beginPath();
+    ctx.arc(cx + R, cy + arcR, arcR, 0, 2 * PI);
+    ctx.stroke();
+  });
+
+  // Horizontal axis
+  ctx.beginPath();
+  ctx.moveTo(cx - R, cy);
+  ctx.lineTo(cx + R, cy);
+  ctx.strokeStyle = '#2a3a52';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Plot impedance point
+  const zNorm = { r: state.za.r / state.z0, x: state.za.x / state.z0 };
+  // Convert to gamma
+  const gr = state.gammaR || 0;
+  const gi = state.gammaI || 0;
+  const px = cx + gr * R;
+  const py = cy - gi * R;
+
+  // Point with glow
+  ctx.beginPath();
+  ctx.arc(px, py, 6, 0, 2 * PI);
+  ctx.fillStyle = '#e879f944';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(px, py, 4, 0, 2 * PI);
+  ctx.fillStyle = '#e879f9';
+  ctx.fill();
+  ctx.strokeStyle = '#e879f9';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // VSWR circle
+  ctx.beginPath();
+  ctx.arc(cx, cy, state.gammaCoeff * R, 0, 2 * PI);
+  ctx.strokeStyle = '#fbbf2466';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.fillStyle = '#e879f9';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'left';
+  const label = `z = ${zNorm.r.toFixed(2)} ${zNorm.x>=0?'+':''}j${zNorm.x.toFixed(2)}`;
+  ctx.fillText(label, px + 10, py - 8);
+
+  // VSWR label
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'left';
+  ctx.fillText('VSWR = ' + (state.vswr >= 999 ? '\u221e' : state.vswr.toFixed(2)), 8, h - 8);
+
+  // Center label
+  ctx.fillStyle = '#4ade8088';
+  ctx.font = '8px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('Z\u2080=' + state.z0 + '\u03a9', cx, cy + R + 14);
+}
+
+// ============================================================
+//  DRAWING — VSWR Chart
+// ============================================================
+function drawVSWRChart() {
+  const canvas = $('vswrchart');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, w, h);
+
+  const pad = { l: 50, r: 20, t: 20, b: 30 };
+  const pw = w - pad.l - pad.r;
+  const ph = h - pad.t - pad.b;
+
+  // Frequency range
+  const fc = state.freq;
+  const bw = state.bw2 * 2.5; // show wider than BW
+  const fMin = fc - bw / 2;
+  const fMax = fc + bw / 2;
+
+  // Generate VSWR vs freq curve (simplified model)
+  const points = [];
+  const nPts = 200;
+  for (let i = 0; i <= nPts; i++) {
+    const f = fMin + (fMax - fMin) * i / nPts;
+    const fRatio = (f - fc) / (state.bw2 / 2 || 1);
+    let vswr, rl;
+    if (state.chartMode === 'vswr' || state.chartMode === 'bw') {
+      // Q-factor model: VSWR(f) = 1 + |Gamma(f)|/(1-|Gamma(f)|)
+      const detuning = Math.abs(fRatio);
+      const gf = Math.sqrt(Math.min(0.99, state.gammaCoeff * state.gammaCoeff + detuning * detuning * 0.3));
+      vswr = (1 + gf) / (1 - gf);
+      points.push({ f, v: Math.min(vswr, 15) });
+    } else {
+      const detuning = Math.abs(fRatio);
+      const gf = Math.sqrt(Math.min(0.99, state.gammaCoeff * state.gammaCoeff + detuning * detuning * 0.3));
+      rl = gf > 0 ? -20 * Math.log10(gf) : 50;
+      points.push({ f, v: -Math.min(rl, 40) }); // negative so it goes up
+    }
+  }
+
+  // Y axis range
+  let yMin, yMax, yLabel;
+  if (state.chartMode === 'vswr' || state.chartMode === 'bw') {
+    yMin = 1; yMax = 8; yLabel = 'VSWR';
+  } else {
+    yMin = -40; yMax = 0; yLabel = 'S11 (dB)';
+  }
+
+  // Grid
+  ctx.strokeStyle = '#1e283844';
+  ctx.lineWidth = 0.5;
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillStyle = '#3f4a5b';
+  ctx.textAlign = 'right';
+
+  const ySteps = state.chartMode === 'vswr' || state.chartMode === 'bw' ? [1, 1.5, 2, 3, 5, 8] : [-40, -30, -20, -10, -6, -3, 0];
+  ySteps.forEach(yv => {
+    const y = pad.t + ph * (1 - (yv - yMin) / (yMax - yMin));
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(pad.l + pw, y);
+    // Highlight VSWR=2 and VSWR=1.5
+    if ((state.chartMode === 'vswr' || state.chartMode === 'bw') && (yv === 2 || yv === 1.5)) {
+      ctx.strokeStyle = yv === 2 ? '#fbbf2433' : '#4ade8033';
+      ctx.lineWidth = 1;
+    } else if (state.chartMode === 'rl' && (yv === -10 || yv === -20)) {
+      ctx.strokeStyle = '#fbbf2433';
+      ctx.lineWidth = 1;
+    } else {
+      ctx.strokeStyle = '#1e283844';
+      ctx.lineWidth = 0.5;
+    }
+    ctx.stroke();
+    ctx.fillText(yv, pad.l - 5, y + 3);
+  });
+
+  // X axis labels
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 5; i++) {
+    const f = fMin + (fMax - fMin) * i / 5;
+    const x = pad.l + pw * i / 5;
+    ctx.fillText(f.toFixed(1), x, h - 8);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.t);
+    ctx.lineTo(x, pad.t + ph);
+    ctx.strokeStyle = '#1e283844';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Center frequency line
+  const xc = pad.l + pw * (fc - fMin) / (fMax - fMin);
+  ctx.beginPath();
+  ctx.moveTo(xc, pad.t);
+  ctx.lineTo(xc, pad.t + ph);
+  ctx.strokeStyle = '#e879f944';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw curve
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    const x = pad.l + pw * (p.f - fMin) / (fMax - fMin);
+    const y = pad.t + ph * (1 - (p.v - yMin) / (yMax - yMin));
+    if (i === 0) ctx.moveTo(x, Math.max(pad.t, Math.min(pad.t + ph, y)));
+    else ctx.lineTo(x, Math.max(pad.t, Math.min(pad.t + ph, y)));
+  });
+  ctx.strokeStyle = state.chartMode === 'rl' ? '#38bdf8' : '#e879f9';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Fill under curve
+  const lastPt = points[points.length - 1];
+  const lastX = pad.l + pw * (lastPt.f - fMin) / (fMax - fMin);
+  ctx.lineTo(lastX, pad.t + ph);
+  ctx.lineTo(pad.l, pad.t + ph);
+  ctx.closePath();
+  ctx.fillStyle = state.chartMode === 'rl' ? '#38bdf808' : '#e879f908';
+  ctx.fill();
+
+  // BW markers
+  if (state.chartMode === 'bw') {
+    const f1 = fc - state.bw2 / 2;
+    const f2 = fc + state.bw2 / 2;
+    [f1, f2].forEach(f => {
+      const x = pad.l + pw * (f - fMin) / (fMax - fMin);
+      if (x >= pad.l && x <= pad.l + pw) {
+        ctx.beginPath();
+        ctx.moveTo(x, pad.t);
+        ctx.lineTo(x, pad.t + ph);
+        ctx.strokeStyle = '#4ade80';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+    // BW label
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('BW = ' + state.bw2.toFixed(1) + ' MHz', pad.l + pw / 2, pad.t + 14);
+  }
+
+  // Y axis label
+  ctx.save();
+  ctx.translate(12, pad.t + ph / 2);
+  ctx.rotate(-PI / 2);
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '10px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+
+  // X axis label
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '10px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText('Frequencia (MHz)', pad.l + pw / 2, h - 0);
+}
+
+// ============================================================
+//  DRAWING — 3D Radiation Pattern (Three.js)
+// ============================================================
+let scene3d, camera3d, renderer3d, patternMesh, controls3d;
+let isDragging = false, prevMouse = { x: 0, y: 0 };
+let rotX = 0.3, rotY = 0.5;
+
+function init3D() {
+  const container = $('container3d');
+  const rect = container.getBoundingClientRect();
+
+  scene3d = new THREE.Scene();
+  camera3d = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 100);
+  camera3d.position.set(2.5, 1.5, 2.5);
+  camera3d.lookAt(0, 0, 0);
+
+  renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer3d.setSize(rect.width, rect.height);
+  renderer3d.setPixelRatio(window.devicePixelRatio);
+  renderer3d.setClearColor(0x04070c, 1);
+  container.appendChild(renderer3d.domElement);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene3d.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(3, 5, 3);
+  scene3d.add(dirLight);
+
+  // Axes helper
+  const axLen = 1.8;
+  const axMat = (c) => new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: 0.4 });
+  [
+    { dir: [axLen, 0, 0], col: 0xff4444, label: 'X' },
+    { dir: [0, axLen, 0], col: 0x44ff44, label: 'Z (up)' },
+    { dir: [0, 0, axLen], col: 0x4444ff, label: 'Y' }
+  ].forEach(a => {
+    const geom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(...a.dir)
+    ]);
+    scene3d.add(new THREE.Line(geom, axMat(a.col)));
+  });
+
+  // Grid
+  const gridHelper = new THREE.GridHelper(4, 20, 0x1e2838, 0x0e131b);
+  gridHelper.position.y = -0.01;
+  scene3d.add(gridHelper);
+
+  // Mouse controls
+  container.addEventListener('mousedown', e => {
+    isDragging = true;
+    prevMouse = { x: e.clientX, y: e.clientY };
+    container.style.cursor = 'grabbing';
+  });
+  container.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevMouse.x;
+    const dy = e.clientY - prevMouse.y;
+    rotY += dx * 0.01;
+    rotX += dy * 0.01;
+    rotX = Math.max(-PI / 2, Math.min(PI / 2, rotX));
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+  container.addEventListener('mouseup', () => {
+    isDragging = false;
+    container.style.cursor = 'grab';
+  });
+  container.addEventListener('mouseleave', () => {
+    isDragging = false;
+    container.style.cursor = 'grab';
+  });
+  container.addEventListener('wheel', e => {
+    e.preventDefault();
+    const d = e.deltaY > 0 ? 1.1 : 0.9;
+    camera3d.position.multiplyScalar(d);
+    camera3d.position.clampLength(1.5, 8);
+  }, { passive: false });
+
+  animate3D();
+}
+
+function build3DPattern() {
+  if (patternMesh) {
+    scene3d.remove(patternMesh);
+    patternMesh.geometry.dispose();
+    patternMesh.material.dispose();
+  }
+
+  const res = 60;
+  const geometry = new THREE.BufferGeometry();
+  const vertices = [];
+  const colors = [];
+  const indices = [];
+
+  for (let i = 0; i <= res; i++) {
+    const theta = PI * i / res;
+    for (let j = 0; j <= res * 2; j++) {
+      const phi = 2 * PI * j / (res * 2);
+      let val = getPattern(state.antennaType, theta, phi);
+      val = Math.max(0, val);
+      const r = val * 1.2;
+
+      const x = r * Math.sin(theta) * Math.cos(phi);
+      const z = r * Math.sin(theta) * Math.sin(phi);
+      const y = r * Math.cos(theta);
+
+      vertices.push(x, y, z);
+
+      // Color mapping: cyan -> magenta -> yellow based on intensity
+      const t = val;
+      const cr = t < 0.5 ? t * 2 * 0.91 : 0.91;
+      const cg = t < 0.5 ? t * 2 * 0.47 : 0.47 + (t - 0.5) * 2 * 0.53;
+      const cb = t < 0.5 ? 0.97 - t * 2 * 0.0 : 0.97 - (t - 0.5) * 2 * 0.78;
+      colors.push(cr, cg, cb);
+
+      if (i < res && j < res * 2) {
+        const a = i * (res * 2 + 1) + j;
+        const b = a + res * 2 + 1;
+        indices.push(a, b, a + 1);
+        indices.push(b, b + 1, a + 1);
+      }
+    }
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+
+  const material = new THREE.MeshPhongMaterial({
+    vertexColors: true,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.85,
+    shininess: 40,
+  });
+
+  patternMesh = new THREE.Mesh(geometry, material);
+  scene3d.add(patternMesh);
+
+  // Wireframe overlay
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: 0xe879f9,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.08,
+  });
+  const wireMesh = new THREE.Mesh(geometry.clone(), wireMat);
+  patternMesh.add(wireMesh);
+}
+
+function animate3D() {
+  requestAnimationFrame(animate3D);
+  if (!isDragging) {
+    rotY += 0.003;
+  }
+  const dist = camera3d.position.length();
+  camera3d.position.x = dist * Math.cos(rotX) * Math.sin(rotY);
+  camera3d.position.y = dist * Math.sin(rotX);
+  camera3d.position.z = dist * Math.cos(rotX) * Math.cos(rotY);
+  camera3d.lookAt(0, 0, 0);
+  renderer3d.render(scene3d, camera3d);
+}
+
+// ============================================================
+//  Main Analysis
+// ============================================================
+function runAnalysis() {
+  calcAntenna();
+  updateResults();
+  drawPattern2D();
+  drawSmithChart();
+  drawVSWRChart();
+  build3DPattern();
+}
+
+function resetAll() {
+  $('antenna-type').value = 'dipole-half';
+  $('freq').value = 145;
+  $('za-r').value = 73;
+  $('za-x').value = 42.5;
+  $('z0').value = 50;
+  $('match-type').value = 'none';
+  onAntennaChange();
+  onFreqChange();
+  $('hdr-status').textContent = 'STANDBY';
+  $('hdr-status').style.color = '';
+  $('hdr-gain').innerHTML = '--<span class="unit">dBi</span>';
+  $('hdr-vswr').textContent = '--';
+  $('res-status').innerHTML = '<span class="live-dot standby"></span> AGUARDANDO';
+}
+
+function exportData() {
+  const data = {
+    antenna: antennaDB[state.antennaType].name,
+    frequency_MHz: state.freq,
+    wavelength_m: state.lambda,
+    gain_dBi: state.gain,
+    gain_dBd: state.gain - 2.15,
+    directivity_dBi: state.directivity,
+    efficiency_pct: state.efficiency,
+    hpbw_E_deg: state.hpbwE,
+    hpbw_H_deg: state.hpbwH,
+    fb_ratio_dB: state.fbRatio,
+    impedance_ohm: `${state.za.r}+j${state.za.x}`,
+    z0_ohm: state.z0,
+    vswr: state.vswr,
+    return_loss_dB: state.returnLoss,
+    gamma_mag: state.gammaCoeff,
+    bandwidth_MHz: state.bw2,
+    effective_aperture_m2: state.ae,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `antenna_lab_${state.antennaType}_${state.freq}MHz.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+//  Init
+// ============================================================
+function init() {
+  onFreqChange();
+  onAntennaChange();
+  init3D();
+
+  // Initial draw
+  setTimeout(() => {
+    runAnalysis();
+  }, 300);
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    drawPattern2D();
+    drawSmithChart();
+    drawVSWRChart();
+    const container = $('container3d');
+    const rect = container.getBoundingClientRect();
+    if (renderer3d && rect.width > 0 && rect.height > 0) {
+      renderer3d.setSize(rect.width, rect.height);
+      camera3d.aspect = rect.width / rect.height;
+      camera3d.updateProjectionMatrix();
+    }
+  });
+
+  // Footer timestamp
+  const now = new Date();
+  $('footer-ts').textContent = now.toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
