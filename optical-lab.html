@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Optical Lab — Laboratório de Comunicações Ópticas</title>
+<meta name="description" content="Laboratório interativo de comunicações ópticas: link budget completo, tipos de fibra (SMF/MMF/POF), amplificadores (EDFA/SOA/Raman), WDM, dispersão, BER, OSNR, diagrama de olho e análise completa." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+
+  --orange: #f97316;
+  --teal: #2dd4bf;
+
+  /* optical accent — indigo laser */
+  --opt: #818cf8;
+  --opt-bright: #a5b4fc;
+  --opt-soft: #3730a340;
+  --opt-glow: #818cf833;
+  --opt-deep: #4338ca;
+  --opt-dim: #312e81;
+
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#0d0d25 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d1a1a 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* ===== HEADER ===== */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:32px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+/* fiber core line */
+.brand .logo-mark::before{
+  content:'';position:absolute;
+  width:26px;height:2px;background:var(--opt);border-radius:1px;
+  box-shadow:0 0 12px var(--opt),0 0 4px var(--opt);
+  top:50%;transform:translateY(-50%);
+}
+/* pulse traveling */
+.brand .logo-mark .pulse{
+  position:absolute;width:6px;height:6px;
+  background:var(--opt-bright);border-radius:50%;
+  box-shadow:0 0 14px var(--opt-bright),0 0 6px #fff;
+  top:50%;transform:translateY(-50%);
+  animation:fiber-pulse 2s ease-in-out infinite;
+}
+@keyframes fiber-pulse{
+  0%{left:0;opacity:0;}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{left:26px;opacity:0;}
+}
+.brand .logo-mark .glow1{
+  position:absolute;width:32px;height:12px;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse,rgba(129,140,248,0.2) 0%,transparent 70%);
+  animation:glow-breathe 3s ease-in-out infinite;
+}
+@keyframes glow-breathe{
+  0%,100%{opacity:0.5;transform:translate(-50%,-50%) scaleX(1);}
+  50%{opacity:1;transform:translate(-50%,-50%) scaleX(1.2);}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--opt-bright);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#2e1a6e,#1a0f45);
+  border-color:var(--opt);color:var(--opt-bright);
+  box-shadow:0 0 0 1px var(--opt-glow),inset 0 1px 0 rgba(129,140,248,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#3d2285,#221558);}
+.btn svg{width:12px;height:12px;}
+
+/* ===== MAIN ===== */
+main{
+  display:grid;grid-template-columns:340px 1fr 330px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* ===== SECTIONS ===== */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.indigo{background:var(--opt);box-shadow:0 0 6px var(--opt);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.dot.orange{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* ===== FORM ===== */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--opt);background:#090d13;
+  box-shadow:0 0 0 2px var(--opt-glow);
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--opt-bright);border-color:var(--opt);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--opt-soft);border-color:var(--opt);color:var(--opt-bright);}
+
+/* ===== VIZ ===== */
+.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;}
+.viz-top{display:grid;grid-template-columns:1fr;min-height:0;}
+.viz-bottom{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
+.viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.viz-cell .card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);flex-shrink:0;
+}
+.viz-cell .card-header h3{
+  margin:0;font-family:var(--font-display);font-weight:500;
+  font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);
+}
+.viz-cell .card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.viz-cell .card-body{flex:1;position:relative;min-height:0;overflow:hidden;}
+.viz-cell canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+/* ===== RESULTS ===== */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.opt{color:var(--opt-bright);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(129,140,248,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--opt);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--opt-bright);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark">
+      <span class="glow1"></span>
+      <span class="pulse"></span>
+    </span>
+    <h1>OPTICAL LAB</h1>
+    <span class="tag">Laboratorio de <em>Comunicacoes Opticas</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Link Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Fibra</span>
+      <span class="value" id="hdr-fiber">SMF-28</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">&lambda;</span>
+      <span class="value" id="hdr-lambda">1550<span class="unit">nm</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Distancia</span>
+      <span class="value" id="hdr-dist">80<span class="unit">km</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Margem</span>
+      <span class="value" id="hdr-margin">--<span class="unit">dB</span></span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runCalculation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+      Calcular
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+    <button class="btn" onclick="exportResults()">Export</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+<!-- LEFT PANEL: CONFIGURATION -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao Optica</h2>
+    <span class="panel-sub">TX / FIBRA / RX / AMP</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- PRESETS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Cenarios Predefinidos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="chips" id="preset-chips">
+          <span class="chip active" onclick="loadPreset('metro')">Metro 80km</span>
+          <span class="chip" onclick="loadPreset('longhaul')">Long-Haul 600km</span>
+          <span class="chip" onclick="loadPreset('access')">Access 20km</span>
+          <span class="chip" onclick="loadPreset('gpon')">GPON/FTTH</span>
+          <span class="chip" onclick="loadPreset('datacenter')">Data Center</span>
+          <span class="chip" onclick="loadPreset('submarine')">Submarino</span>
+          <span class="chip" onclick="loadPreset('dwdm')">DWDM 40ch</span>
+          <span class="chip" onclick="loadPreset('pof')">POF Curta Dist</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSMITTER -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Transmissor (TX)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Fonte Optica <span class="tip" data-tip="DFB Laser: monomodo, alta coerencia, ideal para longas distancias e DWDM. VCSEL: baixo custo, multimodo, ideal para data centers. FP Laser: monomodo, menor custo. LED: baixa coerencia, curta distancia.">i</span></label>
+          <select id="tx-source" onchange="onSourceChange()">
+            <option value="dfb">Laser DFB (Distributed Feedback)</option>
+            <option value="eml">Laser EML (Electro-absorption Modulated)</option>
+            <option value="fp">Laser FP (Fabry-Perot)</option>
+            <option value="vcsel">VCSEL (Vertical Cavity)</option>
+            <option value="led">LED (Light Emitting Diode)</option>
+            <option value="tunable">Laser Sintonizavel</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Potencia TX <span class="tip" data-tip="Potencia optica de saida do transmissor, tipicamente 0 a +10 dBm para lasers DFB, -20 a -10 dBm para LEDs.">i</span></label>
+            <input type="number" id="tx-power" value="3" step="0.5" min="-30" max="30" />
+            <div class="help">dBm</div>
+          </div>
+          <div class="field">
+            <label>Comprimento de Onda</label>
+            <select id="tx-wavelength" onchange="onWavelengthChange()">
+              <option value="850">850 nm (1&ordf; Janela)</option>
+              <option value="1310">1310 nm (2&ordf; Janela / O-Band)</option>
+              <option value="1490">1490 nm (3&ordf; Janela)</option>
+              <option value="1550" selected>1550 nm (3&ordf; Janela / C-Band)</option>
+              <option value="1577">1577 nm (L-Band)</option>
+              <option value="1625">1625 nm (U-Band)</option>
+              <option value="650">650 nm (POF Visivel)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Largura Espectral <span class="tip" data-tip="Largura de linha do laser em nm. DFB ~0.1nm, FP ~2nm, LED ~40-80nm. Afeta dispersao cromatica.">i</span></label>
+            <input type="number" id="tx-linewidth" value="0.1" step="0.01" min="0.001" max="100" />
+            <div class="help">nm</div>
+          </div>
+          <div class="field">
+            <label>Taxa de Bits</label>
+            <select id="tx-bitrate">
+              <option value="0.155">155 Mbps (OC-3)</option>
+              <option value="0.622">622 Mbps (OC-12)</option>
+              <option value="1.25">1.25 Gbps (GbE)</option>
+              <option value="2.488">2.488 Gbps (GPON)</option>
+              <option value="2.5">2.5 Gbps (OC-48)</option>
+              <option value="10" selected>10 Gbps (OC-192)</option>
+              <option value="25">25 Gbps</option>
+              <option value="40">40 Gbps (OC-768)</option>
+              <option value="100">100 Gbps</option>
+              <option value="200">200 Gbps</option>
+              <option value="400">400 Gbps</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Modulacao</label>
+          <select id="tx-modulation">
+            <option value="ook" selected>OOK (On-Off Keying / NRZ)</option>
+            <option value="pam4">PAM4</option>
+            <option value="dpsk">DPSK</option>
+            <option value="qpsk">DP-QPSK</option>
+            <option value="16qam">DP-16QAM</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Perda Conector TX <span class="tip" data-tip="Perda no acoplamento entre a fonte optica e a fibra. Tipicamente 0.5-1.0 dB.">i</span></label>
+          <input type="number" id="tx-connector-loss" value="0.5" step="0.1" min="0" max="5" />
+          <div class="help">dB</div>
+        </div>
+        <div id="tx-desc" class="info-box">
+          <strong>DFB Laser:</strong> Fonte monomodo com feedback distribuido. Largura espectral ultrafina (~0.1 nm), alta potencia e estabilidade. Padrao para telecomunicacoes de longa distancia e DWDM.
+        </div>
+      </div>
+    </div>
+
+    <!-- FIBER -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Fibra Optica</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Tipo de Fibra <span class="tip" data-tip="SMF-28: padrao ITU-T G.652, monomodo. NZDSF: dispersao deslocada (G.655). MMF OM1-OM5: multimodo para curtas distancias. POF: fibra plastica.">i</span></label>
+          <select id="fiber-type" onchange="onFiberChange()">
+            <option value="smf28" selected>SMF-28 (G.652.D) - Monomodo Padrao</option>
+            <option value="g652a">G.652.A - Monomodo Convencional</option>
+            <option value="g653">G.653 (DSF) - Dispersao Deslocada</option>
+            <option value="g655">G.655 (NZDSF) - Disp. Desl. Nao-Zero</option>
+            <option value="g657a">G.657.A - Bend Insensitive</option>
+            <option value="g654">G.654 - Cutoff Deslocado (Submarino)</option>
+            <option value="om1">OM1 (62.5/125) - Multimodo</option>
+            <option value="om2">OM2 (50/125) - Multimodo</option>
+            <option value="om3">OM3 (50/125) - Laser Optimized</option>
+            <option value="om4">OM4 (50/125) - Extended</option>
+            <option value="om5">OM5 (50/125) - Wideband</option>
+            <option value="pof">POF (Fibra Plastica)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Comprimento</label>
+            <input type="number" id="fiber-length" value="80" step="1" min="0.01" max="10000" />
+            <div class="help">km</div>
+          </div>
+          <div class="field">
+            <label>Atenuacao <span class="tip" data-tip="Perda por km na fibra. SMF @1550nm: ~0.2 dB/km. @1310nm: ~0.35 dB/km. MMF @850nm: ~2.5-3.5 dB/km. POF: ~150-200 dB/km.">i</span></label>
+            <input type="number" id="fiber-attenuation" value="0.2" step="0.01" min="0.01" max="500" />
+            <div class="help">dB/km</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Dispersao Cromatica <span class="tip" data-tip="Alargamento de pulso devido a variacao do indice de refracao com lambda. SMF @1550nm: ~17 ps/(nm.km). Zero em ~1310nm.">i</span></label>
+            <input type="number" id="fiber-dispersion" value="17" step="0.1" min="-20" max="30" />
+            <div class="help">ps/(nm&middot;km)</div>
+          </div>
+          <div class="field">
+            <label>PMD <span class="tip" data-tip="Dispersao por modo de polarizacao. Valor tipico: 0.04-0.1 ps/&radic;km para fibras modernas.">i</span></label>
+            <input type="number" id="fiber-pmd" value="0.04" step="0.01" min="0" max="2" />
+            <div class="help">ps/&radic;km</div>
+          </div>
+        </div>
+        <div id="fiber-desc" class="info-box">
+          <strong>SMF-28 (G.652.D):</strong> Fibra monomodo padrao com zero de dispersao em ~1310 nm. Atenuacao de ~0.2 dB/km em 1550 nm. Nucleo 8.2 &mu;m, casca 125 &mu;m. Padrao universal para telecomunicacoes.
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSIVE ELEMENTS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Elementos Passivos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row-3">
+          <div class="field">
+            <label>Emendas Fusao</label>
+            <input type="number" id="splice-fusion-qty" value="4" min="0" max="200" />
+            <div class="help">qtd</div>
+          </div>
+          <div class="field">
+            <label>Perda/Emenda</label>
+            <input type="number" id="splice-fusion-loss" value="0.05" step="0.01" min="0" max="1" />
+            <div class="help">dB</div>
+          </div>
+          <div class="field">
+            <label>Total</label>
+            <input type="text" id="splice-fusion-total" value="0.20" readonly style="color:var(--cyan);" />
+            <div class="help">dB</div>
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Emendas Mecanica</label>
+            <input type="number" id="splice-mech-qty" value="0" min="0" max="100" />
+            <div class="help">qtd</div>
+          </div>
+          <div class="field">
+            <label>Perda/Emenda</label>
+            <input type="number" id="splice-mech-loss" value="0.3" step="0.05" min="0" max="2" />
+            <div class="help">dB</div>
+          </div>
+          <div class="field">
+            <label>Total</label>
+            <input type="text" id="splice-mech-total" value="0.00" readonly style="color:var(--cyan);" />
+            <div class="help">dB</div>
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Conectores</label>
+            <input type="number" id="connector-qty" value="4" min="0" max="100" />
+            <div class="help">qtd</div>
+          </div>
+          <div class="field">
+            <label>Perda/Conector <span class="tip" data-tip="SC/PC ~0.3 dB, SC/APC ~0.2 dB, LC ~0.2 dB, MTP/MPO ~0.35 dB.">i</span></label>
+            <input type="number" id="connector-loss" value="0.3" step="0.05" min="0" max="2" />
+            <div class="help">dB</div>
+          </div>
+          <div class="field">
+            <label>Total</label>
+            <input type="text" id="connector-total" value="1.20" readonly style="color:var(--cyan);" />
+            <div class="help">dB</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipo de Conector</label>
+          <select id="connector-type">
+            <option value="scpc">SC/PC</option>
+            <option value="scapc">SC/APC</option>
+            <option value="lc" selected>LC/UPC</option>
+            <option value="lcapc">LC/APC</option>
+            <option value="fc">FC/PC</option>
+            <option value="mtp">MTP/MPO</option>
+            <option value="st">ST</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Splitter (se houver) <span class="tip" data-tip="Divisor optico para redes PON. 1:2=3.5dB, 1:4=7dB, 1:8=10.5dB, 1:16=14dB, 1:32=17.5dB, 1:64=21dB.">i</span></label>
+            <select id="splitter-ratio">
+              <option value="0" selected>Nenhum</option>
+              <option value="3.5">1:2 (3.5 dB)</option>
+              <option value="7">1:4 (7.0 dB)</option>
+              <option value="10.5">1:8 (10.5 dB)</option>
+              <option value="14">1:16 (14.0 dB)</option>
+              <option value="17.5">1:32 (17.5 dB)</option>
+              <option value="21">1:64 (21.0 dB)</option>
+              <option value="24.5">1:128 (24.5 dB)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Margem do Sistema <span class="tip" data-tip="Margem de seguranca para envelhecimento, reparos futuros e variacao de temperatura. Tipicamente 3-6 dB.">i</span></label>
+            <input type="number" id="system-margin" value="3" step="0.5" min="0" max="15" />
+            <div class="help">dB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMPLIFIER -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Amplificador Optico</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Tipo <span class="tip" data-tip="EDFA: erbio, banda C/L (1530-1565nm), ganho ~20-40dB. SOA: semicondutor, todas as bandas, ganho ~10-25dB. Raman: fibra como meio de ganho, menor NF.">i</span></label>
+          <select id="amp-type" onchange="onAmpChange()">
+            <option value="none" selected>Sem Amplificador</option>
+            <option value="edfa-booster">EDFA Booster (pos-TX)</option>
+            <option value="edfa-inline">EDFA In-Line</option>
+            <option value="edfa-preamp">EDFA Pre-Amp (pre-RX)</option>
+            <option value="soa">SOA (Semicondutor)</option>
+            <option value="raman">Raman Distribuido</option>
+          </select>
+        </div>
+        <div id="amp-params" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>Ganho</label>
+              <input type="number" id="amp-gain" value="20" step="1" min="0" max="50" />
+              <div class="help">dB</div>
+            </div>
+            <div class="field">
+              <label>Figura de Ruido (NF)</label>
+              <input type="number" id="amp-nf" value="5" step="0.5" min="3" max="12" />
+              <div class="help">dB</div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Potencia Sat. Saida</label>
+              <input type="number" id="amp-psat" value="17" step="1" min="0" max="30" />
+              <div class="help">dBm</div>
+            </div>
+            <div class="field">
+              <label>Qtd. Amplificadores</label>
+              <input type="number" id="amp-qty" value="1" min="1" max="20" />
+            </div>
+          </div>
+          <div id="amp-desc" class="info-box ok"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIVER -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Receptor (RX)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Fotodetector <span class="tip" data-tip="PIN: simples, rapido, sensibilidade moderada. APD: ganho interno (M~10-100), melhor sensibilidade (~10dB), mais caro. Coh: deteccao coerente para formatos avancados.">i</span></label>
+          <select id="rx-detector" onchange="onDetectorChange()">
+            <option value="pin" selected>PIN Photodiode</option>
+            <option value="apd">APD (Avalanche Photodiode)</option>
+            <option value="coherent">Receptor Coerente (ICR)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Sensibilidade RX <span class="tip" data-tip="Potencia minima para BER=10^-9 (ou 10^-12 com FEC). PIN @10G: ~-18dBm. APD @10G: ~-28dBm. Coerente @100G: ~-32dBm.">i</span></label>
+            <input type="number" id="rx-sensitivity" value="-18" step="0.5" min="-50" max="0" />
+            <div class="help">dBm (BER=10&minus;9)</div>
+          </div>
+          <div class="field">
+            <label>Sobrecarga RX</label>
+            <input type="number" id="rx-overload" value="-3" step="0.5" min="-10" max="10" />
+            <div class="help">dBm</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Perda Conector RX</label>
+          <input type="number" id="rx-connector-loss" value="0.5" step="0.1" min="0" max="5" />
+          <div class="help">dB</div>
+        </div>
+        <div class="field">
+          <label>FEC (Forward Error Correction)</label>
+          <select id="rx-fec">
+            <option value="0">Sem FEC</option>
+            <option value="5.6" selected>RS(255,239) — Ganho ~5.6 dB</option>
+            <option value="8.3">EFEC — Ganho ~8.3 dB</option>
+            <option value="10.5">SD-FEC — Ganho ~10.5 dB</option>
+            <option value="12.5">OFEC — Ganho ~12.5 dB</option>
+          </select>
+        </div>
+        <div id="rx-desc" class="info-box">
+          <strong>PIN Photodiode:</strong> Fotodiodo simples, sem ganho interno. Resposta linear, baixo ruido. Sensibilidade tipica: -18 a -24 dBm para 10 Gbps (BER 10&minus;9). Ideal para curtas/medias distancias.
+        </div>
+      </div>
+    </div>
+
+    <!-- WDM -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>WDM (Multiplexacao)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Sistema WDM</label>
+          <select id="wdm-type" onchange="onWdmChange()">
+            <option value="none" selected>Sem WDM (Canal Unico)</option>
+            <option value="cwdm">CWDM (Coarse WDM)</option>
+            <option value="dwdm">DWDM (Dense WDM)</option>
+          </select>
+        </div>
+        <div id="wdm-params" style="display:none;">
+          <div class="field-row">
+            <div class="field">
+              <label>Canais</label>
+              <input type="number" id="wdm-channels" value="40" min="2" max="160" />
+            </div>
+            <div class="field">
+              <label>Espacamento</label>
+              <select id="wdm-spacing">
+                <option value="20">20 nm (CWDM)</option>
+                <option value="0.8" selected>100 GHz (0.8nm)</option>
+                <option value="0.4">50 GHz (0.4nm)</option>
+                <option value="0.2">25 GHz (0.2nm)</option>
+                <option value="0.1">12.5 GHz (0.1nm)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Perda MUX</label>
+              <input type="number" id="wdm-mux-loss" value="4" step="0.5" min="0" max="15" />
+              <div class="help">dB</div>
+            </div>
+            <div class="field">
+              <label>Perda DEMUX</label>
+              <input type="number" id="wdm-demux-loss" value="4" step="0.5" min="0" max="15" />
+              <div class="help">dB</div>
+            </div>
+          </div>
+          <div id="wdm-info" class="info-box"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER: VISUALIZATION -->
+<div class="panel viz">
+  <div class="viz-top">
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Diagrama do Enlace Optico</h3>
+        <span class="meta" id="link-diagram-meta">TX → Fibra → RX</span>
+      </div>
+      <div class="card-body">
+        <canvas id="linkDiagram"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="viz-bottom">
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Diagrama de Olho</h3>
+        <span class="meta" id="eye-meta">NRZ — 10 Gbps</span>
+      </div>
+      <div class="card-body">
+        <canvas id="eyeDiagram"></canvas>
+      </div>
+    </div>
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Atenuacao x Comprimento de Onda</h3>
+        <span class="meta">Silica Dopada</span>
+      </div>
+      <div class="card-body">
+        <canvas id="attenuationChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL: RESULTS -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="result-time">--</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- LINK STATUS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Status do Enlace</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k"><span class="live-dot standby" id="link-dot"></span> Link Status</span><span class="v" id="r-link-status">AGUARDANDO</span></div>
+        <div class="kv"><span class="k">Margem do Sistema</span><span class="v" id="r-margin">--<span class="unit">dB</span></span></div>
+        <div class="gauge" id="margin-gauge"><div class="gauge-fill" id="margin-fill" style="width:0%"></div><span class="gauge-label" id="margin-label">--</span></div>
+        <div class="kv"><span class="k">Veredicto</span><span class="v" id="r-verdict">--</span></div>
+      </div>
+    </div>
+
+    <!-- POWER BUDGET -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Power Budget</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Potencia TX</span><span class="v opt" id="r-ptx">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Perda Fibra</span><span class="v" id="r-fiber-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda Emendas</span><span class="v" id="r-splice-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda Conectores</span><span class="v" id="r-conn-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda Splitter</span><span class="v" id="r-splitter-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda WDM MUX/DEMUX</span><span class="v" id="r-wdm-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Ganho Amplificador</span><span class="v good" id="r-amp-gain">--<span class="unit">dB</span></span></div>
+        <hr class="divider"/>
+        <div class="kv"><span class="k">Perda Total</span><span class="v warn" id="r-total-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Potencia RX Estimada</span><span class="v acc" id="r-prx">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Sensibilidade RX</span><span class="v" id="r-sens">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Ganho FEC</span><span class="v good" id="r-fec-gain">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Budget Disponivel</span><span class="v" id="r-budget">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Margem Seguranca</span><span class="v" id="r-safety">--<span class="unit">dB</span></span></div>
+      </div>
+    </div>
+
+    <!-- DISPERSION -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Analise de Dispersao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Dispersao Cromatica Total</span><span class="v" id="r-cd-total">--<span class="unit">ps/nm</span></span></div>
+        <div class="kv"><span class="k">Alargamento de Pulso (CD)</span><span class="v" id="r-cd-broadening">--<span class="unit">ps</span></span></div>
+        <div class="kv"><span class="k">Limite CD (sem comp.)</span><span class="v" id="r-cd-limit">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">PMD Total</span><span class="v" id="r-pmd-total">--<span class="unit">ps</span></span></div>
+        <div class="kv"><span class="k">Limite PMD</span><span class="v" id="r-pmd-limit">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Fator Limitante</span><span class="v" id="r-limiting">--</span></div>
+        <div id="disp-info" class="info-box"></div>
+      </div>
+    </div>
+
+    <!-- OSNR / BER -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Qualidade do Sinal</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">OSNR Estimado</span><span class="v" id="r-osnr">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">OSNR Requerido</span><span class="v" id="r-osnr-req">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Fator Q</span><span class="v" id="r-qfactor">--</span></div>
+        <div class="kv"><span class="k">BER Estimado</span><span class="v" id="r-ber">--</span></div>
+        <div class="kv"><span class="k">BER pos-FEC</span><span class="v" id="r-ber-fec">--</span></div>
+        <div id="quality-info" class="info-box"></div>
+      </div>
+    </div>
+
+    <!-- CAPACITY -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Capacidade &amp; Alcance</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Capacidade por Canal</span><span class="v opt" id="r-ch-cap">--</span></div>
+        <div class="kv"><span class="k">Canais WDM</span><span class="v" id="r-wdm-ch">1</span></div>
+        <div class="kv"><span class="k">Capacidade Agregada</span><span class="v opt" id="r-total-cap">--</span></div>
+        <div class="kv"><span class="k">Alcance Max (Power)</span><span class="v" id="r-max-reach-pwr">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Alcance Max (Disp.)</span><span class="v" id="r-max-reach-disp">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Eficiencia Espectral</span><span class="v" id="r-spectral-eff">--<span class="unit">b/s/Hz</span></span></div>
+      </div>
+    </div>
+
+    <!-- FIBER INFO -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot orange"></span>Especificacoes da Fibra</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Norma ITU-T</span><span class="v" id="r-itu">G.652.D</span></div>
+        <div class="kv"><span class="k">Nucleo / Casca</span><span class="v" id="r-core-clad">8.2 / 125<span class="unit">&mu;m</span></span></div>
+        <div class="kv"><span class="k">Abertura Numerica</span><span class="v" id="r-na">0.14</span></div>
+        <div class="kv"><span class="k">Modos</span><span class="v" id="r-modes">Monomodo</span></div>
+        <div class="kv"><span class="k">Raio Min. Curvatura</span><span class="v" id="r-bend">30<span class="unit">mm</span></span></div>
+        <div class="kv"><span class="k">&lambda; Corte</span><span class="v" id="r-cutoff">1260<span class="unit">nm</span></span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="author">
+    Optical Lab &middot; <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> &middot; IFSC
+  </div>
+  <span class="ts" id="footer-ts">2026</span>
+</footer>
+
+</div>
+
+<script>
+// ==================== GLOBALS ====================
+const C = 299792458; // m/s
+const H = 6.62607015e-34; // Planck
+
+// ==================== UI HELPERS ====================
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function setChipActive(container, chip) {
+  container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+}
+
+function updatePassiveTotals() {
+  const sfq = +document.getElementById('splice-fusion-qty').value;
+  const sfl = +document.getElementById('splice-fusion-loss').value;
+  document.getElementById('splice-fusion-total').value = (sfq * sfl).toFixed(2);
+
+  const smq = +document.getElementById('splice-mech-qty').value;
+  const sml = +document.getElementById('splice-mech-loss').value;
+  document.getElementById('splice-mech-total').value = (smq * sml).toFixed(2);
+
+  const cq = +document.getElementById('connector-qty').value;
+  const cl = +document.getElementById('connector-loss').value;
+  document.getElementById('connector-total').value = (cq * cl).toFixed(2);
+}
+
+// auto update passive totals
+['splice-fusion-qty','splice-fusion-loss','splice-mech-qty','splice-mech-loss','connector-qty','connector-loss'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePassiveTotals);
+});
+
+// ==================== FIBER DATABASE ====================
+const FIBER_DB = {
+  'smf28':  { itu:'G.652.D', core:'8.2', clad:'125', na:'0.14', modes:'Monomodo', bend:'30', cutoff:'1260', att1310:0.35, att1550:0.2, disp1310:0, disp1550:17, pmd:0.04, desc:'<strong>SMF-28 (G.652.D):</strong> Fibra monomodo padrao. Zero de dispersao ~1310nm. Atenuacao 0.2 dB/km @1550nm. Referencia universal para telecom.' },
+  'g652a': { itu:'G.652.A', core:'8.3', clad:'125', na:'0.14', modes:'Monomodo', bend:'30', cutoff:'1260', att1310:0.35, att1550:0.22, disp1310:0, disp1550:17, pmd:0.1, desc:'<strong>G.652.A:</strong> Monomodo convencional, PMD mais alto que G.652.D. Adequada para taxas ate 2.5 Gbps.' },
+  'g653':  { itu:'G.653', core:'7.8', clad:'125', na:'0.13', modes:'Monomodo', bend:'30', cutoff:'1270', att1310:0.35, att1550:0.22, disp1310:-12, disp1550:0, pmd:0.04, desc:'<strong>G.653 (DSF):</strong> Zero de dispersao deslocado para 1550nm. Otima para canal unico, mas problematica para WDM (FWM). Descontinuada em novas instalacoes.' },
+  'g655':  { itu:'G.655', core:'8.0', clad:'125', na:'0.13', modes:'Monomodo', bend:'30', cutoff:'1260', att1310:0.35, att1550:0.21, disp1310:-8, disp1550:4.5, pmd:0.04, desc:'<strong>G.655 (NZDSF):</strong> Dispersao deslocada nao-zero (2-6 ps/nm.km @1550nm). Reduz FWM em DWDM, mantendo dispersao baixa para longas distancias.' },
+  'g657a': { itu:'G.657.A', core:'8.2', clad:'125', na:'0.14', modes:'Monomodo', bend:'10', cutoff:'1260', att1310:0.35, att1550:0.2, disp1310:0, disp1550:17, pmd:0.04, desc:'<strong>G.657.A (Bend Insensitive):</strong> Compativel com G.652.D mas com raio de curvatura minimo de 10mm. Ideal para FTTH e instalacoes internas.' },
+  'g654':  { itu:'G.654', core:'9.5', clad:'125', na:'0.13', modes:'Monomodo', bend:'30', cutoff:'1530', att1310:0.4, att1550:0.17, disp1310:0, disp1550:18, pmd:0.04, desc:'<strong>G.654:</strong> Cutoff deslocado para 1530nm. Atenuacao ultra-baixa (~0.17 dB/km @1550nm). Projetada para cabos submarinos e ultra-long-haul.' },
+  'om1':   { itu:'OM1', core:'62.5', clad:'125', na:'0.275', modes:'Multimodo', bend:'25', cutoff:'--', att1310:0.6, att1550:1.0, disp1310:0, disp1550:0, pmd:0, desc:'<strong>OM1 (62.5/125):</strong> Multimodo legacy. BW 200 MHz.km @850nm. Suporta GbE ate 275m. Praticamente descontinuada.' },
+  'om2':   { itu:'OM2', core:'50', clad:'125', na:'0.2', modes:'Multimodo', bend:'25', cutoff:'--', att1310:0.6, att1550:1.0, disp1310:0, disp1550:0, pmd:0, desc:'<strong>OM2 (50/125):</strong> Multimodo. BW 500 MHz.km @850nm. GbE ate 550m, 10GbE ate 82m.' },
+  'om3':   { itu:'OM3', core:'50', clad:'125', na:'0.2', modes:'Multimodo', bend:'25', cutoff:'--', att1310:0.6, att1550:1.0, disp1310:0, disp1550:0, pmd:0, desc:'<strong>OM3 (50/125 Laser-Optimized):</strong> BW 2000 MHz.km @850nm. 10GbE ate 300m, 40/100GbE ate 100m. Padrao para data centers.' },
+  'om4':   { itu:'OM4', core:'50', clad:'125', na:'0.2', modes:'Multimodo', bend:'25', cutoff:'--', att1310:0.6, att1550:1.0, disp1310:0, disp1550:0, pmd:0, desc:'<strong>OM4 (50/125 Extended):</strong> BW 4700 MHz.km @850nm. 10GbE ate 550m, 40/100GbE ate 150m.' },
+  'om5':   { itu:'OM5', core:'50', clad:'125', na:'0.2', modes:'Multimodo', bend:'25', cutoff:'--', att1310:0.6, att1550:1.0, disp1310:0, disp1550:0, pmd:0, desc:'<strong>OM5 (50/125 Wideband):</strong> Suporte a SWDM (850-953nm). BW 4700 MHz.km @850nm + 2470 MHz.km @953nm. 400GbE via SWDM.' },
+  'pof':   { itu:'POF', core:'980', clad:'1000', na:'0.5', modes:'Multimodo', bend:'25', cutoff:'--', att1310:150, att1550:200, disp1310:0, disp1550:0, pmd:0, desc:'<strong>POF (Fibra Plastica):</strong> Nucleo PMMA 980um. Alta atenuacao (~150 dB/km). Facil manuseio, conectorizacao sem ferramentas especiais. Alcance <100m @650nm.' },
+};
+
+const SOURCE_DB = {
+  'dfb':     { desc:'<strong>DFB Laser:</strong> Fonte monomodo com feedback distribuido. Largura espectral ultrafina (~0.1 nm), alta potencia e estabilidade. Padrao para telecomunicacoes de longa distancia e DWDM.' },
+  'eml':     { desc:'<strong>EML:</strong> Laser DFB + modulador eletro-absorcao integrado. Chirp controlado, ideal para 10-25G em medias/longas distancias. Menor chirp que modulacao direta.' },
+  'fp':      { desc:'<strong>Laser FP (Fabry-Perot):</strong> Multimodo longitudinal (~2nm linewidth). Menor custo, adequado para curtas distancias e baixas taxas onde dispersao nao e critica.' },
+  'vcsel':   { desc:'<strong>VCSEL:</strong> Emissao pela superficie, baixo custo, baixo consumo. Tipicamente 850nm com MMF. Padrao para interconexoes em data centers ate 400m.' },
+  'led':     { desc:'<strong>LED:</strong> Fonte incoerente, largura espectral ampla (40-80nm). Baixa potencia (-20 a -10 dBm). Uso em curtas distancias e POF. Longa vida util.' },
+  'tunable': { desc:'<strong>Laser Sintonizavel:</strong> Comprimento de onda ajustavel sobre a banda C ou L. Essencial para DWDM reconfiguravel e ROADM. Linewidth ~100kHz para coerente.' },
+};
+
+const DETECTOR_DB = {
+  'pin':      { desc:'<strong>PIN Photodiode:</strong> Fotodiodo simples, sem ganho interno. Resposta linear, baixo ruido. Sensibilidade tipica: -18 a -24 dBm para 10 Gbps (BER 10&minus;9). Ideal para curtas/medias distancias.' },
+  'apd':      { desc:'<strong>APD:</strong> Fotodiodo avalanche com ganho interno (M~10-100). Melhora sensibilidade em ~10 dB vs PIN. Requer alta tensao reversa. Excelente para longa distancia sem amplificador.' },
+  'coherent': { desc:'<strong>Receptor Coerente (ICR):</strong> Mistura sinal com oscilador local (LO). Recupera amplitude, fase e polarizacao. Essencial para DP-QPSK, DP-16QAM. Sensibilidade superior com DSP.' },
+};
+
+// ==================== PRESET SCENARIOS ====================
+function loadPreset(name) {
+  const chip = event.target;
+  setChipActive(document.getElementById('preset-chips'), chip);
+
+  const presets = {
+    'metro':      { src:'dfb', wl:'1550', power:3, linewidth:0.1, bitrate:'10', mod:'ook', fiber:'smf28', length:80, att:0.2, disp:17, pmd:0.04, sfq:4, sfl:0.05, smq:0, sml:0.3, cq:4, cl:0.3, ctype:'lc', splitter:'0', margin:3, amp:'none', ampGain:20, ampNF:5, ampPsat:17, ampQty:1, det:'pin', sens:-18, over:-3, connTX:0.5, connRX:0.5, fec:'5.6', wdm:'none', wdmCh:1, wdmSp:'0.8', wdmMux:4, wdmDemux:4 },
+    'longhaul':   { src:'eml', wl:'1550', power:6, linewidth:0.05, bitrate:'10', mod:'ook', fiber:'g655', length:600, att:0.21, disp:4.5, pmd:0.04, sfq:30, sfl:0.05, smq:0, sml:0.3, cq:4, cl:0.3, ctype:'lc', splitter:'0', margin:3, amp:'edfa-inline', ampGain:25, ampNF:5.5, ampPsat:17, ampQty:4, det:'apd', sens:-28, over:-5, connTX:0.5, connRX:0.5, fec:'8.3', wdm:'dwdm', wdmCh:40, wdmSp:'0.8', wdmMux:5, wdmDemux:5 },
+    'access':     { src:'dfb', wl:'1310', power:0, linewidth:0.5, bitrate:'1.25', mod:'ook', fiber:'smf28', length:20, att:0.35, disp:0, pmd:0.04, sfq:2, sfl:0.05, smq:0, sml:0.3, cq:4, cl:0.3, ctype:'scapc', splitter:'0', margin:3, amp:'none', ampGain:20, ampNF:5, ampPsat:17, ampQty:1, det:'pin', sens:-24, over:-3, connTX:0.5, connRX:0.5, fec:'0', wdm:'none', wdmCh:1, wdmSp:'0.8', wdmMux:4, wdmDemux:4 },
+    'gpon':       { src:'dfb', wl:'1490', power:5, linewidth:0.5, bitrate:'2.488', mod:'ook', fiber:'g657a', length:20, att:0.22, disp:12, pmd:0.04, sfq:3, sfl:0.05, smq:0, sml:0.3, cq:6, cl:0.25, ctype:'scapc', splitter:'17.5', margin:3, amp:'none', ampGain:20, ampNF:5, ampPsat:17, ampQty:1, det:'apd', sens:-28, over:-5, connTX:0.5, connRX:0.5, fec:'5.6', wdm:'none', wdmCh:1, wdmSp:'0.8', wdmMux:4, wdmDemux:4 },
+    'datacenter': { src:'vcsel', wl:'850', power:-2, linewidth:0.6, bitrate:'25', mod:'ook', fiber:'om4', length:0.3, att:2.5, disp:0, pmd:0, sfq:0, sfl:0.05, smq:0, sml:0.3, cq:4, cl:0.35, ctype:'mtp', splitter:'0', margin:2, amp:'none', ampGain:20, ampNF:5, ampPsat:17, ampQty:1, det:'pin', sens:-14, over:0, connTX:0.5, connRX:0.5, fec:'5.6', wdm:'none', wdmCh:1, wdmSp:'0.8', wdmMux:4, wdmDemux:4 },
+    'submarine':  { src:'tunable', wl:'1550', power:1, linewidth:0.01, bitrate:'100', mod:'qpsk', fiber:'g654', length:5000, att:0.17, disp:18, pmd:0.04, sfq:100, sfl:0.03, smq:0, sml:0.3, cq:2, cl:0.2, ctype:'lcapc', splitter:'0', margin:3, amp:'edfa-inline', ampGain:20, ampNF:4.5, ampPsat:17, ampQty:50, det:'coherent', sens:-32, over:-8, connTX:0.3, connRX:0.3, fec:'12.5', wdm:'dwdm', wdmCh:80, wdmSp:'0.4', wdmMux:5, wdmDemux:5 },
+    'dwdm':       { src:'tunable', wl:'1550', power:0, linewidth:0.05, bitrate:'10', mod:'ook', fiber:'smf28', length:200, att:0.2, disp:17, pmd:0.04, sfq:10, sfl:0.05, smq:0, sml:0.3, cq:4, cl:0.3, ctype:'lc', splitter:'0', margin:3, amp:'edfa-booster', ampGain:20, ampNF:5, ampPsat:20, ampQty:1, det:'apd', sens:-28, over:-5, connTX:0.5, connRX:0.5, fec:'5.6', wdm:'dwdm', wdmCh:40, wdmSp:'0.8', wdmMux:5, wdmDemux:5 },
+    'pof':        { src:'led', wl:'650', power:-10, linewidth:40, bitrate:'0.155', mod:'ook', fiber:'pof', length:0.05, att:150, disp:0, pmd:0, sfq:0, sfl:0.05, smq:0, sml:0.3, cq:2, cl:1.0, ctype:'st', splitter:'0', margin:2, amp:'none', ampGain:20, ampNF:5, ampPsat:17, ampQty:1, det:'pin', sens:-20, over:-3, connTX:1.0, connRX:1.0, fec:'0', wdm:'none', wdmCh:1, wdmSp:'20', wdmMux:4, wdmDemux:4 },
+  };
+
+  const p = presets[name];
+  if (!p) return;
+
+  document.getElementById('tx-source').value = p.src;
+  document.getElementById('tx-wavelength').value = p.wl;
+  document.getElementById('tx-power').value = p.power;
+  document.getElementById('tx-linewidth').value = p.linewidth;
+  document.getElementById('tx-bitrate').value = p.bitrate;
+  document.getElementById('tx-modulation').value = p.mod;
+  document.getElementById('tx-connector-loss').value = p.connTX;
+
+  document.getElementById('fiber-type').value = p.fiber;
+  document.getElementById('fiber-length').value = p.length;
+  document.getElementById('fiber-attenuation').value = p.att;
+  document.getElementById('fiber-dispersion').value = p.disp;
+  document.getElementById('fiber-pmd').value = p.pmd;
+
+  document.getElementById('splice-fusion-qty').value = p.sfq;
+  document.getElementById('splice-fusion-loss').value = p.sfl;
+  document.getElementById('splice-mech-qty').value = p.smq;
+  document.getElementById('splice-mech-loss').value = p.sml;
+  document.getElementById('connector-qty').value = p.cq;
+  document.getElementById('connector-loss').value = p.cl;
+  document.getElementById('connector-type').value = p.ctype;
+  document.getElementById('splitter-ratio').value = p.splitter;
+  document.getElementById('system-margin').value = p.margin;
+
+  document.getElementById('amp-type').value = p.amp;
+  document.getElementById('amp-gain').value = p.ampGain;
+  document.getElementById('amp-nf').value = p.ampNF;
+  document.getElementById('amp-psat').value = p.ampPsat;
+  document.getElementById('amp-qty').value = p.ampQty;
+
+  document.getElementById('rx-detector').value = p.det;
+  document.getElementById('rx-sensitivity').value = p.sens;
+  document.getElementById('rx-overload').value = p.over;
+  document.getElementById('rx-connector-loss').value = p.connRX;
+  document.getElementById('rx-fec').value = p.fec;
+
+  document.getElementById('wdm-type').value = p.wdm;
+  document.getElementById('wdm-channels').value = p.wdmCh;
+  document.getElementById('wdm-spacing').value = p.wdmSp;
+  document.getElementById('wdm-mux-loss').value = p.wdmMux;
+  document.getElementById('wdm-demux-loss').value = p.wdmDemux;
+
+  onSourceChange();
+  onFiberChange();
+  onAmpChange();
+  onDetectorChange();
+  onWdmChange();
+  updatePassiveTotals();
+  runCalculation();
+}
+
+// ==================== EVENT HANDLERS ====================
+function onSourceChange() {
+  const src = document.getElementById('tx-source').value;
+  const info = SOURCE_DB[src];
+  if (info) document.getElementById('tx-desc').innerHTML = info.desc;
+}
+
+function onFiberChange() {
+  const ft = document.getElementById('fiber-type').value;
+  const f = FIBER_DB[ft];
+  if (!f) return;
+  const wl = +document.getElementById('tx-wavelength').value;
+  if (wl <= 1350) {
+    document.getElementById('fiber-attenuation').value = f.att1310;
+    document.getElementById('fiber-dispersion').value = f.disp1310;
+  } else {
+    document.getElementById('fiber-attenuation').value = f.att1550;
+    document.getElementById('fiber-dispersion').value = f.disp1550;
+  }
+  document.getElementById('fiber-pmd').value = f.pmd;
+  document.getElementById('fiber-desc').innerHTML = f.desc;
+
+  document.getElementById('r-itu').textContent = f.itu;
+  document.getElementById('r-core-clad').innerHTML = f.core + ' / ' + f.clad + '<span class="unit">\u03BCm</span>';
+  document.getElementById('r-na').textContent = f.na;
+  document.getElementById('r-modes').textContent = f.modes;
+  document.getElementById('r-bend').innerHTML = f.bend + '<span class="unit">mm</span>';
+  document.getElementById('r-cutoff').innerHTML = f.cutoff + '<span class="unit">nm</span>';
+}
+
+function onWavelengthChange() {
+  onFiberChange();
+}
+
+function onAmpChange() {
+  const t = document.getElementById('amp-type').value;
+  const params = document.getElementById('amp-params');
+  if (t === 'none') {
+    params.style.display = 'none';
+  } else {
+    params.style.display = 'block';
+    const descEl = document.getElementById('amp-desc');
+    const descs = {
+      'edfa-booster': '<strong>EDFA Booster:</strong> Posicionado apos o TX para aumentar potencia de lancamento. Ganho tipico 15-25 dB. Banda C (1530-1565nm) ou L (1565-1625nm).',
+      'edfa-inline': '<strong>EDFA In-Line:</strong> Compensa atenuacao em intervalos regulares ao longo da rota. Essencial para long-haul e submarino.',
+      'edfa-preamp': '<strong>EDFA Pre-Amp:</strong> Antes do RX, melhora sensibilidade efetiva do receptor. Baixa NF critica (~4-5 dB).',
+      'soa': '<strong>SOA:</strong> Amplificador de semicondutor. Menor ganho e pior NF que EDFA, mas opera em qualquer banda. Compacto e integravel.',
+      'raman': '<strong>Raman Distribuido:</strong> Usa a propria fibra como meio de ganho. Bombeio contra-propagante. Menor NF efetiva, ideal combinado com EDFA.',
+    };
+    descEl.innerHTML = descs[t] || '';
+  }
+}
+
+function onDetectorChange() {
+  const d = document.getElementById('rx-detector').value;
+  const info = DETECTOR_DB[d];
+  if (info) document.getElementById('rx-desc').innerHTML = info.desc;
+  // update default sensitivity
+  const br = +document.getElementById('tx-bitrate').value;
+  if (d === 'apd') document.getElementById('rx-sensitivity').value = br >= 10 ? -28 : -34;
+  else if (d === 'coherent') document.getElementById('rx-sensitivity').value = br >= 100 ? -32 : -36;
+  else document.getElementById('rx-sensitivity').value = br >= 10 ? -18 : -24;
+}
+
+function onWdmChange() {
+  const t = document.getElementById('wdm-type').value;
+  const params = document.getElementById('wdm-params');
+  if (t === 'none') {
+    params.style.display = 'none';
+  } else {
+    params.style.display = 'block';
+    if (t === 'cwdm') {
+      document.getElementById('wdm-spacing').value = '20';
+      document.getElementById('wdm-channels').value = 8;
+    }
+    const ch = +document.getElementById('wdm-channels').value;
+    const sp = +document.getElementById('wdm-spacing').value;
+    const br = +document.getElementById('tx-bitrate').value;
+    const cap = ch * br;
+    let capStr = cap >= 1000 ? (cap/1000).toFixed(1) + ' Tbps' : cap.toFixed(1) + ' Gbps';
+    document.getElementById('wdm-info').innerHTML = '<strong>' + t.toUpperCase() + ':</strong> ' + ch + ' canais x ' + br + ' Gbps = <strong>' + capStr + '</strong> capacidade agregada.';
+  }
+}
+
+// ==================== MAIN CALCULATION ====================
+function runCalculation() {
+  const txPower = +document.getElementById('tx-power').value;
+  const txConnLoss = +document.getElementById('tx-connector-loss').value;
+  const wl = +document.getElementById('tx-wavelength').value;
+  const bitrate = +document.getElementById('tx-bitrate').value;
+  const linewidth = +document.getElementById('tx-linewidth').value;
+  const mod = document.getElementById('tx-modulation').value;
+
+  const fiberLen = +document.getElementById('fiber-length').value;
+  const fiberAtt = +document.getElementById('fiber-attenuation').value;
+  const fiberDisp = +document.getElementById('fiber-dispersion').value;
+  const fiberPMD = +document.getElementById('fiber-pmd').value;
+
+  const sfTotal = (+document.getElementById('splice-fusion-qty').value) * (+document.getElementById('splice-fusion-loss').value);
+  const smTotal = (+document.getElementById('splice-mech-qty').value) * (+document.getElementById('splice-mech-loss').value);
+  const connTotal = (+document.getElementById('connector-qty').value) * (+document.getElementById('connector-loss').value);
+  const splitterLoss = +document.getElementById('splitter-ratio').value;
+  const sysMarg = +document.getElementById('system-margin').value;
+
+  const ampType = document.getElementById('amp-type').value;
+  const ampGain = +document.getElementById('amp-gain').value;
+  const ampNF = +document.getElementById('amp-nf').value;
+  const ampQty = +document.getElementById('amp-qty').value;
+
+  const rxSens = +document.getElementById('rx-sensitivity').value;
+  const rxOver = +document.getElementById('rx-overload').value;
+  const rxConnLoss = +document.getElementById('rx-connector-loss').value;
+  const fecGain = +document.getElementById('rx-fec').value;
+
+  const wdmType = document.getElementById('wdm-type').value;
+  const wdmCh = wdmType !== 'none' ? +document.getElementById('wdm-channels').value : 1;
+  const wdmMuxLoss = wdmType !== 'none' ? +document.getElementById('wdm-mux-loss').value : 0;
+  const wdmDemuxLoss = wdmType !== 'none' ? +document.getElementById('wdm-demux-loss').value : 0;
+
+  // === POWER BUDGET ===
+  const fiberLoss = fiberLen * fiberAtt;
+  const spliceLoss = sfTotal + smTotal;
+  const totalAmpGain = ampType !== 'none' ? ampGain * ampQty : 0;
+
+  const totalLoss = fiberLoss + spliceLoss + connTotal + txConnLoss + rxConnLoss + splitterLoss + wdmMuxLoss + wdmDemuxLoss;
+  const pRx = txPower - totalLoss + totalAmpGain;
+  const effectiveSens = rxSens - fecGain;
+  const margin = pRx - effectiveSens - sysMarg;
+  const budget = txPower - effectiveSens;
+
+  // === DISPERSION ===
+  const cdTotal = Math.abs(fiberDisp) * fiberLen; // ps/nm
+  const cdBroadening = cdTotal * linewidth; // ps
+  const bitPeriod = 1e3 / bitrate; // ps (bitrate in Gbps)
+  let cdLimitKm = Infinity;
+  if (Math.abs(fiberDisp) > 0 && linewidth > 0) {
+    const maxBroadening = bitPeriod * 0.25; // 25% rule
+    cdLimitKm = maxBroadening / (Math.abs(fiberDisp) * linewidth);
+  }
+
+  const pmdTotal = fiberPMD * Math.sqrt(fiberLen); // ps
+  let pmdLimitKm = Infinity;
+  if (fiberPMD > 0) {
+    const maxPMD = bitPeriod * 0.1; // 10% rule
+    pmdLimitKm = (maxPMD / fiberPMD) ** 2;
+  }
+
+  // === MAX REACH (power) ===
+  const fixedLoss = spliceLoss + connTotal + txConnLoss + rxConnLoss + splitterLoss + wdmMuxLoss + wdmDemuxLoss + sysMarg;
+  const maxReachPwr = fiberAtt > 0 ? (txPower + totalAmpGain - effectiveSens - fixedLoss) / fiberAtt : Infinity;
+
+  // === OSNR estimate (amplified) ===
+  let osnr = Infinity;
+  let osnrReq = 14; // default for OOK
+  if (mod === 'pam4') osnrReq = 22;
+  if (mod === 'dpsk') osnrReq = 11;
+  if (mod === 'qpsk') osnrReq = 12;
+  if (mod === '16qam') osnrReq = 18;
+
+  if (ampType !== 'none' && ampQty > 0) {
+    // P_ASE per amp in 0.1nm bandwidth
+    const freq = C / (wl * 1e-9);
+    const nsp = Math.pow(10, ampNF / 10) / 2;
+    const g = Math.pow(10, ampGain / 10);
+    const pasePerAmp = 2 * nsp * H * freq * (g - 1) * 12.5e9; // ref bandwidth 0.1nm ~ 12.5GHz at 1550
+    const totalPase = pasePerAmp * ampQty;
+    const pSig = Math.pow(10, (pRx) / 10) * 1e-3; // W
+    if (totalPase > 0 && pSig > 0) {
+      osnr = 10 * Math.log10(pSig / totalPase);
+    }
+  }
+
+  // === Q-factor and BER ===
+  let qFactor, ber;
+  if (osnr < Infinity && ampType !== 'none') {
+    const osnrLin = Math.pow(10, osnr / 10);
+    qFactor = Math.sqrt(2 * osnrLin);
+    ber = 0.5 * erfc(qFactor / Math.sqrt(2));
+  } else {
+    // estimate from margin
+    if (margin > 0) {
+      qFactor = 6 + margin * 0.5; // rough estimate
+      ber = 0.5 * erfc(qFactor / Math.sqrt(2));
+    } else {
+      qFactor = Math.max(0, 6 + margin * 0.8);
+      ber = 0.5 * erfc(qFactor / Math.sqrt(2));
+    }
+  }
+  const berFEC = fecGain > 0 ? Math.max(ber * Math.pow(10, -fecGain / 3), 1e-15) : ber;
+
+  // === Spectral efficiency ===
+  const modBitsPerSymbol = { 'ook': 1, 'pam4': 2, 'dpsk': 1, 'qpsk': 4, '16qam': 8 };
+  const specEff = modBitsPerSymbol[mod] || 1;
+
+  // === Capacity ===
+  const chCap = bitrate;
+  const totalCap = chCap * wdmCh;
+
+  // === Limiting factor ===
+  let limiting = 'Potencia';
+  if (cdLimitKm < fiberLen && cdLimitKm < pmdLimitKm) limiting = 'Dispersao Cromatica';
+  else if (pmdLimitKm < fiberLen) limiting = 'PMD';
+
+  // ==================== UPDATE UI ====================
+  // Header
+  const ft = document.getElementById('fiber-type').value;
+  document.getElementById('hdr-fiber').textContent = document.getElementById('fiber-type').selectedOptions[0].text.split(' ')[0];
+  document.getElementById('hdr-lambda').innerHTML = wl + '<span class="unit">nm</span>';
+  document.getElementById('hdr-dist').innerHTML = fiberLen + '<span class="unit">km</span>';
+  document.getElementById('hdr-margin').innerHTML = margin.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('hdr-status').textContent = margin >= 0 ? 'LINK OK' : 'NO LINK';
+  document.getElementById('hdr-status').style.color = margin >= 0 ? 'var(--phos)' : 'var(--rose)';
+
+  // Link status
+  const dot = document.getElementById('link-dot');
+  const statusEl = document.getElementById('r-link-status');
+  if (margin >= 3) {
+    dot.className = 'live-dot'; statusEl.textContent = 'LINK ATIVO'; statusEl.className = 'v good';
+  } else if (margin >= 0) {
+    dot.className = 'live-dot standby'; statusEl.textContent = 'MARGINAL'; statusEl.className = 'v warn';
+  } else {
+    dot.className = 'live-dot off'; statusEl.textContent = 'SEM LINK'; statusEl.className = 'v bad';
+  }
+
+  const marginEl = document.getElementById('r-margin');
+  marginEl.innerHTML = margin.toFixed(2) + '<span class="unit">dB</span>';
+  marginEl.className = 'v ' + (margin >= 3 ? 'good' : margin >= 0 ? 'warn' : 'bad');
+
+  // margin gauge
+  const mgp = Math.max(0, Math.min(100, (margin + 10) / 30 * 100));
+  document.getElementById('margin-fill').style.width = mgp + '%';
+  document.getElementById('margin-fill').className = 'gauge-fill ' + (margin >= 3 ? 'good' : margin >= 0 ? 'warn' : 'bad');
+  document.getElementById('margin-label').textContent = margin.toFixed(1) + ' dB';
+
+  // verdict
+  const vEl = document.getElementById('r-verdict');
+  if (margin >= 6) { vEl.textContent = 'EXCELENTE'; vEl.className = 'v good'; }
+  else if (margin >= 3) { vEl.textContent = 'BOM'; vEl.className = 'v good'; }
+  else if (margin >= 0) { vEl.textContent = 'MARGINAL — Risco de falha'; vEl.className = 'v warn'; }
+  else { vEl.textContent = 'INVIAVEL — Aumentar potencia ou reduzir perdas'; vEl.className = 'v bad'; }
+
+  // Power budget
+  document.getElementById('r-ptx').innerHTML = txPower.toFixed(1) + '<span class="unit">dBm</span>';
+  document.getElementById('r-fiber-loss').innerHTML = fiberLoss.toFixed(2) + '<span class="unit">dB</span>';
+  document.getElementById('r-splice-loss').innerHTML = spliceLoss.toFixed(2) + '<span class="unit">dB</span>';
+  document.getElementById('r-conn-loss').innerHTML = (connTotal + txConnLoss + rxConnLoss).toFixed(2) + '<span class="unit">dB</span>';
+  document.getElementById('r-splitter-loss').innerHTML = splitterLoss.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-wdm-loss').innerHTML = (wdmMuxLoss + wdmDemuxLoss).toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-amp-gain').innerHTML = (totalAmpGain > 0 ? '+' : '') + totalAmpGain.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-total-loss').innerHTML = totalLoss.toFixed(2) + '<span class="unit">dB</span>';
+  document.getElementById('r-prx').innerHTML = pRx.toFixed(2) + '<span class="unit">dBm</span>';
+  const prxClass = pRx > rxOver ? 'bad' : pRx > rxSens ? 'good' : 'bad';
+  document.getElementById('r-prx').className = 'v ' + prxClass;
+  document.getElementById('r-sens').innerHTML = rxSens.toFixed(1) + '<span class="unit">dBm</span>';
+  document.getElementById('r-fec-gain').innerHTML = '+' + fecGain + '<span class="unit">dB</span>';
+  document.getElementById('r-budget').innerHTML = budget.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-safety').innerHTML = sysMarg.toFixed(1) + '<span class="unit">dB</span>';
+
+  // Dispersion
+  document.getElementById('r-cd-total').innerHTML = cdTotal.toFixed(1) + '<span class="unit">ps/nm</span>';
+  document.getElementById('r-cd-broadening').innerHTML = cdBroadening.toFixed(2) + '<span class="unit">ps</span>';
+  const cdLimitStr = cdLimitKm >= 1e6 ? '∞' : cdLimitKm.toFixed(0);
+  document.getElementById('r-cd-limit').innerHTML = cdLimitStr + '<span class="unit">km</span>';
+  document.getElementById('r-cd-limit').className = 'v ' + (cdLimitKm >= fiberLen ? 'good' : 'bad');
+  document.getElementById('r-pmd-total').innerHTML = pmdTotal.toFixed(3) + '<span class="unit">ps</span>';
+  const pmdLimitStr = pmdLimitKm >= 1e6 ? '∞' : pmdLimitKm.toFixed(0);
+  document.getElementById('r-pmd-limit').innerHTML = pmdLimitStr + '<span class="unit">km</span>';
+  document.getElementById('r-pmd-limit').className = 'v ' + (pmdLimitKm >= fiberLen ? 'good' : 'bad');
+  document.getElementById('r-limiting').textContent = limiting;
+  document.getElementById('r-limiting').className = 'v ' + (limiting === 'Potencia' ? 'acc' : 'warn');
+
+  const dispInfoEl = document.getElementById('disp-info');
+  if (cdBroadening > bitPeriod * 0.25) {
+    dispInfoEl.className = 'info-box bad-box';
+    dispInfoEl.innerHTML = '<strong>Atencao:</strong> Alargamento de pulso (' + cdBroadening.toFixed(1) + ' ps) excede 25% do periodo de bit (' + bitPeriod.toFixed(1) + ' ps). Necessaria compensacao de dispersao (DCF ou DSP).';
+  } else {
+    dispInfoEl.className = 'info-box ok';
+    dispInfoEl.innerHTML = 'Dispersao dentro dos limites. Alargamento: ' + cdBroadening.toFixed(2) + ' ps vs periodo de bit: ' + bitPeriod.toFixed(1) + ' ps (' + (cdBroadening/bitPeriod*100).toFixed(1) + '%).';
+  }
+
+  // Quality
+  document.getElementById('r-osnr').innerHTML = (osnr < 100 ? osnr.toFixed(1) : '--') + '<span class="unit">dB</span>';
+  document.getElementById('r-osnr').className = 'v ' + (osnr >= osnrReq ? 'good' : 'bad');
+  document.getElementById('r-osnr-req').innerHTML = osnrReq.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-qfactor').textContent = qFactor.toFixed(2);
+  document.getElementById('r-qfactor').className = 'v ' + (qFactor >= 6 ? 'good' : qFactor >= 4 ? 'warn' : 'bad');
+  document.getElementById('r-ber').textContent = ber < 1e-15 ? '< 10⁻¹⁵' : ber.toExponential(2);
+  document.getElementById('r-ber').className = 'v ' + (ber < 1e-9 ? 'good' : ber < 1e-3 ? 'warn' : 'bad');
+  document.getElementById('r-ber-fec').textContent = berFEC < 1e-15 ? '< 10⁻¹⁵' : berFEC.toExponential(2);
+  document.getElementById('r-ber-fec').className = 'v ' + (berFEC < 1e-12 ? 'good' : 'warn');
+
+  const qualInfoEl = document.getElementById('quality-info');
+  if (qFactor >= 7) {
+    qualInfoEl.className = 'info-box ok';
+    qualInfoEl.innerHTML = 'Qualidade excelente. Q=' + qFactor.toFixed(1) + ' garante BER muito baixo com margem confortavel.';
+  } else if (qFactor >= 6) {
+    qualInfoEl.className = 'info-box';
+    qualInfoEl.innerHTML = 'Qualidade adequada. Q=' + qFactor.toFixed(1) + ' atende BER 10⁻⁹ com margem minima.';
+  } else {
+    qualInfoEl.className = 'info-box bad-box';
+    qualInfoEl.innerHTML = 'Qualidade insuficiente. Q=' + qFactor.toFixed(1) + ' nao atende BER 10⁻⁹ sem FEC robusto.';
+  }
+
+  // Capacity
+  let capStr = chCap >= 1000 ? (chCap/1000).toFixed(1) + ' Tbps' : chCap + ' Gbps';
+  document.getElementById('r-ch-cap').textContent = capStr;
+  document.getElementById('r-wdm-ch').textContent = wdmCh;
+  let totalCapStr = totalCap >= 1000 ? (totalCap/1000).toFixed(1) + ' Tbps' : totalCap + ' Gbps';
+  document.getElementById('r-total-cap').textContent = totalCapStr;
+  document.getElementById('r-max-reach-pwr').innerHTML = (maxReachPwr >= 0 ? maxReachPwr.toFixed(0) : '0') + '<span class="unit">km</span>';
+  document.getElementById('r-max-reach-disp').innerHTML = (cdLimitKm >= 1e6 ? '∞' : cdLimitKm.toFixed(0)) + '<span class="unit">km</span>';
+  document.getElementById('r-spectral-eff').innerHTML = specEff.toFixed(1) + '<span class="unit">b/s/Hz</span>';
+
+  // Update time
+  const now = new Date();
+  document.getElementById('result-time').textContent = now.toLocaleTimeString();
+  document.getElementById('footer-ts').textContent = now.getFullYear();
+
+  // Draw visualizations
+  drawLinkDiagram(txPower, fiberLoss, spliceLoss, connTotal + txConnLoss + rxConnLoss, splitterLoss, totalAmpGain, wdmMuxLoss + wdmDemuxLoss, pRx, rxSens, margin, ampType, wdmType);
+  drawEyeDiagram(margin, cdBroadening, bitPeriod, mod);
+  drawAttenuationChart(wl);
+
+  // Update eye meta
+  const modNames = {'ook':'NRZ','pam4':'PAM4','dpsk':'DPSK','qpsk':'DP-QPSK','16qam':'DP-16QAM'};
+  document.getElementById('eye-meta').textContent = (modNames[mod]||'NRZ') + ' — ' + bitrate + ' Gbps';
+  document.getElementById('link-diagram-meta').textContent = 'TX → ' + fiberLen + 'km → RX | ' + (margin>=0?'+':'') + margin.toFixed(1) + ' dB';
+}
+
+// ==================== ERFC approximation ====================
+function erfc(x) {
+  if (x >= 6) return 0;
+  if (x <= -6) return 2;
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  const val = poly * Math.exp(-x * x);
+  return x >= 0 ? val : 2 - val;
+}
+
+// ==================== DRAW LINK DIAGRAM ====================
+function drawLinkDiagram(ptx, fLoss, sLoss, cLoss, spLoss, ampG, wdmLoss, prx, sens, margin, ampType, wdmType) {
+  const canvas = document.getElementById('linkDiagram');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = 30;
+  const graphW = W - pad * 2;
+  const graphH = H - pad * 2;
+
+  // background
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = '#1e283820';
+  ctx.lineWidth = 0.5;
+  for (let y = pad; y <= H - pad; y += 20) {
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  }
+
+  // build power profile points
+  const totalLoss = fLoss + sLoss + cLoss + spLoss + wdmLoss;
+  const segments = [];
+  let x = 0;
+  segments.push({ x: 0, p: ptx, label: 'TX' });
+
+  if (wdmType !== 'none') {
+    x += 0.08;
+    segments.push({ x, p: ptx - wdmLoss/2, label: 'MUX' });
+  }
+  x += 0.05;
+  segments.push({ x, p: ptx - cLoss*0.3 - (wdmType!=='none'?wdmLoss/2:0), label: '' });
+
+  if (ampType === 'edfa-booster') {
+    x += 0.05;
+    segments.push({ x, p: ptx - cLoss*0.3 - (wdmType!=='none'?wdmLoss/2:0) + ampG, label: 'EDFA' });
+  }
+
+  // fiber
+  const fiberStart = x;
+  x += 0.5;
+  const midP = ptx + (ampType==='edfa-booster'?ampG:0) - cLoss*0.3 - (wdmType!=='none'?wdmLoss/2:0) - fLoss - sLoss;
+  segments.push({ x, p: midP, label: '' });
+
+  if (ampType === 'edfa-inline' || ampType === 'raman') {
+    x += 0.02;
+    segments.push({ x, p: midP + ampG, label: ampType==='raman'?'RAMAN':'EDFA' });
+    x += 0.15;
+    segments.push({ x, p: midP + ampG - fLoss*0.2, label: '' });
+  }
+
+  if (ampType === 'edfa-preamp') {
+    x += 0.02;
+    segments.push({ x, p: midP + ampG, label: 'EDFA' });
+  }
+
+  if (wdmType !== 'none') {
+    x += 0.05;
+    const prevP = segments[segments.length-1].p;
+    segments.push({ x, p: prevP - wdmLoss/2, label: 'DEMUX' });
+  }
+
+  x = 1;
+  segments.push({ x, p: prx, label: 'RX' });
+
+  // find power range
+  const allP = segments.map(s => s.p);
+  const maxP = Math.max(...allP) + 3;
+  const minP = Math.min(sens - 5, ...allP) - 2;
+  const pRange = maxP - minP;
+
+  const toX = (frac) => pad + frac * graphW;
+  const toY = (p) => pad + (1 - (p - minP) / pRange) * graphH;
+
+  // sensitivity line
+  ctx.strokeStyle = '#fb718540';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(pad, toY(sens));
+  ctx.lineTo(W - pad, toY(sens));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#fb7185';
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillText('Sensibilidade ' + sens + ' dBm', pad + 4, toY(sens) - 4);
+
+  // 0 dBm reference
+  if (minP < 0 && maxP > 0) {
+    ctx.strokeStyle = '#6b788930';
+    ctx.setLineDash([2, 6]);
+    ctx.beginPath();
+    ctx.moveTo(pad, toY(0));
+    ctx.lineTo(W - pad, toY(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#6b7889';
+    ctx.fillText('0 dBm', W - pad - 40, toY(0) - 3);
+  }
+
+  // power profile
+  ctx.strokeStyle = '#818cf8';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#818cf860';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  segments.forEach((s, i) => {
+    const px = toX(s.x), py = toY(s.p);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // points and labels
+  segments.forEach(s => {
+    if (!s.label) return;
+    const px = toX(s.x), py = toY(s.p);
+    ctx.fillStyle = s.label.includes('EDFA') || s.label.includes('RAMAN') ? '#4ade80' : s.label==='TX' ? '#818cf8' : s.label==='RX' ? '#38bdf8' : '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e6ecf5';
+    ctx.font = '9px "Chakra Petch"';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.label, px, py - 10);
+    ctx.font = '8px "JetBrains Mono"';
+    ctx.fillStyle = '#b6c2d4';
+    ctx.fillText(s.p.toFixed(1) + ' dBm', px, py + 14);
+  });
+
+  ctx.textAlign = 'left';
+
+  // Y axis labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '8px "JetBrains Mono"';
+  const ySteps = Math.ceil(pRange / 5);
+  for (let i = 0; i <= ySteps; i++) {
+    const pVal = minP + (i / ySteps) * pRange;
+    const yy = toY(pVal);
+    ctx.fillText(pVal.toFixed(0), 4, yy + 3);
+  }
+}
+
+// ==================== DRAW EYE DIAGRAM ====================
+function drawEyeDiagram(margin, cdBroad, bitPeriod, mod) {
+  const canvas = document.getElementById('eyeDiagram');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  const W = rect.width, H = rect.height;
+
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, W, H);
+
+  // grid
+  ctx.strokeStyle = '#1e283818';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(W/2, 10); ctx.lineTo(W/2, H-10);
+  ctx.moveTo(10, H/2); ctx.lineTo(W-10, H/2);
+  ctx.stroke();
+
+  const degradation = Math.min(1, Math.max(0, cdBroad / (bitPeriod * 0.5)));
+  const noiseFactor = margin < 0 ? 0.3 : Math.max(0.02, 0.15 - margin * 0.01);
+
+  const padX = 20, padY = 20;
+  const eyeW = W - padX * 2, eyeH = H - padY * 2;
+  const traces = 60;
+
+  ctx.lineWidth = 0.8;
+  ctx.globalAlpha = 0.35;
+
+  for (let t = 0; t < traces; t++) {
+    // random bit sequence
+    const bits = [];
+    for (let i = 0; i < 5; i++) bits.push(Math.random() > 0.5 ? 1 : 0);
+
+    const levels = mod === 'pam4' ? 4 : 2;
+
+    for (let b = 0; b < bits.length - 1; b++) {
+      const from = bits[b];
+      const to = bits[b + 1];
+
+      const hue = margin >= 3 ? 130 : margin >= 0 ? 45 : 0;
+      ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 0.5)`;
+
+      ctx.beginPath();
+      const steps = 40;
+      for (let s = 0; s <= steps; s++) {
+        const frac = s / steps;
+        const x = padX + (b + frac) / (bits.length - 1) * eyeW;
+
+        // transition shape
+        const riseTime = 0.15 + degradation * 0.3;
+        let norm;
+        if (frac < riseTime) {
+          norm = frac / riseTime;
+          norm = 0.5 - 0.5 * Math.cos(norm * Math.PI);
+        } else if (frac > 1 - riseTime) {
+          norm = (1 - frac) / riseTime;
+          norm = 0.5 - 0.5 * Math.cos(norm * Math.PI);
+          norm = 1 - (1 - norm);
+        } else {
+          norm = 1;
+        }
+
+        const level = from + (to - from) * (0.5 - 0.5 * Math.cos(Math.min(1, frac / (0.2 + degradation * 0.3)) * Math.PI));
+        const noise = (Math.random() - 0.5) * noiseFactor * eyeH;
+        const jitter = (Math.random() - 0.5) * degradation * 8;
+        const y = padY + (1 - level) * eyeH + noise;
+
+        if (s === 0) ctx.moveTo(x + jitter, y);
+        else ctx.lineTo(x + jitter, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  ctx.globalAlpha = 1;
+
+  // labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '9px "JetBrains Mono"';
+  ctx.textAlign = 'center';
+  ctx.fillText('Periodo de Bit', W/2, H - 4);
+}
+
+// ==================== DRAW ATTENUATION CHART ====================
+function drawAttenuationChart(currentWl) {
+  const canvas = document.getElementById('attenuationChart');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  const W = rect.width, H = rect.height;
+
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, W, H);
+
+  const pad = { l: 40, r: 15, t: 15, b: 25 };
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+
+  // Silica attenuation curve (approximate)
+  const wls = [];
+  const atts = [];
+  for (let w = 700; w <= 1700; w += 5) {
+    wls.push(w);
+    let a;
+    // Rayleigh + IR absorption + OH peak model
+    const rayleigh = 0.8 * Math.pow(850 / w, 4);
+    const ir = 0.01 * Math.exp((w - 1700) / 100);
+    const oh = 2.5 * Math.exp(-Math.pow((w - 1383) / 15, 2)); // OH peak
+    a = rayleigh + ir + oh;
+    a = Math.max(0.15, Math.min(6, a));
+    atts.push(a);
+  }
+
+  const maxAtt = 5;
+  const minWl = 700, maxWl = 1700;
+
+  const toX = w => pad.l + (w - minWl) / (maxWl - minWl) * gW;
+  const toY = a => pad.t + (1 - Math.log(a / maxAtt) / Math.log(0.15 / maxAtt)) * gH;
+
+  // grid
+  ctx.strokeStyle = '#1e283820';
+  ctx.lineWidth = 0.5;
+  [0.2, 0.5, 1, 2, 5].forEach(a => {
+    const y = toY(a);
+    if (y > pad.t && y < H - pad.b) {
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+      ctx.fillStyle = '#6b7889';
+      ctx.font = '8px "JetBrains Mono"';
+      ctx.textAlign = 'right';
+      ctx.fillText(a.toString(), pad.l - 4, y + 3);
+    }
+  });
+
+  // wavelength bands
+  const bands = [
+    { name: 'O', start: 1260, end: 1360, color: '#38bdf815' },
+    { name: 'E', start: 1360, end: 1460, color: '#fbbf2410' },
+    { name: 'S', start: 1460, end: 1530, color: '#4ade8010' },
+    { name: 'C', start: 1530, end: 1565, color: '#818cf820' },
+    { name: 'L', start: 1565, end: 1625, color: '#a78bfa15' },
+    { name: 'U', start: 1625, end: 1675, color: '#fb718512' },
+  ];
+  bands.forEach(b => {
+    const x1 = toX(b.start), x2 = toX(b.end);
+    ctx.fillStyle = b.color;
+    ctx.fillRect(x1, pad.t, x2 - x1, gH);
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '8px "Chakra Petch"';
+    ctx.textAlign = 'center';
+    ctx.fillText(b.name, (x1 + x2) / 2, pad.t + 12);
+  });
+
+  // attenuation curve
+  ctx.strokeStyle = '#818cf8';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#818cf840';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  wls.forEach((w, i) => {
+    const x = toX(w), y = toY(atts[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // current wavelength marker
+  const curX = toX(currentWl);
+  // find approx attenuation at current wl
+  const idx = Math.round((currentWl - 700) / 5);
+  const curAtt = atts[Math.min(idx, atts.length - 1)] || 0.2;
+  const curY = toY(curAtt);
+
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(curX, pad.t);
+  ctx.lineTo(curX, H - pad.b);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '9px "JetBrains Mono"';
+  ctx.textAlign = 'center';
+  ctx.fillText(currentWl + 'nm', curX, H - pad.b + 12);
+
+  // window labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '8px "JetBrains Mono"';
+  ctx.textAlign = 'center';
+  [850, 1310, 1550].forEach(w => {
+    ctx.fillText(w + '', toX(w), H - pad.b + 12);
+  });
+
+  // Y axis title
+  ctx.save();
+  ctx.translate(8, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '8px "Chakra Petch"';
+  ctx.textAlign = 'center';
+  ctx.fillText('dB/km', 0, 0);
+  ctx.restore();
+}
+
+// ==================== RESET ====================
+function resetAll() {
+  loadPreset('metro');
+}
+
+// ==================== EXPORT ====================
+function exportResults() {
+  let text = '=== OPTICAL LAB — Resultados ===\n';
+  text += 'Data: ' + new Date().toLocaleString() + '\n\n';
+
+  // collect all kv pairs
+  document.querySelectorAll('.kv').forEach(kv => {
+    const k = kv.querySelector('.k');
+    const v = kv.querySelector('.v');
+    if (k && v) {
+      text += k.textContent.trim() + ': ' + v.textContent.trim() + '\n';
+    }
+  });
+
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'optical-lab-results.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ==================== INIT ====================
+window.addEventListener('load', () => {
+  onSourceChange();
+  onFiberChange();
+  onAmpChange();
+  onDetectorChange();
+  onWdmChange();
+  updatePassiveTotals();
+  // initial draw
+  setTimeout(() => {
+    drawAttenuationChart(1550);
+    drawEyeDiagram(0, 0, 100, 'ook');
+    drawLinkDiagram(3, 16, 0.2, 2.2, 0, 0, 0, -15.4, -18, 0, 'none', 'none');
+  }, 100);
+
+  // Redraw on resize
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => runCalculation(), 200);
+  });
+});
+
+</script>
+</body>
+</html>
