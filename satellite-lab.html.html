@@ -1,0 +1,3614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Satellite Lab — Laboratório de Comunicação por Satélite</title>
+<meta name="description" content="Laboratório interativo de comunicação por satélite: link budget completo, propagação SGP4 via TLE em tempo real, previsão de passagens e visualização sky plot." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<style>
+:root {
+  /* palette — mission control / deep space observatory */
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  /* phosphor */
+  --phos: #4ade80;           /* live/tracking green */
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;            /* data / info */
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;           /* warnings */
+  --amber-soft: #78350f40;
+
+  --rose: #fb7185;            /* danger / no link */
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+
+  /* spacing */
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  /* fonts */
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #0d2137 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #1a0d2b 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+/* subtle scanline grid overlay for vibe */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== layout ========== */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+/* ========== header ========== */
+header.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.95), rgba(10,14,20,0.7));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+.brand {
+  display: flex; align-items: baseline; gap: 12px;
+}
+.brand .logo-mark {
+  display: inline-flex;
+  width: 28px; height: 28px;
+  align-items: center; justify-content: center;
+  position: relative;
+}
+.brand .logo-mark::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1px solid var(--phos);
+  border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+}
+.brand .logo-mark::after {
+  content: ''; position: absolute;
+  width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 12px var(--phos);
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+}
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.18em;
+}
+.brand .tag {
+  color: var(--text-2);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+.brand .tag em {
+  font-style: italic; font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--phos);
+  letter-spacing: 0.04em;
+}
+
+.top-stats {
+  display: flex; gap: 18px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.top-stat {
+  display: flex; flex-direction: column;
+  gap: 2px;
+  padding-right: 18px;
+  border-right: 1px solid var(--border);
+}
+.top-stat:last-child { border-right: none; padding-right: 0; }
+.top-stat .label {
+  color: var(--text-2);
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+}
+.top-stat .value {
+  color: var(--text-0);
+  font-weight: 500;
+}
+.top-stat.live .value { color: var(--phos); }
+.top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300;}
+
+.top-actions { display: flex; gap: 8px; }
+.btn {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border-strong);
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--bg-3); border-color: var(--text-2); }
+.btn.primary {
+  background: linear-gradient(180deg, #1a4d2e, #0f3321);
+  border-color: var(--phos);
+  color: var(--phos);
+  box-shadow: 0 0 0 1px var(--phos-glow), inset 0 1px 0 #4ade8020;
+}
+.btn.primary:hover { background: linear-gradient(180deg, #226339, #144a2d); }
+.btn.ghost { background: transparent; border-color: var(--border); }
+.btn svg { width: 12px; height: 12px; }
+
+/* ========== main grid ========== */
+main {
+  display: grid;
+  grid-template-columns: 340px 1fr 340px;
+  gap: 1px;
+  background: var(--border-soft);
+  min-height: 0;
+}
+
+/* panels */
+.panel {
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.35), rgba(30,40,56,0.1));
+  position: sticky;
+  top: 0; z-index: 3;
+}
+.panel-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-0);
+}
+.panel-header .panel-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+}
+
+.panel-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar { width: 6px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* ========== section (collapsible) ========== */
+.section {
+  border: 1px solid var(--border);
+  background: var(--bg-1);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.section-head {
+  display: flex; align-items: center;
+  padding: 9px 12px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #141a25, #0d121a);
+  border-bottom: 1px solid transparent;
+  transition: background .15s;
+  user-select: none;
+}
+.section-head:hover { background: #151c28; }
+.section-head.open { border-bottom-color: var(--border); }
+.section-head h3 {
+  margin: 0 auto 0 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-1);
+  display: flex; align-items: center; gap: 8px;
+}
+.section-head h3 .dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+}
+.section-head h3 .dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan);}
+.section-head h3 .dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber);}
+.section-head h3 .dot.violet { background: var(--violet); box-shadow: 0 0 6px var(--violet);}
+.chev {
+  color: var(--text-2); font-family: var(--font-mono); font-size: 11px;
+  transition: transform .2s;
+}
+.section-head.open .chev { transform: rotate(90deg); }
+.section-body { padding: 12px; display: none; }
+.section-body.open { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ========== form ========== */
+.field {
+  margin-bottom: 10px;
+}
+.field-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 10px;
+}
+.field-row-3 {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
+  margin-bottom: 10px;
+}
+.field label, .field-row label, .field-row-3 label {
+  display: flex; align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-family: var(--font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.field .unit {
+  color: var(--text-3); font-size: 9px;
+}
+input[type="number"], input[type="text"], select, textarea {
+  width: 100%;
+  background: var(--bg-0);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: border-color .15s, background .15s;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--cyan);
+  background: #090d13;
+  box-shadow: 0 0 0 2px var(--cyan-glow);
+}
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+                    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position: right 10px top 50%, right 6px top 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+  padding-right: 24px;
+}
+textarea {
+  resize: vertical;
+  min-height: 70px;
+  line-height: 1.45;
+}
+.help {
+  font-size: 10px; color: var(--text-2);
+  margin-top: 3px; line-height: 1.4;
+  font-family: var(--font-mono);
+}
+
+.tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text-2);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 10px;
+  cursor: help;
+  position: relative;
+}
+.tip:hover { color: var(--cyan); border-color: var(--cyan); }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-strong);
+  color: var(--text-1);
+  padding: 8px 10px; border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 10.5px; font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.5;
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s;
+  z-index: 100;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  text-align: left;
+}
+.tip:hover::after { opacity: 1; }
+
+/* toggle / chips */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.chip {
+  padding: 5px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  cursor: pointer;
+  transition: all .15s;
+  color: var(--text-1);
+}
+.chip:hover { border-color: var(--text-2); color: var(--text-0);}
+.chip.active {
+  background: var(--phos-soft);
+  border-color: var(--phos);
+  color: var(--phos);
+}
+
+/* ========== viz area ========== */
+.viz {
+  display: grid;
+  grid-template-rows: 1fr 280px;
+  min-height: 0;
+}
+
+.map-wrap {
+  position: relative;
+  min-height: 0;
+  background: #000;
+}
+#map {
+  position: absolute; inset: 0;
+  background: #04070c;
+}
+.leaflet-container { background: #04070c !important; font-family: var(--font-mono); }
+.leaflet-control-zoom a {
+  background: var(--bg-2) !important; color: var(--text-0) !important;
+  border-color: var(--border) !important;
+}
+.leaflet-control-zoom a:hover { background: var(--bg-3) !important; }
+.leaflet-tooltip {
+  background: var(--bg-3); color: var(--text-0);
+  border: 1px solid var(--border-strong); box-shadow: none;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.leaflet-tooltip-left::before { border-left-color: var(--border-strong); }
+.leaflet-tooltip-right::before { border-right-color: var(--border-strong); }
+
+.map-legend {
+  position: absolute; top: 10px; left: 10px;
+  background: rgba(7,9,13,0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  z-index: 500;
+  display: flex; gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-1);
+  backdrop-filter: blur(8px);
+}
+.map-legend .li { display: flex; align-items: center; gap: 6px; }
+.map-legend .sw {
+  display: inline-block; width: 10px; height: 3px;
+}
+.map-legend .sw.gt { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.map-legend .sw.fut { background: var(--cyan); opacity: 0.4; }
+.map-legend .sw.sat { background: var(--phos); box-shadow: 0 0 6px var(--phos); width: 8px; height: 8px; border-radius: 50%; }
+.map-legend .sw.gs { background: var(--amber); width: 8px; height: 8px; border-radius: 50%; }
+.map-legend .sw.fp { background: var(--phos-glow); border: 1px solid var(--phos); border-radius: 50%; width: 10px; height: 10px; }
+
+/* ========== view toggle (2D / 3D) ========== */
+.view-toggle {
+  position: absolute; bottom: 10px; left: 10px;
+  display: flex; gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 1px;
+  z-index: 600;
+  font-family: var(--font-mono);
+  backdrop-filter: blur(8px);
+}
+.vt-btn {
+  background: rgba(7,9,13,0.9);
+  color: var(--text-2);
+  border: none;
+  padding: 6px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: all .15s;
+  border-radius: 2px;
+}
+.vt-btn svg { width: 12px; height: 12px; }
+.vt-btn:hover { color: var(--text-0); }
+.vt-btn.active {
+  background: var(--phos-soft);
+  color: var(--phos);
+  box-shadow: 0 0 8px rgba(74,222,128,0.25);
+}
+
+/* ========== globe 3d ========== */
+#globe-container {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, #0a0f18 0%, #04070c 70%, #000 100%);
+  overflow: hidden;
+  cursor: grab;
+}
+#globe-container.dragging { cursor: grabbing; }
+#globe-container canvas {
+  position: absolute; inset: 0;
+  width: 100% !important; height: 100% !important;
+  display: block;
+}
+#globe-hud {
+  position: absolute; top: 10px; left: 10px;
+  background: rgba(7,9,13,0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  z-index: 10;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-1);
+  backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; gap: 3px;
+  min-width: 180px;
+  pointer-events: none;
+}
+#globe-hud .hud-row {
+  display: flex; justify-content: space-between; gap: 12px;
+}
+#globe-hud .k {
+  color: var(--text-2); letter-spacing: 0.08em; font-size: 9.5px;
+}
+#globe-hud .v {
+  color: var(--phos); font-weight: 600;
+}
+#globe-controls-hint {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(7,9,13,0.75);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 9px;
+  z-index: 10;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-2);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  letter-spacing: 0.03em;
+}
+
+/* ========== synthetic satellite panel ========== */
+.synth-panel {
+  margin-top: 10px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(56,189,248,0.04), rgba(56,189,248,0.01));
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  animation: fadeIn .2s ease;
+}
+.synth-title {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.synth-presets {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-bottom: 10px;
+}
+.synth-presets .chip {
+  font-size: 10px; padding: 4px 8px;
+}
+.synth-info {
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: rgba(7,9,13,0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.synth-info > div {
+  display: flex; justify-content: space-between; gap: 12px;
+}
+.synth-info span:first-child {
+  color: var(--text-2); letter-spacing: 0.05em;
+}
+.synth-info span:last-child {
+  color: var(--cyan);
+}
+
+.map-badge {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(7,9,13,0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  z-index: 500;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-1);
+  backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; gap: 2px;
+  text-align: right;
+}
+.map-badge .big {
+  font-family: var(--font-display); font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--phos);
+}
+.map-badge .big.off { color: var(--rose); }
+
+/* bottom strip with skyplot + passes + chart */
+.bottom-strip {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1px;
+  background: var(--border-soft);
+  min-height: 0;
+}
+.sky-card, .chart-card {
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+}
+.card-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+.card-header .meta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-2);
+}
+
+.sky-card .card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+#skyplot { width: 100%; height: 100%; max-height: 220px; }
+
+.chart-card .card-body {
+  flex: 1;
+  position: relative;
+  padding: 4px 6px 10px 6px;
+}
+#linkchart { width: 100%; height: 100%; }
+
+/* ========== results panel (right) ========== */
+.kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.kv:last-child { border-bottom: none; }
+.kv .k {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+}
+.kv .v {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-0);
+  text-align: right;
+  white-space: nowrap;
+}
+.kv .v .unit { color: var(--text-2); margin-left: 3px; font-weight: 300; font-size: 10px;}
+.kv .v.good { color: var(--phos); }
+.kv .v.warn { color: var(--amber); }
+.kv .v.bad { color: var(--rose); }
+.kv .v.acc { color: var(--cyan); }
+
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--phos);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.live-dot.off { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+.live-dot.standby { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+/* bar gauge */
+.gauge {
+  margin-top: 6px;
+  height: 10px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--phos), #86efac);
+  transition: width .4s ease;
+}
+.gauge-fill.warn { background: linear-gradient(90deg, #d97706, var(--amber)); }
+.gauge-fill.bad { background: linear-gradient(90deg, #991b1b, var(--rose)); }
+.gauge-fill.good { background: linear-gradient(90deg, #15803d, var(--phos)); }
+.gauge-label {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px; color: var(--text-2);
+  margin-top: 3px;
+}
+
+/* ========== passes table ========== */
+.passes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.passes-table th {
+  padding: 6px 8px;
+  text-align: left;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+  position: sticky; top: 0;
+}
+.passes-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-1);
+}
+.passes-table tr:hover td { background: #0e141d; color: var(--text-0); cursor: pointer; }
+.passes-table .elev-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+/* ========== toast / status ========== */
+.status-bar {
+  padding: 6px 14px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-1);
+}
+.status-bar .left, .status-bar .right {
+  display: flex; align-items: center; gap: 16px;
+}
+.status-bar .right { margin-left: auto; }
+.status-bar .item { display: flex; align-items: center; gap: 6px; }
+.status-bar .label { color: var(--text-2); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.status-bar .sep { color: var(--text-3); }
+
+.toast {
+  position: fixed;
+  bottom: 46px; right: 16px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--cyan);
+  color: var(--text-0);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  max-width: 360px;
+  z-index: 2000;
+  animation: slideIn .3s ease;
+}
+.toast.warn { border-left-color: var(--amber); }
+.toast.bad { border-left-color: var(--rose); }
+.toast.good { border-left-color: var(--phos); }
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* loading */
+.loader {
+  border: 2px solid var(--border);
+  border-top-color: var(--phos);
+  border-radius: 50%;
+  width: 14px; height: 14px;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* modal */
+.modal-back {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 3000;
+}
+.modal-back.open { display: flex; }
+.modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-width: 720px;
+  width: calc(100% - 32px);
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+.modal header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.modal .close {
+  background: transparent; border: none; color: var(--text-1);
+  font-size: 18px; cursor: pointer; padding: 0 8px;
+}
+.modal .body {
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-1);
+}
+.modal .body h3 {
+  font-family: var(--font-display); font-size: 12px;
+  color: var(--phos);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 22px 0 8px 0;
+}
+.modal .body h3:first-child { margin-top: 0; }
+.modal .body p { margin: 0 0 10px 0; }
+.modal .body code {
+  background: var(--bg-0);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--cyan);
+  border: 1px solid var(--border);
+}
+.modal .body .eq {
+  display: block;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  margin: 10px 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-0);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  border-left: 3px solid var(--cyan);
+}
+.modal .body ul { padding-left: 20px; margin: 0 0 10px 0;}
+.modal .body li { margin-bottom: 4px; }
+
+/* footer */
+footer {
+  padding: 6px 14px;
+  background: var(--bg-0);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+footer a { color: var(--text-2); text-decoration: none; }
+footer a:hover { color: var(--phos); }
+
+/* responsive — tablet / narrow */
+@media (max-width: 1280px) {
+  main { grid-template-columns: 300px 1fr 300px; }
+}
+@media (max-width: 1024px) {
+  main { grid-template-columns: 280px 1fr; }
+  .panel.results { display: none; }
+  .top-stats { gap: 10px; }
+  .top-stat { padding-right: 10px; }
+}
+@media (max-width: 768px) {
+  body { overflow: auto; font-size: 12px; }
+  .app { height: auto; min-height: 100vh; }
+  main {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  .viz { grid-template-rows: 400px auto; }
+  .bottom-strip { grid-template-columns: 1fr; grid-auto-rows: auto; }
+  .sky-card { min-height: 280px; }
+  .chart-card { min-height: 240px; }
+  header.top-bar { flex-wrap: wrap; gap: 10px; }
+  .top-stats { width: 100%; }
+}
+
+/* utility */
+.mono { font-family: var(--font-mono); }
+.dim { color: var(--text-2); }
+.hidden { display: none !important; }
+.flex { display: flex; }
+.row { display: flex; gap: 8px; align-items: center; }
+.space { flex: 1; }
+.bar-subtle { border-top: 1px solid var(--border-soft); margin: 10px 0; }
+
+/* custom marker */
+.sat-marker {
+  width: 14px; height: 14px;
+  background: var(--phos);
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 12px var(--phos), 0 0 24px var(--phos);
+}
+.gs-marker {
+  width: 0; height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 12px solid var(--amber);
+  filter: drop-shadow(0 0 4px var(--amber));
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ============ HEADER ============ -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark" aria-hidden="true"></span>
+    <h1>SATELLITE&nbsp;LAB</h1>
+    <span class="tag">Laboratório <em>interativo</em> · Link Budget &middot; SGP4 &middot; Pass Prediction</span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">UTC</span>
+      <span class="value" id="clock-utc">--:--:--</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Local</span>
+      <span class="value" id="clock-local">--:--:--</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Satélite</span>
+      <span class="value" id="stat-sat">—</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Estação</span>
+      <span class="value" id="stat-gs">—</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn ghost" id="btn-help" title="Referência teórica">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Teoria
+    </button>
+    <button class="btn" id="btn-export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar CSV
+    </button>
+    <button class="btn primary" id="btn-reset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      Reset
+    </button>
+  </div>
+</header>
+
+<main>
+<!-- ============ LEFT PANEL: CONTROLS ============ -->
+<aside class="panel controls">
+  <div class="panel-header">
+    <h2>Parâmetros</h2>
+    <span class="panel-sub">INPUT</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- SATELLITE -->
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot"></span> Satélite &amp; TLE</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Preset
+            <span class="tip" data-tip="Selecione um satélite pré-configurado. O TLE é buscado do Celestrak em tempo real (com fallback local).">i</span>
+          </label>
+          <select id="sat-preset">
+            <optgroup label="Estações Espaciais">
+              <option value="iss">ISS (Zarya) — NORAD 25544</option>
+              <option value="tiangong">Tiangong (CSS) — NORAD 48274</option>
+              <option value="css-tianhe">Tianhe Core Module</option>
+            </optgroup>
+            <optgroup label="Observação da Terra">
+              <option value="noaa19">NOAA-19 (APT 137.100 MHz)</option>
+              <option value="noaa18">NOAA-18 (APT 137.913 MHz)</option>
+              <option value="noaa15">NOAA-15 (APT 137.620 MHz)</option>
+              <option value="meteor">METEOR-M 2 (LRPT)</option>
+            </optgroup>
+            <optgroup label="Amador (AMSAT)">
+              <option value="so50">SO-50 (FM Repeater)</option>
+              <option value="io86">IO-86 (LAPAN-A2)</option>
+              <option value="ao91">AO-91 (Fox-1B)</option>
+            </optgroup>
+            <optgroup label="Navegação (GEO/MEO)">
+              <option value="gps">GPS IIF-5 (MEO)</option>
+            </optgroup>
+            <optgroup label="Constelações">
+              <option value="starlink">Starlink-1007</option>
+            </optgroup>
+            <optgroup label="Custom">
+              <option value="synthetic">⚙️ Satélite Fictício (parâmetros orbitais)</option>
+              <option value="custom">📝 TLE Personalizado</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>TLE (2 linhas) <span id="tle-status" class="dim mono" style="margin-left:auto;font-size:10px;"></span></label>
+          <textarea id="tle-input" spellcheck="false" placeholder="1 25544U 98067A   24001.50000000 ..."></textarea>
+          <div class="help">A primeira linha começa com "1", a segunda com "2". Formato NORAD padrão.</div>
+        </div>
+        <div class="row">
+          <button class="btn ghost" id="btn-fetch-tle" style="flex:1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c2.5-2 4-5 4-9s-1.5-7-4-9m0 18c-2.5-2-4-5-4-9s1.5-7 4-9"/></svg>
+            Buscar TLE atual (Celestrak)
+          </button>
+        </div>
+
+        <!-- SYNTHETIC SATELLITE BUILDER -->
+        <div id="synth-panel" class="synth-panel" style="display:none;">
+          <div class="synth-title">
+            <span>⚙️ Gerador de Satélite Fictício</span>
+            <span class="dim" style="font-size:10px;">parâmetros Keplerianos → TLE sintético</span>
+          </div>
+
+          <div class="field">
+            <label>Nome
+              <span class="tip" data-tip="Nome de exibição do satélite fictício.">i</span>
+            </label>
+            <input type="text" id="syn-name" value="SATLAB-1" maxlength="22" />
+          </div>
+
+          <div class="synth-presets">
+            <button class="chip" data-synth="leo-low"   title="LEO baixa (ISS-like)">LEO 420 km</button>
+            <button class="chip" data-synth="leo-polar" title="LEO polar heliossíncrona">SSO 700 km</button>
+            <button class="chip" data-synth="leo-high"  title="LEO alta">LEO 1200 km</button>
+            <button class="chip" data-synth="meo-gps"   title="MEO estilo GPS">MEO 20200 km</button>
+            <button class="chip" data-synth="geo"       title="Geoestacionária">GEO 35786 km</button>
+            <button class="chip" data-synth="molniya"   title="Órbita excêntrica Molniya">Molniya</button>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Altitude (km)
+                <span class="tip" data-tip="Altitude média acima da superfície da Terra (equivale a semi-eixo maior menos o raio equatorial).">i</span>
+              </label>
+              <input type="number" id="syn-alt" value="420" min="180" max="400000" step="10" />
+            </div>
+            <div class="field">
+              <label>Inclinação (°)
+                <span class="tip" data-tip="0°=equatorial, 90°=polar, 98°≈SSO, 51,6°=ISS, 63,4°=Molniya.">i</span>
+              </label>
+              <input type="number" id="syn-inc" value="51.64" min="0" max="180" step="0.01" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Excentricidade
+                <span class="tip" data-tip="0=circular, próximo a 1=muito elíptica. Valores típicos: 0 (LEO/GEO), 0.001 (SSO), 0.72 (Molniya).">i</span>
+              </label>
+              <input type="number" id="syn-ecc" value="0.0001" min="0" max="0.95" step="0.0001" />
+            </div>
+            <div class="field">
+              <label>RAAN (°)
+                <span class="tip" data-tip="Right Ascension of Ascending Node — ângulo do nó ascendente medido no plano equatorial (Ω).">i</span>
+              </label>
+              <input type="number" id="syn-raan" value="0" min="0" max="360" step="0.1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>Arg. Perigeu (°)
+                <span class="tip" data-tip="Argumento do perigeu (ω) — ângulo entre nó ascendente e perigeu.">i</span>
+              </label>
+              <input type="number" id="syn-argp" value="0" min="0" max="360" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Anomalia Média (°)
+                <span class="tip" data-tip="Anomalia média (M) na época. Define a posição do satélite na órbita em t=época.">i</span>
+              </label>
+              <input type="number" id="syn-ma" value="0" min="0" max="360" step="0.1" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Época <span class="dim" style="font-size:10px;margin-left:auto;">UTC</span></label>
+            <input type="text" id="syn-epoch" readonly />
+            <div class="help">Época fixada em "agora" na geração. O satélite começa no ponto definido por M no instante de época.</div>
+          </div>
+
+          <div class="synth-info">
+            <div><span>Semi-eixo a:</span><span id="syn-info-a" class="mono">—</span></div>
+            <div><span>Período T:</span><span id="syn-info-t" class="mono">—</span></div>
+            <div><span>Mean motion n:</span><span id="syn-info-mm" class="mono">—</span></div>
+            <div><span>Perigeu h<sub>p</sub>:</span><span id="syn-info-hp" class="mono">—</span></div>
+            <div><span>Apogeu h<sub>a</sub>:</span><span id="syn-info-ha" class="mono">—</span></div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="btn-gen-tle" style="flex:1;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Gerar TLE sintético
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUND STATION -->
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot amber"></span> Estação Terrestre</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Preset</label>
+          <select id="gs-preset">
+            <option value="ifsc">IFSC São José (SC)</option>
+            <option value="ifsc-fln">IFSC Florianópolis (SC)</option>
+            <option value="sp">São Paulo – INPE</option>
+            <option value="cuiaba">Cuiabá – Estação Terrestre INPE</option>
+            <option value="natal">Natal – Barreira do Inferno</option>
+            <option value="ale">Alcântara (MA)</option>
+            <option value="cba">Córdoba (AR) – CONAE</option>
+            <option value="wallops">NASA Wallops (USA)</option>
+            <option value="custom">📍 Personalizada</option>
+          </select>
+        </div>
+        <div class="field-row-3">
+          <div>
+            <label>Latitude <span class="unit">°</span></label>
+            <input type="number" id="gs-lat" step="0.0001" value="-27.595">
+          </div>
+          <div>
+            <label>Longitude <span class="unit">°</span></label>
+            <input type="number" id="gs-lon" step="0.0001" value="-48.618">
+          </div>
+          <div>
+            <label>Alt <span class="unit">m</span></label>
+            <input type="number" id="gs-alt" step="1" value="5">
+          </div>
+        </div>
+        <div class="field">
+          <label>Elevação mínima <span class="unit">°</span>
+            <span class="tip" data-tip="Ângulo mínimo de elevação para considerar o satélite visível e a passagem válida. Valores comuns: 5° para enlace sem obstruções; 10° para enlaces em áreas urbanas.">i</span>
+          </label>
+          <input type="number" id="min-elev" step="0.1" min="0" max="90" value="5">
+        </div>
+      </div>
+    </div>
+
+    <!-- RF / LINK -->
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot cyan"></span> RF &amp; Enlace</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div>
+            <label>Direção</label>
+            <select id="link-dir">
+              <option value="down">Downlink (Sat → Terra)</option>
+              <option value="up">Uplink (Terra → Sat)</option>
+            </select>
+          </div>
+          <div>
+            <label>Frequência <span class="unit">MHz</span>
+              <span class="tip" data-tip="Frequência da portadora. VHF (137, 145), UHF (435), L (1.5 GHz), S (2-4 GHz), C (4-8), X (8-12), Ku (12-18), Ka (26-40).">i</span>
+            </label>
+            <input type="number" id="freq" step="0.1" value="2245">
+          </div>
+        </div>
+        <div class="field">
+          <label>Banda de frequência (preset)</label>
+          <div class="chips" id="band-chips">
+            <span class="chip" data-band="vhf" data-freq="137.9">VHF · 137 MHz</span>
+            <span class="chip" data-band="uhf" data-freq="435">UHF · 435 MHz</span>
+            <span class="chip" data-band="l"   data-freq="1575">L · 1.5 GHz</span>
+            <span class="chip active" data-band="s" data-freq="2245">S · 2.2 GHz</span>
+            <span class="chip" data-band="x"  data-freq="8400">X · 8.4 GHz</span>
+            <span class="chip" data-band="ku" data-freq="14500">Ku · 14.5 GHz</span>
+            <span class="chip" data-band="ka" data-freq="30000">Ka · 30 GHz</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Taxa de dados
+              <span class="tip" data-tip="Taxa de bits de informação (Rb). Usada no cálculo de Eb/N0.">i</span>
+            </label>
+            <input type="number" id="datarate" step="1" value="2048">
+            <div class="help">kbps</div>
+          </div>
+          <div>
+            <label>Largura de banda
+              <span class="tip" data-tip="Largura de banda equivalente de ruído (B). Afeta N e C/N.">i</span>
+            </label>
+            <input type="number" id="bw" step="1" value="2400">
+            <div class="help">kHz</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSMITTER -->
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot violet"></span> Transmissor</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div>
+            <label>Pot. TX <span class="unit">W</span>
+              <span class="tip" data-tip="Potência na saída do transmissor (antes das perdas do feeder).">i</span>
+            </label>
+            <input type="number" id="tx-power" step="0.1" value="5">
+          </div>
+          <div>
+            <label>Perda Feeder TX <span class="unit">dB</span>
+              <span class="tip" data-tip="Perdas entre o TX e a antena (cabos, conectores, filtros, duplexadores).">i</span>
+            </label>
+            <input type="number" id="tx-feeder" step="0.1" value="1.0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Ganho Antena TX <span class="unit">dBi</span>
+            <span class="tip" data-tip="Ganho da antena transmissora em direção ao alvo. Inclua perdas de apontamento como campo separado.">i</span>
+          </label>
+          <input type="number" id="tx-gain" step="0.1" value="10">
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEIVER -->
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot violet"></span> Receptor</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div>
+            <label>Ganho Antena RX <span class="unit">dBi</span></label>
+            <input type="number" id="rx-gain" step="0.1" value="32">
+          </div>
+          <div>
+            <label>Perda Feeder RX <span class="unit">dB</span></label>
+            <input type="number" id="rx-feeder" step="0.1" value="0.5">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Temp. sistema <span class="unit">K</span>
+              <span class="tip" data-tip="Temperatura de ruído total do sistema (antena + LNA + pós-LNA referenciada). Valores típicos: 100-200 K em banda S/X com LNA criogênico; 300-500 K com LNA comercial.">i</span>
+            </label>
+            <input type="number" id="rx-tsys" step="1" value="290">
+          </div>
+          <div>
+            <label>G/T <span class="unit">dB/K</span>
+              <span class="tip" data-tip="Figura de mérito do receptor. Calculado automaticamente: G/T = Gr - Lf_rx - 10·log10(Ts).">i</span>
+            </label>
+            <input type="text" id="rx-gt" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOSSES -->
+    <div class="section">
+      <div class="section-head" data-toggle>
+        <h3><span class="dot amber"></span> Perdas &amp; Atmosfera</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div>
+            <label>Aponta/Polariz. <span class="unit">dB</span>
+              <span class="tip" data-tip="Perdas combinadas de apontamento e polarização. Típico: 0.5-2 dB.">i</span>
+            </label>
+            <input type="number" id="loss-point" step="0.1" value="1.5">
+          </div>
+          <div>
+            <label>Implementação <span class="unit">dB</span>
+              <span class="tip" data-tip="Perda de implementação do modem (não-idealidades do demodulador).">i</span>
+            </label>
+            <input type="number" id="loss-impl" step="0.1" value="1.0">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Atm. gasosa <span class="unit">dB</span>
+              <span class="tip" data-tip="Absorção por O2 e H2O (ITU-R P.676). Calculada automaticamente a partir da elevação e frequência.">i</span>
+            </label>
+            <input type="text" id="loss-gas" readonly>
+          </div>
+          <div>
+            <label>Chuva <span class="unit">dB</span>
+              <span class="tip" data-tip="Atenuação por chuva (ITU-R P.618). Calculada pelo modelo simplificado com a taxa de chuva.">i</span>
+            </label>
+            <input type="text" id="loss-rain" readonly>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>Taxa chuva <span class="unit">mm/h</span>
+              <span class="tip" data-tip="Taxa de chuva excedida 0,01% do tempo (R0.01). Sudeste do BR: ~60-90 mm/h; Norte: 100-145 mm/h.">i</span>
+            </label>
+            <input type="number" id="rain-rate" step="1" value="60">
+          </div>
+          <div>
+            <label>Polarização</label>
+            <select id="polarization">
+              <option value="H">Horizontal</option>
+              <option value="V" selected>Vertical</option>
+              <option value="C">Circular</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOD / FEC -->
+    <div class="section">
+      <div class="section-head" data-toggle>
+        <h3><span class="dot cyan"></span> Modulação &amp; FEC</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div>
+            <label>Modulação</label>
+            <select id="modulation">
+              <option value="BPSK">BPSK</option>
+              <option value="QPSK" selected>QPSK</option>
+              <option value="8PSK">8PSK</option>
+              <option value="16APSK">16APSK</option>
+              <option value="16QAM">16QAM</option>
+              <option value="32APSK">32APSK</option>
+            </select>
+          </div>
+          <div>
+            <label>FEC</label>
+            <select id="fec">
+              <option value="none">Sem FEC</option>
+              <option value="1/2" selected>LDPC 1/2</option>
+              <option value="2/3">LDPC 2/3</option>
+              <option value="3/4">LDPC 3/4</option>
+              <option value="5/6">LDPC 5/6</option>
+              <option value="conv1/2">Convolucional 1/2 (Viterbi)</option>
+              <option value="conv3/4">Convolucional 3/4 (Viterbi)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label>BER alvo</label>
+            <select id="ber-target">
+              <option value="1e-3">1e-3</option>
+              <option value="1e-5">1e-5</option>
+              <option value="1e-6" selected>1e-6</option>
+              <option value="1e-9">1e-9</option>
+            </select>
+          </div>
+          <div>
+            <label>Eb/N0 Req. <span class="unit">dB</span>
+              <span class="tip" data-tip="Eb/N0 mínimo requerido considerando modulação, FEC e BER alvo. Pode ser sobrescrito com valor manual abaixo.">i</span>
+            </label>
+            <input type="text" id="ebno-req" readonly>
+          </div>
+        </div>
+        <div class="field">
+          <label>Override Eb/N0 Req. <span class="unit">dB (opcional)</span></label>
+          <input type="number" id="ebno-override" step="0.1" placeholder="Auto">
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULATION -->
+    <div class="section">
+      <div class="section-head" data-toggle>
+        <h3><span class="dot"></span> Simulação</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div>
+            <label>Velocidade</label>
+            <select id="sim-speed">
+              <option value="0.5">0,5×</option>
+              <option value="1" selected>1× (tempo real)</option>
+              <option value="10">10×</option>
+              <option value="60">60× (1 min/s)</option>
+              <option value="300">300× (5 min/s)</option>
+              <option value="1800">1800× (30 min/s)</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <div class="row" style="padding-top:6px;">
+              <span class="live-dot" id="sim-dot"></span>
+              <span class="mono" id="sim-status">Rodando</span>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn ghost" id="btn-play" style="flex:1;">⏵ Play</button>
+          <button class="btn ghost" id="btn-pause" style="flex:1;">⏸ Pause</button>
+          <button class="btn ghost" id="btn-now" style="flex:1;">⟳ Agora</button>
+        </div>
+        <div class="bar-subtle"></div>
+        <div class="field">
+          <label>Jump para próxima passagem</label>
+          <button class="btn ghost" id="btn-jump-pass" style="width:100%;">⤒ Ir para próxima AOS</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ============ CENTER: VISUALIZATIONS ============ -->
+<section class="panel viz" style="background: var(--bg-0);">
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div id="globe-container" style="display:none;">
+      <div id="globe-hud">
+        <div class="hud-row"><span class="k">SUBPONTO</span><span class="v mono" id="g-subp">—</span></div>
+        <div class="hud-row"><span class="k">ALTITUDE</span><span class="v mono" id="g-alt">—</span></div>
+        <div class="hud-row"><span class="k">FOOTPRINT</span><span class="v mono" id="g-fp">—</span></div>
+        <div class="hud-row"><span class="k">SLANT</span><span class="v mono" id="g-slant">—</span></div>
+      </div>
+      <div id="globe-controls-hint">
+        🖱️ arrastar = rotacionar · scroll = zoom · duplo-clique = reset
+      </div>
+    </div>
+    <div class="view-toggle">
+      <button class="vt-btn active" data-view="map" title="Mapa 2D">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6z"/><path d="M9 3v15M15 6v15"/></svg>
+        <span>2D</span>
+      </button>
+      <button class="vt-btn" data-view="globe" title="Globo 3D">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/><path d="M12 2v20"/></svg>
+        <span>3D</span>
+      </button>
+    </div>
+    <div class="map-legend">
+      <div class="li"><span class="sw sat"></span> Satélite</div>
+      <div class="li"><span class="sw gs"></span> Estação</div>
+      <div class="li"><span class="sw gt"></span> Trajeto (passado)</div>
+      <div class="li"><span class="sw fut"></span> Trajeto (futuro)</div>
+      <div class="li"><span class="sw fp"></span> Footprint</div>
+    </div>
+    <div class="map-badge">
+      <div class="big" id="badge-state">—</div>
+      <div><span id="badge-sub">Aguardando TLE…</span></div>
+    </div>
+  </div>
+
+  <div class="bottom-strip">
+    <div class="sky-card">
+      <div class="card-header">
+        <h3>Sky Plot</h3>
+        <span class="meta" id="sky-meta">— · —</span>
+      </div>
+      <div class="card-body">
+        <svg id="skyplot" viewBox="-110 -110 220 220" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-header">
+        <h3>Link Budget @ Passagem — Slant / Elev / Margem</h3>
+        <span class="meta" id="chart-meta">—</span>
+      </div>
+      <div class="card-body">
+        <canvas id="linkchart"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RIGHT PANEL: RESULTS ============ -->
+<aside class="panel results">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="live-stamp">LIVE</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot"></span> Posição em tempo real</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Lat / Lon</span><span class="v mono" id="r-latlon">—</span></div>
+        <div class="kv"><span class="k">Altitude</span><span class="v mono" id="r-alt">—</span></div>
+        <div class="kv"><span class="k">Velocidade</span><span class="v mono" id="r-speed">—</span></div>
+        <div class="kv"><span class="k">Slant Range</span><span class="v mono acc" id="r-range">—</span></div>
+        <div class="kv"><span class="k">Elevação</span><span class="v mono" id="r-elev">—</span></div>
+        <div class="kv"><span class="k">Azimute</span><span class="v mono" id="r-az">—</span></div>
+        <div class="kv"><span class="k">Doppler</span><span class="v mono" id="r-doppler">—</span></div>
+        <div class="kv"><span class="k">Atraso prop.</span><span class="v mono" id="r-delay">—</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot cyan"></span> Link Budget instantâneo</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">EIRP</span><span class="v mono" id="r-eirp">—</span></div>
+        <div class="kv"><span class="k">FSPL</span><span class="v mono" id="r-fspl">—</span></div>
+        <div class="kv"><span class="k">Perdas atm.</span><span class="v mono" id="r-lossatm">—</span></div>
+        <div class="kv"><span class="k">Perdas total</span><span class="v mono" id="r-losstot">—</span></div>
+        <div class="kv"><span class="k">Pot. recebida</span><span class="v mono" id="r-prx">—</span></div>
+        <div class="kv"><span class="k">G/T</span><span class="v mono" id="r-gt">—</span></div>
+        <div class="kv"><span class="k">C/N₀</span><span class="v mono" id="r-cn0">—</span></div>
+        <div class="kv"><span class="k">C/N</span><span class="v mono" id="r-cn">—</span></div>
+        <div class="kv"><span class="k">Eb/N₀</span><span class="v mono acc" id="r-ebno">—</span></div>
+        <div class="kv"><span class="k">Eb/N₀ Req.</span><span class="v mono" id="r-ebnoreq">—</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot amber"></span> Margem de Enlace</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv">
+          <span class="k">Margem</span>
+          <span class="v mono" id="r-margin" style="font-size:15px;">—</span>
+        </div>
+        <div class="gauge">
+          <div class="gauge-fill" id="r-margin-bar" style="width:0"></div>
+        </div>
+        <div class="gauge-label">
+          <span id="r-margin-lo">−10 dB</span>
+          <span>0 dB</span>
+          <span id="r-margin-hi">+20 dB</span>
+        </div>
+        <div class="help" id="r-margin-msg" style="margin-top:8px;color:var(--text-1);"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" data-toggle>
+        <h3><span class="dot violet"></span> Próximas passagens</h3>
+        <span class="chev">▸</span>
+      </div>
+      <div class="section-body open" style="padding: 0;">
+        <div style="max-height:280px; overflow-y:auto;">
+          <table class="passes-table" id="passes-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>AOS (local)</th>
+                <th>Dur.</th>
+                <th>Elev max.</th>
+              </tr>
+            </thead>
+            <tbody id="passes-tbody">
+              <tr><td colspan="4" class="dim" style="padding:12px;text-align:center;">Calculando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+</main>
+
+<!-- ============ STATUS BAR ============ -->
+<div class="status-bar">
+  <div class="left">
+    <div class="item"><span class="label">Propagador</span> <span id="st-prop">SGP4</span></div>
+    <div class="item"><span class="label">Fonte TLE</span> <span id="st-tle">Aguardando...</span></div>
+    <div class="item"><span class="label">Idade TLE</span> <span id="st-tleage">—</span></div>
+  </div>
+  <div class="right">
+    <div class="item"><span class="label">FPS</span> <span id="st-fps">60</span></div>
+    <div class="item"><span class="label">Sim. t</span> <span id="st-simt">—</span></div>
+    <div class="item"><span class="live-dot" id="st-dot"></span> <span id="st-msg">Inicializando...</span></div>
+  </div>
+</div>
+
+<footer>
+  <span>SATELLITE LAB · v1.0 · construído para ensino de Engenharia de Telecomunicações</span> ·
+  <span>Propagação SGP4 (satellite.js) · TLE via Celestrak · Mapa Leaflet</span> ·
+  <a href="#" id="foot-help">Teoria</a>
+</footer>
+
+</div> <!-- /.app -->
+
+<!-- ============ MODAL: TEORIA ============ -->
+<div class="modal-back" id="modal-help">
+  <div class="modal">
+    <header>
+      <h2>Referência Teórica</h2>
+      <button class="close" id="modal-close">✕</button>
+    </header>
+    <div class="body">
+
+<h3>1. Free Space Path Loss (FSPL)</h3>
+<p>A perda básica no espaço livre entre duas antenas isotrópicas separadas por uma distância <code>d</code> e operando em frequência <code>f</code>:</p>
+<span class="eq">FSPL (dB) = 20·log₁₀(d) + 20·log₁₀(f) + 20·log₁₀(4π/c)</span>
+<span class="eq">FSPL (dB) = 32,45 + 20·log₁₀(d<sub>km</sub>) + 20·log₁₀(f<sub>MHz</sub>)</span>
+
+<h3>2. EIRP — Effective Isotropic Radiated Power</h3>
+<span class="eq">EIRP (dBW) = P<sub>t</sub> − L<sub>ft</sub> + G<sub>t</sub></span>
+<p>Onde <code>Pt</code> é a potência do TX, <code>Lft</code> as perdas do feeder e <code>Gt</code> o ganho da antena.</p>
+
+<h3>3. G/T — Figura de Mérito do Receptor</h3>
+<span class="eq">G/T (dB/K) = G<sub>r</sub> − L<sub>fr</sub> − 10·log₁₀(T<sub>s</sub>)</span>
+<p>Expressa a qualidade do receptor (ganho efetivo contra o ruído do sistema).</p>
+
+<h3>4. C/N₀ — Razão Portadora/Densidade de Ruído</h3>
+<span class="eq">C/N₀ (dB-Hz) = EIRP − FSPL − L<sub>atm</sub> − L<sub>point</sub> + G/T − k</span>
+<p>Onde <code>k = −228,6 dBW/K/Hz</code> (constante de Boltzmann em dB).</p>
+
+<h3>5. C/N e E<sub>b</sub>/N₀</h3>
+<span class="eq">C/N (dB) = C/N₀ − 10·log₁₀(B)</span>
+<span class="eq">E<sub>b</sub>/N₀ (dB) = C/N₀ − 10·log₁₀(R<sub>b</sub>)</span>
+<p>onde <code>B</code> é a largura de banda de ruído e <code>Rb</code> a taxa de bits de informação.</p>
+
+<h3>6. Margem de Enlace</h3>
+<span class="eq">Margem (dB) = E<sub>b</sub>/N₀<sub>recebido</sub> − E<sub>b</sub>/N₀<sub>requerido</sub> − L<sub>impl</sub></span>
+<p>Margem positiva indica enlace viável. Valores típicos de projeto:</p>
+<ul>
+  <li><strong>3 dB:</strong> mínimo aceitável (compensa variações)</li>
+  <li><strong>6 dB:</strong> projeto robusto</li>
+  <li><strong>10+ dB:</strong> conservador, para ambientes severos</li>
+</ul>
+
+<h3>7. Propagação SGP4 e TLEs</h3>
+<p>Os <strong>Two-Line Elements (TLE)</strong> codificam elementos Keplerianos médios no formato SGP4/SDP4, modelo analítico da Força Aérea dos EUA. A propagação fornece posição e velocidade no referencial ECI (inercial). Para converter para coordenadas observador (azimute/elevação/range), calcula-se ECF e aplica-se a matriz de rotação topocêntrica.</p>
+
+<h3>8. Doppler</h3>
+<span class="eq">Δf ≈ (v<sub>radial</sub> / c) · f<sub>0</sub></span>
+<p>Onde <code>v_radial</code> é a taxa de variação do slant range. Em LEO tipicamente ±10 a ±30 kHz em UHF.</p>
+
+<h3>9. Atenuação Atmosférica — ITU-R</h3>
+<p><strong>Gases (ITU-R P.676):</strong> dominada por O₂ e H₂O. Em bandas VHF/UHF é desprezível; torna-se significativa acima de Ku.</p>
+<p><strong>Chuva (ITU-R P.618):</strong> <code>A = γ<sub>R</sub> · L<sub>eff</sub></code>, onde <code>γR = k·R<sup>α</sup></code> com coeficientes <code>k, α</code> tabelados por frequência e polarização (ITU-R P.838).</p>
+
+<h3>10. Modulação & FEC</h3>
+<p>Valores típicos de E<sub>b</sub>/N₀ requerido (BER = 10⁻⁶, canal AWGN):</p>
+<ul>
+  <li>BPSK / QPSK sem código: ~10,5 dB</li>
+  <li>QPSK + LDPC 1/2 (DVB-S2): ~1,0 dB</li>
+  <li>QPSK + LDPC 3/4: ~2,5 dB</li>
+  <li>8PSK + LDPC 2/3: ~3,8 dB</li>
+  <li>16APSK + LDPC 3/4: ~5,5 dB</li>
+</ul>
+
+<h3>Referências</h3>
+<ul>
+  <li>PRATT, T.; BOSTIAN, C.; ALLNUTT, J. <em>Satellite Communications</em>. 3. ed. Wiley, 2020.</li>
+  <li>ROSCOE, O. S. <em>Communication Satellite Systems</em>. STK / AGI.</li>
+  <li>ITU-R P.618, P.676, P.838 — Recomendações para propagação.</li>
+  <li>VALLADO, D. A.; CRAWFORD, P. <em>Revisiting Spacetrack Report #3</em> (SGP4).</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ LIBRARIES ============ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+/* =====================================================================
+   SATELLITE LAB — core application
+   Autor: Prof. Ramon Mayor Martins — IFSC Campus São José
+   ===================================================================== */
+
+(() => {
+'use strict';
+
+// ---------- constants ----------
+const K_BOLTZ_DB = -228.6;        // 10*log10(kB) em dBW/K/Hz
+const C_LIGHT = 299792.458;       // km/s
+const EARTH_RADIUS = 6378.137;    // km (WGS84 equatorial)
+
+// ---------- state ----------
+const state = {
+  tle1: null, tle2: null,
+  satrec: null,
+  satName: 'ISS (ZARYA)',
+  simTime: new Date(),
+  simSpeed: 1,
+  paused: false,
+  lastRealTime: performance.now(),
+  passes: [],
+  passTrack: [],      // time-series during current/next pass
+  gt: 0,
+  ebnoReq: 0,
+};
+
+// ---------- fallback TLE database ----------
+const TLE_FALLBACK = {
+  iss: {
+    name: 'ISS (ZARYA)',
+    l1: '1 25544U 98067A   26107.52000000  .00012345  00000+0  22345-3 0  9991',
+    l2: '2 25544  51.6400 150.0000 0004500 100.0000 260.0000 15.50000000400001'
+  },
+  tiangong: {
+    name: 'TIANGONG-CSS',
+    l1: '1 48274U 21035A   26107.50000000  .00010000  00000+0  20000-3 0  9997',
+    l2: '2 48274  41.4700 200.0000 0005000  50.0000 310.0000 15.60000000280001'
+  },
+  'css-tianhe': {
+    name: 'CSS (TIANHE)',
+    l1: '1 48274U 21035A   26107.50000000  .00010000  00000+0  20000-3 0  9997',
+    l2: '2 48274  41.4700 200.0000 0005000  50.0000 310.0000 15.60000000280001'
+  },
+  noaa19: {
+    name: 'NOAA 19',
+    l1: '1 33591U 09005A   26107.50000000  .00000140  00000+0  95000-4 0  9993',
+    l2: '2 33591  99.1900  90.0000 0013000 270.0000  90.0000 14.13000000890001'
+  },
+  noaa18: {
+    name: 'NOAA 18',
+    l1: '1 28654U 05018A   26107.50000000  .00000150  00000+0  10000-3 0  9996',
+    l2: '2 28654  98.7800 130.0000 0014000 260.0000 100.0000 14.13000001050001'
+  },
+  noaa15: {
+    name: 'NOAA 15',
+    l1: '1 25338U 98030A   26107.50000000  .00000080  00000+0  50000-4 0  9994',
+    l2: '2 25338  98.7500 115.0000 0011000 290.0000  70.0000 14.26000001390001'
+  },
+  meteor: {
+    name: 'METEOR-M 2',
+    l1: '1 40069U 14037A   26107.50000000  .00000020  00000+0  30000-4 0  9991',
+    l2: '2 40069  98.6000 120.0000 0005500  80.0000 280.0000 14.22000000620001'
+  },
+  so50: {
+    name: 'SO-50 (SAUDISAT 1C)',
+    l1: '1 27607U 02058C   26107.50000000  .00000180  00000+0  15000-3 0  9997',
+    l2: '2 27607  64.5500 200.0000 0070000  90.0000 270.0000 14.78000001200001'
+  },
+  io86: {
+    name: 'LAPAN-A2 / IO-86',
+    l1: '1 40931U 15052B   26107.50000000  .00000500  00000+0  25000-4 0  9993',
+    l2: '2 40931   6.0000 100.0000 0012000  45.0000 315.0000 14.77000000560001'
+  },
+  ao91: {
+    name: 'AO-91 (FOX-1B)',
+    l1: '1 43017U 17073E   26107.50000000  .00001500  00000+0  80000-4 0  9992',
+    l2: '2 43017  97.7700 200.0000 0240000  20.0000 340.0000 14.78000000430001'
+  },
+  gps: {
+    name: 'GPS BIIF-5 (PRN 24)',
+    l1: '1 38833U 12053A   26107.50000000  .00000010  00000+0  00000+0 0  9991',
+    l2: '2 38833  54.8000 120.0000 0085000  30.0000 330.0000  2.00560000100001'
+  },
+  starlink: {
+    name: 'STARLINK-1007',
+    l1: '1 44713U 19074A   26107.50000000  .00002000  00000+0  14000-3 0  9997',
+    l2: '2 44713  53.0500 200.0000 0001500  90.0000 270.0000 15.06000000280001'
+  },
+};
+
+// Celestrak groups mapping per preset
+const CELESTRAK_MAP = {
+  iss: { group: 'stations', match: ['ISS (ZARYA)', 'ISS'] },
+  tiangong: { group: 'stations', match: ['CSS (TIANHE)', 'TIANHE', 'TIANGONG'] },
+  'css-tianhe': { group: 'stations', match: ['CSS (TIANHE)', 'TIANHE'] },
+  noaa19: { group: 'noaa', match: ['NOAA 19'] },
+  noaa18: { group: 'noaa', match: ['NOAA 18'] },
+  noaa15: { group: 'noaa', match: ['NOAA 15'] },
+  meteor: { group: 'weather', match: ['METEOR-M 2', 'METEOR M2'] },
+  so50:  { group: 'amateur', match: ['SAUDISAT 1C (SO-50)', 'SO-50'] },
+  io86:  { group: 'amateur', match: ['LAPAN-A2', 'IO-86'] },
+  ao91:  { group: 'amateur', match: ['FOX-1B', 'AO-91'] },
+  gps:   { group: 'gps-ops', match: ['GPS BIIF-5', 'NAVSTAR'] },
+  starlink: { group: 'starlink', match: ['STARLINK-1007', 'STARLINK'] },
+};
+
+// ---------- ground stations ----------
+const GS_PRESETS = {
+  ifsc:      { name: 'IFSC São José',           lat: -27.5954, lon: -48.6180, alt: 5 },
+  'ifsc-fln':{ name: 'IFSC Florianópolis',      lat: -27.5969, lon: -48.5495, alt: 3 },
+  sp:        { name: 'INPE São Paulo',          lat: -23.2103, lon: -45.8634, alt: 630 },
+  cuiaba:    { name: 'INPE Cuiabá',             lat: -15.6000, lon: -56.0300, alt: 237 },
+  natal:     { name: 'CLBI Natal (Barreira)',   lat:  -5.9200, lon: -35.1800, alt: 40 },
+  ale:       { name: 'CLA Alcântara',           lat:  -2.3733, lon: -44.3967, alt: 40 },
+  cba:       { name: 'CONAE Córdoba',           lat: -31.5242, lon: -64.4647, alt: 730 },
+  wallops:   { name: 'NASA Wallops',            lat:  37.9400, lon: -75.4664, alt: 12 },
+};
+
+// ---------- Eb/N0 required reference table (dB) ----------
+// AWGN typical; FEC gains approximated.
+function getEbN0Req(modulation, fec, ber) {
+  // Uncoded Eb/N0 for target BER (approx)
+  const berRef = {
+    'BPSK':    { '1e-3': 6.8,  '1e-5': 9.6,  '1e-6': 10.5, '1e-9': 12.6 },
+    'QPSK':    { '1e-3': 6.8,  '1e-5': 9.6,  '1e-6': 10.5, '1e-9': 12.6 },
+    '8PSK':    { '1e-3': 10.5, '1e-5': 13.0, '1e-6': 14.0, '1e-9': 16.0 },
+    '16APSK':  { '1e-3': 11.5, '1e-5': 14.0, '1e-6': 15.0, '1e-9': 17.2 },
+    '16QAM':   { '1e-3': 10.5, '1e-5': 13.4, '1e-6': 14.5, '1e-9': 16.8 },
+    '32APSK':  { '1e-3': 13.0, '1e-5': 15.5, '1e-6': 16.5, '1e-9': 18.7 },
+  };
+  const fecGain = {
+    'none': 0,
+    '1/2': 9.5, '2/3': 8.0, '3/4': 7.0, '5/6': 5.5,   // LDPC approx.
+    'conv1/2': 5.1, 'conv3/4': 4.2                     // Viterbi approx.
+  };
+  const base = (berRef[modulation] && berRef[modulation][ber]) || 10.5;
+  const gain = fecGain[fec] ?? 0;
+  return base - gain;
+}
+
+// ---------- ITU-R simplified atmospheric losses ----------
+// Gaseous attenuation (specific) — ITU-R P.676 simplified vs freq
+function specificGasAttenuation(freqGHz) {
+  const f = freqGHz;
+  // Simplified piecewise (dB/km) at sea level, std atmosphere
+  if (f < 1) return 0.005;
+  if (f < 5) return 0.006 + 0.002 * f;
+  if (f < 20) return 0.01 + 0.002 * Math.pow(f / 10, 2);
+  if (f < 60) return 0.03 + 0.01 * Math.pow((f - 20) / 10, 1.5);
+  if (f <= 100) return 0.5;
+  return 0.3;
+}
+
+function atmosphericGasLoss(freqGHz, elevationDeg) {
+  if (elevationDeg <= 0) return 99;
+  const gamma = specificGasAttenuation(freqGHz); // dB/km
+  const hEff = 6;                                // effective height ~ km
+  const el = Math.max(elevationDeg, 0.1) * Math.PI / 180;
+  const Ae = hEff / Math.sin(el);
+  return gamma * Ae;
+}
+
+// Rain attenuation (simplified ITU-R P.618)
+// Coefficients from ITU-R P.838-3 (select values)
+function rainCoef(freqGHz, polarization) {
+  // approximate k,alpha for vertical; adjust by polarization
+  const table = [
+    [1,   0.0000308,0.8592, 0.0000352,0.880],
+    [2,   0.000154, 0.963,  0.000138, 0.923],
+    [4,   0.000650, 1.121,  0.000591, 1.075],
+    [6,   0.00175,  1.308,  0.00155,  1.265],
+    [8,   0.00454,  1.327,  0.00395,  1.310],
+    [10,  0.0101,   1.276,  0.00887,  1.264],
+    [12,  0.0188,   1.217,  0.0168,   1.200],
+    [15,  0.0367,   1.154,  0.0335,   1.128],
+    [20,  0.0751,   1.099,  0.0691,   1.065],
+    [25,  0.124,    1.061,  0.113,    1.030],
+    [30,  0.187,    1.021,  0.167,    1.000],
+    [35,  0.263,    0.979,  0.233,    0.963],
+    [40,  0.350,    0.939,  0.310,    0.929],
+    [50,  0.536,    0.873,  0.479,    0.868],
+  ];
+  // interpolate
+  const f = freqGHz;
+  let kh, ah, kv, av;
+  if (f <= table[0][0]) { kh=table[0][1]; ah=table[0][2]; kv=table[0][3]; av=table[0][4];}
+  else if (f >= table[table.length-1][0]) { const r=table[table.length-1]; kh=r[1]; ah=r[2]; kv=r[3]; av=r[4];}
+  else {
+    for (let i = 0; i < table.length-1; i++) {
+      if (f >= table[i][0] && f <= table[i+1][0]) {
+        const t = (f-table[i][0])/(table[i+1][0]-table[i][0]);
+        kh = table[i][1] + t*(table[i+1][1]-table[i][1]);
+        ah = table[i][2] + t*(table[i+1][2]-table[i][2]);
+        kv = table[i][3] + t*(table[i+1][3]-table[i][3]);
+        av = table[i][4] + t*(table[i+1][4]-table[i][4]);
+        break;
+      }
+    }
+  }
+  // polarization mix (assume tau=0 for circular -> avg)
+  if (polarization === 'H') return { k: kh, a: ah };
+  if (polarization === 'V') return { k: kv, a: av };
+  return { k: (kh+kv)/2, a: (ah+av)/2 };
+}
+
+function rainAttenuation(freqGHz, elevationDeg, rainRateMmH, polarization) {
+  if (elevationDeg <= 0 || rainRateMmH <= 0 || freqGHz < 2) return 0;
+  const { k, a } = rainCoef(freqGHz, polarization);
+  const gammaR = k * Math.pow(rainRateMmH, a); // dB/km
+  // Effective path length (simplified) — rain height ~ 4 km tropics, 3 km temperate
+  const hR = 4.0;
+  const hS = 0; // station at sea level simplified
+  const el = Math.max(elevationDeg, 0.1) * Math.PI / 180;
+  const Ls = (hR - hS) / Math.sin(el);
+  // Horizontal projection reduction (ITU simplified)
+  const Lg = Ls * Math.cos(el);
+  const r001 = 1 / (1 + 0.78 * Math.sqrt(Lg * gammaR / freqGHz) - 0.38 * (1 - Math.exp(-2*Lg)));
+  const Le = Ls * r001;
+  return gammaR * Le;
+}
+
+// ---------- DOM helpers ----------
+const $ = id => document.getElementById(id);
+const fmt = (x, digits=1) => {
+  if (x == null || isNaN(x)) return '—';
+  return Number(x).toFixed(digits);
+};
+const fmtInt = x => (x == null || isNaN(x)) ? '—' : Math.round(x).toLocaleString('pt-BR');
+
+// ---------- collapsible sections ----------
+document.querySelectorAll('.section-head').forEach(h => {
+  h.addEventListener('click', () => {
+    h.classList.toggle('open');
+    h.nextElementSibling.classList.toggle('open');
+  });
+});
+
+// ---------- TLE management ----------
+async function fetchTLE(preset) {
+  const info = CELESTRAK_MAP[preset];
+  if (!info) return null;
+  const url = `https://celestrak.org/NORAD/elements/gp.php?GROUP=${info.group}&FORMAT=tle`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    // parse tle blocks
+    const lines = txt.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < lines.length - 2; i++) {
+      if (lines[i+1].startsWith('1 ') && lines[i+2].startsWith('2 ')) {
+        const name = lines[i].toUpperCase();
+        for (const m of info.match) {
+          if (name.includes(m.toUpperCase())) {
+            return { name: lines[i], l1: lines[i+1], l2: lines[i+2], source: 'Celestrak' };
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('TLE fetch error:', e.message);
+  }
+  return null;
+}
+
+function loadTLE(tleObj, sourceLabel) {
+  state.tle1 = tleObj.l1;
+  state.tle2 = tleObj.l2;
+  state.satName = tleObj.name;
+  try {
+    state.satrec = satellite.twoline2satrec(tleObj.l1, tleObj.l2);
+    $('tle-input').value = `${tleObj.name}\n${tleObj.l1}\n${tleObj.l2}`;
+    $('stat-sat').textContent = tleObj.name;
+    $('st-tle').textContent = sourceLabel || tleObj.source || 'local';
+    $('tle-status').textContent = sourceLabel ? `✓ ${sourceLabel}` : '✓ local';
+    $('tle-status').style.color = 'var(--phos)';
+    // estimate TLE epoch age
+    const epochDays = parseFloat(tleObj.l1.substring(20, 32));
+    const epochYear = 2000 + parseInt(tleObj.l1.substring(18, 20), 10);
+    const epochDate = new Date(Date.UTC(epochYear, 0, 1));
+    epochDate.setUTCMilliseconds(epochDays * 86400 * 1000);
+    const ageDays = (Date.now() - epochDate.getTime()) / 86400000;
+    $('st-tleage').textContent = `${ageDays.toFixed(1)}d`;
+    $('st-tleage').style.color = ageDays > 7 ? 'var(--amber)' : 'var(--phos)';
+
+    toast(`TLE carregado: ${tleObj.name}`, 'good');
+    recomputePasses();
+  } catch (e) {
+    toast('Erro no TLE: ' + e.message, 'bad');
+  }
+}
+
+async function loadPreset(key) {
+  if (key === 'custom') return;
+  $('tle-status').innerHTML = '<span class="loader"></span> buscando...';
+  $('tle-status').style.color = 'var(--cyan)';
+  const online = await fetchTLE(key);
+  if (online) {
+    loadTLE(online, 'Celestrak · live');
+  } else {
+    const fb = TLE_FALLBACK[key];
+    if (fb) {
+      loadTLE(fb, 'fallback local');
+      toast('Celestrak indisponível (CORS/rede). Usando TLE de fallback (dados podem estar desatualizados).', 'warn');
+    } else {
+      toast('Sem TLE para este preset.', 'bad');
+    }
+  }
+}
+
+// ---------- Ground station ----------
+function getGS() {
+  return {
+    lat: parseFloat($('gs-lat').value) || 0,
+    lon: parseFloat($('gs-lon').value) || 0,
+    alt: (parseFloat($('gs-alt').value) || 0) / 1000, // km
+  };
+}
+function getObserverGd() {
+  const gs = getGS();
+  return {
+    longitude: satellite.degreesToRadians(gs.lon),
+    latitude: satellite.degreesToRadians(gs.lat),
+    height: gs.alt,
+  };
+}
+
+$('gs-preset').addEventListener('change', e => {
+  const k = e.target.value;
+  if (k === 'custom') return;
+  const p = GS_PRESETS[k];
+  $('gs-lat').value = p.lat;
+  $('gs-lon').value = p.lon;
+  $('gs-alt').value = p.alt;
+  $('stat-gs').textContent = p.name;
+  recomputePasses();
+});
+['gs-lat','gs-lon','gs-alt','min-elev'].forEach(id => {
+  $(id).addEventListener('change', () => {
+    $('gs-preset').value = 'custom';
+    $('stat-gs').textContent = 'Personalizada';
+    recomputePasses();
+  });
+});
+
+// ---------- Band chips ----------
+document.querySelectorAll('.chip[data-band]').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip[data-band]').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+    $('freq').value = c.dataset.freq;
+    updateLinkBudget();
+  });
+});
+
+// ---------- Satellite position ----------
+function getSatState(date) {
+  if (!state.satrec) return null;
+  try {
+    const pv = satellite.propagate(state.satrec, date);
+    if (!pv.position || !pv.velocity) return null;
+    const gmst = satellite.gstime(date);
+    const posGd = satellite.eciToGeodetic(pv.position, gmst);
+    const posEcf = satellite.eciToEcf(pv.position, gmst);
+    const velEcf = satellite.eciToEcf(pv.velocity, gmst);
+    const obs = getObserverGd();
+    const look = satellite.ecfToLookAngles(obs, posEcf);
+    // radial velocity for Doppler
+    // observer ECF
+    const ox = (EARTH_RADIUS + obs.height) * Math.cos(obs.latitude) * Math.cos(obs.longitude);
+    const oy = (EARTH_RADIUS + obs.height) * Math.cos(obs.latitude) * Math.sin(obs.longitude);
+    const oz = (EARTH_RADIUS + obs.height) * Math.sin(obs.latitude);
+    const dx = posEcf.x - ox, dy = posEcf.y - oy, dz = posEcf.z - oz;
+    const r = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    const vRad = (dx*velEcf.x + dy*velEcf.y + dz*velEcf.z) / r; // km/s
+    const vMag = Math.sqrt(velEcf.x*velEcf.x + velEcf.y*velEcf.y + velEcf.z*velEcf.z);
+    return {
+      latDeg: satellite.radiansToDegrees(posGd.latitude),
+      lonDeg: satellite.radiansToDegrees(posGd.longitude),
+      altKm: posGd.height,
+      elevDeg: satellite.radiansToDegrees(look.elevation),
+      azDeg: (satellite.radiansToDegrees(look.azimuth) + 360) % 360,
+      rangeKm: look.rangeSat,
+      velocityKmS: vMag,
+      radialVelKmS: vRad,
+      posEcf, velEcf, posGd
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// ---------- Link budget ----------
+function updateLinkBudget(now) {
+  const freqMHz = parseFloat($('freq').value) || 0;
+  const freqGHz = freqMHz / 1000;
+  const bwkHz = parseFloat($('bw').value) || 0;
+  const rbkbps = parseFloat($('datarate').value) || 0;
+  const txPw = parseFloat($('tx-power').value) || 0;
+  const txLf = parseFloat($('tx-feeder').value) || 0;
+  const txG = parseFloat($('tx-gain').value) || 0;
+  const rxG = parseFloat($('rx-gain').value) || 0;
+  const rxLf = parseFloat($('rx-feeder').value) || 0;
+  const tsys = parseFloat($('rx-tsys').value) || 1;
+  const lossPoint = parseFloat($('loss-point').value) || 0;
+  const lossImpl = parseFloat($('loss-impl').value) || 0;
+  const rainRate = parseFloat($('rain-rate').value) || 0;
+  const pol = $('polarization').value;
+  const mod = $('modulation').value;
+  const fec = $('fec').value;
+  const ber = $('ber-target').value;
+  const ebnoOv = parseFloat($('ebno-override').value);
+
+  // compute sat state now
+  const sat = state.satrec ? getSatState(now || state.simTime) : null;
+  const elevDeg = sat ? Math.max(sat.elevDeg, 0) : 0;
+  const rangeKm = sat ? sat.rangeKm : 1000;
+
+  // EIRP (dBW)
+  const ptdBW = 10 * Math.log10(Math.max(txPw, 1e-9));
+  const eirp = ptdBW - txLf + txG;
+
+  // FSPL (dB)
+  const fspl = 20 * Math.log10(rangeKm) + 20 * Math.log10(freqMHz) + 32.44;
+
+  // Atmospheric losses
+  const lGas = atmosphericGasLoss(freqGHz, elevDeg);
+  const lRain = rainAttenuation(freqGHz, elevDeg, rainRate, pol);
+  $('loss-gas').value  = fmt(lGas, 2);
+  $('loss-rain').value = fmt(lRain, 2);
+
+  // G/T
+  const gt = rxG - rxLf - 10 * Math.log10(tsys);
+  state.gt = gt;
+  $('rx-gt').value = fmt(gt, 2);
+
+  const lossAtmTotal = lGas + lRain;
+  const lossTotal = fspl + lossAtmTotal + lossPoint;
+
+  // Received power
+  const prx = eirp - lossTotal + rxG - rxLf;
+
+  // C/N0 using G/T
+  const cno = eirp - lossTotal + gt - K_BOLTZ_DB;
+
+  // C/N
+  const bHz = bwkHz * 1e3;
+  const cn = cno - 10 * Math.log10(Math.max(bHz, 1));
+
+  // Eb/N0
+  const rbHz = rbkbps * 1e3;
+  const ebno = cno - 10 * Math.log10(Math.max(rbHz, 1));
+
+  // Required Eb/N0
+  const ebnoReqAuto = getEbN0Req(mod, fec, ber);
+  const ebnoReq = isNaN(ebnoOv) ? ebnoReqAuto : ebnoOv;
+  state.ebnoReq = ebnoReq;
+  $('ebno-req').value = fmt(ebnoReqAuto, 2);
+
+  const margin = ebno - ebnoReq - lossImpl;
+
+  // ---- UI update ----
+  const visible = sat && sat.elevDeg >= (parseFloat($('min-elev').value) || 0);
+  $('badge-state').textContent = visible ? 'VISÍVEL' : (sat ? 'OCULTO' : 'SEM TLE');
+  $('badge-state').className = 'big' + (visible ? '' : ' off');
+  $('badge-sub').textContent = sat
+    ? `elev ${fmt(sat.elevDeg,1)}°  ·  az ${fmt(sat.azDeg,0)}°  ·  ${fmtInt(sat.rangeKm)} km`
+    : '—';
+
+  if (sat) {
+    $('r-latlon').textContent = `${fmt(sat.latDeg,3)}, ${fmt(sat.lonDeg,3)}`;
+    $('r-alt').innerHTML       = `${fmt(sat.altKm,1)}<span class="unit">km</span>`;
+    $('r-speed').innerHTML     = `${fmt(sat.velocityKmS,2)}<span class="unit">km/s</span>`;
+    $('r-range').innerHTML     = `${fmtInt(sat.rangeKm)}<span class="unit">km</span>`;
+    $('r-elev').innerHTML      = `${fmt(sat.elevDeg,2)}<span class="unit">°</span>`;
+    $('r-az').innerHTML        = `${fmt(sat.azDeg,1)}<span class="unit">°</span>`;
+    const doppler = -(sat.radialVelKmS / C_LIGHT) * freqMHz * 1e3; // Hz (approaching -> positive shift)
+    $('r-doppler').innerHTML   = `${doppler>=0?'+':''}${fmtInt(doppler)}<span class="unit">Hz</span>`;
+    $('r-delay').innerHTML     = `${fmt(sat.rangeKm / C_LIGHT * 1000, 2)}<span class="unit">ms</span>`;
+  }
+
+  $('r-eirp').innerHTML    = `${fmt(eirp,2)}<span class="unit">dBW</span>`;
+  $('r-fspl').innerHTML    = `${fmt(fspl,2)}<span class="unit">dB</span>`;
+  $('r-lossatm').innerHTML = `${fmt(lossAtmTotal,2)}<span class="unit">dB</span>`;
+  $('r-losstot').innerHTML = `${fmt(lossTotal,2)}<span class="unit">dB</span>`;
+  $('r-prx').innerHTML     = `${fmt(prx,2)}<span class="unit">dBW</span>`;
+  $('r-gt').innerHTML      = `${fmt(gt,2)}<span class="unit">dB/K</span>`;
+  $('r-cn0').innerHTML     = `${fmt(cno,2)}<span class="unit">dB-Hz</span>`;
+  $('r-cn').innerHTML      = `${fmt(cn,2)}<span class="unit">dB</span>`;
+  $('r-ebno').innerHTML    = `${fmt(ebno,2)}<span class="unit">dB</span>`;
+  $('r-ebnoreq').innerHTML = `${fmt(ebnoReq,2)}<span class="unit">dB</span>`;
+
+  // Margin + gauge
+  const marginEl = $('r-margin');
+  marginEl.innerHTML = `${margin>=0?'+':''}${fmt(margin,2)}<span class="unit">dB</span>`;
+  marginEl.className = 'v mono';
+  let cls = 'bad', msg = '⚠ Enlace inviável — ajustar potência, antena ou FEC.';
+  if (margin >= 10) { cls = 'good'; msg = '✓ Margem excelente (>10 dB). Enlace muito robusto.'; }
+  else if (margin >= 6) { cls = 'good'; msg = '✓ Margem boa (6–10 dB). Projeto recomendado.'; }
+  else if (margin >= 3) { cls = 'acc'; msg = '○ Margem aceitável (3–6 dB). Limite para operação robusta.'; }
+  else if (margin >= 0) { cls = 'warn'; msg = '◎ Margem apertada (0–3 dB). Sujeito a degradações.'; }
+  marginEl.classList.add(cls);
+  $('r-margin-msg').textContent = msg;
+  $('r-margin-msg').style.color = 'var(--text-1)';
+
+  // gauge: map -10..+20 dB → 0..100%
+  const lo = -10, hi = 20;
+  const pct = Math.min(100, Math.max(0, (margin - lo) / (hi - lo) * 100));
+  const bar = $('r-margin-bar');
+  bar.style.width = pct + '%';
+  bar.className = 'gauge-fill' + (margin>=6?' good':margin>=3?'':margin>=0?' warn':' bad');
+
+  return { eirp, fspl, cno, ebno, ebnoReq, margin, visible, sat, prx, lossTotal, doppler: sat ? -(sat.radialVelKmS / C_LIGHT) * freqMHz * 1e3 : 0 };
+}
+
+// ---------- Synthetic satellite (Keplerian -> TLE) ----------
+const MU_EARTH = 398600.4418; // km^3/s^2
+
+// presets for the synthetic builder: [altKm, inc, ecc, raan, argp, ma, name]
+const SYNTH_PRESETS = {
+  'leo-low':   { alt: 420,    inc: 51.64, ecc: 0.0001, raan: 0,   argp: 0,    ma: 0,    name: 'SATLAB-LEO-420' },
+  'leo-polar': { alt: 700,    inc: 98.2,  ecc: 0.0012, raan: 45,  argp: 90,   ma: 0,    name: 'SATLAB-SSO-700' },
+  'leo-high':  { alt: 1200,   inc: 87.0,  ecc: 0.0015, raan: 120, argp: 0,    ma: 0,    name: 'SATLAB-LEO-1200' },
+  'meo-gps':   { alt: 20200,  inc: 55.0,  ecc: 0.001,  raan: 60,  argp: 0,    ma: 45,   name: 'SATLAB-MEO-GPS' },
+  'geo':       { alt: 35786,  inc: 0.05,  ecc: 0.0001, raan: 0,   argp: 0,    ma: 315,  name: 'SATLAB-GEO' },
+  'molniya':   { alt: 20000,  inc: 63.4,  ecc: 0.72,   raan: 0,   argp: 270,  ma: 0,    name: 'SATLAB-MOLNIYA' },
+};
+
+function meanMotionFromAlt(altKm) {
+  // interpret altKm as semi-major axis - Re (mean altitude)
+  const a = EARTH_RADIUS + altKm;
+  const T = 2 * Math.PI * Math.sqrt((a*a*a) / MU_EARTH); // seconds
+  return 86400 / T; // rev/day
+}
+
+function tleChecksum(line) {
+  let sum = 0;
+  for (let i = 0; i < line.length && i < 68; i++) {
+    const c = line.charCodeAt(i);
+    if (c >= 48 && c <= 57) sum += c - 48;
+    else if (c === 45) sum += 1; // '-'
+  }
+  return sum % 10;
+}
+
+function synthesizeTLE(params) {
+  // params: { name, altKm, inc, ecc, raan, argp, ma, epochDate }
+  const epoch = params.epochDate || new Date();
+  const year = epoch.getUTCFullYear() % 100;
+  const yearStr = year.toString().padStart(2, '0');
+  const startOfYear = Date.UTC(epoch.getUTCFullYear(), 0, 1);
+  const dayOfYear = (epoch.getTime() - startOfYear) / 86400000 + 1;
+  // day string with 8 decimals, total 12 chars, space-padded for DOY < 100
+  const dayStr = dayOfYear.toFixed(8).padStart(12, ' ');
+
+  const mm = meanMotionFromAlt(params.altKm);
+
+  // clamp params
+  const inc  = Math.max(0, Math.min(180, params.inc));
+  const raan = ((params.raan % 360) + 360) % 360;
+  const argp = ((params.argp % 360) + 360) % 360;
+  const ma   = ((params.ma % 360) + 360) % 360;
+  const ecc  = Math.max(0, Math.min(0.9499999, params.ecc));
+
+  const incStr  = inc.toFixed(4).padStart(8, ' ');
+  const raanStr = raan.toFixed(4).padStart(8, ' ');
+  const argpStr = argp.toFixed(4).padStart(8, ' ');
+  const maStr   = ma.toFixed(4).padStart(8, ' ');
+  const mmStr   = mm.toFixed(8).padStart(11, ' ');
+  const eccInt  = Math.min(9999999, Math.max(0, Math.round(ecc * 1e7)));
+  const eccStr  = eccInt.toString().padStart(7, '0');
+
+  // --- Line 1 (68 chars before checksum) ---
+  // pos 1-18: "1 99999U 26001A   "
+  let l1 = '1 99999U 26001A   ';
+  l1 += yearStr;            // pos 19-20 (2)
+  l1 += dayStr;             // pos 21-32 (12)
+  l1 += ' ';                // pos 33
+  l1 += ' .00000000';       // pos 34-43 (10) - mean motion 1st derivative / 2
+  l1 += ' ';                // pos 44
+  l1 += ' 00000-0';         // pos 45-52 (8)  - mean motion 2nd derivative / 6
+  l1 += ' ';                // pos 53
+  l1 += ' 00000-0';         // pos 54-61 (8)  - BSTAR
+  l1 += ' ';                // pos 62
+  l1 += '0';                // pos 63          - ephemeris type
+  l1 += ' ';                // pos 64
+  l1 += ' 999';             // pos 65-68 (4)  - element set number
+  l1 += tleChecksum(l1).toString();
+
+  // --- Line 2 (68 chars before checksum) ---
+  let l2 = '2 99999 ';       // pos 1-8
+  l2 += incStr;              // pos 9-16 (8)
+  l2 += ' ';                 // pos 17
+  l2 += raanStr;             // pos 18-25 (8)
+  l2 += ' ';                 // pos 26
+  l2 += eccStr;              // pos 27-33 (7)
+  l2 += ' ';                 // pos 34
+  l2 += argpStr;             // pos 35-42 (8)
+  l2 += ' ';                 // pos 43
+  l2 += maStr;               // pos 44-51 (8)
+  l2 += ' ';                 // pos 52
+  l2 += mmStr;               // pos 53-63 (11)
+  l2 += '00001';             // pos 64-68 (5)  - rev num at epoch
+  l2 += tleChecksum(l2).toString();
+
+  return {
+    name: (params.name || 'SATLAB-1').toUpperCase().substring(0, 22),
+    l1, l2,
+    source: 'sintético'
+  };
+}
+
+function updateSynthInfo() {
+  const alt = parseFloat($('syn-alt').value) || 0;
+  const ecc = parseFloat($('syn-ecc').value) || 0;
+  const a = EARTH_RADIUS + alt;
+  const T = 2 * Math.PI * Math.sqrt((a*a*a) / MU_EARTH);
+  const mm = 86400 / T;
+  const hp = a * (1 - ecc) - EARTH_RADIUS;
+  const ha = a * (1 + ecc) - EARTH_RADIUS;
+  $('syn-info-a').textContent  = a.toFixed(1) + ' km';
+  $('syn-info-t').textContent  = (T/60).toFixed(2) + ' min';
+  $('syn-info-mm').textContent = mm.toFixed(6) + ' rev/dia';
+  $('syn-info-hp').textContent = hp.toFixed(1) + ' km';
+  $('syn-info-ha').textContent = ha.toFixed(1) + ' km';
+  $('syn-epoch').value = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+}
+
+function loadSynthetic() {
+  const params = {
+    name: $('syn-name').value.trim() || 'SATLAB-1',
+    altKm: parseFloat($('syn-alt').value) || 420,
+    inc:   parseFloat($('syn-inc').value) || 0,
+    ecc:   parseFloat($('syn-ecc').value) || 0,
+    raan:  parseFloat($('syn-raan').value) || 0,
+    argp:  parseFloat($('syn-argp').value) || 0,
+    ma:    parseFloat($('syn-ma').value) || 0,
+    epochDate: new Date()
+  };
+  if (params.altKm < 180) {
+    toast('Altitude muito baixa (mínimo 180 km para órbita viável).', 'bad');
+    return;
+  }
+  const tle = synthesizeTLE(params);
+  // quick validate by trying to parse
+  try {
+    const testRec = satellite.twoline2satrec(tle.l1, tle.l2);
+    if (testRec.error && testRec.error !== 0) throw new Error('satrec error code ' + testRec.error);
+    loadTLE(tle, 'sintético');
+    updateSynthInfo();
+  } catch (e) {
+    toast('Erro ao gerar TLE sintético: ' + e.message, 'bad');
+    console.error(e, tle);
+  }
+}
+
+// ---------- Map ----------
+let map, satMarker, gsMarker, footprintCircle, trackPast, trackFut, trackAll;
+
+function initMap() {
+  map = L.map('map', {
+    center: [0, 0],
+    zoom: 2,
+    worldCopyJump: true,
+    attributionControl: false,
+    zoomControl: true,
+    preferCanvas: true,
+  });
+  // dark tile — CartoDB Dark
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    maxZoom: 8, minZoom: 1,
+  }).addTo(map);
+  // labels overlay
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+    maxZoom: 8, minZoom: 1, opacity: 0.6,
+  }).addTo(map);
+
+  const satIcon = L.divIcon({ className: '', html: '<div class="sat-marker"></div>', iconSize: [14,14], iconAnchor: [7,7] });
+  const gsIcon  = L.divIcon({ className: '', html: '<div class="gs-marker"></div>', iconSize: [14,12], iconAnchor: [7,12] });
+
+  satMarker = L.marker([0,0], { icon: satIcon, interactive: false }).addTo(map);
+  gsMarker  = L.marker([0,0], { icon: gsIcon, interactive: false })
+    .bindTooltip('Estação', { permanent: false, direction: 'top' }).addTo(map);
+
+  footprintCircle = L.circle([0,0], {
+    radius: 0, color: '#4ade80', weight: 1, fillOpacity: 0.04, fillColor: '#4ade80', interactive: false,
+  }).addTo(map);
+
+  trackPast = L.polyline([], { color: '#38bdf8', weight: 1.5, opacity: 0.9 }).addTo(map);
+  trackFut  = L.polyline([], { color: '#38bdf8', weight: 1, opacity: 0.35, dashArray: '3 3' }).addTo(map);
+}
+
+function updateMap(sat) {
+  if (!sat) return;
+  const gs = getGS();
+  gsMarker.setLatLng([gs.lat, gs.lon]);
+  satMarker.setLatLng([sat.latDeg, sat.lonDeg]);
+
+  // footprint radius (km) = earth_radius * acos(Re/(Re+h))
+  const h = sat.altKm;
+  const rf = EARTH_RADIUS * Math.acos(EARTH_RADIUS / (EARTH_RADIUS + h)); // km on surface
+  footprintCircle.setLatLng([sat.latDeg, sat.lonDeg]);
+  footprintCircle.setRadius(rf * 1000); // meters
+}
+
+function computeGroundTrack(centerDate, minutesBack=45, minutesFwd=45, stepSec=30) {
+  if (!state.satrec) return { past: [], fut: [] };
+  const past = [], fut = [];
+  for (let t = -minutesBack * 60; t <= minutesFwd * 60; t += stepSec) {
+    const d = new Date(centerDate.getTime() + t * 1000);
+    const s = getSatState(d);
+    if (!s) continue;
+    const pt = [s.latDeg, s.lonDeg];
+    if (t < 0) past.push(pt);
+    else fut.push(pt);
+  }
+  // split at discontinuities (longitude wrap)
+  return { past: splitWrap(past), fut: splitWrap(fut) };
+}
+
+function splitWrap(pts) {
+  const out = [[]];
+  for (let i = 0; i < pts.length; i++) {
+    if (i > 0) {
+      const dLon = Math.abs(pts[i][1] - pts[i-1][1]);
+      if (dLon > 180) out.push([]);
+    }
+    out[out.length - 1].push(pts[i]);
+  }
+  return out;
+}
+
+function refreshGroundTrack() {
+  if (!map || !state.satrec) return;
+  const t = computeGroundTrack(state.simTime);
+  trackPast.setLatLngs(t.past);
+  trackFut.setLatLngs(t.fut);
+}
+
+// ---------- Sky Plot ----------
+function drawSkyPlot(currentSat) {
+  const svg = $('skyplot');
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const R = 95; // radius
+
+  // Concentric circles (elev rings)
+  for (let el of [0, 30, 60]) {
+    const r = R * (1 - el/90);
+    const c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', 0); c.setAttribute('cy', 0);
+    c.setAttribute('r', r);
+    c.setAttribute('fill', 'none');
+    c.setAttribute('stroke', '#1e2838');
+    c.setAttribute('stroke-width', el === 0 ? 1.5 : 1);
+    svg.appendChild(c);
+  }
+  // zenith point
+  const zen = document.createElementNS(ns, 'circle');
+  zen.setAttribute('cx', 0); zen.setAttribute('cy', 0); zen.setAttribute('r', 2);
+  zen.setAttribute('fill', '#4ade80'); svg.appendChild(zen);
+
+  // axes (N/E/S/W)
+  ['N','E','S','W'].forEach((lab, i) => {
+    const ang = i * Math.PI / 2 - Math.PI/2; // N top
+    const x = Math.cos(ang) * R;
+    const y = Math.sin(ang) * R;
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', 0); line.setAttribute('y1', 0);
+    line.setAttribute('x2', x); line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#1e2838'); line.setAttribute('stroke-width', 0.5);
+    svg.appendChild(line);
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', Math.cos(ang) * (R+11));
+    t.setAttribute('y', Math.sin(ang) * (R+11) + 3);
+    t.setAttribute('fill', '#6b7889');
+    t.setAttribute('font-family', 'JetBrains Mono, monospace');
+    t.setAttribute('font-size', '10');
+    t.setAttribute('text-anchor', 'middle');
+    t.textContent = lab;
+    svg.appendChild(t);
+  });
+
+  // elevation labels
+  [30, 60].forEach(el => {
+    const r = R * (1 - el/90);
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', 2); t.setAttribute('y', -r);
+    t.setAttribute('fill', '#3f4a5b');
+    t.setAttribute('font-family', 'JetBrains Mono, monospace');
+    t.setAttribute('font-size', '8');
+    t.textContent = el+'°';
+    svg.appendChild(t);
+  });
+
+  // Next pass trajectory (if any pass ongoing or upcoming within ~24h)
+  const now = state.simTime;
+  let trackingPass = null;
+  for (const p of state.passes) {
+    if (now >= p.aos && now <= p.los) { trackingPass = p; break; }
+  }
+  if (!trackingPass && state.passes[0]) trackingPass = state.passes[0];
+
+  if (trackingPass) {
+    const pts = [];
+    const dur = (trackingPass.los - trackingPass.aos);
+    const n = 40;
+    for (let i = 0; i <= n; i++) {
+      const d = new Date(trackingPass.aos.getTime() + dur * (i/n));
+      const s = getSatState(d);
+      if (!s || s.elevDeg < 0) continue;
+      const az = s.azDeg * Math.PI / 180 - Math.PI/2;
+      const r = R * (1 - s.elevDeg/90);
+      pts.push([Math.cos(az) * r, Math.sin(az) * r]);
+    }
+    if (pts.length > 1) {
+      const path = document.createElementNS(ns, 'polyline');
+      path.setAttribute('points', pts.map(p => p.join(',')).join(' '));
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', '#fbbf24');
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('opacity', '0.9');
+      svg.appendChild(path);
+      // AOS/LOS dots
+      const aos = pts[0], los = pts[pts.length-1];
+      [['AOS', aos, '#4ade80'], ['LOS', los, '#fb7185']].forEach(([lab, pt, col]) => {
+        const c = document.createElementNS(ns, 'circle');
+        c.setAttribute('cx', pt[0]); c.setAttribute('cy', pt[1]);
+        c.setAttribute('r', 2.5);
+        c.setAttribute('fill', col);
+        svg.appendChild(c);
+        const tx = document.createElementNS(ns, 'text');
+        tx.setAttribute('x', pt[0] + 4); tx.setAttribute('y', pt[1] + 3);
+        tx.setAttribute('fill', col);
+        tx.setAttribute('font-family', 'JetBrains Mono, monospace');
+        tx.setAttribute('font-size', '8');
+        tx.textContent = lab;
+        svg.appendChild(tx);
+      });
+    }
+    $('sky-meta').textContent = trackingPass
+      ? `${trackingPass.aos.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} → max ${fmt(trackingPass.maxEl,0)}°`
+      : '—';
+  } else {
+    $('sky-meta').textContent = '— · —';
+  }
+
+  // Current position dot
+  if (currentSat && currentSat.elevDeg >= 0) {
+    const az = currentSat.azDeg * Math.PI / 180 - Math.PI/2;
+    const r = R * (1 - currentSat.elevDeg/90);
+    const x = Math.cos(az) * r, y = Math.sin(az) * r;
+    const glow = document.createElementNS(ns, 'circle');
+    glow.setAttribute('cx', x); glow.setAttribute('cy', y);
+    glow.setAttribute('r', 8);
+    glow.setAttribute('fill', '#4ade80');
+    glow.setAttribute('opacity', '0.15');
+    svg.appendChild(glow);
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y);
+    dot.setAttribute('r', 4);
+    dot.setAttribute('fill', '#4ade80');
+    dot.setAttribute('stroke', '#ffffff');
+    dot.setAttribute('stroke-width', '1');
+    svg.appendChild(dot);
+  }
+}
+
+// ---------- Link budget chart ----------
+let chartCtx, chartCanvas, chartData = null;
+function initChart() {
+  chartCanvas = $('linkchart');
+  chartCtx = chartCanvas.getContext('2d');
+  // handle resize
+  window.addEventListener('resize', () => requestAnimationFrame(drawChart));
+}
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = chartCanvas.getBoundingClientRect();
+  chartCanvas.width = Math.max(100, rect.width * dpr);
+  chartCanvas.height = Math.max(80, rect.height * dpr);
+  chartCtx.setTransform(1, 0, 0, 1, 0, 0);
+  chartCtx.scale(dpr, dpr);
+}
+
+function buildPassChartData(pass) {
+  if (!pass) return null;
+  const n = 80;
+  const dur = pass.los - pass.aos;
+  const points = [];
+  for (let i = 0; i <= n; i++) {
+    const d = new Date(pass.aos.getTime() + dur * (i/n));
+    const s = getSatState(d);
+    if (!s) continue;
+    const lb = computeLBForSatState(s);
+    points.push({
+      t: d,
+      elev: s.elevDeg,
+      range: s.rangeKm,
+      fspl: lb.fspl,
+      ebno: lb.ebno,
+      margin: lb.margin,
+    });
+  }
+  return { pass, points };
+}
+
+function computeLBForSatState(sat) {
+  // build link budget for a given pre-computed sat state (no UI update)
+  const freqMHz = parseFloat($('freq').value) || 1;
+  const freqGHz = freqMHz/1000;
+  const bwkHz = parseFloat($('bw').value) || 1;
+  const rbkbps = parseFloat($('datarate').value) || 1;
+  const txPw = parseFloat($('tx-power').value) || 0.001;
+  const txLf = parseFloat($('tx-feeder').value) || 0;
+  const txG = parseFloat($('tx-gain').value) || 0;
+  const rxG = parseFloat($('rx-gain').value) || 0;
+  const rxLf = parseFloat($('rx-feeder').value) || 0;
+  const tsys = parseFloat($('rx-tsys').value) || 1;
+  const lossPoint = parseFloat($('loss-point').value) || 0;
+  const lossImpl = parseFloat($('loss-impl').value) || 0;
+  const rainRate = parseFloat($('rain-rate').value) || 0;
+  const pol = $('polarization').value;
+  const mod = $('modulation').value;
+  const fec = $('fec').value;
+  const ber = $('ber-target').value;
+  const ebnoOv = parseFloat($('ebno-override').value);
+
+  const elev = Math.max(sat.elevDeg, 0);
+  const rangeKm = sat.rangeKm;
+  const ptdBW = 10 * Math.log10(Math.max(txPw, 1e-9));
+  const eirp = ptdBW - txLf + txG;
+  const fspl = 20*Math.log10(rangeKm) + 20*Math.log10(freqMHz) + 32.44;
+  const lGas = atmosphericGasLoss(freqGHz, elev);
+  const lRain = rainAttenuation(freqGHz, elev, rainRate, pol);
+  const lossTotal = fspl + lGas + lRain + lossPoint;
+  const gt = rxG - rxLf - 10 * Math.log10(tsys);
+  const cno = eirp - lossTotal + gt - K_BOLTZ_DB;
+  const ebno = cno - 10 * Math.log10(Math.max(rbkbps * 1e3, 1));
+  const ebnoReqAuto = getEbN0Req(mod, fec, ber);
+  const ebnoReq = isNaN(ebnoOv) ? ebnoReqAuto : ebnoOv;
+  const margin = ebno - ebnoReq - lossImpl;
+  return { eirp, fspl, lossTotal, gt, cno, ebno, ebnoReq, margin };
+}
+
+function drawChart() {
+  if (!chartCtx) return;
+  resizeCanvas();
+  const rect = chartCanvas.getBoundingClientRect();
+  const W = rect.width, H = rect.height;
+  const padL = 40, padR = 40, padT = 12, padB = 22;
+  const cx = chartCtx;
+  cx.clearRect(0, 0, W, H);
+
+  if (!chartData || chartData.points.length === 0) {
+    cx.fillStyle = '#6b7889';
+    cx.font = '11px JetBrains Mono, monospace';
+    cx.textAlign = 'center';
+    cx.fillText('— Sem passagem para plotar —', W/2, H/2);
+    return;
+  }
+
+  const pts = chartData.points;
+  const t0 = pts[0].t.getTime(), t1 = pts[pts.length-1].t.getTime();
+  const xOf = t => padL + (t - t0) / (t1 - t0) * (W - padL - padR);
+
+  // two Y axes: left=elevation/margin, right=range
+  const lefts = pts.flatMap(p => [p.margin, p.elev]);
+  const leftMin = Math.min(-10, Math.min(...lefts));
+  const leftMax = Math.max(30, Math.max(...lefts));
+  const rangeMin = Math.min(...pts.map(p => p.range));
+  const rangeMax = Math.max(...pts.map(p => p.range));
+  const yL = v => padT + (1 - (v - leftMin)/(leftMax - leftMin)) * (H - padT - padB);
+  const yR = v => padT + (1 - (v - rangeMin)/(rangeMax - rangeMin)) * (H - padT - padB);
+
+  // grid
+  cx.strokeStyle = '#172030'; cx.lineWidth = 1;
+  cx.beginPath();
+  for (let i = 0; i <= 5; i++) {
+    const y = padT + i * (H - padT - padB) / 5;
+    cx.moveTo(padL, y); cx.lineTo(W - padR, y);
+  }
+  cx.stroke();
+
+  // zero line on left axis
+  cx.strokeStyle = '#2a3a52'; cx.lineWidth = 1; cx.setLineDash([3,3]);
+  cx.beginPath(); cx.moveTo(padL, yL(0)); cx.lineTo(W - padR, yL(0)); cx.stroke();
+  cx.setLineDash([]);
+
+  // axis labels
+  cx.fillStyle = '#6b7889';
+  cx.font = '9.5px JetBrains Mono, monospace';
+  cx.textAlign = 'right';
+  for (let i = 0; i <= 5; i++) {
+    const v = leftMax - i * (leftMax - leftMin) / 5;
+    const y = padT + i * (H - padT - padB) / 5;
+    cx.fillText(v.toFixed(0), padL - 4, y + 3);
+  }
+  cx.textAlign = 'left';
+  for (let i = 0; i <= 5; i++) {
+    const v = rangeMin + (5-i) * (rangeMax - rangeMin) / 5;
+    const y = padT + i * (H - padT - padB) / 5;
+    cx.fillText(Math.round(v) + 'km', W - padR + 4, y + 3);
+  }
+
+  // X axis times
+  cx.textAlign = 'center';
+  for (let i = 0; i <= 4; i++) {
+    const t = new Date(t0 + (t1-t0) * i / 4);
+    const x = padL + (W - padL - padR) * i / 4;
+    cx.fillText(t.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}), x, H - 6);
+  }
+
+  // Range (right axis — gray)
+  cx.strokeStyle = '#6b7889'; cx.lineWidth = 1.2; cx.setLineDash([4,3]);
+  cx.beginPath();
+  pts.forEach((p, i) => {
+    const x = xOf(p.t.getTime()), y = yR(p.range);
+    if (i === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
+  });
+  cx.stroke();
+  cx.setLineDash([]);
+
+  // Elevation (cyan)
+  cx.strokeStyle = '#38bdf8'; cx.lineWidth = 2;
+  cx.beginPath();
+  pts.forEach((p, i) => {
+    const x = xOf(p.t.getTime()), y = yL(p.elev);
+    if (i === 0) cx.moveTo(x, y); else cx.lineTo(x, y);
+  });
+  cx.stroke();
+
+  // Margin (green / amber / red area)
+  cx.lineWidth = 2.2;
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i-1], p1 = pts[i];
+    const m = (p0.margin + p1.margin)/2;
+    cx.strokeStyle = m >= 6 ? '#4ade80' : m >= 0 ? '#fbbf24' : '#fb7185';
+    cx.beginPath();
+    cx.moveTo(xOf(p0.t.getTime()), yL(p0.margin));
+    cx.lineTo(xOf(p1.t.getTime()), yL(p1.margin));
+    cx.stroke();
+  }
+
+  // current time vertical line
+  const nowMs = state.simTime.getTime();
+  if (nowMs >= t0 && nowMs <= t1) {
+    cx.strokeStyle = '#e6ecf5'; cx.lineWidth = 1; cx.setLineDash([2,2]);
+    cx.beginPath();
+    cx.moveTo(xOf(nowMs), padT);
+    cx.lineTo(xOf(nowMs), H - padB);
+    cx.stroke();
+    cx.setLineDash([]);
+    cx.fillStyle = '#e6ecf5';
+    cx.font = '9.5px JetBrains Mono, monospace';
+    cx.textAlign = 'center';
+    cx.fillText('AGORA', xOf(nowMs), padT - 2);
+  }
+
+  // Legend
+  cx.font = '10px JetBrains Mono, monospace';
+  cx.textAlign = 'left';
+  const legY = padT + 6;
+  const items = [
+    { c: '#38bdf8', l: 'Elevação (°)' },
+    { c: '#4ade80', l: 'Margem (dB)' },
+    { c: '#6b7889', l: 'Slant range (km) →' },
+  ];
+  let lx = padL + 6;
+  items.forEach(it => {
+    cx.fillStyle = it.c;
+    cx.fillRect(lx, legY - 5, 10, 2);
+    cx.fillStyle = '#b6c2d4';
+    cx.fillText(it.l, lx + 14, legY);
+    lx += cx.measureText(it.l).width + 34;
+  });
+}
+
+// ---------- Pass prediction ----------
+function recomputePasses() {
+  if (!state.satrec) return;
+  const start = new Date();
+  const end = new Date(start.getTime() + 48 * 3600 * 1000);
+  state.passes = predictPasses(start, end, parseFloat($('min-elev').value) || 0);
+  renderPassesTable();
+  // build chart data for next pass (or ongoing)
+  const now = state.simTime;
+  const p = state.passes.find(p => p.los > now);
+  chartData = p ? buildPassChartData(p) : null;
+  $('chart-meta').textContent = p
+    ? `${p.aos.toLocaleString('pt-BR',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})} · max ${fmt(p.maxEl,0)}°`
+    : '—';
+  drawChart();
+}
+
+function predictPasses(startDate, endDate, minElev) {
+  const passes = [];
+  if (!state.satrec) return passes;
+  const coarseStep = 30; // seconds
+  let t = startDate.getTime();
+  let prev = null;
+  let inPass = false, aos = null, maxEl = -90, maxElT = null;
+
+  while (t < endDate.getTime() && passes.length < 25) {
+    const d = new Date(t);
+    const s = getSatState(d);
+    if (!s) { t += coarseStep*1000; continue; }
+    const el = s.elevDeg;
+
+    if (!inPass && el >= minElev && prev !== null && prev < minElev) {
+      // found AOS — refine
+      inPass = true;
+      aos = refineCrossing(new Date(t - coarseStep*1000), d, minElev);
+      maxEl = el; maxElT = d;
+    }
+    if (inPass) {
+      if (el > maxEl) { maxEl = el; maxElT = d; }
+      if (el < minElev && prev !== null && prev >= minElev) {
+        const los = refineCrossing(new Date(t - coarseStep*1000), d, minElev);
+        passes.push({ aos, los, maxEl, maxElT });
+        inPass = false; aos = null; maxEl = -90; maxElT = null;
+      }
+    }
+    prev = el;
+    t += coarseStep * 1000;
+  }
+  if (inPass && aos) {
+    passes.push({ aos, los: new Date(t), maxEl, maxElT });
+  }
+  return passes;
+}
+
+function refineCrossing(t0, t1, minElev) {
+  // bisection
+  let lo = t0.getTime(), hi = t1.getTime();
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    const s = getSatState(new Date(mid));
+    if (!s) break;
+    if (s.elevDeg < minElev) lo = mid; else hi = mid;
+  }
+  return new Date((lo+hi)/2);
+}
+
+function renderPassesTable() {
+  const tbody = $('passes-tbody');
+  tbody.innerHTML = '';
+  if (!state.passes.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="dim" style="padding:12px;text-align:center;">Nenhuma passagem nas próximas 48h</td></tr>';
+    return;
+  }
+  state.passes.forEach((p, i) => {
+    const dur = Math.round((p.los - p.aos) / 1000);
+    const mm = String(Math.floor(dur/60)).padStart(2, '0');
+    const ss = String(dur%60).padStart(2, '0');
+    const elColor = p.maxEl >= 45 ? 'var(--phos)' : p.maxEl >= 20 ? 'var(--cyan)' : p.maxEl >= 10 ? 'var(--amber)' : 'var(--text-2)';
+    const aosStr = p.aos.toLocaleString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit', day:'2-digit', month:'2-digit' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="dim">${i+1}</td>
+      <td>${aosStr}</td>
+      <td>${mm}:${ss}</td>
+      <td><span class="elev-dot" style="background:${elColor};"></span>${fmt(p.maxEl, 0)}°</td>
+    `;
+    tr.addEventListener('click', () => {
+      state.simTime = new Date(p.aos.getTime() - 30*1000);
+      state.paused = true;
+      $('sim-status').textContent = 'Pausado (na passagem)';
+      $('sim-dot').classList.add('standby');
+      chartData = buildPassChartData(p);
+      $('chart-meta').textContent = `${p.aos.toLocaleString('pt-BR')} · max ${fmt(p.maxEl, 0)}°`;
+      drawChart();
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Animation loop ----------
+let fpsCounter = 0, fpsTime = performance.now();
+function tick() {
+  const now = performance.now();
+  const dt = (now - state.lastRealTime) / 1000;
+  state.lastRealTime = now;
+  if (!state.paused) {
+    state.simTime = new Date(state.simTime.getTime() + dt * 1000 * state.simSpeed);
+  }
+  fpsCounter++;
+  if (now - fpsTime > 1000) {
+    $('st-fps').textContent = fpsCounter;
+    fpsCounter = 0;
+    fpsTime = now;
+  }
+
+  // Clocks
+  $('clock-utc').textContent = state.simTime.toISOString().substring(11,19);
+  $('clock-local').textContent = state.simTime.toLocaleTimeString('pt-BR');
+  $('st-simt').textContent = state.simTime.toLocaleString('pt-BR');
+
+  if (state.satrec) {
+    const lb = updateLinkBudget();
+    if (lb.sat) updateMap(lb.sat);
+    drawSkyPlot(lb.sat);
+    // refresh ground track every 10s real time or when paused jumps
+    if (!window._gtTimer || now - window._gtTimer > 10000) {
+      refreshGroundTrack();
+      window._gtTimer = now;
+    }
+    drawChart();
+    // 3D globe — update if active
+    if (Globe.isActive()) Globe.update(lb.sat);
+  } else {
+    if (Globe.isActive()) Globe.update(null);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// ---------- Controls ----------
+$('sim-speed').addEventListener('change', e => { state.simSpeed = parseFloat(e.target.value); });
+$('btn-play').addEventListener('click', () => {
+  state.paused = false;
+  $('sim-status').textContent = 'Rodando';
+  $('sim-dot').className = 'live-dot';
+});
+$('btn-pause').addEventListener('click', () => {
+  state.paused = true;
+  $('sim-status').textContent = 'Pausado';
+  $('sim-dot').className = 'live-dot standby';
+});
+$('btn-now').addEventListener('click', () => {
+  state.simTime = new Date();
+  state.paused = false;
+  $('sim-status').textContent = 'Rodando';
+  $('sim-dot').className = 'live-dot';
+  recomputePasses();
+});
+$('btn-jump-pass').addEventListener('click', () => {
+  const now = state.simTime;
+  const next = state.passes.find(p => p.aos > now);
+  if (next) {
+    state.simTime = new Date(next.aos.getTime() - 15*1000);
+    state.paused = false;
+    chartData = buildPassChartData(next);
+    drawChart();
+    toast(`Pulando para passagem: ${next.aos.toLocaleString('pt-BR')}`, 'good');
+  } else {
+    toast('Nenhuma passagem futura detectada em 48h.', 'warn');
+  }
+});
+
+$('sat-preset').addEventListener('change', e => {
+  const k = e.target.value;
+  const synthPanel = $('synth-panel');
+  if (k === 'synthetic') {
+    synthPanel.style.display = 'block';
+    $('tle-status').textContent = 'Ajuste os parâmetros e clique em Gerar TLE';
+    $('tle-status').style.color = 'var(--cyan)';
+    updateSynthInfo();
+    return;
+  } else {
+    synthPanel.style.display = 'none';
+  }
+  if (k === 'custom') {
+    $('tle-status').textContent = 'Cole seu TLE abaixo';
+    return;
+  }
+  loadPreset(k);
+});
+
+// synthetic preset chips
+document.querySelectorAll('.synth-presets .chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const key = btn.dataset.synth;
+    const p = SYNTH_PRESETS[key];
+    if (!p) return;
+    $('syn-name').value = p.name;
+    $('syn-alt').value = p.alt;
+    $('syn-inc').value = p.inc;
+    $('syn-ecc').value = p.ecc;
+    $('syn-raan').value = p.raan;
+    $('syn-argp').value = p.argp;
+    $('syn-ma').value = p.ma;
+    updateSynthInfo();
+    document.querySelectorAll('.synth-presets .chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// synthetic input live update of info
+['syn-alt','syn-ecc','syn-inc','syn-raan','syn-argp','syn-ma'].forEach(id => {
+  $(id).addEventListener('input', updateSynthInfo);
+});
+
+$('btn-gen-tle').addEventListener('click', () => {
+  loadSynthetic();
+  if (Globe.isActive()) Globe.forceOrbitUpdate();
+});
+
+// View toggle (2D Map / 3D Globe)
+document.querySelectorAll('.vt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b === btn));
+    const mapEl = $('map');
+    const globeEl = $('globe-container');
+    if (view === 'globe') {
+      mapEl.style.display = 'none';
+      globeEl.style.display = 'block';
+      // lazy init
+      if (typeof THREE === 'undefined') {
+        toast('Biblioteca three.js não carregou (verifique conexão).', 'bad');
+        return;
+      }
+      Globe.init(globeEl);
+      Globe.show();
+      Globe.forceOrbitUpdate();
+    } else {
+      mapEl.style.display = 'block';
+      globeEl.style.display = 'none';
+      Globe.hide();
+      // leaflet sometimes needs a nudge after being hidden
+      setTimeout(() => { if (map) map.invalidateSize(); }, 60);
+    }
+  });
+});
+
+$('btn-fetch-tle').addEventListener('click', () => {
+  const k = $('sat-preset').value;
+  if (k === 'custom') {
+    // try parse from textarea
+    const lines = $('tle-input').value.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length >= 2) {
+      let name = 'CUSTOM', l1, l2;
+      if (lines[0].startsWith('1 ')) { l1 = lines[0]; l2 = lines[1]; }
+      else { name = lines[0]; l1 = lines[1]; l2 = lines[2]; }
+      if (l1 && l2 && l1.startsWith('1 ') && l2.startsWith('2 ')) {
+        loadTLE({ name, l1, l2 }, 'manual');
+      } else toast('TLE inválido: verifique as linhas começando com "1 " e "2 ".', 'bad');
+    } else toast('Cole um TLE válido (nome opcional + 2 linhas).', 'warn');
+  } else {
+    loadPreset(k);
+  }
+});
+
+$('tle-input').addEventListener('change', () => {
+  const lines = $('tle-input').value.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length >= 2) {
+    let name = 'CUSTOM', l1, l2;
+    if (lines[0].startsWith('1 ')) { l1 = lines[0]; l2 = lines[1]; }
+    else { name = lines[0]; l1 = lines[1] || ''; l2 = lines[2] || ''; }
+    if (l1.startsWith('1 ') && l2.startsWith('2 ')) {
+      $('sat-preset').value = 'custom';
+      loadTLE({ name, l1, l2 }, 'manual');
+    }
+  }
+});
+
+// All input changes -> link budget + chart rebuild when needed
+const watchInputs = ['freq','datarate','bw','tx-power','tx-feeder','tx-gain','rx-gain','rx-feeder','rx-tsys',
+  'loss-point','loss-impl','rain-rate','polarization','modulation','fec','ber-target','ebno-override'];
+watchInputs.forEach(id => {
+  $(id).addEventListener('change', () => {
+    updateLinkBudget();
+    // rebuild chart data for current pass
+    const now = state.simTime;
+    const p = state.passes.find(pp => pp.los > now);
+    chartData = p ? buildPassChartData(p) : null;
+    drawChart();
+  });
+  $(id).addEventListener('input', () => updateLinkBudget());
+});
+
+// ---------- Export CSV ----------
+$('btn-export').addEventListener('click', () => {
+  const rows = [
+    ['Satellite Lab — Export'],
+    ['Gerado em', new Date().toISOString()],
+    ['Satélite', state.satName],
+    ['TLE L1', state.tle1 || ''],
+    ['TLE L2', state.tle2 || ''],
+    [],
+    ['GS lat','GS lon','GS alt m', 'freq MHz','BW kHz','Rb kbps','TX Pot W','TX Lf dB','TX Gain dBi','RX Gain dBi','RX Lf dB','T_sys K','Loss_point dB','Loss_impl dB','Rain mm/h','Polarization','Modulation','FEC','BER'],
+    [
+      $('gs-lat').value, $('gs-lon').value, $('gs-alt').value,
+      $('freq').value, $('bw').value, $('datarate').value,
+      $('tx-power').value, $('tx-feeder').value, $('tx-gain').value,
+      $('rx-gain').value, $('rx-feeder').value, $('rx-tsys').value,
+      $('loss-point').value, $('loss-impl').value,
+      $('rain-rate').value, $('polarization').value,
+      $('modulation').value, $('fec').value, $('ber-target').value
+    ],
+    [],
+    ['=== PRÓXIMAS PASSAGENS (48h) ==='],
+    ['#','AOS UTC','LOS UTC','Duração s','Elev max °','Az AOS °','Az LOS °'],
+  ];
+  state.passes.forEach((p, i) => {
+    const sa = getSatState(p.aos), sl = getSatState(p.los);
+    rows.push([
+      i+1,
+      p.aos.toISOString(),
+      p.los.toISOString(),
+      Math.round((p.los - p.aos)/1000),
+      fmt(p.maxEl, 2),
+      sa ? fmt(sa.azDeg, 1) : '',
+      sl ? fmt(sl.azDeg, 1) : '',
+    ]);
+  });
+
+  // Current pass link budget samples
+  if (chartData) {
+    rows.push([]);
+    rows.push(['=== LINK BUDGET @ PRÓXIMA PASSAGEM ===']);
+    rows.push(['Tempo UTC','Elev °','Range km','FSPL dB','EbN0 dB','Margem dB']);
+    chartData.points.forEach(p => {
+      rows.push([p.t.toISOString(), fmt(p.elev,2), fmt(p.range,1), fmt(p.fspl,2), fmt(p.ebno,2), fmt(p.margin,2)]);
+    });
+  }
+
+  const csv = rows.map(r => r.map(c => {
+    const s = String(c);
+    return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `satlab-${state.satName.replace(/\s+/g,'_')}-${new Date().toISOString().substring(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exportado com sucesso.', 'good');
+});
+
+$('btn-reset').addEventListener('click', () => {
+  if (confirm('Resetar todos os parâmetros para os defaults?')) location.reload();
+});
+
+// ---------- Modal ----------
+function openModal() { $('modal-help').classList.add('open'); }
+function closeModal() { $('modal-help').classList.remove('open'); }
+$('btn-help').addEventListener('click', openModal);
+$('modal-close').addEventListener('click', closeModal);
+$('foot-help').addEventListener('click', e => { e.preventDefault(); openModal(); });
+$('modal-help').addEventListener('click', e => { if (e.target === $('modal-help')) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+    e.preventDefault();
+    if (state.paused) { $('btn-play').click(); } else { $('btn-pause').click(); }
+  }
+});
+
+// ---------- Toast ----------
+let toastTimer;
+function toast(msg, kind='info') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind === 'good' ? 'good' : kind === 'warn' ? 'warn' : kind === 'bad' ? 'bad' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 4500);
+}
+
+// ---------- 3D Globe (three.js) ----------
+const Globe = (() => {
+  const Re = 6378.137;
+  let scene, camera, renderer, container;
+  let earth, grid, equator;
+  let satMesh, satGlow, gsMesh;
+  let orbitPastLine, orbitFutLine;
+  let footprintLine, coneMesh;
+  let starField;
+  let active = false;
+  let initialized = false;
+  let needsRender = true;
+
+  // camera orbit state
+  let azim = 0.9, elev = 0.35, dist = 22000;
+  let dragging = false, lastX = 0, lastY = 0;
+
+  function latLonAltToVec3(latDeg, lonDeg, altKm) {
+    const r = Re + (altKm || 0);
+    const la = latDeg * Math.PI / 180;
+    const lo = lonDeg * Math.PI / 180;
+    return new THREE.Vector3(
+      r * Math.cos(la) * Math.cos(lo),
+      r * Math.sin(la),
+      r * Math.cos(la) * Math.sin(lo)
+    );
+  }
+
+  function buildEarth() {
+    // solid earth (slightly inset)
+    const earthGeo = new THREE.SphereGeometry(Re * 0.998, 64, 48);
+    const earthMat = new THREE.MeshBasicMaterial({ color: 0x071628, transparent: true, opacity: 0.95 });
+    earth = new THREE.Mesh(earthGeo, earthMat);
+    scene.add(earth);
+
+    // lat/lon grid lines
+    const positions = [];
+    const SEG = 96;
+    // parallels every 15°
+    for (let lat = -75; lat <= 75; lat += 15) {
+      const phi = (90 - lat) * Math.PI / 180;
+      const ringY = Re * Math.cos(phi);
+      const ringR = Re * Math.sin(phi);
+      for (let i = 0; i < SEG; i++) {
+        const a1 = (i / SEG) * Math.PI * 2;
+        const a2 = ((i + 1) / SEG) * Math.PI * 2;
+        positions.push(ringR * Math.cos(a1), ringY, ringR * Math.sin(a1));
+        positions.push(ringR * Math.cos(a2), ringY, ringR * Math.sin(a2));
+      }
+    }
+    // meridians every 15°
+    for (let lon = 0; lon < 360; lon += 15) {
+      const lo = lon * Math.PI / 180;
+      for (let i = 0; i < SEG; i++) {
+        const t1 = (i / SEG) * Math.PI - Math.PI / 2;
+        const t2 = ((i + 1) / SEG) * Math.PI - Math.PI / 2;
+        positions.push(Re * Math.cos(t1) * Math.cos(lo), Re * Math.sin(t1), Re * Math.cos(t1) * Math.sin(lo));
+        positions.push(Re * Math.cos(t2) * Math.cos(lo), Re * Math.sin(t2), Re * Math.cos(t2) * Math.sin(lo));
+      }
+    }
+    const gridGeo = new THREE.BufferGeometry();
+    gridGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const gridMat = new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.25 });
+    grid = new THREE.LineSegments(gridGeo, gridMat);
+    scene.add(grid);
+
+    // equator highlight (amber)
+    const eqPos = [];
+    const ES = 180;
+    for (let i = 0; i < ES; i++) {
+      const a1 = (i / ES) * Math.PI * 2;
+      const a2 = ((i + 1) / ES) * Math.PI * 2;
+      eqPos.push(Re * 1.001 * Math.cos(a1), 0, Re * 1.001 * Math.sin(a1));
+      eqPos.push(Re * 1.001 * Math.cos(a2), 0, Re * 1.001 * Math.sin(a2));
+    }
+    const eqGeo = new THREE.BufferGeometry();
+    eqGeo.setAttribute('position', new THREE.Float32BufferAttribute(eqPos, 3));
+    const eqMat = new THREE.LineBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.55 });
+    equator = new THREE.LineSegments(eqGeo, eqMat);
+    scene.add(equator);
+
+    // atmosphere glow (slightly larger sphere with additive blending)
+    const atmGeo = new THREE.SphereGeometry(Re * 1.015, 48, 32);
+    const atmMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.06,
+      side: THREE.BackSide
+    });
+    scene.add(new THREE.Mesh(atmGeo, atmMat));
+
+    // stars background (points on a far sphere)
+    const starPos = [];
+    for (let i = 0; i < 800; i++) {
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      const R = 120000;
+      starPos.push(R * Math.sin(ph) * Math.cos(th), R * Math.cos(ph), R * Math.sin(ph) * Math.sin(th));
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xe6ecf5, size: 150, transparent: true, opacity: 0.6, sizeAttenuation: true });
+    starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
+  }
+
+  function buildMarkers() {
+    // satellite: octahedron with glow sprite behind
+    const satGeo = new THREE.OctahedronGeometry(180);
+    const satMat = new THREE.MeshBasicMaterial({ color: 0x4ade80 });
+    satMesh = new THREE.Mesh(satGeo, satMat);
+    scene.add(satMesh);
+
+    const glowGeo = new THREE.SphereGeometry(380, 24, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.18 });
+    satGlow = new THREE.Mesh(glowGeo, glowMat);
+    scene.add(satGlow);
+
+    // ground station: pyramid pointing outward
+    const gsGeo = new THREE.ConeGeometry(130, 300, 4);
+    const gsMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    gsMesh = new THREE.Mesh(gsGeo, gsMat);
+    scene.add(gsMesh);
+
+    // orbit lines (past = dim cyan, future = bright cyan)
+    const pastMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 });
+    const futMat  = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.95 });
+    orbitPastLine = new THREE.Line(new THREE.BufferGeometry(), pastMat);
+    orbitFutLine  = new THREE.Line(new THREE.BufferGeometry(), futMat);
+    scene.add(orbitPastLine);
+    scene.add(orbitFutLine);
+
+    // footprint loop
+    const fpMat = new THREE.LineBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.9 });
+    footprintLine = new THREE.LineLoop(new THREE.BufferGeometry(), fpMat);
+    scene.add(footprintLine);
+
+    // coverage cone
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.11,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    coneMesh = new THREE.Mesh(new THREE.BufferGeometry(), coneMat);
+    scene.add(coneMesh);
+  }
+
+  function updateCamera() {
+    elev = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, elev));
+    dist = Math.max(Re + 400, Math.min(140000, dist));
+    camera.position.set(
+      dist * Math.cos(elev) * Math.sin(azim),
+      dist * Math.sin(elev),
+      dist * Math.cos(elev) * Math.cos(azim)
+    );
+    camera.lookAt(0, 0, 0);
+    needsRender = true;
+  }
+
+  function setupControls(el) {
+    el.addEventListener('pointerdown', (e) => {
+      dragging = true;
+      lastX = e.clientX; lastY = e.clientY;
+      el.classList.add('dragging');
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      azim -= dx * 0.005;
+      elev += dy * 0.005;
+      updateCamera();
+    });
+    const endDrag = (e) => {
+      dragging = false;
+      el.classList.remove('dragging');
+      try { el.releasePointerCapture(e.pointerId); } catch(_) {}
+    };
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+    el.addEventListener('pointerleave', endDrag);
+    el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const scale = e.deltaY > 0 ? 1.12 : 0.89;
+      dist *= scale;
+      updateCamera();
+    }, { passive: false });
+    el.addEventListener('dblclick', () => {
+      azim = 0.9; elev = 0.35; dist = 22000;
+      updateCamera();
+    });
+  }
+
+  function init(containerEl) {
+    if (initialized) return;
+    container = containerEl;
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(40, 1, 50, 300000);
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x04070c, 1);
+    container.appendChild(renderer.domElement);
+
+    buildEarth();
+    buildMarkers();
+    setupControls(container);
+    resize();
+    window.addEventListener('resize', resize);
+    updateCamera();
+    initialized = true;
+  }
+
+  function resize() {
+    if (!renderer || !container) return;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w === 0 || h === 0) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    needsRender = true;
+  }
+
+  function buildFootprintPoints(sat, minElevDeg=0) {
+    // returns { bdry: Vector3[], ground: Vector3[], gamma }
+    // gamma = Earth central angle to footprint edge
+    const eMin = minElevDeg * Math.PI / 180;
+    const r = Re + sat.altKm;
+    const alpha = Math.asin(Math.min(1, Re * Math.cos(eMin) / r)); // cone half-angle at sat
+    const gamma = Math.PI / 2 - eMin - alpha;                        // central earth angle
+    const subLat = sat.latDeg * Math.PI / 180;
+    const subLon = sat.lonDeg * Math.PI / 180;
+
+    const bdry = [];
+    const N = 96;
+    for (let i = 0; i < N; i++) {
+      const brg = (i / N) * Math.PI * 2;
+      // destination point on sphere at angular distance gamma from (subLat, subLon) with bearing brg
+      const sinLat = Math.sin(subLat) * Math.cos(gamma) + Math.cos(subLat) * Math.sin(gamma) * Math.cos(brg);
+      const lat2 = Math.asin(Math.max(-1, Math.min(1, sinLat)));
+      const lon2 = subLon + Math.atan2(
+        Math.sin(brg) * Math.sin(gamma) * Math.cos(subLat),
+        Math.cos(gamma) - Math.sin(subLat) * Math.sin(lat2)
+      );
+      // point slightly above surface for visibility
+      const R2 = Re * 1.003;
+      bdry.push(new THREE.Vector3(
+        R2 * Math.cos(lat2) * Math.cos(lon2),
+        R2 * Math.sin(lat2),
+        R2 * Math.cos(lat2) * Math.sin(lon2)
+      ));
+    }
+    return { bdry, gamma };
+  }
+
+  function updateFootprintAndCone(sat) {
+    if (!sat || sat.altKm <= 0) return;
+    const { bdry } = buildFootprintPoints(sat, 0);
+
+    // footprint line
+    const fpPos = new Float32Array(bdry.length * 3);
+    for (let i = 0; i < bdry.length; i++) {
+      fpPos[i*3]   = bdry[i].x;
+      fpPos[i*3+1] = bdry[i].y;
+      fpPos[i*3+2] = bdry[i].z;
+    }
+    footprintLine.geometry.dispose();
+    const fpGeo = new THREE.BufferGeometry();
+    fpGeo.setAttribute('position', new THREE.BufferAttribute(fpPos, 3));
+    footprintLine.geometry = fpGeo;
+
+    // cone: triangles from satellite to each adjacent pair of footprint points
+    const satVec = latLonAltToVec3(sat.latDeg, sat.lonDeg, sat.altKm);
+    const n = bdry.length;
+    const conePos = new Float32Array(n * 3 * 3);
+    for (let i = 0; i < n; i++) {
+      const a = bdry[i];
+      const b = bdry[(i + 1) % n];
+      const o = i * 9;
+      conePos[o]     = satVec.x; conePos[o+1] = satVec.y; conePos[o+2] = satVec.z;
+      conePos[o+3]   = a.x;      conePos[o+4] = a.y;      conePos[o+5] = a.z;
+      conePos[o+6]   = b.x;      conePos[o+7] = b.y;      conePos[o+8] = b.z;
+    }
+    coneMesh.geometry.dispose();
+    const coneGeo = new THREE.BufferGeometry();
+    coneGeo.setAttribute('position', new THREE.BufferAttribute(conePos, 3));
+    coneGeo.computeVertexNormals();
+    coneMesh.geometry = coneGeo;
+  }
+
+  function updateOrbit(centerDate) {
+    if (!state.satrec) return;
+    const pastPos = [];
+    const futPos = [];
+    const stepSec = 30;
+    const minutesBack = 45, minutesFwd = 45;
+    for (let t = -minutesBack * 60; t <= minutesFwd * 60; t += stepSec) {
+      const d = new Date(centerDate.getTime() + t * 1000);
+      const s = getSatState(d);
+      if (!s) continue;
+      const v = latLonAltToVec3(s.latDeg, s.lonDeg, s.altKm);
+      if (t < 0) pastPos.push(v.x, v.y, v.z);
+      else futPos.push(v.x, v.y, v.z);
+    }
+    orbitPastLine.geometry.dispose();
+    orbitFutLine.geometry.dispose();
+    const gp = new THREE.BufferGeometry();
+    gp.setAttribute('position', new THREE.Float32BufferAttribute(pastPos, 3));
+    orbitPastLine.geometry = gp;
+    const gf = new THREE.BufferGeometry();
+    gf.setAttribute('position', new THREE.Float32BufferAttribute(futPos, 3));
+    orbitFutLine.geometry = gf;
+  }
+
+  let _lastOrbitUpdate = 0;
+
+  function update(sat) {
+    if (!active || !initialized) return;
+
+    // rotate starfield very slowly for ambience
+    if (starField) starField.rotation.y += 0.00005;
+
+    // ground station marker
+    const gs = getGS();
+    const gsVec = latLonAltToVec3(gs.lat, gs.lon, 50);
+    gsMesh.position.copy(gsVec);
+    // orient cone so tip points outward (normal to surface)
+    gsMesh.lookAt(gsVec.clone().multiplyScalar(2));
+    gsMesh.rotateX(Math.PI / 2);
+
+    if (sat && sat.altKm > 0) {
+      const satVec = latLonAltToVec3(sat.latDeg, sat.lonDeg, sat.altKm);
+      satMesh.position.copy(satVec);
+      satGlow.position.copy(satVec);
+      satMesh.rotation.y += 0.02;
+
+      // update footprint + cone every frame
+      updateFootprintAndCone(sat);
+
+      // update orbit trajectory every ~3s of real time
+      const nowMs = performance.now();
+      if (nowMs - _lastOrbitUpdate > 3000) {
+        updateOrbit(state.simTime);
+        _lastOrbitUpdate = nowMs;
+      }
+
+      // HUD
+      $('g-subp').textContent = `${sat.latDeg.toFixed(2)}°, ${sat.lonDeg.toFixed(2)}°`;
+      $('g-alt').textContent = sat.altKm.toFixed(1) + ' km';
+      const fpRadKm = Re * Math.acos(Re / (Re + sat.altKm));
+      $('g-fp').textContent = fpRadKm.toFixed(0) + ' km';
+      $('g-slant').textContent = (sat.slantKm ? sat.slantKm.toFixed(1) : '—') + (sat.slantKm ? ' km' : '');
+    }
+
+    renderer.render(scene, camera);
+    needsRender = false;
+  }
+
+  function forceOrbitUpdate() {
+    _lastOrbitUpdate = 0;
+  }
+
+  return {
+    init,
+    update,
+    resize,
+    forceOrbitUpdate,
+    show() { active = true; needsRender = true; setTimeout(resize, 50); },
+    hide() { active = false; },
+    isActive() { return active; }
+  };
+})();
+
+// ---------- Init ----------
+async function init() {
+  // ground station default
+  const gs = GS_PRESETS.ifsc;
+  $('stat-gs').textContent = gs.name;
+  initMap();
+  initChart();
+  map.setView([gs.lat, gs.lon], 3);
+
+  // Load default preset
+  $('st-msg').textContent = 'Buscando TLE inicial (ISS)...';
+  await loadPreset('iss');
+  $('st-msg').textContent = 'Operacional';
+
+  requestAnimationFrame(tick);
+}
+
+// wait for libs
+function ready() {
+  if (typeof satellite === 'undefined' || typeof L === 'undefined') {
+    setTimeout(ready, 50); return;
+  }
+  init();
+}
+ready();
+
+})();
+</script>
+</body>
+</html>
