@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Telecom Tools — Laboratórios Interativos de Telecomunicações</title>
+<meta name="description" content="Ferramentas interativas para aprendizado de Telecomunicações — Laboratórios e Commanders." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #0a0708;
+  --bg-1: #110c0e;
+  --bg-2: #1a1214;
+  --bg-3: #23181b;
+  --bg-panel: #120d0f;
+  --border: #2e1e24;
+  --border-soft: #261820;
+  --border-strong: #3d2832;
+
+  --text-0: #f5e8ec;
+  --text-1: #d4b6c2;
+  --text-2: #896b78;
+  --text-3: #5b3f4a;
+
+  /* Primary: warm red */
+  --red: #f43f5e;
+  --red-soft: #4c081540;
+  --red-glow: #f43f5e33;
+
+  /* Secondary accents */
+  --orange: #fb923c;
+  --orange-soft: #5c2a0a40;
+  --orange-glow: #fb923c33;
+
+  --gold: #fbbf24;
+  --gold-soft: #5c3d0a40;
+  --gold-glow: #fbbf2433;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+  --rose-glow: #fb718533;
+
+  --emerald: #34d399;
+  --emerald-soft: #0d3b2940;
+  --emerald-glow: #34d39933;
+
+  --sky: #38bdf8;
+  --sky-soft: #0c4a6e40;
+  --sky-glow: #38bdf833;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+  --violet-glow: #a78bfa33;
+
+  --teal: #2dd4bf;
+  --teal-soft: #0d373340;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #370d18 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #2b0a0f 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.012) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.012) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ========== header ========== */
+header.top-bar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 20px;
+  padding: 12px 24px;
+  background: linear-gradient(180deg, rgba(10,7,8,0.97), rgba(10,7,8,0.85));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand .logo-mark {
+  display: inline-flex; width: 32px; height: 32px;
+  align-items: center; justify-content: center; position: relative;
+}
+.brand .logo-mark::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1.5px solid var(--red); border-radius: 6px;
+  animation: pulse-telecom 3s ease-in-out infinite;
+}
+.brand .logo-mark::after {
+  content: ''; position: absolute;
+  width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%;
+  box-shadow: 0 0 14px var(--red), 0 0 30px var(--red-glow);
+}
+@keyframes pulse-telecom {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.12) rotate(3deg); opacity: 0.45; }
+}
+.brand h1 {
+  font-family: var(--font-display);
+  font-weight: 700; font-size: 20px; letter-spacing: 0.2em;
+}
+.brand .tag {
+  color: var(--text-2); font-size: 10px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+}
+.brand .tag em {
+  font-style: italic; font-family: var(--font-serif);
+  font-size: 14px; color: var(--red); letter-spacing: 0.04em;
+}
+
+.top-stats {
+  display: flex; gap: 18px; margin-left: auto;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.top-stat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-right: 18px; border-right: 1px solid var(--border);
+}
+.top-stat:last-child { border-right: none; padding-right: 0; }
+.top-stat .label {
+  color: var(--text-2); font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.top-stat .value { color: var(--text-0); font-weight: 500; }
+.top-stat.live .value { color: var(--phos); }
+.top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300; }
+
+/* ========== content ========== */
+.content {
+  position: relative; z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+/* ========== section headers ========== */
+.section-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px; margin-top: 40px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.section-header:first-child { margin-top: 0; }
+.section-header .dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.section-header .dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.section-header .dot.orange { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+.section-header h2 {
+  font-family: var(--font-display);
+  font-weight: 600; font-size: 13px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--text-0);
+}
+.section-header .count {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); letter-spacing: 0.06em;
+  margin-left: auto;
+}
+
+/* ========== sub-section label ========== */
+.sub-label {
+  display: flex; align-items: center; gap: 8px;
+  margin: 22px 0 12px;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.sub-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border-soft);
+}
+
+/* ========== PRIMARY cards grid (LABs) ========== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+/* ========== SECONDARY cards grid (complementary) ========== */
+.cards-grid-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+/* ========== PRIMARY card (LAB) ========== */
+.tool-card {
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 16px;
+  display: flex; flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.tool-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, var(--red)), transparent);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+.tool-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--card-accent, var(--red-glow)) 0%, transparent 55%);
+  opacity: 0.06;
+  pointer-events: none;
+}
+.tool-card:hover {
+  border-color: color-mix(in srgb, var(--card-accent, var(--red)) 40%, var(--border-strong));
+  background: linear-gradient(180deg, var(--bg-3), var(--bg-2));
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px var(--border-strong);
+}
+.tool-card:hover::before { opacity: 1; }
+.tool-card:hover::after { opacity: 0.12; }
+
+.tool-card .card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative; z-index: 1;
+}
+.tool-card .status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--phos-soft);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: var(--phos);
+}
+.tool-card .status-badge .live-dot {
+  display: inline-block; width: 5px; height: 5px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.lab-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-display); font-size: 9px;
+  font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 3px;
+}
+.lab-badge.red-b { background: var(--red-soft); border: 1px solid rgba(244,63,94,0.25); color: var(--red); }
+.lab-badge.orange-b { background: var(--orange-soft); border: 1px solid rgba(251,146,60,0.25); color: var(--orange); }
+.lab-badge.gold-b { background: var(--gold-soft); border: 1px solid rgba(251,191,36,0.25); color: var(--gold); }
+.lab-badge.rose-b { background: var(--rose-soft); border: 1px solid rgba(251,113,133,0.25); color: var(--rose); }
+.lab-badge.emerald-b { background: var(--emerald-soft); border: 1px solid rgba(52,211,153,0.25); color: var(--emerald); }
+.lab-badge.sky-b { background: var(--sky-soft); border: 1px solid rgba(56,189,248,0.25); color: var(--sky); }
+.lab-badge.violet-b { background: var(--violet-soft); border: 1px solid rgba(167,139,250,0.25); color: var(--violet); }
+
+.tool-card .card-icon {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; font-size: 18px; flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.card-icon.red-icon { background: var(--red-soft); border: 1px solid rgba(244,63,94,0.15); }
+.card-icon.orange-icon { background: var(--orange-soft); border: 1px solid rgba(251,146,60,0.15); }
+.card-icon.gold-icon { background: var(--gold-soft); border: 1px solid rgba(251,191,36,0.15); }
+.card-icon.rose-icon { background: var(--rose-soft); border: 1px solid rgba(251,113,133,0.15); }
+.card-icon.emerald-icon { background: var(--emerald-soft); border: 1px solid rgba(52,211,153,0.15); }
+.card-icon.sky-icon { background: var(--sky-soft); border: 1px solid rgba(56,189,248,0.15); }
+.card-icon.violet-icon { background: var(--violet-soft); border: 1px solid rgba(167,139,250,0.15); }
+
+.tool-card h3 {
+  font-family: var(--font-display);
+  font-weight: 600; font-size: 15px;
+  letter-spacing: 0.06em;
+  color: var(--text-0);
+  line-height: 1.3;
+  position: relative; z-index: 1;
+}
+.tool-card .card-desc {
+  font-family: var(--font-body);
+  font-size: 11.5px; line-height: 1.55;
+  color: var(--text-2);
+  flex: 1;
+  position: relative; z-index: 1;
+}
+.tool-card .card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  margin-top: auto;
+  position: relative; z-index: 1;
+}
+.tool-card .card-author {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
+}
+.tool-card .card-author .avatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 700; color: var(--text-2);
+}
+.tool-card .card-year {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
+}
+
+/* accent colors */
+.tool-card[data-accent="red"] { --card-accent: var(--red); }
+.tool-card[data-accent="orange"] { --card-accent: var(--orange); }
+.tool-card[data-accent="gold"] { --card-accent: var(--gold); }
+.tool-card[data-accent="rose"] { --card-accent: var(--rose); }
+.tool-card[data-accent="emerald"] { --card-accent: var(--emerald); }
+.tool-card[data-accent="sky"] { --card-accent: var(--sky); }
+.tool-card[data-accent="violet"] { --card-accent: var(--violet); }
+
+/* ========== SECONDARY card (compact row) ========== */
+.tool-card-sm {
+  background: var(--bg-0);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.tool-card-sm:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.tool-card-sm .sm-icon {
+  width: 28px; height: 28px; min-width: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.tool-card-sm .sm-body {
+  flex: 1; min-width: 0;
+}
+.tool-card-sm .sm-body h4 {
+  font-family: var(--font-display);
+  font-weight: 500; font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-1);
+  line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tool-card-sm .sm-body p {
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--text-3); margin-top: 2px;
+  line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tool-card-sm .sm-arrow {
+  color: var(--text-3);
+  font-family: var(--font-mono); font-size: 11px;
+  transition: color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.tool-card-sm:hover .sm-arrow {
+  color: var(--red); transform: translateX(3px);
+}
+.tool-card-sm:hover .sm-body h4 { color: var(--text-0); }
+
+/* ========== footer ========== */
+footer {
+  padding: 12px 24px;
+  background: linear-gradient(180deg, rgba(10,7,8,0.7), rgba(10,7,8,0.95));
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; text-align: center;
+  position: relative; z-index: 1;
+}
+footer .author a { color: var(--red); text-decoration: none; }
+footer .author a:hover { text-decoration: underline; }
+footer .ts { color: var(--text-3); }
+footer .ts a { color: var(--text-2); text-decoration: none; }
+footer .ts a:hover { color: var(--red); text-decoration: underline; }
+
+/* ========== responsive ========== */
+@media (max-width: 768px) {
+  header.top-bar { flex-wrap: wrap; padding: 10px 16px; gap: 10px; }
+  .top-stats { display: none; }
+  .content { padding: 20px 16px 40px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .cards-grid-sm { grid-template-columns: 1fr; }
+  .section-header h2 { font-size: 11px; }
+  footer { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"></span>
+    <h1>TELECOM TOOLS</h1>
+    <span class="tag">Laboratórios <em>Interativos de Telecom</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value">ONLINE</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Labs</span>
+      <span class="value">9</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Commanders</span>
+      <span class="value">3</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Total</span>
+      <span class="value">12<span class="unit">tools</span></span>
+    </div>
+  </div>
+</header>
+
+<!-- ========== CONTENT ========== -->
+<div class="content">
+
+  <!-- ============================================================== -->
+  <!--                    LABORATÓRIOS INTERATIVOS                     -->
+  <!-- ============================================================== -->
+  <div class="section-header">
+    <span class="dot red"></span>
+    <h2>Laboratórios Interativos</h2>
+    <span class="count">9 labs</span>
+  </div>
+
+  <!-- ---- LABs ---- -->
+  <div class="sub-label">Labs</div>
+  <div class="cards-grid">
+
+    <a href="satellite-lab.html" class="tool-card" data-accent="red">
+      <div class="card-top">
+        <div class="card-icon red-icon">🛰️</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge red-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Satellite LAB</h3>
+      <p class="card-desc">Laboratório interativo de sistemas de comunicação via satélite, órbitas e enlaces</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="rf-lab.html" class="tool-card" data-accent="red">
+      <div class="card-top">
+        <div class="card-icon red-icon">📡</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge red-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>RF LAB</h3>
+      <p class="card-desc">Laboratório interativo de radiofrequência, propagação e espectro eletromagnético</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="rf-circuits-lab.html" class="tool-card" data-accent="red">
+      <div class="card-top">
+        <div class="card-icon orange-icon">⚡</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge red-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>RF Circuits LAB</h3>
+      <p class="card-desc">Laboratório interativo de circuitos de radiofrequência, filtros e casamento de impedância</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="antenna-lab.html" class="tool-card" data-accent="red">
+      <div class="card-top">
+        <div class="card-icon red-icon">📶</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge red-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Antenna LAB</h3>
+      <p class="card-desc">Laboratório interativo de antenas, diagramas de radiação e parâmetros de desempenho</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="optical-lab.html" class="tool-card" data-accent="orange">
+      <div class="card-top">
+        <div class="card-icon orange-icon">💡</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge orange-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Optical LAB</h3>
+      <p class="card-desc">Laboratório interativo de comunicações ópticas, fibras e sistemas WDM</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="iot-lab.html" class="tool-card" data-accent="emerald">
+      <div class="card-top">
+        <div class="card-icon emerald-icon">🌐</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge emerald-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>IoT LAB</h3>
+      <p class="card-desc">Laboratório interativo de Internet das Coisas, protocolos MQTT/LoRaWAN e sensores</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="network-system-lab.html" class="tool-card" data-accent="sky">
+      <div class="card-top">
+        <div class="card-icon sky-icon">🖧</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge sky-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Network System LAB</h3>
+      <p class="card-desc">Laboratório interativo de sistemas de rede, topologias e protocolos de comunicação</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="dsp-lab.html" class="tool-card" data-accent="violet">
+      <div class="card-top">
+        <div class="card-icon violet-icon">〰️</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge violet-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>DSP LAB</h3>
+      <p class="card-desc">Laboratório interativo de processamento digital de sinais, transformadas e filtragem</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="digital-communications-lab.html" class="tool-card" data-accent="gold">
+      <div class="card-top">
+        <div class="card-icon gold-icon">📨</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge gold-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Digital Communications LAB</h3>
+      <p class="card-desc">Laboratório interativo de comunicações digitais, modulação e codificação de canal</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- ---- Complementares ---- -->
+  <div class="sub-label">Visualizações Complementares</div>
+  <div class="cards-grid-sm">
+
+    <a href="#" class="tool-card-sm">
+      <div class="sm-icon red-icon">📋</div>
+      <div class="sm-body">
+        <h4>Secundário 1</h4>
+        <p>Visualização complementar reservada</p>
+      </div>
+      <span class="sm-arrow">&#9654;</span>
+    </a>
+
+    <a href="#" class="tool-card-sm">
+      <div class="sm-icon red-icon">📋</div>
+      <div class="sm-body">
+        <h4>Secundário 2</h4>
+        <p>Visualização complementar reservada</p>
+      </div>
+      <span class="sm-arrow">&#9654;</span>
+    </a>
+
+    <a href="#" class="tool-card-sm">
+      <div class="sm-icon red-icon">📋</div>
+      <div class="sm-body">
+        <h4>Secundário 3</h4>
+        <p>Visualização complementar reservada</p>
+      </div>
+      <span class="sm-arrow">&#9654;</span>
+    </a>
+
+  </div>
+
+  <!-- ============================================================== -->
+  <!--                         COMMANDERS                              -->
+  <!-- ============================================================== -->
+  <div class="section-header">
+    <span class="dot orange"></span>
+    <h2>Commanders</h2>
+    <span class="count">3 commanders</span>
+  </div>
+
+  <!-- ---- Commander LABs ---- -->
+  <div class="sub-label">Painéis de Comando</div>
+  <div class="cards-grid">
+
+    <a href="starlink-commander.html" class="tool-card" data-accent="orange">
+      <div class="card-top">
+        <div class="card-icon orange-icon">🚀</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge orange-b">CMD</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Starlink Commander</h3>
+      <p class="card-desc">Painel de rastreamento em tempo real da constelação Starlink com visualização orbital</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2025</span>
+      </div>
+    </a>
+
+    <a href="station-commander.html" class="tool-card" data-accent="orange">
+      <div class="card-top">
+        <div class="card-icon orange-icon">🛸</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge orange-b">CMD</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>ISS Commander</h3>
+      <p class="card-desc">Painel de rastreamento em tempo real da Estação Espacial Internacional e Tiangong</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2025</span>
+      </div>
+    </a>
+
+    <a href="hamradio-commander.html" class="tool-card" data-accent="orange">
+      <div class="card-top">
+        <div class="card-icon gold-icon">📻</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge orange-b">CMD</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>HamRadio Commander</h3>
+      <p class="card-desc">Painel de radioamadorismo com monitoramento de bandas, propagação e contatos</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- ---- Complementares Commanders ---- -->
+  <div class="sub-label">Visualizações Complementares</div>
+  <div class="cards-grid-sm">
+
+    <a href="#" class="tool-card-sm">
+      <div class="sm-icon orange-icon">📋</div>
+      <div class="sm-body">
+        <h4>Secundário 1</h4>
+        <p>Visualização complementar reservada</p>
+      </div>
+      <span class="sm-arrow">&#9654;</span>
+    </a>
+
+    <a href="#" class="tool-card-sm">
+      <div class="sm-icon orange-icon">📋</div>
+      <div class="sm-body">
+        <h4>Secundário 2</h4>
+        <p>Visualização complementar reservada</p>
+      </div>
+      <span class="sm-arrow">&#9654;</span>
+    </a>
+
+  </div>
+
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <span class="author">Author: Ramon Mayor Martins, Ph.D. · <a href="https://rmayormartins.github.io" target="_blank">rmayormartins.github.io</a></span>
+  <span class="ts"><a href="https://www.ifsc.edu.br/web/campus-sao-jose" target="_blank">IFSC</a> — Campus São José · Engenharia de Telecomunicações</span>
+</footer>
+
+</body>
+</html>
