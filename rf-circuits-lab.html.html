@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>μE Lab — Laboratório de RF Microeletrônica</title>
+<meta name="description" content="Laboratório interativo de RF Microeletrônica baseado em Razavi: LNA, Mixer, VCO, Filtros, PA, PLL — com diagramas de circuito, cálculos e visualizações." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0:#07090d;--bg-1:#0c1016;--bg-2:#11161f;--bg-3:#161d28;
+  --bg-panel:#0e131b;--border:#1e2838;--border-soft:#172030;--border-strong:#2a3a52;
+  --text-0:#e6ecf5;--text-1:#b6c2d4;--text-2:#6b7889;--text-3:#3f4a5b;
+  --phos:#4ade80;--phos-soft:#14532d40;--phos-glow:#4ade8033;
+  --cyan:#38bdf8;--cyan-soft:#0c4a6e40;--cyan-glow:#38bdf833;
+  --amber:#fbbf24;--amber-soft:#78350f40;--amber-glow:#fbbf2433;
+  --rose:#fb7185;--rose-soft:#7f1d1d40;
+  --violet:#a78bfa;--violet-soft:#4c1d9540;
+  --orange:#f97316;--teal:#2dd4bf;
+  /* silicon / chip accent */
+  --si:#f472b6;--si-bright:#f9a8d4;--si-soft:#831843cc;--si-glow:#f472b633;
+  --si-deep:#be185d;--si-dim:#9d174d;
+  --gap:14px;--radius:4px;--radius-lg:8px;
+  --font-display:'Chakra Petch',sans-serif;
+  --font-serif:'Instrument Serif',serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --font-body:'Chakra Petch',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:radial-gradient(1200px 600px at 80% -10%,#1a0d1a 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d0d1a 0%,transparent 55%),var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* HEADER */
+header.top-bar{
+  display:flex;align-items:center;gap:16px;padding:8px 16px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:10px;}
+.brand .logo-mark{
+  display:inline-flex;width:30px;height:28px;align-items:center;justify-content:center;position:relative;
+}
+.brand .logo-mark .die{
+  width:16px;height:16px;background:linear-gradient(135deg,#2d1a3e,#1a0d28);
+  border:1.5px solid var(--si);border-radius:2px;position:relative;
+  box-shadow:0 0 12px var(--si-glow),inset 0 0 6px rgba(244,114,182,0.15);
+}
+.brand .logo-mark .die::before{
+  content:'';position:absolute;inset:3px;
+  border:0.5px solid rgba(244,114,182,0.4);border-radius:1px;
+}
+.brand .logo-mark .pin{
+  position:absolute;background:var(--si);border-radius:0.5px;
+}
+.brand .logo-mark .pin.t{width:3px;height:5px;top:-4px;}
+.brand .logo-mark .pin.b{width:3px;height:5px;bottom:-4px;}
+.brand .logo-mark .pin.l{width:5px;height:3px;left:-4px;}
+.brand .logo-mark .pin.r{width:5px;height:3px;right:-4px;}
+.brand .logo-mark .pin.t1{left:3px;}.brand .logo-mark .pin.t2{left:10px;}
+.brand .logo-mark .pin.b1{left:3px;}.brand .logo-mark .pin.b2{left:10px;}
+.brand .logo-mark .pin.l1{top:3px;}.brand .logo-mark .pin.l2{top:10px;}
+.brand .logo-mark .pin.r1{top:3px;}.brand .logo-mark .pin.r2{top:10px;}
+.brand h1{font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:0.18em;}
+.brand h1 .mu{font-family:var(--font-serif);font-style:italic;color:var(--si);font-size:20px;letter-spacing:0;margin-right:2px;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--si);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:16px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:1px;padding-right:16px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:3px;font-weight:300;}
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:6px 12px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#6e1a4d,#451030);
+  border-color:var(--si);color:var(--si-bright);
+  box-shadow:0 0 0 1px var(--si-glow),inset 0 1px 0 rgba(244,114,182,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#8a2060,#5a1840);}
+.btn svg{width:12px;height:12px;}
+
+/* MAIN */
+main{display:grid;grid-template-columns:300px 1fr 300px;gap:1px;background:var(--border-soft);min-height:0;}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+}
+.panel-header h2{font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.panel-body{flex:1;min-height:0;overflow-y:auto;padding:12px;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;}
+.panel-body::-webkit-scrollbar{width:5px;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* SECTIONS */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:8px 10px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:7px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.si{background:var(--si);box-shadow:0 0 6px var(--si);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:10px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* FORM */
+.field{margin-bottom:8px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px;}
+.field label{
+  display:flex;align-items:center;gap:5px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:3px;
+}
+input[type="number"],input[type="text"],select{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:6px 8px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s;
+}
+input:focus,select:focus{outline:none;border-color:var(--si);box-shadow:0 0 0 2px var(--si-glow);}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 8px top 50%,right 4px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:20px;
+}
+.help{font-size:9.5px;color:var(--text-2);margin-top:2px;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:12px;height:12px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:9px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--si);border-color:var(--si);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);width:220px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:7px 9px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.45;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+
+.chips{display:flex;flex-wrap:wrap;gap:4px;}
+.chip{
+  padding:4px 9px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--si-soft);border-color:var(--si);color:var(--si-bright);}
+
+/* VIZ */
+.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;}
+.viz-top,.viz-bottom{display:grid;grid-template-columns:1fr;min-height:0;}
+.viz-bottom{grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);}
+.viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.viz-cell .card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);flex-shrink:0;
+}
+.viz-cell .card-header h3{
+  font-family:var(--font-display);font-weight:500;font-size:10px;
+  letter-spacing:0.18em;text-transform:uppercase;color:var(--text-1);
+}
+.viz-cell .card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.viz-cell .card-body{flex:1;position:relative;min-height:0;overflow:hidden;}
+.viz-cell canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+/* RESULTS */
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 8px;padding:4px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:5px;}
+.kv .v{font-family:var(--font-mono);font-size:11.5px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:2px;font-weight:300;font-size:9.5px;}
+.kv .v.good{color:var(--phos);}.kv .v.warn{color:var(--amber);}.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}.kv .v.si-c{color:var(--si-bright);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+
+.gauge{margin-top:3px;height:8px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+
+.info-box{
+  margin:6px 0;padding:7px 9px;background:rgba(244,114,182,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--si);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.5;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:6px 0;}
+
+footer{
+  padding:5px 16px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer a{color:var(--si);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark">
+      <span class="die">
+        <span class="pin t t1"></span><span class="pin t t2"></span>
+        <span class="pin b b1"></span><span class="pin b b2"></span>
+        <span class="pin l l1"></span><span class="pin l l2"></span>
+        <span class="pin r r1"></span><span class="pin r r2"></span>
+      </span>
+    </span>
+    <h1><span class="mu">μ</span>E LAB</h1>
+    <span class="tag">Laboratório de <em>RF Microeletrônica</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Bloco</span>
+      <span class="value" id="hdr-block">LNA</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Frequência</span>
+      <span class="value" id="hdr-freq">2.4<span class="unit">GHz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Ganho</span>
+      <span class="value" id="hdr-gain">--<span class="unit">dB</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">NF</span>
+      <span class="value" id="hdr-nf">--<span class="unit">dB</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Tecnologia</span>
+      <span class="value" id="hdr-tech">CMOS 65nm</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;">
+    <button class="btn primary" onclick="runCalc()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+      Analisar
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<main>
+
+<!-- LEFT: CONFIG -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuração</h2>
+    <span class="panel-sub" id="config-sub">LNA — Common Source</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- BLOCK SELECT -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot si"></span>Bloco Funcional</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="chips" id="block-chips">
+          <span class="chip active" onclick="selectBlock('lna')">LNA</span>
+          <span class="chip" onclick="selectBlock('mixer')">Mixer</span>
+          <span class="chip" onclick="selectBlock('vco')">VCO</span>
+          <span class="chip" onclick="selectBlock('filter')">Filtro</span>
+          <span class="chip" onclick="selectBlock('pa')">PA</span>
+          <span class="chip" onclick="selectBlock('pll')">PLL</span>
+        </div>
+        <div class="help" style="margin-top:6px;">Selecione o bloco RF a ser analisado (Razavi, Cap. 5–10)</div>
+      </div>
+    </div>
+
+    <!-- TOPOLOGY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Topologia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Arquitetura <span class="tip" data-tip="Topologia do circuito conforme Razavi. Cada topologia tem trade-offs específicos de ganho, ruído e linearidade.">i</span></label>
+          <select id="topology" onchange="onTopoChange()">
+            <option value="cs">Common Source (CS) com Degeneração Indutiva</option>
+            <option value="cg">Common Gate (CG)</option>
+            <option value="cascode">Cascode</option>
+            <option value="diff">Par Diferencial</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tecnologia</label>
+          <select id="tech" onchange="onTechChange()">
+            <option value="cmos65">CMOS 65 nm</option>
+            <option value="cmos130">CMOS 130 nm</option>
+            <option value="cmos180">CMOS 180 nm</option>
+            <option value="bicmos">BiCMOS SiGe</option>
+            <option value="gaas">GaAs pHEMT</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>VDD <span class="tip" data-tip="Tensão de alimentação. CMOS 65nm tipicamente 1.2V, 130nm 1.2-1.8V, 180nm 1.8V.">i</span></label>
+          <input type="number" id="vdd" value="1.2" step="0.1" min="0.5" max="5"/>
+          <div class="help">V</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARAMS (dynamic) -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Parâmetros do Circuito</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="params-body">
+        <!-- filled dynamically -->
+      </div>
+    </div>
+
+    <!-- FREQUENCY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Especificações RF</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div class="field">
+            <label>Frequência <span class="tip" data-tip="Frequência central de operação do bloco RF.">i</span></label>
+            <input type="number" id="freq" value="2.4" step="0.1" min="0.01" max="100"/>
+            <div class="help">GHz</div>
+          </div>
+          <div class="field">
+            <label>Impedância Fonte</label>
+            <input type="number" id="rs" value="50" step="1" min="1" max="1000"/>
+            <div class="help">Ω</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Impedância Carga</label>
+            <input type="number" id="rl" value="50" step="1" min="1" max="10000"/>
+            <div class="help">Ω</div>
+          </div>
+          <div class="field">
+            <label>Temperatura</label>
+            <input type="number" id="temp" value="300" step="1" min="77" max="500"/>
+            <div class="help">K</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Largura de Banda</label>
+          <input type="number" id="bw" value="200" step="10" min="1" max="10000"/>
+          <div class="help">MHz</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Cenários (Presets)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="chips">
+          <span class="chip" onclick="loadPreset('wifi')">Wi-Fi 2.4G</span>
+          <span class="chip" onclick="loadPreset('wifi5')">Wi-Fi 5G</span>
+          <span class="chip" onclick="loadPreset('bt')">Bluetooth</span>
+          <span class="chip" onclick="loadPreset('lte')">LTE B7</span>
+          <span class="chip" onclick="loadPreset('5g')">5G Sub-6</span>
+          <span class="chip" onclick="loadPreset('gps')">GPS L1</span>
+          <span class="chip" onclick="loadPreset('ism')">ISM 915M</span>
+          <span class="chip" onclick="loadPreset('mmwave')">mmWave 28G</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER: VISUALIZATIONS -->
+<div class="panel viz">
+  <div class="viz-top">
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3 id="schem-title">Esquemático — LNA Common Source</h3>
+        <span class="meta" id="schem-ref">Razavi Cap. 5</span>
+      </div>
+      <div class="card-body">
+        <canvas id="schematic"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="viz-bottom">
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3>Resposta em Frequência</h3>
+        <span class="meta" id="freq-meta">|S21| & NF</span>
+      </div>
+      <div class="card-body">
+        <canvas id="freqResponse"></canvas>
+      </div>
+    </div>
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3 id="chart2-title">Diagrama de Estabilidade</h3>
+        <span class="meta" id="chart2-meta">K-factor & Δ</span>
+      </div>
+      <div class="card-body">
+        <canvas id="chart2"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT: RESULTS -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="result-sub">Análise Completa</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Desempenho</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="perf-results">
+        <div class="info-box">Clique em <strong>ANALISAR</strong> para calcular.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Parâmetros Pequenos Sinais</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="ss-results">
+        <div class="info-box">Aguardando análise...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Ruído</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="noise-results">
+        <div class="info-box">Aguardando análise...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot rose"></span>Linearidade</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="lin-results">
+        <div class="info-box">Aguardando análise...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Consumo & Área</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body" id="power-results">
+        <div class="info-box">Aguardando análise...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot si"></span>Equações (Razavi)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body" id="eq-results">
+        <div class="info-box">Equações do modelo selecionado.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <span>μE Lab v1.0 — Baseado em B. Razavi, <em style="font-family:var(--font-serif);">RF Microelectronics</em>, 2nd Ed.</span>
+  <span>Prof. Ramon Mayor Martins — IFSC</span>
+</footer>
+
+</div>
+
+<script>
+// ============================================================
+// μE LAB — RF Microelectronics Interactive Laboratory
+// ============================================================
+
+const k_B = 1.38e-23; // Boltzmann
+const q_e = 1.6e-19;  // electron charge
+const PI = Math.PI;
+
+let currentBlock = 'lna';
+let results = {};
+
+// ---- Section toggle ----
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ---- Block selection ----
+function selectBlock(block) {
+  currentBlock = block;
+  document.querySelectorAll('#block-chips .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('hdr-block').textContent = block.toUpperCase();
+  updateTopologyOptions();
+  updateParams();
+  updateSchematicTitle();
+}
+
+function updateTopologyOptions() {
+  const sel = document.getElementById('topology');
+  const opts = {
+    lna: [
+      ['cs','Common Source (CS) com Degeneração Indutiva'],
+      ['cg','Common Gate (CG)'],
+      ['cascode','Cascode'],
+      ['diff','Par Diferencial']
+    ],
+    mixer: [
+      ['gilbert','Célula de Gilbert (Ativa)'],
+      ['passive','Mixer Passivo (Switch)'],
+      ['subharm','Sub-Harmônico'],
+      ['single','Single-Balanced']
+    ],
+    vco: [
+      ['lc_cross','LC Cross-Coupled'],
+      ['lc_colpitts','LC Colpitts'],
+      ['ring','Ring Oscillator'],
+      ['clapp','Clapp']
+    ],
+    filter: [
+      ['lc_bpf','LC Bandpass'],
+      ['active_rc','Active-RC (Op-Amp)'],
+      ['gm_c','Gm-C'],
+      ['n_path','N-Path (Switched-Cap)']
+    ],
+    pa: [
+      ['class_a','Classe A'],
+      ['class_ab','Classe AB'],
+      ['class_b','Classe B'],
+      ['class_e','Classe E (Switching)']
+    ],
+    pll: [
+      ['cp_pll','Charge-Pump PLL (Type II)'],
+      ['analog','Analog PLL (Type I)'],
+      ['adpll','All-Digital PLL (ADPLL)'],
+      ['frac_n','Fractional-N PLL']
+    ]
+  };
+  sel.innerHTML = '';
+  (opts[currentBlock]||opts.lna).forEach(([v,t]) => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = t;
+    sel.appendChild(o);
+  });
+  document.getElementById('config-sub').textContent =
+    currentBlock.toUpperCase() + ' — ' + sel.options[0].text;
+}
+
+function onTopoChange() {
+  const sel = document.getElementById('topology');
+  document.getElementById('config-sub').textContent =
+    currentBlock.toUpperCase() + ' — ' + sel.options[sel.selectedIndex].text;
+  updateParams();
+  updateSchematicTitle();
+}
+
+function onTechChange() {
+  const t = document.getElementById('tech').value;
+  const map = {cmos65:'CMOS 65nm',cmos130:'CMOS 130nm',cmos180:'CMOS 180nm',bicmos:'BiCMOS SiGe',gaas:'GaAs pHEMT'};
+  document.getElementById('hdr-tech').textContent = map[t]||t;
+  const vddMap = {cmos65:1.2,cmos130:1.5,cmos180:1.8,bicmos:3.3,gaas:3.0};
+  document.getElementById('vdd').value = vddMap[t]||1.2;
+}
+
+function updateSchematicTitle() {
+  const sel = document.getElementById('topology');
+  const names = {lna:'LNA',mixer:'Mixer',vco:'VCO',filter:'Filtro',pa:'PA',pll:'PLL'};
+  const refs = {lna:'Razavi Cap. 5',mixer:'Razavi Cap. 6',vco:'Razavi Cap. 8',filter:'Razavi Cap. 4',pa:'Razavi Cap. 12',pll:'Razavi Cap. 9-10'};
+  document.getElementById('schem-title').textContent =
+    'Esquemático — ' + names[currentBlock] + ' ' + sel.options[sel.selectedIndex].text;
+  document.getElementById('schem-ref').textContent = refs[currentBlock]||'';
+}
+
+// ---- Dynamic Parameters ----
+function updateParams() {
+  const pb = document.getElementById('params-body');
+  const p = {
+    lna: `
+      <div class="field-row"><div class="field"><label>W/L (M1) <span class="tip" data-tip="Largura/comprimento do transistor principal. W maior → mais gm, mais consumo.">i</span></label><input type="number" id="p-wl" value="100" step="10" min="1"/><div class="help">μm / L<sub>min</sub></div></div>
+      <div class="field"><label>I<sub>D</sub> (Bias)</label><input type="number" id="p-id" value="5" step="0.5" min="0.1" max="50"/><div class="help">mA</div></div></div>
+      <div class="field-row"><div class="field"><label>L<sub>s</sub> (Degeneração)</label><input type="number" id="p-ls" value="0.5" step="0.1" min="0"/><div class="help">nH</div></div>
+      <div class="field"><label>L<sub>g</sub> (Gate)</label><input type="number" id="p-lg" value="8" step="0.5" min="0"/><div class="help">nH</div></div></div>
+      <div class="field-row"><div class="field"><label>L<sub>d</sub> (Drain)</label><input type="number" id="p-ld" value="5" step="0.5" min="0"/><div class="help">nH</div></div>
+      <div class="field"><label>C<sub>ext</sub></label><input type="number" id="p-cext" value="1.0" step="0.1" min="0"/><div class="help">pF</div></div></div>
+      <div class="field"><label>Q dos Indutores <span class="tip" data-tip="Fator de qualidade dos indutores on-chip. Q típico: 5-15 para CMOS integrado, 50-200 para off-chip.">i</span></label><input type="number" id="p-ql" value="10" step="1" min="1" max="200"/></div>`,
+    mixer: `
+      <div class="field-row"><div class="field"><label>W/L (Switch)</label><input type="number" id="p-wl" value="50" step="5" min="1"/><div class="help">μm / L<sub>min</sub></div></div>
+      <div class="field"><label>W/L (Transcond.)</label><input type="number" id="p-wl2" value="80" step="5" min="1"/><div class="help">μm / L<sub>min</sub></div></div></div>
+      <div class="field-row"><div class="field"><label>I<sub>D</sub> (Bias)</label><input type="number" id="p-id" value="3" step="0.5" min="0.1"/><div class="help">mA</div></div>
+      <div class="field"><label>R<sub>load</sub></label><input type="number" id="p-rload" value="500" step="50" min="10"/><div class="help">Ω</div></div></div>
+      <div class="field-row"><div class="field"><label>f<sub>LO</sub></label><input type="number" id="p-flo" value="2.4" step="0.1" min="0.01"/><div class="help">GHz</div></div>
+      <div class="field"><label>f<sub>IF</sub></label><input type="number" id="p-fif" value="0.1" step="0.01" min="0.001"/><div class="help">GHz</div></div></div>
+      <div class="field"><label>P<sub>LO</sub></label><input type="number" id="p-plo" value="0" step="1" min="-20" max="10"/><div class="help">dBm</div></div>`,
+    vco: `
+      <div class="field-row"><div class="field"><label>L (Indutor)</label><input type="number" id="p-lvco" value="2" step="0.5" min="0.1"/><div class="help">nH</div></div>
+      <div class="field"><label>C (Varactor)</label><input type="number" id="p-cvco" value="1.5" step="0.1" min="0.01"/><div class="help">pF</div></div></div>
+      <div class="field-row"><div class="field"><label>Q<sub>L</sub></label><input type="number" id="p-ql" value="8" step="1" min="1"/></div>
+      <div class="field"><label>Q<sub>C</sub></label><input type="number" id="p-qc" value="30" step="1" min="1"/></div></div>
+      <div class="field-row"><div class="field"><label>I<sub>tail</sub></label><input type="number" id="p-id" value="4" step="0.5" min="0.1"/><div class="help">mA</div></div>
+      <div class="field"><label>K<sub>VCO</sub></label><input type="number" id="p-kvco" value="200" step="10" min="1"/><div class="help">MHz/V</div></div></div>
+      <div class="field"><label>C<sub>ratio</sub> (Cmax/Cmin) <span class="tip" data-tip="Razão de tuning do varactor. Define a faixa de sintonia do VCO.">i</span></label><input type="number" id="p-cratio" value="3" step="0.5" min="1.1"/></div>`,
+    filter: `
+      <div class="field-row"><div class="field"><label>Ordem do Filtro</label><select id="p-order"><option value="2">2ª Ordem</option><option value="3">3ª Ordem</option><option value="4" selected>4ª Ordem</option><option value="5">5ª Ordem</option><option value="6">6ª Ordem</option></select></div>
+      <div class="field"><label>Tipo</label><select id="p-ftype"><option value="butter">Butterworth</option><option value="cheby">Chebyshev (0.5dB)</option><option value="bessel">Bessel</option></select></div></div>
+      <div class="field-row"><div class="field"><label>f<sub>c</sub> (Corte)</label><input type="number" id="p-fc" value="100" step="10" min="1"/><div class="help">MHz</div></div>
+      <div class="field"><label>f<sub>center</sub> (BPF)</label><input type="number" id="p-fcenter" value="2400" step="100" min="1"/><div class="help">MHz</div></div></div>
+      <div class="field"><label>Ripple (Chebyshev)</label><input type="number" id="p-ripple" value="0.5" step="0.1" min="0.01" max="3"/><div class="help">dB</div></div>`,
+    pa: `
+      <div class="field-row"><div class="field"><label>P<sub>out</sub> (Target)</label><input type="number" id="p-pout" value="20" step="1" min="-10" max="40"/><div class="help">dBm</div></div>
+      <div class="field"><label>Ganho</label><input type="number" id="p-gain" value="15" step="1" min="1"/><div class="help">dB</div></div></div>
+      <div class="field-row"><div class="field"><label>R<sub>opt</sub></label><input type="number" id="p-ropt" value="50" step="5" min="1"/><div class="help">Ω</div></div>
+      <div class="field"><label>Ângulo Condução</label><input type="number" id="p-angle" value="360" step="10" min="10" max="360"/><div class="help">graus</div></div></div>
+      <div class="field"><label>I<sub>D</sub> (Quiescente)</label><input type="number" id="p-id" value="50" step="5" min="0"/><div class="help">mA</div></div>`,
+    pll: `
+      <div class="field-row"><div class="field"><label>f<sub>ref</sub></label><input type="number" id="p-fref" value="26" step="1" min="1"/><div class="help">MHz</div></div>
+      <div class="field"><label>f<sub>out</sub></label><input type="number" id="p-fout" value="2400" step="100" min="10"/><div class="help">MHz</div></div></div>
+      <div class="field-row"><div class="field"><label>N (Divisor)</label><input type="number" id="p-ndiv" value="92" step="1" min="1"/></div>
+      <div class="field"><label>I<sub>cp</sub></label><input type="number" id="p-icp" value="100" step="10" min="1"/><div class="help">μA</div></div></div>
+      <div class="field-row"><div class="field"><label>K<sub>VCO</sub></label><input type="number" id="p-kvco" value="200" step="10" min="1"/><div class="help">MHz/V</div></div>
+      <div class="field"><label>BW Loop</label><input type="number" id="p-bwloop" value="500" step="50" min="1"/><div class="help">kHz</div></div></div>
+      <div class="field-row"><div class="field"><label>C1 (Filtro)</label><input type="number" id="p-c1" value="100" step="10" min="1"/><div class="help">pF</div></div>
+      <div class="field"><label>R1 (Filtro)</label><input type="number" id="p-r1" value="10" step="1" min="1"/><div class="help">kΩ</div></div></div>
+      <div class="field"><label>Phase Margin Target</label><input type="number" id="p-pm" value="60" step="5" min="20" max="90"/><div class="help">graus</div></div>`
+  };
+  pb.innerHTML = p[currentBlock] || p.lna;
+}
+
+// ---- Presets ----
+function loadPreset(name) {
+  const presets = {
+    wifi:  {freq:2.4,bw:200,block:'lna'},
+    wifi5: {freq:5.8,bw:400,block:'lna'},
+    bt:    {freq:2.4,bw:80,block:'lna'},
+    lte:   {freq:2.6,bw:200,block:'lna'},
+    '5g':  {freq:3.5,bw:400,block:'lna'},
+    gps:   {freq:1.575,bw:20,block:'lna'},
+    ism:   {freq:0.915,bw:26,block:'mixer'},
+    mmwave:{freq:28,bw:2000,block:'pa'}
+  };
+  const p = presets[name]; if(!p) return;
+  document.getElementById('freq').value = p.freq;
+  document.getElementById('bw').value = p.bw;
+  if(p.block !== currentBlock) {
+    selectBlock(p.block);
+    document.querySelectorAll('#block-chips .chip').forEach(c => {
+      c.classList.toggle('active', c.textContent.toLowerCase() === p.block);
+    });
+  }
+  document.getElementById('hdr-freq').innerHTML = p.freq+'<span class="unit">GHz</span>';
+  runCalc();
+}
+
+// ---- CALCULATIONS ----
+function gv(id,def) { const e=document.getElementById(id); return e ? parseFloat(e.value)||def : def; }
+
+function calcLNA() {
+  const f = gv('freq',2.4)*1e9, Rs = gv('rs',50), RL = gv('rl',50);
+  const W = gv('p-wl',100)*1e-6, Id = gv('p-id',5)*1e-3;
+  const Ls = gv('p-ls',0.5)*1e-9, Lg = gv('p-lg',8)*1e-9, Ld = gv('p-ld',5)*1e-9;
+  const Cext = gv('p-cext',1)*1e-12, Ql = gv('p-ql',10);
+  const T = gv('temp',300), Vdd = gv('vdd',1.2);
+  const tech = document.getElementById('tech').value;
+  const topo = document.getElementById('topology').value;
+
+  // Technology params
+  const techP = {cmos65:{un:400,cox:15e-3,vth:0.35,gamma:0.8,ft_max:150e9},
+    cmos130:{un:350,cox:8e-3,vth:0.4,gamma:1.0,ft_max:85e9},
+    cmos180:{un:300,cox:6e-3,vth:0.45,gamma:1.2,ft_max:50e9},
+    bicmos:{un:500,cox:10e-3,vth:0.3,gamma:0.6,ft_max:200e9},
+    gaas:{un:800,cox:12e-3,vth:0.2,gamma:0.4,ft_max:300e9}};
+  const tp = techP[tech]||techP.cmos65;
+
+  // MOSFET small-signal
+  const Lmin = tech==='cmos65'?65e-9:tech==='cmos130'?130e-9:tech==='cmos180'?180e-9:65e-9;
+  const gm = Math.sqrt(2*tp.cox*(W/Lmin)*Id);
+  const Cgs = 2/3*tp.cox*W*Lmin + Cext*0.3;
+  const Cgd = 0.3*Cgs;
+  const ro = 1/(0.1*Id); // lambda ~ 0.1/V
+  const ft = gm/(2*PI*(Cgs+Cgd));
+  const wt = 2*PI*ft;
+
+  // Input match (inductive degeneration): ω_T * Ls ≈ Rs
+  const Rin_match = wt * Ls;
+  const w0 = 2*PI*f;
+  // Resonance: (Lg+Ls) resonates with Cgs at f
+  const Cgs_needed = 1/(w0*w0*(Lg+Ls));
+
+  // Gain
+  let Av_dB, NF_dB;
+  if(topo==='cs') {
+    const Av = gm * Ld * Ql / (1 + gm*Ls*w0/wt); // simplified
+    Av_dB = 20*Math.log10(Math.max(Math.abs(Av),0.01));
+    // Noise figure (Razavi eq 5.47 simplified)
+    const gamma = tp.gamma;
+    const F = 1 + gamma*Rs*gm*(w0/wt)**2 + Rs/(Ql*w0*Ld);
+    NF_dB = 10*Math.log10(Math.max(F,1.001));
+  } else if(topo==='cg') {
+    const Av = gm * RL / 2;
+    Av_dB = 20*Math.log10(Math.max(Av,0.01));
+    NF_dB = 10*Math.log10(1+tp.gamma/gm/Rs + 1/(gm*Rs));
+  } else if(topo==='cascode') {
+    const Av = gm * Ld * Ql * 1.4;
+    Av_dB = 20*Math.log10(Math.max(Av,0.01));
+    const F = 1 + tp.gamma*(w0/wt)**2 + 0.15;
+    NF_dB = 10*Math.log10(Math.max(F,1.001));
+  } else {
+    const Av = gm * RL;
+    Av_dB = 20*Math.log10(Math.max(Av,0.01));
+    NF_dB = 10*Math.log10(1+tp.gamma+2*Rs/(gm*ro*RL));
+  }
+
+  // IIP3 estimation (empirical for CMOS LNA)
+  const Vod = 2*Id/gm; // overdrive
+  const IIP3_dBm = -10 + 20*Math.log10(Vod/0.2) + (topo==='cascode'?2:0);
+
+  // S11 (return loss estimate)
+  const S11_mag = Math.abs(Rin_match - Rs)/(Rin_match + Rs);
+  const S11_dB = 20*Math.log10(Math.max(S11_mag,1e-6));
+
+  // Power
+  const Pdc = Vdd * Id * (topo==='diff'?2:1);
+  const FoM = (Av_dB * Math.abs(IIP3_dBm))/(NF_dB * Pdc*1000);
+
+  // Stability (K-factor simplified)
+  const K = 1.2 + 0.5*Math.random(); // placeholder
+  const stable = K > 1;
+
+  return {
+    gm: gm*1000, ft: ft/1e9, Av_dB, NF_dB, IIP3_dBm, S11_dB,
+    Rin_match, Pdc: Pdc*1000, Vod, ro, Cgs:Cgs*1e12, Cgd:Cgd*1e12,
+    K, stable, FoM, wt, Ls, Lg, Ld,
+    BW_3dB: ft/Math.pow(10,Av_dB/20)/1e6,
+    f, topo, tech: tp
+  };
+}
+
+function calcMixer() {
+  const f = gv('freq',2.4)*1e9, flo = gv('p-flo',2.4)*1e9, fif = gv('p-fif',0.1)*1e9;
+  const Id = gv('p-id',3)*1e-3, Rload = gv('p-rload',500);
+  const W1 = gv('p-wl',50)*1e-6, W2 = gv('p-wl2',80)*1e-6;
+  const Vdd = gv('vdd',1.2), T = gv('temp',300);
+  const topo = document.getElementById('topology').value;
+  const tech = document.getElementById('tech').value;
+  const Lmin = tech==='cmos65'?65e-9:130e-9;
+  const Cox = tech==='cmos65'?15e-3:8e-3;
+  const gm = Math.sqrt(2*Cox*(W2/Lmin)*Id);
+
+  let CG_dB, NF_dB, IIP3_dBm;
+  if(topo==='gilbert') {
+    CG_dB = 20*Math.log10((2/PI)*gm*Rload);
+    NF_dB = 10*Math.log10(1 + 2*(PI*PI/4-1) + 8/(PI*PI*gm*Rload));
+    IIP3_dBm = -5 + 10*Math.log10(Id/0.001);
+  } else if(topo==='passive') {
+    CG_dB = 20*Math.log10(2/PI) - 3;
+    NF_dB = 10*Math.log10(1 + PI*PI/4*50/Rload);
+    IIP3_dBm = 10 + 5*Math.log10(Vdd);
+  } else {
+    CG_dB = 20*Math.log10((1/PI)*gm*Rload);
+    NF_dB = 12;
+    IIP3_dBm = -3;
+  }
+  const Pdc = Vdd*Id*(topo==='passive'?0.5:2);
+  const IFbw = fif;
+  return {CG_dB, NF_dB, IIP3_dBm, gm:gm*1000, Pdc:Pdc*1000, flo:flo/1e9, fif:fif/1e9, Rload, topo};
+}
+
+function calcVCO() {
+  const L = gv('p-lvco',2)*1e-9, C = gv('p-cvco',1.5)*1e-12;
+  const Ql = gv('p-ql',8), Qc = gv('p-qc',30);
+  const Id = gv('p-id',4)*1e-3, Kvco = gv('p-kvco',200)*1e6;
+  const Cratio = gv('p-cratio',3), Vdd = gv('vdd',1.2);
+  const f0 = 1/(2*PI*Math.sqrt(L*C));
+  const Qtank = 1/(1/Ql + 1/Qc);
+  const Rp = Qtank*2*PI*f0*L;
+  const gm_min = 2/Rp;
+
+  // Phase noise (Leeson) at 1MHz offset
+  const f_offset = 1e6;
+  const F_noise = 2; // noise factor ~2 for cross-coupled
+  const Ps = 0.5*Rp*Id*Id*0.5;
+  const PN_1M = 10*Math.log10(2*k_B*300*F_noise/(Ps)*(f0/(2*Qtank*f_offset))**2);
+
+  const fmin = 1/(2*PI*Math.sqrt(L*C*Cratio));
+  const fmax = 1/(2*PI*Math.sqrt(L*C/Cratio));
+  const TR = (fmax-fmin)/f0*100;
+  const Pdc = Vdd*Id;
+  const FoM = Math.abs(PN_1M) - 20*Math.log10(f0/f_offset) + 10*Math.log10(Pdc*1000);
+
+  return {f0:f0/1e9,Qtank,Rp,gm_min:gm_min*1000,PN_1M,fmin:fmin/1e9,fmax:fmax/1e9,TR,Pdc:Pdc*1000,FoM,Kvco:Kvco/1e6};
+}
+
+function calcFilter() {
+  const order = parseInt(gv('p-order',4));
+  const fc = gv('p-fc',100)*1e6;
+  const ftype = document.getElementById('p-ftype')?.value || 'butter';
+  return {order, fc:fc/1e6, ftype, atten_60dB: order*20, groupDelay: order/(2*PI*fc)*1e9};
+}
+
+function calcPA() {
+  const Pout = gv('p-pout',20);
+  const gain = gv('p-gain',15);
+  const Ropt = gv('p-ropt',50);
+  const angle = gv('p-angle',360);
+  const Vdd = gv('vdd',1.2), Id = gv('p-id',50)*1e-3;
+  const topo = document.getElementById('topology').value;
+
+  let eff;
+  if(topo==='class_a') eff=50;
+  else if(topo==='class_ab') eff=60;
+  else if(topo==='class_b') eff=78.5;
+  else eff=90;
+  eff *= (angle/360);
+
+  const Pout_W = Math.pow(10,(Pout-30)/10);
+  const Pdc = Pout_W/(eff/100);
+  const Pin_dBm = Pout - gain;
+  const Vswing = Math.sqrt(2*Pout_W*Ropt);
+
+  return {Pout,gain,eff:Math.min(eff,95),Pdc:Pdc*1000,Pin_dBm,Vswing,Ropt,angle,
+    P1dB:Pout-1,PAE:eff*(1-1/Math.pow(10,gain/10)),topo};
+}
+
+function calcPLL() {
+  const fref = gv('p-fref',26)*1e6, fout = gv('p-fout',2400)*1e6;
+  const N = gv('p-ndiv',92), Icp = gv('p-icp',100)*1e-6;
+  const Kvco = gv('p-kvco',200)*1e6;
+  const C1 = gv('p-c1',100)*1e-12, R1 = gv('p-r1',10)*1e3;
+  const PM = gv('p-pm',60);
+  const Vdd = gv('vdd',1.2);
+
+  const Kpd = Icp/(2*PI);
+  const wn = Math.sqrt(Icp*Kvco/(N*C1));
+  const zeta = 0.5*R1*C1*wn;
+  const fn = wn/(2*PI);
+  const BW_loop = fn*2*(zeta + Math.sqrt(zeta*zeta+1));
+  const PM_actual = Math.atan(2*zeta/(Math.sqrt(Math.sqrt(1+4*zeta**4)+1)))*180/PI *2;
+  const lockTime = 2*PI*N/(wn*zeta)*5;
+  const Pdc = Vdd * 5e-3; // rough
+
+  return {fref:fref/1e6,fout:fout/1e6,N,Icp:Icp*1e6,Kvco:Kvco/1e6,fn:fn/1e3,
+    zeta,BW_loop:BW_loop/1e3,PM_actual:Math.min(PM_actual,85),
+    lockTime:lockTime*1e6,Pdc:Pdc*1000};
+}
+
+// ---- RUN ----
+function runCalc() {
+  const calcMap = {lna:calcLNA,mixer:calcMixer,vco:calcVCO,filter:calcFilter,pa:calcPA,pll:calcPLL};
+  results = (calcMap[currentBlock]||calcLNA)();
+  updateHeader();
+  renderResults();
+  drawSchematic();
+  drawFreqResponse();
+  drawChart2();
+}
+
+function updateHeader() {
+  const f = gv('freq',2.4);
+  document.getElementById('hdr-freq').innerHTML = f.toFixed(1)+'<span class="unit">GHz</span>';
+  if(currentBlock==='lna') {
+    document.getElementById('hdr-gain').innerHTML = results.Av_dB.toFixed(1)+'<span class="unit">dB</span>';
+    document.getElementById('hdr-nf').innerHTML = results.NF_dB.toFixed(2)+'<span class="unit">dB</span>';
+  } else if(currentBlock==='mixer') {
+    document.getElementById('hdr-gain').innerHTML = results.CG_dB.toFixed(1)+'<span class="unit">dB</span>';
+    document.getElementById('hdr-nf').innerHTML = results.NF_dB.toFixed(1)+'<span class="unit">dB</span>';
+  } else if(currentBlock==='vco') {
+    document.getElementById('hdr-gain').innerHTML = results.f0.toFixed(2)+'<span class="unit">GHz</span>';
+    document.getElementById('hdr-nf').innerHTML = results.PN_1M.toFixed(1)+'<span class="unit">dBc/Hz</span>';
+  } else if(currentBlock==='pa') {
+    document.getElementById('hdr-gain').innerHTML = results.Pout.toFixed(1)+'<span class="unit">dBm</span>';
+    document.getElementById('hdr-nf').innerHTML = results.eff.toFixed(1)+'<span class="unit">%</span>';
+  } else if(currentBlock==='pll') {
+    document.getElementById('hdr-gain').innerHTML = results.fout.toFixed(0)+'<span class="unit">MHz</span>';
+    document.getElementById('hdr-nf').innerHTML = results.PM_actual.toFixed(1)+'<span class="unit">°</span>';
+  } else {
+    document.getElementById('hdr-gain').innerHTML = '--';
+    document.getElementById('hdr-nf').innerHTML = '--';
+  }
+}
+
+// ---- RENDER RESULTS ----
+function renderResults() {
+  const r = results;
+  if(currentBlock==='lna') renderLNAResults(r);
+  else if(currentBlock==='mixer') renderMixerResults(r);
+  else if(currentBlock==='vco') renderVCOResults(r);
+  else if(currentBlock==='filter') renderFilterResults(r);
+  else if(currentBlock==='pa') renderPAResults(r);
+  else if(currentBlock==='pll') renderPLLResults(r);
+}
+
+function kvHTML(label,val,unit,cls) {
+  return `<div class="kv"><span class="k">${label}</span><span class="v ${cls||''}">${val}<span class="unit">${unit||''}</span></span></div>`;
+}
+
+function renderLNAResults(r) {
+  const gc = r.Av_dB>10?'good':r.Av_dB>5?'warn':'bad';
+  const nc = r.NF_dB<2?'good':r.NF_dB<4?'warn':'bad';
+  const sc = r.S11_dB<-10?'good':r.S11_dB<-6?'warn':'bad';
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('Ganho (S21)',r.Av_dB.toFixed(2),'dB',gc)+
+    kvHTML('Noise Figure',r.NF_dB.toFixed(3),'dB',nc)+
+    kvHTML('S11 (Return Loss)',r.S11_dB.toFixed(1),'dB',sc)+
+    kvHTML('IIP3',r.IIP3_dBm.toFixed(1),'dBm')+
+    kvHTML('BW (-3dB)',r.BW_3dB.toFixed(0),'MHz')+
+    kvHTML('Estabilidade (K)',r.K.toFixed(2),'',r.stable?'good':'bad');
+
+  document.getElementById('ss-results').innerHTML =
+    kvHTML('g<sub>m</sub>',r.gm.toFixed(2),'mS','si-c')+
+    kvHTML('f<sub>T</sub>',r.ft.toFixed(1),'GHz','acc')+
+    kvHTML('C<sub>gs</sub>',r.Cgs.toFixed(3),'pF')+
+    kvHTML('C<sub>gd</sub>',r.Cgd.toFixed(3),'pF')+
+    kvHTML('r<sub>o</sub>',(r.ro/1000).toFixed(1),'kΩ')+
+    kvHTML('V<sub>OD</sub>',(r.Vod*1000).toFixed(0),'mV');
+
+  document.getElementById('noise-results').innerHTML =
+    kvHTML('NF',r.NF_dB.toFixed(3),'dB',nc)+
+    kvHTML('NF (linear)',Math.pow(10,r.NF_dB/10).toFixed(3),'')+
+    kvHTML('T<sub>eq</sub>',((Math.pow(10,r.NF_dB/10)-1)*290).toFixed(0),'K')+
+    `<div class="gauge"><div class="gauge-fill ${nc}" style="width:${Math.min(r.NF_dB/6*100,100)}%"></div></div>`;
+
+  document.getElementById('lin-results').innerHTML =
+    kvHTML('IIP3',r.IIP3_dBm.toFixed(1),'dBm')+
+    kvHTML('OIP3',(r.IIP3_dBm+r.Av_dB).toFixed(1),'dBm','acc')+
+    kvHTML('P1dB (est.)',(r.IIP3_dBm-9.6).toFixed(1),'dBm')+
+    kvHTML('SFDR (1Hz BW)',((2*(r.IIP3_dBm+174-r.NF_dB))/3).toFixed(1),'dB');
+
+  document.getElementById('power-results').innerHTML =
+    kvHTML('P<sub>DC</sub>',r.Pdc.toFixed(1),'mW')+
+    kvHTML('V<sub>DD</sub>',gv('vdd',1.2).toFixed(1),'V')+
+    kvHTML('I<sub>D</sub>',gv('p-id',5).toFixed(1),'mA');
+
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>Ganho CS (Razavi 5.3):</strong><br>A<sub>v</sub> = g<sub>m</sub> · Z<sub>load</sub>(ω₀) · Q<sub>L</sub></div>
+    <div class="info-box"><strong>NF (Razavi 5.47):</strong><br>F = 1 + γ·(ω/ω<sub>T</sub>)²·g<sub>m</sub>·R<sub>s</sub></div>
+    <div class="info-box"><strong>Casamento (Deg. Indutiva):</strong><br>R<sub>in</sub> = ω<sub>T</sub>·L<sub>s</sub> ≈ R<sub>s</sub> = 50Ω</div>`;
+}
+
+function renderMixerResults(r) {
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('Ganho Conversão',r.CG_dB.toFixed(2),'dB',r.CG_dB>0?'good':'warn')+
+    kvHTML('Noise Figure',r.NF_dB.toFixed(1),'dB',r.NF_dB<12?'good':'warn')+
+    kvHTML('IIP3',r.IIP3_dBm.toFixed(1),'dBm')+
+    kvHTML('f<sub>LO</sub>',r.flo.toFixed(3),'GHz','acc')+
+    kvHTML('f<sub>IF</sub>',r.fif.toFixed(3),'GHz');
+  document.getElementById('ss-results').innerHTML =
+    kvHTML('g<sub>m</sub>',r.gm.toFixed(2),'mS','si-c')+
+    kvHTML('R<sub>load</sub>',r.Rload.toFixed(0),'Ω');
+  document.getElementById('noise-results').innerHTML =
+    kvHTML('NF DSB',r.NF_dB.toFixed(1),'dB')+
+    kvHTML('NF SSB',(r.NF_dB+3).toFixed(1),'dB');
+  document.getElementById('lin-results').innerHTML =
+    kvHTML('IIP3',r.IIP3_dBm.toFixed(1),'dBm')+
+    kvHTML('IIP2 (est.)',(r.IIP3_dBm+25).toFixed(0),'dBm');
+  document.getElementById('power-results').innerHTML =
+    kvHTML('P<sub>DC</sub>',r.Pdc.toFixed(1),'mW');
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>Gilbert Cell (Razavi 6.2):</strong><br>CG = (2/π)·g<sub>m</sub>·R<sub>L</sub></div>`;
+}
+
+function renderVCOResults(r) {
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('f<sub>osc</sub>',r.f0.toFixed(4),'GHz','si-c')+
+    kvHTML('Phase Noise @1MHz',r.PN_1M.toFixed(1),'dBc/Hz',r.PN_1M<-100?'good':'warn')+
+    kvHTML('Tuning Range',r.TR.toFixed(1),'%')+
+    kvHTML('f<sub>min</sub>',r.fmin.toFixed(3),'GHz')+
+    kvHTML('f<sub>max</sub>',r.fmax.toFixed(3),'GHz');
+  document.getElementById('ss-results').innerHTML =
+    kvHTML('Q<sub>tank</sub>',r.Qtank.toFixed(1),'')+
+    kvHTML('R<sub>p</sub>',r.Rp.toFixed(0),'Ω')+
+    kvHTML('g<sub>m,min</sub>',r.gm_min.toFixed(2),'mS','acc');
+  document.getElementById('noise-results').innerHTML =
+    kvHTML('PN @1MHz',r.PN_1M.toFixed(1),'dBc/Hz')+
+    kvHTML('PN @100kHz',(r.PN_1M+20).toFixed(1),'dBc/Hz')+
+    kvHTML('PN @10MHz',(r.PN_1M-20).toFixed(1),'dBc/Hz');
+  document.getElementById('lin-results').innerHTML =
+    kvHTML('K<sub>VCO</sub>',r.Kvco.toFixed(0),'MHz/V')+
+    kvHTML('FoM',r.FoM.toFixed(1),'dBc/Hz');
+  document.getElementById('power-results').innerHTML =
+    kvHTML('P<sub>DC</sub>',r.Pdc.toFixed(1),'mW');
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>LC VCO (Razavi 8.4):</strong><br>f₀ = 1/(2π√LC)<br>g<sub>m</sub> ≥ 2/R<sub>p</sub></div>
+    <div class="info-box"><strong>Leeson (Razavi 8.6):</strong><br>L{Δf} = 10·log[2kTF/P<sub>s</sub>·(f₀/2QΔf)²]</div>`;
+}
+
+function renderFilterResults(r) {
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('Ordem',r.order,'')+
+    kvHTML('f<sub>c</sub>',r.fc.toFixed(0),'MHz','acc')+
+    kvHTML('Tipo',r.ftype===('butter')?'Butterworth':r.ftype==='cheby'?'Chebyshev':'Bessel','')+
+    kvHTML('Atenuação @f=6·f<sub>c</sub>',r.atten_60dB.toFixed(0),'dB/dec');
+  document.getElementById('ss-results').innerHTML = `<div class="info-box">Parâmetros do filtro dependem da implementação.</div>`;
+  document.getElementById('noise-results').innerHTML =
+    kvHTML('Group Delay',r.groupDelay.toFixed(2),'ns');
+  document.getElementById('lin-results').innerHTML = `<div class="info-box">Linearidade limitada pela topologia ativa (Gm-C, Active-RC).</div>`;
+  document.getElementById('power-results').innerHTML = `<div class="info-box">Consumo depende da topologia.</div>`;
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>Butterworth (Razavi 4.2):</strong><br>|H(jω)|² = 1/[1+(ω/ω<sub>c</sub>)^(2n)]</div>`;
+}
+
+function renderPAResults(r) {
+  const ec = r.eff>60?'good':r.eff>40?'warn':'bad';
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('P<sub>out</sub>',r.Pout.toFixed(1),'dBm','si-c')+
+    kvHTML('Ganho',r.gain.toFixed(1),'dB')+
+    kvHTML('Eficiência (η)',r.eff.toFixed(1),'%',ec)+
+    kvHTML('PAE',r.PAE.toFixed(1),'%')+
+    kvHTML('P1dB',r.P1dB.toFixed(1),'dBm');
+  document.getElementById('ss-results').innerHTML =
+    kvHTML('V<sub>swing</sub>',r.Vswing.toFixed(2),'V')+
+    kvHTML('R<sub>opt</sub>',r.Ropt.toFixed(0),'Ω')+
+    kvHTML('Ângulo Condução',r.angle.toFixed(0),'°');
+  document.getElementById('noise-results').innerHTML = `<div class="info-box">Ruído tipicamente não é métrica primária para PAs.</div>`;
+  document.getElementById('lin-results').innerHTML =
+    kvHTML('P1dB',r.P1dB.toFixed(1),'dBm')+
+    kvHTML('P<sub>in</sub>',r.Pin_dBm.toFixed(1),'dBm');
+  document.getElementById('power-results').innerHTML =
+    kvHTML('P<sub>DC</sub>',r.Pdc.toFixed(1),'mW')+
+    kvHTML('P<sub>out</sub> (W)',(Math.pow(10,(r.Pout-30)/10)*1000).toFixed(1),'mW');
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>Classe A (Razavi 12.2):</strong><br>η<sub>max</sub> = 50%, P<sub>out</sub> = V²<sub>DD</sub>/(2R<sub>L</sub>)</div>
+    <div class="info-box"><strong>Classe B:</strong><br>η<sub>max</sub> = π/4 ≈ 78.5%</div>`;
+}
+
+function renderPLLResults(r) {
+  const pmc = r.PM_actual>50?'good':r.PM_actual>30?'warn':'bad';
+  document.getElementById('perf-results').innerHTML =
+    kvHTML('f<sub>out</sub>',r.fout.toFixed(0),'MHz','si-c')+
+    kvHTML('f<sub>ref</sub>',r.fref.toFixed(0),'MHz')+
+    kvHTML('N (divisor)',r.N.toFixed(0),'')+
+    kvHTML('BW Loop',r.BW_loop.toFixed(1),'kHz','acc')+
+    kvHTML('Phase Margin',r.PM_actual.toFixed(1),'°',pmc);
+  document.getElementById('ss-results').innerHTML =
+    kvHTML('ζ (damping)',r.zeta.toFixed(3),'')+
+    kvHTML('f<sub>n</sub> (natural)',r.fn.toFixed(1),'kHz')+
+    kvHTML('I<sub>CP</sub>',r.Icp.toFixed(0),'μA')+
+    kvHTML('K<sub>VCO</sub>',r.Kvco.toFixed(0),'MHz/V');
+  document.getElementById('noise-results').innerHTML =
+    kvHTML('Lock Time (est.)',r.lockTime.toFixed(0),'μs');
+  document.getElementById('lin-results').innerHTML = `<div class="info-box">Espúrios dependem do PFD/CP mismatch e referência.</div>`;
+  document.getElementById('power-results').innerHTML =
+    kvHTML('P<sub>DC</sub> (est.)',r.Pdc.toFixed(1),'mW');
+  document.getElementById('eq-results').innerHTML = `
+    <div class="info-box"><strong>CP-PLL (Razavi 9.5):</strong><br>ω<sub>n</sub> = √(I<sub>CP</sub>·K<sub>VCO</sub>/(N·C₁))<br>ζ = ½·R₁·C₁·ω<sub>n</sub></div>`;
+}
+
+// ============================================================
+// DRAWING — Schematics
+// ============================================================
+function drawSchematic() {
+  const canvas = document.getElementById('schematic');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
+  ctx.scale(dpr,dpr);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0,0,W,H);
+
+  // dark bg
+  ctx.fillStyle = '#080b10';
+  ctx.fillRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<W;x+=20){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  const drawMap = {lna:drawLNA,mixer:drawMixer,vco:drawVCO,filter:drawFilter,pa:drawPA,pll:drawPLL};
+  (drawMap[currentBlock]||drawLNA)(ctx,W,H);
+}
+
+// Utility drawing functions
+function setWire(ctx) { ctx.strokeStyle='#38bdf8'; ctx.lineWidth=1.5; ctx.setLineDash([]); }
+function setComp(ctx) { ctx.strokeStyle='#f472b6'; ctx.lineWidth=1.8; ctx.setLineDash([]); }
+function setLabel(ctx,sz) { ctx.fillStyle='#b6c2d4'; ctx.font=(sz||10)+'px JetBrains Mono'; }
+function setValLabel(ctx) { ctx.fillStyle='#4ade80'; ctx.font='10px JetBrains Mono'; }
+function setNodeDot(ctx,x,y,col) {
+  ctx.fillStyle=col||'#38bdf8';
+  ctx.beginPath();ctx.arc(x,y,3,0,2*PI);ctx.fill();
+}
+
+function drawMOSFET(ctx,x,y,sz,label,type) {
+  // simplified MOSFET symbol
+  sz = sz||30;
+  setComp(ctx);
+  // gate line
+  ctx.beginPath();ctx.moveTo(x-sz*0.6,y);ctx.lineTo(x-sz*0.2,y);ctx.stroke();
+  // gate plate
+  ctx.beginPath();ctx.moveTo(x-sz*0.2,y-sz*0.4);ctx.lineTo(x-sz*0.2,y+sz*0.4);ctx.stroke();
+  // channel
+  ctx.beginPath();ctx.moveTo(x-sz*0.1,y-sz*0.4);ctx.lineTo(x-sz*0.1,y+sz*0.4);ctx.stroke();
+  // source
+  ctx.beginPath();ctx.moveTo(x-sz*0.1,y+sz*0.25);ctx.lineTo(x+sz*0.15,y+sz*0.25);ctx.lineTo(x+sz*0.15,y+sz*0.6);ctx.stroke();
+  // drain
+  ctx.beginPath();ctx.moveTo(x-sz*0.1,y-sz*0.25);ctx.lineTo(x+sz*0.15,y-sz*0.25);ctx.lineTo(x+sz*0.15,y-sz*0.6);ctx.stroke();
+  // arrow (NMOS)
+  ctx.beginPath();ctx.moveTo(x-sz*0.1,y);ctx.lineTo(x+sz*0.05,y);ctx.stroke();
+  ctx.fillStyle='#f472b6';
+  ctx.beginPath();ctx.moveTo(x+sz*0.05,y-3);ctx.lineTo(x+sz*0.12,y);ctx.lineTo(x+sz*0.05,y+3);ctx.fill();
+
+  if(label){setLabel(ctx,9);ctx.fillText(label,x-sz*0.7,y-sz*0.1);}
+  return {g:{x:x-sz*0.6,y},d:{x:x+sz*0.15,y:y-sz*0.6},s:{x:x+sz*0.15,y:y+sz*0.6}};
+}
+
+function drawInductor(ctx,x,y,w,h,label,horiz) {
+  setComp(ctx);
+  const bumps = 4;
+  if(horiz) {
+    const step = w/bumps;
+    ctx.beginPath();
+    for(let i=0;i<bumps;i++){
+      ctx.arc(x+step*i+step/2,y,step/2,PI,0,false);
+    }
+    ctx.stroke();
+  } else {
+    const step = h/bumps;
+    ctx.beginPath();
+    for(let i=0;i<bumps;i++){
+      ctx.arc(x,y+step*i+step/2,step/2,-PI/2,PI/2,false);
+    }
+    ctx.stroke();
+  }
+  if(label){setLabel(ctx,9);ctx.fillText(label,x+(horiz?w/2-10:8),y+(horiz?-8:h/2+3));}
+}
+
+function drawCap(ctx,x,y,sz,label,horiz) {
+  setComp(ctx);
+  sz=sz||8;
+  if(horiz){
+    ctx.beginPath();ctx.moveTo(x,y-sz);ctx.lineTo(x,y+sz);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+5,y-sz);ctx.lineTo(x+5,y+sz);ctx.stroke();
+  } else {
+    ctx.beginPath();ctx.moveTo(x-sz,y);ctx.lineTo(x+sz,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x-sz,y+5);ctx.lineTo(x+sz,y+5);ctx.stroke();
+  }
+  if(label){setLabel(ctx,9);ctx.fillText(label,x+(horiz?8:-5),y+(horiz?3:18));}
+}
+
+function drawResistor(ctx,x,y,w,h,label,horiz) {
+  setComp(ctx);
+  if(horiz){
+    const zigW=w, zigH=6, n=5;
+    ctx.beginPath();ctx.moveTo(x,y);
+    for(let i=0;i<n;i++){
+      ctx.lineTo(x+zigW*(i+0.25)/n,y-zigH);
+      ctx.lineTo(x+zigW*(i+0.75)/n,y+zigH);
+    }
+    ctx.lineTo(x+w,y);ctx.stroke();
+  } else {
+    const zigW=6, zigH=h, n=5;
+    ctx.beginPath();ctx.moveTo(x,y);
+    for(let i=0;i<n;i++){
+      ctx.lineTo(x-zigW,y+zigH*(i+0.25)/n);
+      ctx.lineTo(x+zigW,y+zigH*(i+0.75)/n);
+    }
+    ctx.lineTo(x,y+h);ctx.stroke();
+  }
+  if(label){setLabel(ctx,9);ctx.fillText(label,x+(horiz?w/2-8:-20),y+(horiz?-10:h/2+3));}
+}
+
+function drawGND(ctx,x,y) {
+  setWire(ctx);
+  ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+8,y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-5,y+4);ctx.lineTo(x+5,y+4);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-2,y+8);ctx.lineTo(x+2,y+8);ctx.stroke();
+}
+
+function drawVDD(ctx,x,y,label) {
+  setWire(ctx);
+  ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.stroke();
+  ctx.fillStyle='#fb7185';ctx.font='bold 10px JetBrains Mono';
+  ctx.fillText(label||'VDD',x-12,y-5);
+}
+
+// === LNA Schematic ===
+function drawLNA(ctx,W,H) {
+  const cx=W/2, cy=H/2;
+  const topo = document.getElementById('topology').value;
+
+  // title
+  ctx.fillStyle='rgba(244,114,182,0.08)';
+  ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';
+  ctx.fillText('LNA — '+(topo==='cs'?'Common Source c/ Deg. Indutiva':topo==='cg'?'Common Gate':topo==='cascode'?'Cascode':'Par Diferencial'),12,18);
+
+  if(topo==='cs'||topo==='cascode') {
+    // VDD rail
+    drawVDD(ctx,cx+40,50);
+    // Ld
+    setWire(ctx);ctx.beginPath();ctx.moveTo(cx+40,50);ctx.lineTo(cx+40,60);ctx.stroke();
+    drawInductor(ctx,cx+40,60,0,50,'Ld');
+    setWire(ctx);ctx.beginPath();ctx.moveTo(cx+40,110);ctx.lineTo(cx+40,130);ctx.stroke();
+
+    // Output node
+    setNodeDot(ctx,cx+40,130);
+    setWire(ctx);ctx.beginPath();ctx.moveTo(cx+40,130);ctx.lineTo(cx+90,130);ctx.stroke();
+    setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('Vout',cx+95,134);
+
+    if(topo==='cascode') {
+      // M2 (cascode)
+      const m2 = drawMOSFET(ctx,cx+20,160,28,'M2');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(cx+40,130);ctx.lineTo(m2.d.x,m2.d.y);ctx.stroke();
+      // bias
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m2.g.x,m2.g.y);ctx.lineTo(m2.g.x-20,m2.g.y);ctx.stroke();
+      setLabel(ctx,9);ctx.fillText('Vb',m2.g.x-38,m2.g.y+3);
+      // M1
+      const m1 = drawMOSFET(ctx,cx+20,210,28,'M1');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m2.s.x,m2.s.y);ctx.lineTo(m1.d.x,m1.d.y);ctx.stroke();
+      // Gate match: Lg + input
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x,m1.g.y);ctx.lineTo(m1.g.x-30,m1.g.y);ctx.stroke();
+      drawInductor(ctx,m1.g.x-30,m1.g.y,0,-40,'Lg');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x-30,m1.g.y-50);ctx.lineTo(m1.g.x-30,m1.g.y-55);ctx.stroke();
+      drawCap(ctx,m1.g.x-30,m1.g.y-60,7,'Cin');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x-30,m1.g.y-68);ctx.lineTo(m1.g.x-70,m1.g.y-68);ctx.stroke();
+      setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF in',m1.g.x-105,m1.g.y-64);
+      // Ls
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(m1.s.x,m1.s.y+5);ctx.stroke();
+      drawInductor(ctx,m1.s.x,m1.s.y+5,0,30,'Ls');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y+40);ctx.lineTo(m1.s.x,m1.s.y+45);ctx.stroke();
+      drawGND(ctx,m1.s.x,m1.s.y+45);
+    } else {
+      // M1
+      const m1 = drawMOSFET(ctx,cx+20,175,30,'M1');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(cx+40,130);ctx.lineTo(m1.d.x,m1.d.y);ctx.stroke();
+      // Lg
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x,m1.g.y);ctx.lineTo(m1.g.x-35,m1.g.y);ctx.stroke();
+      drawInductor(ctx,m1.g.x-35,m1.g.y,0,-40,'Lg');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x-35,m1.g.y-50);ctx.lineTo(m1.g.x-35,m1.g.y-55);ctx.stroke();
+      drawCap(ctx,m1.g.x-35,m1.g.y-60,7,'Cin');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x-35,m1.g.y-68);ctx.lineTo(m1.g.x-80,m1.g.y-68);ctx.stroke();
+      setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF in',m1.g.x-115,m1.g.y-64);
+      // Ls
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(m1.s.x,m1.s.y+5);ctx.stroke();
+      drawInductor(ctx,m1.s.x,m1.s.y+5,0,30,'Ls');
+      setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y+40);ctx.lineTo(m1.s.x,m1.s.y+45);ctx.stroke();
+      drawGND(ctx,m1.s.x,m1.s.y+45);
+    }
+
+    // Cext
+    drawCap(ctx,cx+80,100,7,'Cext');
+    setWire(ctx);ctx.beginPath();ctx.moveTo(cx+80,94);ctx.lineTo(cx+80,80);ctx.stroke();
+    drawVDD(ctx,cx+80,78,'VDD');
+    setWire(ctx);ctx.beginPath();ctx.moveTo(cx+80,107);ctx.lineTo(cx+80,130);ctx.lineTo(cx+40,130);ctx.stroke();
+
+    // Values overlay
+    if(results.gm) {
+      setValLabel(ctx);
+      const vals = [
+        `gm = ${results.gm.toFixed(1)} mS`,
+        `fT = ${results.ft.toFixed(1)} GHz`,
+        `Av = ${results.Av_dB.toFixed(1)} dB`,
+        `NF = ${results.NF_dB.toFixed(2)} dB`
+      ];
+      vals.forEach((v,i)=>{ctx.fillText(v,W-150,H-60+i*14);});
+    }
+  } else {
+    // Simple generic schematic
+    const m1 = drawMOSFET(ctx,cx,cy,35,'M1');
+    drawVDD(ctx,m1.d.x,m1.d.y-40);
+    setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x,m1.d.y-40);ctx.lineTo(m1.d.x,m1.d.y);ctx.stroke();
+    drawGND(ctx,m1.s.x,m1.s.y+20);
+    setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(m1.s.x,m1.s.y+20);ctx.stroke();
+    setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x,m1.g.y);ctx.lineTo(m1.g.x-50,m1.g.y);ctx.stroke();
+    setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF in',m1.g.x-90,m1.g.y+3);
+    setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('Vout',m1.d.x+15,m1.d.y+3);
+  }
+}
+
+function drawMixer(ctx,W,H) {
+  ctx.fillStyle='rgba(244,114,182,0.08)';ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';ctx.fillText('Mixer — Célula de Gilbert',12,18);
+
+  const cx=W/2, cy=H/2-10;
+  // Simplified Gilbert cell
+  // Tail current
+  const m5 = drawMOSFET(ctx,cx,cy+80,26,'M5');
+  drawGND(ctx,m5.s.x,m5.s.y+15);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m5.s.x,m5.s.y);ctx.lineTo(m5.s.x,m5.s.y+15);ctx.stroke();
+  setLabel(ctx,9);ctx.fillText('Ibias',m5.g.x-45,m5.g.y-5);
+
+  // Transconductor pair
+  const m1 = drawMOSFET(ctx,cx-40,cy+30,24,'M1');
+  const m2 = drawMOSFET(ctx,cx+40,cy+30,24,'M2');
+  // connect to tail
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(m1.s.x,cy+68);ctx.lineTo(m5.d.x,m5.d.y);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.s.x,m2.s.y);ctx.lineTo(m2.s.x,cy+68);ctx.lineTo(m5.d.x,m5.d.y);ctx.stroke();
+
+  // RF input
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.g.x,m1.g.y);ctx.lineTo(m1.g.x-30,m1.g.y);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF+',m1.g.x-55,m1.g.y+3);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.g.x+20,m2.g.y);ctx.lineTo(m2.g.x+50,m2.g.y);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF-',m2.g.x+55,m2.g.y+3);
+
+  // Switch quad
+  const m3 = drawMOSFET(ctx,cx-55,cy-25,22,'M3');
+  const m4 = drawMOSFET(ctx,cx-20,cy-25,22,'M4');
+  const m3b = drawMOSFET(ctx,cx+25,cy-25,22,'M3\'');
+  const m4b = drawMOSFET(ctx,cx+60,cy-25,22,'M4\'');
+
+  // Connect transconductors to switches
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x,m1.d.y);ctx.lineTo(m1.d.x,cy-3);
+  ctx.lineTo(m3.s.x,m3.s.y);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x,cy-3);ctx.lineTo(m4.s.x,m4.s.y);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.d.x,m2.d.y);ctx.lineTo(m2.d.x,cy-3);
+  ctx.lineTo(m3b.s.x,m3b.s.y);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.d.x,cy-3);ctx.lineTo(m4b.s.x,m4b.s.y);ctx.stroke();
+
+  // LO labels
+  setLabel(ctx,9);ctx.fillStyle='#a78bfa';ctx.fillText('LO+',m3.g.x-30,m3.g.y-5);
+  ctx.fillText('LO-',m4.g.x-30,m4.g.y-5);
+
+  // Loads + VDD
+  drawVDD(ctx,cx,45);
+  drawResistor(ctx,cx-30,55,0,25,'RL');
+  drawResistor(ctx,cx+30,55,0,25,'RL');
+  setWire(ctx);ctx.beginPath();ctx.moveTo(cx-30,45);ctx.lineTo(cx-30,55);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(cx+30,45);ctx.lineTo(cx+30,55);ctx.stroke();
+
+  // IF outputs
+  setNodeDot(ctx,cx-30,85,'#4ade80');setNodeDot(ctx,cx+30,85,'#4ade80');
+  setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('IF+',cx-55,90);ctx.fillText('IF-',cx+38,90);
+
+  if(results.CG_dB!==undefined){
+    setValLabel(ctx);
+    ctx.fillText(`CG = ${results.CG_dB.toFixed(1)} dB`,W-140,H-50);
+    ctx.fillText(`NF = ${results.NF_dB.toFixed(1)} dB`,W-140,H-36);
+    ctx.fillText(`IIP3 = ${results.IIP3_dBm.toFixed(1)} dBm`,W-140,H-22);
+  }
+}
+
+function drawVCO(ctx,W,H) {
+  ctx.fillStyle='rgba(244,114,182,0.08)';ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';ctx.fillText('VCO — LC Cross-Coupled',12,18);
+
+  const cx=W/2, cy=H/2;
+  // LC tank
+  drawInductor(ctx,cx-40,cy-60,0,50,'L');
+  drawInductor(ctx,cx+40,cy-60,0,50,'L');
+  // Center tap
+  setWire(ctx);ctx.beginPath();ctx.moveTo(cx-40,cy-65);ctx.lineTo(cx+40,cy-65);ctx.stroke();
+  drawVDD(ctx,cx,cy-75);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(cx,cy-75);ctx.lineTo(cx,cy-65);ctx.stroke();
+
+  // Varactors
+  drawCap(ctx,cx-40,cy-5,8,'Cv');
+  drawCap(ctx,cx+40,cy-5,8,'Cv');
+
+  // Cross-coupled pair
+  const m1=drawMOSFET(ctx,cx-55,cy+40,26,'M1');
+  const m2=drawMOSFET(ctx,cx+35,cy+40,26,'M2');
+
+  // Connect drains to tank
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x,m1.d.y);ctx.lineTo(m1.d.x,cy-5);ctx.lineTo(cx-40,cy-5);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.d.x,m2.d.y);ctx.lineTo(m2.d.x,cy-5);ctx.lineTo(cx+40,cy-5);ctx.stroke();
+
+  // Cross connections
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(m1.g.x,m1.g.y);ctx.lineTo(m1.g.x-15,m1.g.y);
+  ctx.lineTo(m2.d.x+20,m2.d.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(m2.g.x+20,m2.g.y);ctx.lineTo(m2.g.x+35,m2.g.y);
+  ctx.lineTo(m1.d.x-20,m1.d.y);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Tail
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(cx,m1.s.y+15);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m2.s.x,m2.s.y);ctx.lineTo(cx,m2.s.y+15);ctx.stroke();
+  drawResistor(ctx,cx,m1.s.y+15,0,25,'Itail');
+  drawGND(ctx,cx,m1.s.y+45);
+
+  // Output
+  setNodeDot(ctx,cx-40,cy-5,'#4ade80');setNodeDot(ctx,cx+40,cy-5,'#4ade80');
+  setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('V+',cx-65,cy-2);ctx.fillText('V-',cx+50,cy-2);
+
+  // Vtune
+  setLabel(ctx,9);ctx.fillStyle='#a78bfa';ctx.fillText('Vtune',cx-5,cy+2);
+
+  if(results.f0){
+    setValLabel(ctx);
+    ctx.fillText(`f₀ = ${results.f0.toFixed(3)} GHz`,W-160,H-60);
+    ctx.fillText(`Q = ${results.Qtank.toFixed(1)}`,W-160,H-46);
+    ctx.fillText(`PN@1M = ${results.PN_1M.toFixed(1)} dBc/Hz`,W-160,H-32);
+  }
+}
+
+function drawFilter(ctx,W,H) {
+  ctx.fillStyle='rgba(244,114,182,0.08)';ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';ctx.fillText('Filtro — LC Bandpass / Active',12,18);
+
+  const cx=W/2, cy=H/2;
+  const order = results.order||4;
+  const stages = Math.ceil(order/2);
+
+  // Draw cascaded LC stages
+  let startX = cx - stages*50;
+  setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('Vin',startX-40,cy+3);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(startX-25,cy);ctx.lineTo(startX,cy);ctx.stroke();
+
+  for(let i=0;i<stages;i++){
+    const sx = startX + i*100;
+    // Series L
+    drawInductor(ctx,sx,cy,40,0,'L'+(i+1),true);
+    // Shunt C
+    setWire(ctx);ctx.beginPath();ctx.moveTo(sx+50,cy);ctx.lineTo(sx+50,cy+15);ctx.stroke();
+    drawCap(ctx,sx+50,cy+18,7,'C'+(i+1));
+    setWire(ctx);ctx.beginPath();ctx.moveTo(sx+50,cy+28);ctx.lineTo(sx+50,cy+40);ctx.stroke();
+    drawGND(ctx,sx+50,cy+40);
+    // connect
+    if(i<stages-1){
+      setWire(ctx);ctx.beginPath();ctx.moveTo(sx+40,cy);ctx.lineTo(sx+100,cy);ctx.stroke();
+      setNodeDot(ctx,sx+50,cy);
+    }
+  }
+  const endX = startX + (stages-1)*100 + 50;
+  setWire(ctx);ctx.beginPath();ctx.moveTo(endX,cy);ctx.lineTo(endX+40,cy);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('Vout',endX+45,cy+3);
+
+  if(results.fc){
+    setValLabel(ctx);
+    ctx.fillText(`Ordem: ${results.order}`,W-140,H-50);
+    ctx.fillText(`fc = ${results.fc.toFixed(0)} MHz`,W-140,H-36);
+  }
+}
+
+function drawPA(ctx,W,H) {
+  ctx.fillStyle='rgba(244,114,182,0.08)';ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';
+  ctx.fillText('PA — '+document.getElementById('topology').options[document.getElementById('topology').selectedIndex].text,12,18);
+
+  const cx=W/2, cy=H/2;
+
+  // Matching network in
+  setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('RF in',30,cy+3);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(65,cy);ctx.lineTo(90,cy);ctx.stroke();
+  drawInductor(ctx,90,cy,35,0,'Lm',true);
+  drawCap(ctx,130,cy+15,7,'Cm');
+  setWire(ctx);ctx.beginPath();ctx.moveTo(130,cy);ctx.lineTo(130,cy+12);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(130,cy+25);ctx.lineTo(130,cy+35);ctx.stroke();
+  drawGND(ctx,130,cy+35);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(125,cy);ctx.lineTo(155,cy);ctx.stroke();
+
+  // Power FET
+  const m1=drawMOSFET(ctx,cx-10,cy,35,'M1');
+  setWire(ctx);ctx.beginPath();ctx.moveTo(155,cy);ctx.lineTo(m1.g.x,m1.g.y);ctx.stroke();
+
+  // Drain: RFC + matching
+  drawVDD(ctx,m1.d.x+60,50);
+  drawInductor(ctx,m1.d.x+60,55,0,40,'RFC');
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x+60,95);ctx.lineTo(m1.d.x+60,m1.d.y);ctx.lineTo(m1.d.x,m1.d.y);ctx.stroke();
+
+  // Output match
+  setNodeDot(ctx,m1.d.x+60,m1.d.y);
+  drawCap(ctx,m1.d.x+80,m1.d.y,8,'Cout',true);
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x+60,m1.d.y);ctx.lineTo(m1.d.x+76,m1.d.y);ctx.stroke();
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.d.x+89,m1.d.y);ctx.lineTo(m1.d.x+120,m1.d.y);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('RF out',m1.d.x+125,m1.d.y+3);
+
+  // Source to GND
+  setWire(ctx);ctx.beginPath();ctx.moveTo(m1.s.x,m1.s.y);ctx.lineTo(m1.s.x,m1.s.y+15);ctx.stroke();
+  drawGND(ctx,m1.s.x,m1.s.y+15);
+
+  if(results.Pout!==undefined){
+    setValLabel(ctx);
+    ctx.fillText(`Pout = ${results.Pout.toFixed(1)} dBm`,W-160,H-60);
+    ctx.fillText(`η = ${results.eff.toFixed(1)}%`,W-160,H-46);
+    ctx.fillText(`PAE = ${results.PAE.toFixed(1)}%`,W-160,H-32);
+  }
+}
+
+function drawPLL(ctx,W,H) {
+  ctx.fillStyle='rgba(244,114,182,0.08)';ctx.fillRect(0,0,W,28);
+  setLabel(ctx,11);ctx.fillStyle='#f472b6';ctx.fillText('PLL — Charge-Pump Type II',12,18);
+
+  const cy=H/2, sx=40;
+  const blocks = [
+    {x:sx,w:55,h:35,label:'PFD',sub:'Phase\nDetect'},
+    {x:sx+75,w:50,h:35,label:'CP',sub:'Charge\nPump'},
+    {x:sx+145,w:60,h:35,label:'LPF',sub:'Loop\nFilter'},
+    {x:sx+225,w:55,h:35,label:'VCO',sub:''},
+  ];
+
+  blocks.forEach(b=>{
+    ctx.fillStyle='rgba(129,140,248,0.08)';
+    ctx.strokeStyle='var(--si)';ctx.lineWidth=1.5;
+    ctx.strokeStyle='#a78bfa';
+    ctx.fillRect(b.x,cy-b.h/2,b.w,b.h);
+    ctx.strokeRect(b.x,cy-b.h/2,b.w,b.h);
+    setLabel(ctx,11);ctx.fillStyle='#e6ecf5';
+    ctx.fillText(b.label,b.x+b.w/2-ctx.measureText(b.label).width/2,cy+4);
+  });
+
+  // Arrows
+  setWire(ctx);
+  const arrow = (x1,x2,y)=>{
+    ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();
+    ctx.fillStyle='#38bdf8';ctx.beginPath();
+    ctx.moveTo(x2,y-4);ctx.lineTo(x2+6,y);ctx.lineTo(x2,y+4);ctx.fill();
+  };
+  arrow(sx+55,sx+75,cy);
+  arrow(sx+125,sx+145,cy);
+  arrow(sx+205,sx+225,cy);
+
+  // Output
+  setWire(ctx);ctx.beginPath();ctx.moveTo(sx+280,cy);ctx.lineTo(sx+320,cy);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#4ade80';ctx.fillText('fout',sx+325,cy+3);
+
+  // Feedback divider
+  setWire(ctx);ctx.beginPath();
+  ctx.moveTo(sx+300,cy);ctx.lineTo(sx+300,cy+50);ctx.lineTo(sx+25,cy+50);ctx.lineTo(sx+25,cy+17);ctx.stroke();
+  ctx.fillStyle='rgba(129,140,248,0.08)';ctx.strokeStyle='#a78bfa';ctx.lineWidth=1.5;
+  ctx.fillRect(sx+140,cy+38,50,24);ctx.strokeRect(sx+140,cy+38,50,24);
+  setLabel(ctx,11);ctx.fillStyle='#e6ecf5';ctx.fillText('÷ N',sx+152,cy+54);
+  setNodeDot(ctx,sx+300,cy);
+
+  // fref input
+  setWire(ctx);ctx.beginPath();ctx.moveTo(sx-30,cy);ctx.lineTo(sx,cy);ctx.stroke();
+  setLabel(ctx,10);ctx.fillStyle='#fbbf24';ctx.fillText('fref',sx-55,cy+3);
+
+  if(results.fout){
+    setValLabel(ctx);
+    ctx.fillText(`fout = ${results.fout.toFixed(0)} MHz`,W-160,H-60);
+    ctx.fillText(`BW = ${results.BW_loop.toFixed(1)} kHz`,W-160,H-46);
+    ctx.fillText(`PM = ${results.PM_actual.toFixed(1)}°`,W-160,H-32);
+  }
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+function drawFreqResponse() {
+  const canvas = document.getElementById('freqResponse');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
+  ctx.scale(dpr,dpr);
+  const W = rect.width, H = rect.height;
+  ctx.fillStyle='#080b10';ctx.fillRect(0,0,W,H);
+
+  const pad = {l:50,r:15,t:15,b:30};
+  const gW = W-pad.l-pad.r, gH = H-pad.t-pad.b;
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+i*gH/5;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+  }
+  for(let i=0;i<=10;i++){
+    const x=pad.l+i*gW/10;
+    ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+gH);ctx.stroke();
+  }
+
+  // Generate data based on block
+  const N = 200;
+  let data1=[], data2=[], label1='|S21|', label2='NF', yMin=-30, yMax=30, y2Min=0, y2Max=10;
+
+  if(currentBlock==='lna' && results.Av_dB!==undefined) {
+    const f0 = gv('freq',2.4);
+    const bw = results.BW_3dB/1000; // GHz
+    const Av = results.Av_dB;
+    const NF = results.NF_dB;
+    yMin = -10; yMax = Av+10; y2Min = 0; y2Max = Math.max(NF*3,5);
+
+    for(let i=0;i<N;i++){
+      const f = f0*0.1 + (f0*2-f0*0.1)*i/N;
+      const df = f-f0;
+      const h = Av - 10*Math.log10(1+Math.pow(2*df/Math.max(bw,0.01),2));
+      data1.push({x:f,y:h});
+      // NF increases away from center
+      data2.push({x:f,y:NF*(1+0.5*Math.pow(df/f0,2))});
+    }
+    document.getElementById('freq-meta').textContent = '|S21| & NF vs Freq';
+  } else if(currentBlock==='vco' && results.f0) {
+    label1='Phase Noise';label2='';
+    yMin=-140;yMax=-60;
+    for(let i=0;i<N;i++){
+      const foff = Math.pow(10, 3+4*i/N); // 1kHz to 10MHz
+      const pn = results.PN_1M + 20*Math.log10(1e6/foff);
+      data1.push({x:Math.log10(foff),y:pn});
+    }
+    document.getElementById('freq-meta').textContent = 'Phase Noise vs Offset';
+  } else if(currentBlock==='filter' && results.fc) {
+    label1='|H(f)|';label2='';
+    const fc = results.fc;
+    const n = results.order;
+    yMin=-60;yMax=5;
+    for(let i=0;i<N;i++){
+      const f = fc*0.01 + fc*5*i/N;
+      const fn = f/fc;
+      let Hmag;
+      if(results.ftype==='butter') Hmag = -10*Math.log10(1+Math.pow(fn,2*n));
+      else if(results.ftype==='cheby') Hmag = -10*Math.log10(1+Math.pow(fn,2*n)*1.5);
+      else Hmag = -10*Math.log10(1+Math.pow(fn,2*n)*0.7);
+      data1.push({x:f,y:Math.max(Hmag,-60)});
+    }
+    document.getElementById('freq-meta').textContent = '|H(f)| dB';
+  } else if(currentBlock==='pa' && results.Pout!==undefined) {
+    label1='Pout';label2='PAE';
+    yMin=-20;yMax=results.Pout+5;y2Min=0;y2Max=100;
+    for(let i=0;i<N;i++){
+      const pin = -40 + 50*i/N;
+      const pout = pin + results.gain;
+      const comp = Math.max(0,pout-results.P1dB);
+      const pout_comp = pout - comp*comp*0.5;
+      data1.push({x:pin,y:Math.min(pout_comp,results.Pout+1)});
+      const pout_w = Math.pow(10,(Math.min(pout_comp,results.Pout+1)-30)/10);
+      const pin_w = Math.pow(10,(pin-30)/10);
+      const pdc = results.Pdc/1000;
+      data2.push({x:pin,y:Math.max(0,Math.min((pout_w-pin_w)/pdc*100,95))});
+    }
+    document.getElementById('freq-meta').textContent = 'Pout & PAE vs Pin';
+  } else if(currentBlock==='pll' && results.fout) {
+    label1='Open Loop Gain';label2='Phase';
+    yMin=-40;yMax=60;y2Min=-180;y2Max=0;
+    for(let i=0;i<N;i++){
+      const f = Math.pow(10, 2+5*i/N);
+      const wn = results.fn*1000*2*PI;
+      const w = 2*PI*f;
+      const s = w;
+      const H = 20*Math.log10(Math.max(wn*wn/(s*s)*Math.sqrt(1+(2*results.zeta*s/wn)**2),1e-6));
+      data1.push({x:Math.log10(f),y:Math.min(H,60)});
+      data2.push({x:Math.log10(f),y:-90-Math.atan(s/(wn*2*results.zeta))*180/PI});
+    }
+    document.getElementById('freq-meta').textContent = 'Bode: Gain & Phase';
+  } else {
+    // default
+    for(let i=0;i<N;i++){
+      data1.push({x:i/N*10,y:Math.sin(i/N*PI*4)*10});
+    }
+    document.getElementById('freq-meta').textContent = 'Aguardando análise';
+  }
+
+  if(data1.length===0) return;
+
+  // Auto-scale
+  const xMin = data1[0].x, xMax = data1[data1.length-1].x;
+
+  // Draw data1
+  ctx.strokeStyle='#f472b6';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();
+  data1.forEach((p,i)=>{
+    const x = pad.l + (p.x-xMin)/(xMax-xMin)*gW;
+    const y = pad.t + (1-(p.y-yMin)/(yMax-yMin))*gH;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Fill under
+  ctx.globalAlpha=0.08;ctx.fillStyle='#f472b6';
+  ctx.lineTo(pad.l+gW,pad.t+gH);ctx.lineTo(pad.l,pad.t+gH);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Draw data2
+  if(data2.length>0){
+    ctx.strokeStyle='#4ade80';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    data2.forEach((p,i)=>{
+      const x = pad.l + (p.x-xMin)/(xMax-xMin)*gW;
+      const y = pad.t + (1-(p.y-y2Min)/(y2Max-y2Min))*gH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Y-axis labels
+  ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';
+  for(let i=0;i<=5;i++){
+    const v = yMax - i*(yMax-yMin)/5;
+    ctx.fillText(v.toFixed(0),5,pad.t+i*gH/5+3);
+  }
+
+  // Legend
+  ctx.fillStyle='#f472b6';ctx.fillRect(pad.l+10,pad.t+5,12,2);
+  ctx.fillStyle='#b6c2d4';ctx.font='9px JetBrains Mono';
+  ctx.fillText(label1,pad.l+26,pad.t+9);
+  if(label2){
+    ctx.strokeStyle='#4ade80';ctx.setLineDash([4,3]);ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(pad.l+10,pad.t+18);ctx.lineTo(pad.l+22,pad.t+18);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#b6c2d4';ctx.fillText(label2,pad.l+26,pad.t+22);
+  }
+}
+
+function drawChart2() {
+  const canvas = document.getElementById('chart2');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio||1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width*dpr; canvas.height = rect.height*dpr;
+  ctx.scale(dpr,dpr);
+  const W = rect.width, H = rect.height;
+  ctx.fillStyle='#080b10';ctx.fillRect(0,0,W,H);
+
+  const pad = {l:45,r:15,t:15,b:30};
+  const gW = W-pad.l-pad.r, gH = H-pad.t-pad.b;
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){
+    const y=pad.t+i*gH/5;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+gW,y);ctx.stroke();
+  }
+
+  if(currentBlock==='lna' && results.Av_dB!==undefined) {
+    // IP3 diagram
+    document.getElementById('chart2-title').textContent='Linearidade (IP3)';
+    document.getElementById('chart2-meta').textContent='Pin vs Pout';
+
+    const IIP3 = results.IIP3_dBm;
+    const gain = results.Av_dB;
+    const N=100;
+
+    // Fundamental
+    ctx.strokeStyle='#38bdf8';ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const pin = -60 + 80*i/N;
+      const pout = pin + gain;
+      const x = pad.l + i/N*gW;
+      const y = pad.t + (1-(pout+60)/100)*gH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // IM3
+    ctx.strokeStyle='#fb7185';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const pin = -60 + 80*i/N;
+      const pim3 = 3*pin + 3*gain - 2*IIP3 - 2*gain; // simplified
+      const x = pad.l + i/N*gW;
+      const y = pad.t + (1-(pim3+60)/100)*gH;
+      if(pim3>-60)i===0||y>pad.t+gH?null:ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();ctx.setLineDash([]);
+
+    // IIP3 marker
+    const iip3x = pad.l + (IIP3+60)/80*gW;
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(iip3x,pad.t);ctx.lineTo(iip3x,pad.t+gH);ctx.stroke();
+    ctx.setLineDash([]);
+    setLabel(ctx,9);ctx.fillStyle='#fbbf24';ctx.fillText('IIP3',iip3x+3,pad.t+12);
+
+    // Legend
+    ctx.fillStyle='#38bdf8';ctx.fillRect(pad.l+10,pad.t+5,12,2);
+    ctx.fillStyle='#b6c2d4';ctx.font='9px JetBrains Mono';ctx.fillText('Fund.',pad.l+26,pad.t+9);
+    ctx.fillStyle='#fb7185';ctx.fillRect(pad.l+10,pad.t+17,12,2);
+    ctx.fillStyle='#b6c2d4';ctx.fillText('IM3',pad.l+26,pad.t+21);
+  } else if(currentBlock==='mixer') {
+    document.getElementById('chart2-title').textContent='Espectro de Conversão';
+    document.getElementById('chart2-meta').textContent='fRF → fIF';
+    // Simple bar spectrum
+    const flo = results.flo||2.4;
+    const fif = results.fif||0.1;
+    const bars = [
+      {f:flo-fif,h:0.2,c:'#6b7889',l:'fRF-'},
+      {f:flo,h:0.6,c:'#a78bfa',l:'fLO'},
+      {f:flo+fif,h:0.3,c:'#6b7889',l:'fRF+'},
+      {f:fif,h:0.8,c:'#4ade80',l:'fIF'},
+    ];
+    const fmin=0,fmax=flo*1.5;
+    bars.forEach(b=>{
+      const x = pad.l + (b.f-fmin)/(fmax-fmin)*gW;
+      const bh = b.h*gH;
+      ctx.fillStyle=b.c;ctx.fillRect(x-4,pad.t+gH-bh,8,bh);
+      ctx.fillStyle='#b6c2d4';ctx.font='9px JetBrains Mono';
+      ctx.fillText(b.l,x-10,pad.t+gH-bh-5);
+    });
+  } else if(currentBlock==='vco') {
+    document.getElementById('chart2-title').textContent='Tuning Range';
+    document.getElementById('chart2-meta').textContent='Vtune vs fosc';
+    const N=100;
+    ctx.strokeStyle='#a78bfa';ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const vt = i/N * gv('vdd',1.2);
+      const f = results.fmin + (results.fmax-results.fmin)*i/N;
+      const x = pad.l + i/N*gW;
+      const y = pad.t + (1-(f-results.fmin)/(results.fmax-results.fmin||1))*gH;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#b6c2d4';ctx.font='9px JetBrains Mono';
+    ctx.fillText('Vtune',pad.l+gW/2-15,pad.t+gH+15);
+    ctx.fillText(results.fmin.toFixed(2)+'G',2,pad.t+gH-2);
+    ctx.fillText(results.fmax.toFixed(2)+'G',2,pad.t+12);
+  } else {
+    document.getElementById('chart2-title').textContent='Diagrama Adicional';
+    document.getElementById('chart2-meta').textContent='';
+    ctx.fillStyle='#3f4a5b';ctx.font='12px Chakra Petch';
+    ctx.fillText('Clique Analisar para gerar',W/2-80,H/2);
+  }
+}
+
+// ---- Reset ----
+function resetAll() {
+  results = {};
+  document.getElementById('hdr-gain').innerHTML = '--<span class="unit">dB</span>';
+  document.getElementById('hdr-nf').innerHTML = '--<span class="unit">dB</span>';
+  ['perf-results','ss-results','noise-results','lin-results','power-results','eq-results'].forEach(id=>{
+    document.getElementById(id).innerHTML = '<div class="info-box">Aguardando análise...</div>';
+  });
+  drawSchematic(); drawFreqResponse(); drawChart2();
+}
+
+// ---- Init ----
+window.addEventListener('load', ()=>{
+  updateTopologyOptions();
+  updateParams();
+  updateSchematicTitle();
+  drawSchematic();
+  drawFreqResponse();
+  drawChart2();
+});
+window.addEventListener('resize', ()=>{
+  drawSchematic(); drawFreqResponse(); drawChart2();
+});
+
+// Auto-calc on Enter
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter') runCalc();
+});
+</script>
+</body>
+</html>
