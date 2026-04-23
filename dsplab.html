@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DSP Lab — Laboratório de Processamento Digital de Sinais</title>
+<meta name="description" content="Laboratório interativo de DSP: gerador de sinais, FFT, filtros digitais FIR/IIR, janelamento, amostragem, aliasing, convolução, quantização e análise espectral." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+  --orange: #f97316;
+  --teal: #2dd4bf;
+  --indigo: #818cf8;
+  --indigo-bright: #a5b4fc;
+  --indigo-soft: #312e8140;
+  --indigo-glow: #818cf833;
+  --indigo-deep: #4f46e5;
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#0d0d21 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d1a1f 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* HEADER */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:30px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+.brand .logo-mark::before{
+  content:'';position:absolute;inset:2px;
+  border:1.5px solid var(--indigo);border-radius:3px;
+  animation:pulse-dsp 3s ease-in-out infinite;
+}
+.brand .logo-mark::after{
+  content:'';position:absolute;
+  width:16px;height:2px;
+  background:var(--indigo);border-radius:1px;
+  box-shadow:0 0 10px var(--indigo),0 -5px 0 var(--indigo),0 5px 0 var(--indigo);
+}
+.brand .logo-mark .wave1{
+  position:absolute;width:22px;height:22px;inset:4px;
+  border:1px solid rgba(129,140,248,0.25);border-radius:3px;
+  animation:pulse-dsp 3s ease-in-out infinite 0.3s;
+}
+.brand .logo-mark .wave2{
+  position:absolute;inset:-2px;
+  border:1px solid rgba(129,140,248,0.12);border-radius:5px;
+  animation:pulse-dsp 3s ease-in-out infinite 0.6s;
+}
+@keyframes pulse-dsp{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.08);opacity:0.35;}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--indigo);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#2d2b7a,#1a184d);
+  border-color:var(--indigo);color:var(--indigo);
+  box-shadow:0 0 0 1px var(--indigo-glow),inset 0 1px 0 rgba(129,140,248,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#3a3891,#221f5e);}
+
+/* MAIN */
+main{
+  display:grid;grid-template-columns:320px 1fr 310px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* SECTIONS */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.indigo{background:var(--indigo);box-shadow:0 0 6px var(--indigo);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.dot.orange{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* FORM */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--indigo);background:#090d13;
+  box-shadow:0 0 0 2px var(--indigo-glow);
+}
+input[type="range"]{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:6px;background:var(--bg-0);border:1px solid var(--border);
+  border-radius:3px;outline:none;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;
+  background:var(--indigo);border:2px solid var(--bg-0);
+  border-radius:50%;cursor:pointer;box-shadow:0 0 8px var(--indigo-glow);
+}
+input[type="range"]::-moz-range-thumb{
+  width:14px;height:14px;background:var(--indigo);
+  border:2px solid var(--bg-0);border-radius:50%;cursor:pointer;
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--indigo);border-color:var(--indigo);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--indigo-soft);border-color:var(--indigo);color:var(--indigo);}
+
+.slider-row{display:flex;align-items:center;gap:8px;}
+.slider-row input[type="range"]{flex:1;}
+.slider-val{
+  font-family:var(--font-mono);font-size:11px;color:var(--indigo);
+  min-width:50px;text-align:right;
+}
+
+/* VIZ AREA */
+.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;gap:1px;background:var(--border-soft);}
+.viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;position:relative;}
+.viz-cell .card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);
+  flex-shrink:0;
+}
+.viz-cell .card-header h3{
+  margin:0;font-family:var(--font-display);font-weight:500;
+  font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);
+  display:flex;align-items:center;gap:8px;
+}
+.viz-cell .card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.viz-cell .card-body{flex:1;position:relative;min-height:0;}
+.viz-cell canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+.viz-tabs{display:flex;gap:1px;padding:0;margin:0;}
+.viz-tab{
+  background:var(--bg-2);color:var(--text-2);border:none;
+  padding:4px 10px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:0.06em;cursor:pointer;transition:all .15s;
+}
+.viz-tab:hover{color:var(--text-0);}
+.viz-tab.active{background:var(--indigo-soft);color:var(--indigo);}
+
+/* RESULTS PANEL */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.ind{color:var(--indigo);}
+
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-fill.ind{background:linear-gradient(90deg,#1e1b4b,var(--indigo));box-shadow:0 0 8px var(--indigo-glow);}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(129,140,248,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--indigo);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--indigo);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* add signal badges on viz */
+.sig-badge{
+  position:absolute;top:8px;right:10px;
+  background:rgba(7,9,13,0.88);border:1px solid var(--border);
+  border-radius:var(--radius);padding:5px 9px;z-index:10;
+  font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);
+  backdrop-filter:blur(8px);display:flex;gap:10px;pointer-events:none;
+}
+.sig-badge .sb-v{color:var(--indigo);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"><span class="wave1"></span><span class="wave2"></span></span>
+    <h1>DSP LAB</h1>
+    <span class="tag">Laboratorio de <em>Processamento Digital</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Sinal</span>
+      <span class="value" id="hdr-signal">Senoide</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Freq</span>
+      <span class="value" id="hdr-freq">100<span class="unit">Hz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Fs</span>
+      <span class="value" id="hdr-fs">8000<span class="unit">Hz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Filtro</span>
+      <span class="value" id="hdr-filter">Nenhum</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">N</span>
+      <span class="value" id="hdr-n">1024</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runDSP()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+      Processar
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<!-- ══════════ MAIN ══════════ -->
+<main>
+
+<!-- ════ LEFT PANEL ════ -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao DSP</h2>
+    <span class="panel-sub">SIG / FILT / FFT</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- SIGNAL GENERATOR -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Gerador de Sinal</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Forma de Onda <span class="tip" data-tip="Escolha a forma de onda basica. Combine com harmonicas ou ruido usando os controles abaixo.">i</span></label>
+          <select id="waveform" onchange="updateUI()">
+            <option value="sine">Senoide</option>
+            <option value="cosine">Cossenoide</option>
+            <option value="square">Onda Quadrada</option>
+            <option value="triangle">Triangular</option>
+            <option value="sawtooth">Dente de Serra</option>
+            <option value="impulse">Impulso (Delta)</option>
+            <option value="step">Degrau Unitario</option>
+            <option value="sinc">Sinc</option>
+            <option value="chirp">Chirp (Varredura)</option>
+            <option value="am">AM (Modulada)</option>
+            <option value="fm">FM (Modulada)</option>
+            <option value="noise-white">Ruido Branco</option>
+            <option value="noise-pink">Ruido Rosa</option>
+            <option value="multi">Multi-tom</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Freq. fundamental (Hz)</label>
+            <input type="number" id="sig-freq" value="100" min="1" max="20000" step="1">
+          </div>
+          <div class="field">
+            <label>Amplitude</label>
+            <input type="number" id="sig-amp" value="1.0" min="0.01" max="10" step="0.1">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fase (graus)</label>
+            <input type="number" id="sig-phase" value="0" min="-360" max="360" step="1">
+          </div>
+          <div class="field">
+            <label>DC Offset</label>
+            <input type="number" id="sig-dc" value="0" min="-5" max="5" step="0.1">
+          </div>
+        </div>
+        <div id="chirp-params" style="display:none">
+          <div class="field">
+            <label>Freq. final chirp (Hz) <span class="tip" data-tip="Frequencia final da varredura linear (chirp). O sinal varre de f0 ate f1.">i</span></label>
+            <input type="number" id="chirp-end" value="2000" min="1" max="20000">
+          </div>
+        </div>
+        <div id="am-params" style="display:none">
+          <div class="field-row">
+            <div class="field">
+              <label>Freq. moduladora (Hz)</label>
+              <input type="number" id="am-mod-freq" value="10" min="1" max="5000">
+            </div>
+            <div class="field">
+              <label>Indice m</label>
+              <input type="number" id="am-index" value="0.5" min="0" max="1" step="0.05">
+            </div>
+          </div>
+        </div>
+        <div id="fm-params" style="display:none">
+          <div class="field-row">
+            <div class="field">
+              <label>Freq. moduladora (Hz)</label>
+              <input type="number" id="fm-mod-freq" value="5" min="1" max="5000">
+            </div>
+            <div class="field">
+              <label>Desvio &Delta;f (Hz)</label>
+              <input type="number" id="fm-dev" value="50" min="1" max="10000">
+            </div>
+          </div>
+        </div>
+        <div id="multi-params" style="display:none">
+          <div class="field">
+            <label>Frequencias (Hz, separadas por virgula)</label>
+            <input type="text" id="multi-freqs" value="100,250,400,800">
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="field">
+          <label>Adicionar Ruido (SNR dB) <span class="tip" data-tip="Relacao sinal-ruido. Valores menores significam mais ruido. 'Inf' = sem ruido.">i</span></label>
+          <div class="slider-row">
+            <input type="range" id="noise-snr" min="-10" max="60" value="60" oninput="document.getElementById('snr-val').textContent=this.value+' dB'">
+            <span class="slider-val" id="snr-val">60 dB</span>
+          </div>
+        </div>
+        <div class="chips" style="margin-top:8px">
+          <span class="chip" onclick="loadSigPreset('voice')">Voz 1kHz</span>
+          <span class="chip" onclick="loadSigPreset('dtmf')">DTMF</span>
+          <span class="chip" onclick="loadSigPreset('chirp50')">Chirp 50-4k</span>
+          <span class="chip" onclick="loadSigPreset('noisy')">Seno+Ruido</span>
+          <span class="chip" onclick="loadSigPreset('multi3')">3 tons</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLING -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Amostragem &amp; Quantizacao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Freq. Amostragem Fs (Hz) <span class="tip" data-tip="Taxa de amostragem. Pelo teorema de Nyquist, Fs deve ser >= 2·fmax para evitar aliasing.">i</span></label>
+          <select id="fs" onchange="updateUI()">
+            <option value="1000">1,000 Hz</option>
+            <option value="2000">2,000 Hz</option>
+            <option value="4000">4,000 Hz</option>
+            <option value="8000" selected>8,000 Hz</option>
+            <option value="11025">11,025 Hz</option>
+            <option value="16000">16,000 Hz</option>
+            <option value="22050">22,050 Hz</option>
+            <option value="44100">44,100 Hz (CD)</option>
+            <option value="48000">48,000 Hz</option>
+            <option value="96000">96,000 Hz</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>N amostras (FFT)</label>
+            <select id="nfft">
+              <option value="64">64</option>
+              <option value="128">128</option>
+              <option value="256">256</option>
+              <option value="512">512</option>
+              <option value="1024" selected>1024</option>
+              <option value="2048">2048</option>
+              <option value="4096">4096</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Bits Quantizacao</label>
+            <select id="quant-bits">
+              <option value="0">Sem quantizar</option>
+              <option value="2">2 bits (4 niveis)</option>
+              <option value="3">3 bits (8 niveis)</option>
+              <option value="4">4 bits (16 niveis)</option>
+              <option value="8">8 bits (256 niveis)</option>
+              <option value="12">12 bits</option>
+              <option value="16" selected>16 bits (CD)</option>
+              <option value="24">24 bits</option>
+            </select>
+          </div>
+        </div>
+        <div id="nyquist-info" class="info-box ok">
+          <strong>Nyquist OK:</strong> Fs=8000 Hz &ge; 2&times;100 Hz = 200 Hz. Nenhum aliasing.
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Filtro Digital</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Tipo de Filtro <span class="tip" data-tip="Selecione o tipo de filtro digital. FIR usa janelamento (metodo de truncamento), IIR usa Butterworth.">i</span></label>
+          <select id="filter-type" onchange="updateFilterUI()">
+            <option value="none">Nenhum (Bypass)</option>
+            <option value="fir-lp">FIR Passa-Baixa</option>
+            <option value="fir-hp">FIR Passa-Alta</option>
+            <option value="fir-bp">FIR Passa-Banda</option>
+            <option value="fir-bs">FIR Rejeita-Banda</option>
+            <option value="iir-lp">IIR Passa-Baixa (Butter.)</option>
+            <option value="iir-hp">IIR Passa-Alta (Butter.)</option>
+            <option value="ma">Media Movel</option>
+          </select>
+        </div>
+        <div id="filter-params">
+          <div class="field" id="fc1-field" style="display:none">
+            <label>Freq. Corte fc1 (Hz)</label>
+            <input type="number" id="fc1" value="500" min="1" max="24000">
+          </div>
+          <div class="field" id="fc2-field" style="display:none">
+            <label>Freq. Corte fc2 (Hz)</label>
+            <input type="number" id="fc2" value="2000" min="1" max="24000">
+          </div>
+          <div class="field" id="fir-order-field" style="display:none">
+            <label>Ordem do Filtro FIR <span class="tip" data-tip="Numero de coeficientes (taps) do filtro FIR. Valores maiores = transicao mais abrupta, mas mais atraso.">i</span></label>
+            <input type="number" id="fir-order" value="51" min="3" max="501" step="2">
+          </div>
+          <div class="field" id="iir-order-field" style="display:none">
+            <label>Ordem IIR</label>
+            <select id="iir-order">
+              <option value="1">1ª ordem</option>
+              <option value="2" selected>2ª ordem</option>
+              <option value="3">3ª ordem</option>
+              <option value="4">4ª ordem</option>
+              <option value="5">5ª ordem</option>
+              <option value="6">6ª ordem</option>
+            </select>
+          </div>
+          <div class="field" id="ma-len-field" style="display:none">
+            <label>Comprimento Media Movel</label>
+            <input type="number" id="ma-len" value="10" min="2" max="200">
+          </div>
+        </div>
+        <div class="field" id="window-field" style="display:none">
+          <label>Funcao Janela <span class="tip" data-tip="Janela aplicada ao projeto FIR. Controla o balanco entre largura do lobo principal e atenuacao dos lobos laterais.">i</span></label>
+          <select id="window-type">
+            <option value="rectangular">Retangular (Sem janela)</option>
+            <option value="hamming" selected>Hamming</option>
+            <option value="hanning">Hanning (Von Hann)</option>
+            <option value="blackman">Blackman</option>
+            <option value="kaiser">Kaiser (&beta;=5)</option>
+            <option value="bartlett">Bartlett (Triangular)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOW / FFT -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Janelamento FFT</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Janela para FFT <span class="tip" data-tip="Janela aplicada ao sinal ANTES da FFT, para reduzir vazamento espectral (spectral leakage).">i</span></label>
+          <select id="fft-window">
+            <option value="rectangular">Retangular</option>
+            <option value="hamming">Hamming</option>
+            <option value="hanning" selected>Hanning</option>
+            <option value="blackman">Blackman</option>
+            <option value="kaiser">Kaiser</option>
+            <option value="flattop">Flat-Top</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Escala Espectro</label>
+          <select id="fft-scale">
+            <option value="db" selected>dB (Logaritmica)</option>
+            <option value="linear">Linear</option>
+            <option value="psd">PSD (dB/Hz)</option>
+          </select>
+        </div>
+        <div class="info-box">
+          <strong>Dica:</strong> Janela Hanning e boa para analise geral. Flat-Top e ideal para medir amplitude precisa de tons puros.
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPERIMENT PRESETS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Experimentos Prontos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="chips" style="flex-direction:column;gap:6px;">
+          <span class="chip" onclick="loadExperiment('aliasing')" style="width:100%;text-align:left;">&#9658; Aliasing: f &gt; Fs/2</span>
+          <span class="chip" onclick="loadExperiment('leakage')" style="width:100%;text-align:left;">&#9658; Vazamento Espectral (Leakage)</span>
+          <span class="chip" onclick="loadExperiment('filtering')" style="width:100%;text-align:left;">&#9658; Filtragem LP de Sinal Ruidoso</span>
+          <span class="chip" onclick="loadExperiment('quantization')" style="width:100%;text-align:left;">&#9658; Efeitos da Quantizacao (2-bit)</span>
+          <span class="chip" onclick="loadExperiment('chirpfft')" style="width:100%;text-align:left;">&#9658; Chirp: Espectro Variavel</span>
+          <span class="chip" onclick="loadExperiment('dtmf-filter')" style="width:100%;text-align:left;">&#9658; DTMF: Separacao por Filtro BP</span>
+          <span class="chip" onclick="loadExperiment('ma-smooth')" style="width:100%;text-align:left;">&#9658; Media Movel: Suavizacao</span>
+          <span class="chip" onclick="loadExperiment('gibbs')" style="width:100%;text-align:left;">&#9658; Gibbs: Onda Quadrada Truncada</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════ CENTER VIZ ════ -->
+<div class="panel" style="background:var(--border-soft);">
+  <div class="viz">
+    <!-- Time Domain -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3><span class="dot indigo"></span>Dominio do Tempo</h3>
+        <div style="display:flex;gap:4px;">
+          <div class="viz-tabs">
+            <button class="viz-tab active" onclick="setTimeView('input',this)">Entrada</button>
+            <button class="viz-tab" onclick="setTimeView('output',this)">Saida</button>
+            <button class="viz-tab" onclick="setTimeView('both',this)">Ambos</button>
+            <button class="viz-tab" onclick="setTimeView('error',this)">Erro</button>
+          </div>
+        </div>
+        <span class="meta" id="time-meta">N=1024 | T=128.0 ms</span>
+      </div>
+      <div class="card-body">
+        <canvas id="c-time"></canvas>
+        <div class="sig-badge" id="time-badge">
+          <span>RMS: <span class="sb-v" id="badge-rms">--</span></span>
+          <span>Pico: <span class="sb-v" id="badge-peak">--</span></span>
+        </div>
+      </div>
+    </div>
+    <!-- Frequency Domain -->
+    <div class="viz-cell">
+      <div class="card-header">
+        <h3><span class="dot cyan"></span>Dominio da Frequencia (FFT)</h3>
+        <div style="display:flex;gap:4px;">
+          <div class="viz-tabs">
+            <button class="viz-tab active" onclick="setFreqView('mag',this)">|H(f)|</button>
+            <button class="viz-tab" onclick="setFreqView('phase',this)">&angle;H(f)</button>
+            <button class="viz-tab" onclick="setFreqView('filter',this)">Filtro</button>
+            <button class="viz-tab" onclick="setFreqView('spectrogram',this)">Spectrogr.</button>
+          </div>
+        </div>
+        <span class="meta" id="freq-meta">&Delta;f=7.81 Hz | Fs/2=4000 Hz</span>
+      </div>
+      <div class="card-body">
+        <canvas id="c-freq"></canvas>
+        <div class="sig-badge" id="freq-badge">
+          <span>Pico: <span class="sb-v" id="badge-fpeak">--</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ RIGHT PANEL ════ -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="res-ts">--</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- Signal Stats -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Estatisticas do Sinal</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-signal">
+        <div class="kv"><span class="k">Forma de Onda</span><span class="v" id="r-wave">Senoide</span></div>
+        <div class="kv"><span class="k">Frequencia Fund.</span><span class="v" id="r-freq">100<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">Amplitude</span><span class="v" id="r-amp">1.000</span></div>
+        <div class="kv"><span class="k">Periodo</span><span class="v" id="r-period">10.000<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">RMS (entrada)</span><span class="v ind" id="r-rms">--</span></div>
+        <div class="kv"><span class="k">Valor Pico</span><span class="v" id="r-peak">--</span></div>
+        <div class="kv"><span class="k">Fator de Crista</span><span class="v" id="r-crest">--</span></div>
+        <div class="kv"><span class="k">Energia Total</span><span class="v" id="r-energy">--</span></div>
+      </div>
+    </div>
+
+    <!-- Sampling -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Amostragem</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-sampling">
+        <div class="kv"><span class="k">Fs</span><span class="v" id="r-fs">8000<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">Nyquist (Fs/2)</span><span class="v acc" id="r-nyq">4000<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">N amostras</span><span class="v" id="r-n">1024</span></div>
+        <div class="kv"><span class="k">Duracao</span><span class="v" id="r-dur">128.00<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">Resolucao FFT &Delta;f</span><span class="v" id="r-df">7.81<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k"><span class="live-dot" id="alias-dot"></span> Aliasing</span><span class="v good" id="r-alias">Nao</span></div>
+        <div class="kv"><span class="k">Quantizacao</span><span class="v" id="r-quant">16 bits</span></div>
+        <div class="kv"><span class="k">SQNR Teorico</span><span class="v" id="r-sqnr">98.09<span class="unit">dB</span></span></div>
+      </div>
+    </div>
+
+    <!-- FFT -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Analise Espectral</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-fft">
+        <div class="kv"><span class="k">Freq. Pico</span><span class="v ind" id="r-fpeak">--<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">Magnitude Pico</span><span class="v" id="r-fmag">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">BW -3dB</span><span class="v" id="r-bw3">--<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">THD</span><span class="v" id="r-thd">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">SFDR</span><span class="v" id="r-sfdr">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Janela FFT</span><span class="v" id="r-fftwin">Hanning</span></div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Filtro</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-filter">
+        <div class="kv"><span class="k">Tipo</span><span class="v" id="r-ftype">Nenhum</span></div>
+        <div class="kv"><span class="k">fc1</span><span class="v" id="r-fc1">--<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">fc2</span><span class="v" id="r-fc2">--<span class="unit">Hz</span></span></div>
+        <div class="kv"><span class="k">Ordem / Taps</span><span class="v" id="r-ford">--</span></div>
+        <div class="kv"><span class="k">Atraso Grupo</span><span class="v" id="r-delay">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">RMS (saida)</span><span class="v good" id="r-rms-out">--</span></div>
+        <div class="kv"><span class="k">Atenuacao SNR</span><span class="v" id="r-snr-imp">--<span class="unit">dB</span></span></div>
+        <div class="gauge" id="att-gauge"><div class="gauge-fill ind" id="att-fill" style="width:0%"></div><div class="gauge-label" id="att-label">--</div></div>
+      </div>
+    </div>
+
+    <!-- Experiment notes -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Notas do Experimento</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body" id="res-notes-body">
+        <div class="info-box" id="exp-notes">Selecione um experimento pronto ou configure manualmente e clique em <strong>Processar</strong>.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="author">DSP Lab &mdash; <a href="#">Prof. Ramon Mayor Martins</a> &mdash; IFSC Campus Sao Jose</div>
+  <div class="ts" id="footer-ts">--</div>
+</footer>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  DSP LAB — ENGINE
+// ═══════════════════════════════════════
+
+// ── state ──
+let state = {
+  inputSignal: [],
+  outputSignal: [],
+  fftInput: [],
+  fftOutput: [],
+  fftPhaseInput: [],
+  filterCoeffs: [],
+  filterFreqResp: [],
+  filterPhaseResp: [],
+  timeView: 'input',
+  freqView: 'mag',
+  Fs: 8000,
+  N: 1024,
+};
+
+// ── UI toggle helpers ──
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+function setTimeView(v, btn) {
+  state.timeView = v;
+  btn.parentElement.querySelectorAll('.viz-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawTimeDomain();
+}
+function setFreqView(v, btn) {
+  state.freqView = v;
+  btn.parentElement.querySelectorAll('.viz-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawFreqDomain();
+}
+
+function updateUI() {
+  const w = document.getElementById('waveform').value;
+  document.getElementById('chirp-params').style.display = w === 'chirp' ? '' : 'none';
+  document.getElementById('am-params').style.display = w === 'am' ? '' : 'none';
+  document.getElementById('fm-params').style.display = w === 'fm' ? '' : 'none';
+  document.getElementById('multi-params').style.display = w === 'multi' ? '' : 'none';
+  updateNyquistInfo();
+}
+
+function updateFilterUI() {
+  const ft = document.getElementById('filter-type').value;
+  const isFIR = ft.startsWith('fir');
+  const isIIR = ft.startsWith('iir');
+  const isMA = ft === 'ma';
+  const isBP = ft.includes('bp') || ft.includes('bs');
+
+  document.getElementById('fc1-field').style.display = (ft !== 'none' && !isMA) ? '' : 'none';
+  document.getElementById('fc2-field').style.display = isBP ? '' : 'none';
+  document.getElementById('fir-order-field').style.display = isFIR ? '' : 'none';
+  document.getElementById('iir-order-field').style.display = isIIR ? '' : 'none';
+  document.getElementById('ma-len-field').style.display = isMA ? '' : 'none';
+  document.getElementById('window-field').style.display = isFIR ? '' : 'none';
+}
+
+function updateNyquistInfo() {
+  const fs = parseInt(document.getElementById('fs').value);
+  const f0 = parseFloat(document.getElementById('sig-freq').value);
+  const nyq = fs / 2;
+  const aliasing = f0 > nyq;
+  const el = document.getElementById('nyquist-info');
+  if (aliasing) {
+    el.className = 'info-box bad-box';
+    el.innerHTML = `<strong>ALIASING!</strong> f=${f0} Hz > Fs/2=${nyq} Hz. O sinal sera incorretamente amostrado. A frequencia aparente sera ${Math.abs(f0 % fs > nyq ? fs - (f0 % fs) : f0 % fs).toFixed(1)} Hz.`;
+  } else {
+    el.className = 'info-box ok';
+    el.innerHTML = `<strong>Nyquist OK:</strong> Fs=${fs} Hz &ge; 2&times;${f0} Hz = ${2*f0} Hz. Margem: ${(nyq - f0).toFixed(1)} Hz.`;
+  }
+}
+
+// ── Signal generation ──
+function generateSignal() {
+  const fs = parseInt(document.getElementById('fs').value);
+  const N = parseInt(document.getElementById('nfft').value);
+  const waveform = document.getElementById('waveform').value;
+  const f0 = parseFloat(document.getElementById('sig-freq').value);
+  const amp = parseFloat(document.getElementById('sig-amp').value);
+  const phase = parseFloat(document.getElementById('sig-phase').value) * Math.PI / 180;
+  const dc = parseFloat(document.getElementById('sig-dc').value);
+  const snr = parseFloat(document.getElementById('noise-snr').value);
+
+  state.Fs = fs;
+  state.N = N;
+  const x = new Float64Array(N);
+
+  for (let n = 0; n < N; n++) {
+    const t = n / fs;
+    let v = 0;
+    switch (waveform) {
+      case 'sine':
+        v = amp * Math.sin(2 * Math.PI * f0 * t + phase);
+        break;
+      case 'cosine':
+        v = amp * Math.cos(2 * Math.PI * f0 * t + phase);
+        break;
+      case 'square':
+        v = amp * Math.sign(Math.sin(2 * Math.PI * f0 * t + phase));
+        break;
+      case 'triangle':
+        v = amp * (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * f0 * t + phase));
+        break;
+      case 'sawtooth': {
+        let p = (f0 * t + phase / (2 * Math.PI)) % 1;
+        v = amp * (2 * p - 1);
+        break;
+      }
+      case 'impulse':
+        v = (n === 0) ? amp : 0;
+        break;
+      case 'step':
+        v = (n >= 0) ? amp : 0;
+        break;
+      case 'sinc': {
+        const arg = f0 * (t - N / (2 * fs));
+        v = amp * (Math.abs(arg) < 1e-10 ? 1 : Math.sin(Math.PI * arg) / (Math.PI * arg));
+        break;
+      }
+      case 'chirp': {
+        const f1 = parseFloat(document.getElementById('chirp-end').value);
+        const T = N / fs;
+        const k = (f1 - f0) / T;
+        v = amp * Math.sin(2 * Math.PI * (f0 * t + 0.5 * k * t * t) + phase);
+        break;
+      }
+      case 'am': {
+        const fm = parseFloat(document.getElementById('am-mod-freq').value);
+        const m = parseFloat(document.getElementById('am-index').value);
+        v = amp * (1 + m * Math.sin(2 * Math.PI * fm * t)) * Math.sin(2 * Math.PI * f0 * t + phase);
+        break;
+      }
+      case 'fm': {
+        const fmf = parseFloat(document.getElementById('fm-mod-freq').value);
+        const dev = parseFloat(document.getElementById('fm-dev').value);
+        v = amp * Math.sin(2 * Math.PI * f0 * t + (dev / fmf) * Math.sin(2 * Math.PI * fmf * t) + phase);
+        break;
+      }
+      case 'noise-white':
+        v = amp * (Math.random() * 2 - 1);
+        break;
+      case 'noise-pink': {
+        // approximate pink noise
+        let white = Math.random() * 2 - 1;
+        if (!state._pinkState) state._pinkState = [0,0,0,0,0,0,0];
+        let b = state._pinkState;
+        b[0] = 0.99886*b[0] + white*0.0555179;
+        b[1] = 0.99332*b[1] + white*0.0750759;
+        b[2] = 0.96900*b[2] + white*0.1538520;
+        b[3] = 0.86650*b[3] + white*0.3104856;
+        b[4] = 0.55000*b[4] + white*0.5329522;
+        b[5] = -0.7616*b[5] - white*0.0168980;
+        v = amp * (b[0]+b[1]+b[2]+b[3]+b[4]+b[5]+b[6]+white*0.5362) * 0.11;
+        b[6] = white * 0.115926;
+        break;
+      }
+      case 'multi': {
+        const freqs = document.getElementById('multi-freqs').value.split(',').map(s => parseFloat(s.trim())).filter(f => !isNaN(f));
+        freqs.forEach(f => { v += (amp / freqs.length) * Math.sin(2 * Math.PI * f * t); });
+        break;
+      }
+    }
+    x[n] = v + dc;
+  }
+  state._pinkState = null;
+
+  // Add noise
+  if (snr < 60 && waveform !== 'noise-white' && waveform !== 'noise-pink') {
+    const sigPow = x.reduce((s, v) => s + v * v, 0) / N;
+    const noisePow = sigPow / Math.pow(10, snr / 10);
+    const noiseStd = Math.sqrt(noisePow);
+    for (let n = 0; n < N; n++) {
+      // Box-Muller
+      const u1 = Math.random(), u2 = Math.random();
+      x[n] += noiseStd * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    }
+  }
+
+  // Quantization
+  const bits = parseInt(document.getElementById('quant-bits').value);
+  if (bits > 0 && bits < 24) {
+    const levels = Math.pow(2, bits);
+    const maxVal = Math.max(...x.map(Math.abs)) || 1;
+    for (let n = 0; n < N; n++) {
+      const norm = x[n] / maxVal;
+      const q = Math.round(norm * (levels / 2 - 1)) / (levels / 2 - 1);
+      x[n] = q * maxVal;
+    }
+  }
+
+  state.inputSignal = x;
+}
+
+// ── Window functions ──
+function getWindow(name, N) {
+  const w = new Float64Array(N);
+  for (let n = 0; n < N; n++) {
+    switch (name) {
+      case 'rectangular': w[n] = 1; break;
+      case 'hamming': w[n] = 0.54 - 0.46 * Math.cos(2 * Math.PI * n / (N - 1)); break;
+      case 'hanning': w[n] = 0.5 * (1 - Math.cos(2 * Math.PI * n / (N - 1))); break;
+      case 'blackman': w[n] = 0.42 - 0.5 * Math.cos(2 * Math.PI * n / (N - 1)) + 0.08 * Math.cos(4 * Math.PI * n / (N - 1)); break;
+      case 'kaiser': {
+        const beta = 5;
+        const ratio = 2.0 * n / (N - 1) - 1;
+        w[n] = besselI0(beta * Math.sqrt(1 - ratio * ratio)) / besselI0(beta);
+        break;
+      }
+      case 'bartlett': w[n] = 1 - Math.abs(2.0 * n / (N - 1) - 1); break;
+      case 'flattop':
+        w[n] = 0.21557895 - 0.41663158*Math.cos(2*Math.PI*n/(N-1)) +
+               0.277263158*Math.cos(4*Math.PI*n/(N-1)) - 0.083578947*Math.cos(6*Math.PI*n/(N-1)) +
+               0.006947368*Math.cos(8*Math.PI*n/(N-1));
+        break;
+    }
+  }
+  return w;
+}
+function besselI0(x) {
+  let sum = 1, term = 1;
+  for (let k = 1; k <= 20; k++) {
+    term *= (x / (2 * k)) * (x / (2 * k));
+    sum += term;
+  }
+  return sum;
+}
+
+// ── FFT (Cooley-Tukey) ──
+function fft(re, im) {
+  const N = re.length;
+  if (N <= 1) return;
+  // bit-reversal
+  for (let i = 1, j = 0; i < N; i++) {
+    let bit = N >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      [re[i], re[j]] = [re[j], re[i]];
+      [im[i], im[j]] = [im[j], im[i]];
+    }
+  }
+  for (let len = 2; len <= N; len *= 2) {
+    const half = len / 2;
+    const ang = -2 * Math.PI / len;
+    const wRe = Math.cos(ang), wIm = Math.sin(ang);
+    for (let i = 0; i < N; i += len) {
+      let curRe = 1, curIm = 0;
+      for (let j = 0; j < half; j++) {
+        const tRe = curRe * re[i+j+half] - curIm * im[i+j+half];
+        const tIm = curRe * im[i+j+half] + curIm * re[i+j+half];
+        re[i+j+half] = re[i+j] - tRe;
+        im[i+j+half] = im[i+j] - tIm;
+        re[i+j] += tRe;
+        im[i+j] += tIm;
+        const newCurRe = curRe * wRe - curIm * wIm;
+        curIm = curRe * wIm + curIm * wRe;
+        curRe = newCurRe;
+      }
+    }
+  }
+}
+
+function computeFFT(signal, windowName) {
+  const N = signal.length;
+  // Pad to power of 2
+  let M = 1;
+  while (M < N) M *= 2;
+  const win = getWindow(windowName, N);
+  const re = new Float64Array(M);
+  const im = new Float64Array(M);
+  // Window normalization
+  let winSum = 0;
+  for (let i = 0; i < N; i++) winSum += win[i];
+  for (let i = 0; i < N; i++) {
+    re[i] = signal[i] * win[i];
+  }
+  fft(re, im);
+  const mag = new Float64Array(M / 2);
+  const phase = new Float64Array(M / 2);
+  for (let i = 0; i < M / 2; i++) {
+    mag[i] = Math.sqrt(re[i] * re[i] + im[i] * im[i]) * 2 / winSum;
+    phase[i] = Math.atan2(im[i], re[i]);
+  }
+  // DC fix
+  mag[0] /= 2;
+  return { mag, phase, N: M };
+}
+
+// ── Filter design ──
+function designFilter() {
+  const ft = document.getElementById('filter-type').value;
+  const fs = state.Fs;
+
+  if (ft === 'none') {
+    state.filterCoeffs = [];
+    state.filterFreqResp = [];
+    state.filterPhaseResp = [];
+    return;
+  }
+
+  if (ft === 'ma') {
+    const len = parseInt(document.getElementById('ma-len').value);
+    const h = new Float64Array(len).fill(1 / len);
+    state.filterCoeffs = h;
+    computeFilterResponse(h);
+    return;
+  }
+
+  const fc1 = parseFloat(document.getElementById('fc1').value);
+  const fc2 = parseFloat(document.getElementById('fc2').value) || fc1 * 4;
+
+  if (ft.startsWith('fir')) {
+    const M = parseInt(document.getElementById('fir-order').value);
+    const winName = document.getElementById('window-type').value;
+    const win = getWindow(winName, M);
+    const h = new Float64Array(M);
+    const wc1 = 2 * Math.PI * fc1 / fs;
+    const wc2 = 2 * Math.PI * fc2 / fs;
+    const mid = (M - 1) / 2;
+
+    for (let n = 0; n < M; n++) {
+      const nm = n - mid;
+      let val;
+      if (ft === 'fir-lp') {
+        val = nm === 0 ? wc1 / Math.PI : Math.sin(wc1 * nm) / (Math.PI * nm);
+      } else if (ft === 'fir-hp') {
+        val = nm === 0 ? 1 - wc1 / Math.PI : -Math.sin(wc1 * nm) / (Math.PI * nm);
+      } else if (ft === 'fir-bp') {
+        val = nm === 0 ? (wc2 - wc1) / Math.PI :
+          Math.sin(wc2 * nm) / (Math.PI * nm) - Math.sin(wc1 * nm) / (Math.PI * nm);
+      } else { // fir-bs
+        val = nm === 0 ? 1 - (wc2 - wc1) / Math.PI :
+          Math.sin(wc1 * nm) / (Math.PI * nm) - Math.sin(wc2 * nm) / (Math.PI * nm);
+      }
+      h[n] = val * win[n];
+    }
+    state.filterCoeffs = h;
+    computeFilterResponse(h);
+    return;
+  }
+
+  if (ft.startsWith('iir')) {
+    const order = parseInt(document.getElementById('iir-order').value);
+    const wc = Math.tan(Math.PI * fc1 / fs);
+    // Build Butterworth cascade as biquad sections, then compute freq response directly
+    // For simplicity, compute the IIR filter response in freq domain and apply
+    const Nresp = 512;
+    const H = new Float64Array(Nresp);
+    const Hph = new Float64Array(Nresp);
+    for (let k = 0; k < Nresp; k++) {
+      const f = k * (fs / 2) / Nresp;
+      const w = 2 * Math.PI * f / fs;
+      // Butterworth magnitude response approximation
+      const ratio = f / fc1;
+      let magSq;
+      if (ft === 'iir-lp') {
+        magSq = 1 / (1 + Math.pow(ratio, 2 * order));
+      } else {
+        magSq = ratio === 0 ? 0 : 1 / (1 + Math.pow(1 / ratio, 2 * order));
+      }
+      H[k] = Math.sqrt(magSq);
+      Hph[k] = -order * Math.atan(ratio); // approx phase
+    }
+    state.filterFreqResp = H;
+    state.filterPhaseResp = Hph;
+    // For IIR, apply in freq domain
+    state.filterCoeffs = null; // flag for freq-domain application
+  }
+}
+
+function computeFilterResponse(h) {
+  const Nresp = 512;
+  const fs = state.Fs;
+  const M = h.length;
+  const H = new Float64Array(Nresp);
+  const Hph = new Float64Array(Nresp);
+  for (let k = 0; k < Nresp; k++) {
+    const f = k * (fs / 2) / Nresp;
+    const w = 2 * Math.PI * f / fs;
+    let re = 0, im = 0;
+    for (let n = 0; n < M; n++) {
+      re += h[n] * Math.cos(-w * n);
+      im += h[n] * Math.sin(-w * n);
+    }
+    H[k] = Math.sqrt(re * re + im * im);
+    Hph[k] = Math.atan2(im, re);
+  }
+  state.filterFreqResp = H;
+  state.filterPhaseResp = Hph;
+}
+
+function applyFilter() {
+  const ft = document.getElementById('filter-type').value;
+  const x = state.inputSignal;
+  const N = x.length;
+
+  if (ft === 'none') {
+    state.outputSignal = new Float64Array(x);
+    return;
+  }
+
+  if (state.filterCoeffs) {
+    // FIR / MA: convolve
+    const h = state.filterCoeffs;
+    const M = h.length;
+    const y = new Float64Array(N);
+    for (let n = 0; n < N; n++) {
+      let sum = 0;
+      for (let k = 0; k < M; k++) {
+        if (n - k >= 0) sum += h[k] * x[n - k];
+      }
+      y[n] = sum;
+    }
+    state.outputSignal = y;
+  } else {
+    // IIR: apply in freq domain
+    const win = getWindow('hanning', N);
+    let M2 = 1;
+    while (M2 < N) M2 *= 2;
+    const re = new Float64Array(M2);
+    const im = new Float64Array(M2);
+    for (let i = 0; i < N; i++) re[i] = x[i];
+    fft(re, im);
+    // Apply filter
+    const H = state.filterFreqResp;
+    const Nresp = H.length;
+    for (let k = 0; k < M2; k++) {
+      const idx = k <= M2/2 ? Math.min(Math.round(k * Nresp / (M2/2)), Nresp-1)
+                            : Math.min(Math.round((M2 - k) * Nresp / (M2/2)), Nresp-1);
+      const g = H[Math.min(idx, Nresp - 1)];
+      re[k] *= g;
+      im[k] *= g;
+    }
+    // IFFT
+    for (let i = 0; i < M2; i++) im[i] = -im[i];
+    fft(re, im);
+    const y = new Float64Array(N);
+    for (let i = 0; i < N; i++) y[i] = re[i] / M2;
+    state.outputSignal = y;
+  }
+}
+
+// ── MAIN RUN ──
+function runDSP() {
+  generateSignal();
+  designFilter();
+  applyFilter();
+
+  const winName = document.getElementById('fft-window').value;
+  const fftIn = computeFFT(state.inputSignal, winName);
+  state.fftInput = fftIn.mag;
+  state.fftPhaseInput = fftIn.phase;
+
+  const fftOut = computeFFT(state.outputSignal, winName);
+  state.fftOutput = fftOut.mag;
+
+  updateHeaderStats();
+  updateResults();
+  drawTimeDomain();
+  drawFreqDomain();
+
+  document.getElementById('hdr-status').textContent = 'PROCESSADO';
+  document.getElementById('hdr-status').style.color = 'var(--phos)';
+  document.getElementById('footer-ts').textContent = new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('res-ts').textContent = new Date().toLocaleTimeString('pt-BR');
+}
+
+function resetAll() {
+  document.getElementById('waveform').value = 'sine';
+  document.getElementById('sig-freq').value = 100;
+  document.getElementById('sig-amp').value = 1;
+  document.getElementById('sig-phase').value = 0;
+  document.getElementById('sig-dc').value = 0;
+  document.getElementById('noise-snr').value = 60;
+  document.getElementById('snr-val').textContent = '60 dB';
+  document.getElementById('fs').value = 8000;
+  document.getElementById('nfft').value = 1024;
+  document.getElementById('quant-bits').value = 16;
+  document.getElementById('filter-type').value = 'none';
+  document.getElementById('fft-window').value = 'hanning';
+  updateUI();
+  updateFilterUI();
+  document.getElementById('hdr-status').textContent = 'STANDBY';
+  document.getElementById('hdr-status').style.color = '';
+}
+
+// ── Header ──
+function updateHeaderStats() {
+  const wNames = {
+    sine:'Senoide',cosine:'Cossenoide',square:'Quadrada',triangle:'Triangular',
+    sawtooth:'Dente Serra',impulse:'Impulso',step:'Degrau',sinc:'Sinc',
+    chirp:'Chirp',am:'AM',fm:'FM','noise-white':'Ruido Br.','noise-pink':'Ruido Rosa',multi:'Multi-tom'
+  };
+  document.getElementById('hdr-signal').textContent = wNames[document.getElementById('waveform').value] || '--';
+  document.getElementById('hdr-freq').innerHTML = document.getElementById('sig-freq').value + '<span class="unit">Hz</span>';
+  document.getElementById('hdr-fs').innerHTML = state.Fs + '<span class="unit">Hz</span>';
+  document.getElementById('hdr-n').textContent = state.N;
+  const ft = document.getElementById('filter-type').value;
+  const fNames = {none:'Nenhum','fir-lp':'FIR LP','fir-hp':'FIR HP','fir-bp':'FIR BP','fir-bs':'FIR BS','iir-lp':'IIR LP','iir-hp':'IIR HP',ma:'Media Movel'};
+  document.getElementById('hdr-filter').textContent = fNames[ft] || '--';
+}
+
+// ── Results ──
+function updateResults() {
+  const x = state.inputSignal;
+  const y = state.outputSignal;
+  const N = state.N;
+  const fs = state.Fs;
+  const f0 = parseFloat(document.getElementById('sig-freq').value);
+  const bits = parseInt(document.getElementById('quant-bits').value);
+  const ft = document.getElementById('filter-type').value;
+
+  // Signal
+  const rmsIn = Math.sqrt(x.reduce((s, v) => s + v * v, 0) / N);
+  const peakIn = Math.max(...x.map(Math.abs));
+  const rmsOut = Math.sqrt(y.reduce((s, v) => s + v * v, 0) / N);
+  const energy = x.reduce((s, v) => s + v * v, 0) / fs;
+
+  document.getElementById('r-wave').textContent = document.getElementById('hdr-signal').textContent;
+  document.getElementById('r-freq').innerHTML = f0 + '<span class="unit">Hz</span>';
+  document.getElementById('r-amp').textContent = parseFloat(document.getElementById('sig-amp').value).toFixed(3);
+  document.getElementById('r-period').innerHTML = (1000 / f0).toFixed(3) + '<span class="unit">ms</span>';
+  document.getElementById('r-rms').textContent = rmsIn.toFixed(4);
+  document.getElementById('r-peak').textContent = peakIn.toFixed(4);
+  document.getElementById('r-crest').textContent = peakIn > 0 ? (peakIn / rmsIn).toFixed(3) : '--';
+  document.getElementById('r-energy').textContent = energy.toFixed(4);
+
+  // Sampling
+  document.getElementById('r-fs').innerHTML = fs + '<span class="unit">Hz</span>';
+  document.getElementById('r-nyq').innerHTML = (fs / 2) + '<span class="unit">Hz</span>';
+  document.getElementById('r-n').textContent = N;
+  document.getElementById('r-dur').innerHTML = (N / fs * 1000).toFixed(2) + '<span class="unit">ms</span>';
+  const df = fs / N;
+  document.getElementById('r-df').innerHTML = df.toFixed(2) + '<span class="unit">Hz</span>';
+  const hasAlias = f0 > fs / 2;
+  document.getElementById('r-alias').textContent = hasAlias ? 'SIM!' : 'Nao';
+  document.getElementById('r-alias').className = hasAlias ? 'v bad' : 'v good';
+  document.getElementById('alias-dot').className = hasAlias ? 'live-dot off' : 'live-dot';
+  document.getElementById('r-quant').textContent = bits > 0 ? bits + ' bits' : 'Float64';
+  const sqnr = bits > 0 ? (6.02 * bits + 1.76) : Infinity;
+  document.getElementById('r-sqnr').innerHTML = bits > 0 ? sqnr.toFixed(2) + '<span class="unit">dB</span>' : '&infin;';
+
+  // FFT
+  const mag = state.fftInput;
+  let peakIdx = 1, peakVal = -Infinity;
+  for (let i = 1; i < mag.length; i++) {
+    if (mag[i] > peakVal) { peakVal = mag[i]; peakIdx = i; }
+  }
+  const fPeak = peakIdx * fs / (mag.length * 2);
+  const peakDB = 20 * Math.log10(peakVal + 1e-12);
+  document.getElementById('r-fpeak').innerHTML = fPeak.toFixed(1) + '<span class="unit">Hz</span>';
+  document.getElementById('r-fmag').innerHTML = peakDB.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('badge-fpeak').textContent = fPeak.toFixed(1) + ' Hz';
+
+  // THD approx
+  if (f0 > 0) {
+    const fundBin = Math.round(f0 * mag.length * 2 / fs);
+    const fundPow = mag[fundBin] * mag[fundBin];
+    let harmPow = 0;
+    for (let h = 2; h <= 8; h++) {
+      const hBin = Math.round(h * f0 * mag.length * 2 / fs);
+      if (hBin < mag.length) harmPow += mag[hBin] * mag[hBin];
+    }
+    const thd = fundPow > 0 ? Math.sqrt(harmPow / fundPow) * 100 : 0;
+    document.getElementById('r-thd').innerHTML = thd.toFixed(2) + '<span class="unit">%</span>';
+  }
+
+  // SFDR
+  let secondPeak = -Infinity;
+  for (let i = 1; i < mag.length; i++) {
+    if (i !== peakIdx && mag[i] > secondPeak) secondPeak = mag[i];
+  }
+  const sfdr = 20 * Math.log10(peakVal / (secondPeak + 1e-12));
+  document.getElementById('r-sfdr').innerHTML = sfdr.toFixed(1) + '<span class="unit">dB</span>';
+
+  // BW -3dB
+  const thresh = peakVal * 0.7071;
+  let bwLow = fPeak, bwHigh = fPeak;
+  for (let i = peakIdx; i >= 0; i--) { if (mag[i] < thresh) { bwLow = i * fs / (mag.length * 2); break; } }
+  for (let i = peakIdx; i < mag.length; i++) { if (mag[i] < thresh) { bwHigh = i * fs / (mag.length * 2); break; } }
+  document.getElementById('r-bw3').innerHTML = (bwHigh - bwLow).toFixed(1) + '<span class="unit">Hz</span>';
+
+  document.getElementById('r-fftwin').textContent = document.getElementById('fft-window').selectedOptions[0].text;
+
+  // Filter
+  const fNames2 = {none:'Nenhum (Bypass)','fir-lp':'FIR Passa-Baixa','fir-hp':'FIR Passa-Alta','fir-bp':'FIR Passa-Banda','fir-bs':'FIR Rejeita-Banda','iir-lp':'IIR Passa-Baixa','iir-hp':'IIR Passa-Alta',ma:'Media Movel'};
+  document.getElementById('r-ftype').textContent = fNames2[ft];
+  if (ft !== 'none') {
+    const fc1 = document.getElementById('fc1').value;
+    const fc2 = document.getElementById('fc2').value;
+    document.getElementById('r-fc1').innerHTML = ft !== 'ma' ? fc1 + '<span class="unit">Hz</span>' : '--';
+    document.getElementById('r-fc2').innerHTML = (ft.includes('bp') || ft.includes('bs')) ? fc2 + '<span class="unit">Hz</span>' : '--';
+    if (ft.startsWith('fir') && state.filterCoeffs) {
+      document.getElementById('r-ford').textContent = state.filterCoeffs.length + ' taps';
+      document.getElementById('r-delay').innerHTML = ((state.filterCoeffs.length - 1) / 2 / fs * 1000).toFixed(2) + '<span class="unit">ms</span>';
+    } else if (ft.startsWith('iir')) {
+      document.getElementById('r-ford').textContent = document.getElementById('iir-order').value + 'ª ordem';
+      document.getElementById('r-delay').textContent = '--';
+    } else if (ft === 'ma') {
+      const len = document.getElementById('ma-len').value;
+      document.getElementById('r-ford').textContent = len + ' pts';
+      document.getElementById('r-delay').innerHTML = ((parseInt(len) - 1) / 2 / fs * 1000).toFixed(2) + '<span class="unit">ms</span>';
+    }
+  } else {
+    document.getElementById('r-fc1').textContent = '--';
+    document.getElementById('r-fc2').textContent = '--';
+    document.getElementById('r-ford').textContent = '--';
+    document.getElementById('r-delay').textContent = '--';
+  }
+
+  document.getElementById('r-rms-out').textContent = rmsOut.toFixed(4);
+  const snrImp = 20 * Math.log10(rmsOut / (rmsIn + 1e-12));
+  document.getElementById('r-snr-imp').innerHTML = snrImp.toFixed(1) + '<span class="unit">dB</span>';
+
+  // Gauge
+  const attPct = Math.min(100, Math.max(0, (1 - rmsOut / (rmsIn + 1e-12)) * 100));
+  document.getElementById('att-fill').style.width = Math.abs(attPct) + '%';
+  document.getElementById('att-label').textContent = ft !== 'none' ? (-snrImp).toFixed(1) + ' dB atenuacao' : 'Bypass';
+
+  // Badges
+  document.getElementById('badge-rms').textContent = rmsIn.toFixed(4);
+  document.getElementById('badge-peak').textContent = peakIn.toFixed(4);
+
+  // Time meta
+  document.getElementById('time-meta').textContent = `N=${N} | T=${(N/fs*1000).toFixed(1)} ms`;
+  document.getElementById('freq-meta').textContent = `\u0394f=${df.toFixed(2)} Hz | Fs/2=${fs/2} Hz`;
+}
+
+// ═══════════════════════════
+//  DRAWING
+// ═══════════════════════════
+
+function drawTimeDomain() {
+  const canvas = document.getElementById('c-time');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const x = state.inputSignal;
+  const y = state.outputSignal;
+  if (!x || x.length === 0) { drawEmpty(ctx, W, H); return; }
+
+  const N = x.length;
+  const fs = state.Fs;
+  const pad = { l: 52, r: 16, t: 16, b: 30 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  // grid
+  drawGrid(ctx, pad, pw, ph, W, H);
+
+  // time axis labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'center';
+  const tMax = N / fs * 1000;
+  for (let i = 0; i <= 5; i++) {
+    const t = tMax * i / 5;
+    const xp = pad.l + pw * i / 5;
+    ctx.fillText(t.toFixed(1), xp, H - pad.b + 14);
+  }
+  ctx.save();
+  ctx.translate(10, pad.t + ph / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('Amplitude', 0, 0);
+  ctx.restore();
+
+  ctx.fillStyle = '#6b7889';
+  ctx.textAlign = 'center';
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillText('Tempo (ms)', pad.l + pw / 2, H - 2);
+
+  // determine y range
+  let allSig = [];
+  if (state.timeView === 'input' || state.timeView === 'both') allSig.push(...x);
+  if (state.timeView === 'output' || state.timeView === 'both') allSig.push(...y);
+  if (state.timeView === 'error') { for (let i = 0; i < N; i++) allSig.push(x[i] - y[i]); }
+  if (allSig.length === 0) allSig = [...x];
+  let yMax = Math.max(...allSig.map(Math.abs)) || 1;
+  yMax *= 1.1;
+
+  // y axis labels
+  ctx.fillStyle = '#6b7889';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = yMax * (1 - 2 * i / 4);
+    const yp = pad.t + ph * i / 4;
+    ctx.fillText(val.toFixed(2), pad.l - 6, yp + 3);
+  }
+
+  // draw signal
+  function plotSig(sig, color, alpha) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.4;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const xp = pad.l + (i / (N - 1)) * pw;
+      const yp = pad.t + ph / 2 - (sig[i] / yMax) * (ph / 2);
+      i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  if (state.timeView === 'input') plotSig(x, '#818cf8', 1);
+  else if (state.timeView === 'output') plotSig(y, '#4ade80', 1);
+  else if (state.timeView === 'both') { plotSig(x, '#818cf8', 0.5); plotSig(y, '#4ade80', 1); }
+  else if (state.timeView === 'error') {
+    const err = new Float64Array(N);
+    for (let i = 0; i < N; i++) err[i] = x[i] - y[i];
+    plotSig(err, '#fb7185', 1);
+  }
+
+  // zero line
+  ctx.strokeStyle = '#2a3a52';
+  ctx.lineWidth = 0.7;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + ph / 2);
+  ctx.lineTo(pad.l + pw, pad.t + ph / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawFreqDomain() {
+  const canvas = document.getElementById('c-freq');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const view = state.freqView;
+  const fs = state.Fs;
+  const pad = { l: 52, r: 16, t: 16, b: 30 };
+  const pw = W - pad.l - pad.r;
+  const ph = H - pad.t - pad.b;
+
+  drawGrid(ctx, pad, pw, ph, W, H);
+
+  if (view === 'mag' || view === 'phase') {
+    const mag = state.fftInput;
+    if (!mag || mag.length === 0) { drawEmpty(ctx, W, H); return; }
+
+    const scale = document.getElementById('fft-scale').value;
+    const fMax = fs / 2;
+
+    // freq axis
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 5; i++) {
+      const f = fMax * i / 5;
+      const xp = pad.l + pw * i / 5;
+      ctx.fillText(f >= 1000 ? (f/1000).toFixed(1)+'k' : f.toFixed(0), xp, H - pad.b + 14);
+    }
+    ctx.fillText('Frequencia (Hz)', pad.l + pw / 2, H - 2);
+
+    if (view === 'mag') {
+      // Magnitude
+      let data;
+      if (scale === 'db') {
+        data = Array.from(mag).map(v => 20 * Math.log10(v + 1e-12));
+        let maxDB = Math.max(...data);
+        let minDB = maxDB - 80;
+        // y axis
+        ctx.fillStyle = '#6b7889';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 4; i++) {
+          const val = maxDB - (maxDB - minDB) * i / 4;
+          const yp = pad.t + ph * i / 4;
+          ctx.fillText(val.toFixed(0) + ' dB', pad.l - 4, yp + 3);
+        }
+        // plot
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        for (let i = 0; i < mag.length; i++) {
+          const xp = pad.l + (i / (mag.length - 1)) * pw;
+          const yp = pad.t + Math.max(0, Math.min(ph, (maxDB - data[i]) / (maxDB - minDB) * ph));
+          i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+        }
+        ctx.stroke();
+        // fill
+        ctx.globalAlpha = 0.08;
+        ctx.lineTo(pad.l + pw, pad.t + ph);
+        ctx.lineTo(pad.l, pad.t + ph);
+        ctx.closePath();
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Also draw output FFT if filter active
+        if (document.getElementById('filter-type').value !== 'none' && state.fftOutput.length) {
+          const dataOut = Array.from(state.fftOutput).map(v => 20 * Math.log10(v + 1e-12));
+          ctx.strokeStyle = '#4ade80';
+          ctx.lineWidth = 1.3;
+          ctx.beginPath();
+          for (let i = 0; i < state.fftOutput.length; i++) {
+            const xp = pad.l + (i / (state.fftOutput.length - 1)) * pw;
+            const yp = pad.t + Math.max(0, Math.min(ph, (maxDB - dataOut[i]) / (maxDB - minDB) * ph));
+            i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+          }
+          ctx.stroke();
+        }
+      } else {
+        // Linear
+        let maxLin = Math.max(...mag);
+        ctx.fillStyle = '#6b7889';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 4; i++) {
+          const val = maxLin * (1 - i / 4);
+          const yp = pad.t + ph * i / 4;
+          ctx.fillText(val.toFixed(3), pad.l - 4, yp + 3);
+        }
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        for (let i = 0; i < mag.length; i++) {
+          const xp = pad.l + (i / (mag.length - 1)) * pw;
+          const yp = pad.t + ph - (mag[i] / maxLin) * ph;
+          i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+        }
+        ctx.stroke();
+      }
+    } else {
+      // Phase
+      const phs = state.fftPhaseInput;
+      ctx.fillStyle = '#6b7889';
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= 4; i++) {
+        const val = Math.PI * (1 - 2 * i / 4);
+        const yp = pad.t + ph * i / 4;
+        ctx.fillText(val.toFixed(2) + ' rad', pad.l - 4, yp + 3);
+      }
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let i = 0; i < phs.length; i++) {
+        const xp = pad.l + (i / (phs.length - 1)) * pw;
+        const yp = pad.t + ph / 2 - (phs[i] / Math.PI) * (ph / 2);
+        i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+      }
+      ctx.stroke();
+    }
+  } else if (view === 'filter') {
+    // Filter frequency response
+    const H = state.filterFreqResp;
+    const Hph = state.filterPhaseResp;
+    if (!H || H.length === 0) {
+      ctx.fillStyle = '#6b7889';
+      ctx.font = '12px Chakra Petch';
+      ctx.textAlign = 'center';
+      ctx.fillText('Nenhum filtro selecionado', W/2, H/2);
+      return;
+    }
+    const fMax = fs / 2;
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 5; i++) {
+      const f = fMax * i / 5;
+      const xp = pad.l + pw * i / 5;
+      ctx.fillText(f >= 1000 ? (f/1000).toFixed(1)+'k' : f.toFixed(0), xp, rect.height - pad.b + 14);
+    }
+    ctx.fillText('Frequencia (Hz)', pad.l + pw / 2, rect.height - 2);
+
+    // Mag in dB
+    const magDB = Array.from(H).map(v => 20 * Math.log10(v + 1e-12));
+    const maxDB = 5;
+    const minDB = -80;
+    ctx.fillStyle = '#6b7889';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const val = maxDB - (maxDB - minDB) * i / 4;
+      const yp = pad.t + ph * i / 4;
+      ctx.fillText(val.toFixed(0) + ' dB', pad.l - 4, yp + 3);
+    }
+    // -3dB line
+    ctx.strokeStyle = '#fbbf2444';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    const y3 = pad.t + (maxDB - (-3)) / (maxDB - minDB) * ph;
+    ctx.beginPath(); ctx.moveTo(pad.l, y3); ctx.lineTo(pad.l + pw, y3); ctx.stroke();
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('-3 dB', pad.l + pw - 35, y3 - 4);
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < H.length; i++) {
+      const xp = pad.l + (i / (H.length - 1)) * pw;
+      const yp = pad.t + Math.max(0, Math.min(ph, (maxDB - magDB[i]) / (maxDB - minDB) * ph));
+      i === 0 ? ctx.moveTo(xp, yp) : ctx.lineTo(xp, yp);
+    }
+    ctx.stroke();
+    // fill
+    ctx.globalAlpha = 0.06;
+    ctx.lineTo(pad.l + pw, pad.t + ph);
+    ctx.lineTo(pad.l, pad.t + ph);
+    ctx.closePath();
+    ctx.fillStyle = '#fbbf24';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+  } else if (view === 'spectrogram') {
+    // Simple spectrogram
+    if (!state.inputSignal || state.inputSignal.length === 0) { drawEmpty(ctx, W, H); return; }
+    const x = state.inputSignal;
+    const segLen = 64;
+    const hop = 16;
+    const nSegs = Math.floor((x.length - segLen) / hop);
+    if (nSegs < 2) { drawEmpty(ctx, W, H); return; }
+
+    const win = getWindow('hanning', segLen);
+    const specData = [];
+    let globalMax = -Infinity;
+    for (let s = 0; s < nSegs; s++) {
+      const re = new Float64Array(segLen);
+      const im = new Float64Array(segLen);
+      for (let i = 0; i < segLen; i++) re[i] = x[s * hop + i] * win[i];
+      fft(re, im);
+      const row = new Float64Array(segLen / 2);
+      for (let i = 0; i < segLen / 2; i++) {
+        row[i] = 20 * Math.log10(Math.sqrt(re[i]*re[i]+im[i]*im[i]) + 1e-12);
+        if (row[i] > globalMax) globalMax = row[i];
+      }
+      specData.push(row);
+    }
+    const minDB = globalMax - 60;
+    const cellW = pw / nSegs;
+    const cellH = ph / (segLen / 2);
+    for (let s = 0; s < nSegs; s++) {
+      for (let f = 0; f < segLen / 2; f++) {
+        const val = Math.max(0, Math.min(1, (specData[s][f] - minDB) / (globalMax - minDB)));
+        const r = Math.round(val * 56 + (1-val) * 7);
+        const g = Math.round(val * 190 + (1-val) * 9);
+        const b = Math.round(val * 248 + (1-val) * 13);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(pad.l + s * cellW, pad.t + ph - (f + 1) * cellH, Math.ceil(cellW), Math.ceil(cellH));
+      }
+    }
+    // axis
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '10px JetBrains Mono';
+    ctx.textAlign = 'center';
+    const tMax = x.length / fs * 1000;
+    for (let i = 0; i <= 4; i++) {
+      ctx.fillText((tMax * i / 4).toFixed(0) + 'ms', pad.l + pw * i / 4, rect.height - pad.b + 14);
+    }
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const f = (fs/2) * i / 4;
+      ctx.fillText(f >= 1000 ? (f/1000).toFixed(1)+'k' : f.toFixed(0), pad.l - 4, pad.t + ph - ph * i / 4 + 3);
+    }
+  }
+}
+
+function drawGrid(ctx, pad, pw, ph) {
+  ctx.strokeStyle = '#1e2838';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + pw * i / 5;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ph); ctx.stroke();
+  }
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ph * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+  }
+  // border
+  ctx.strokeStyle = '#2a3a52';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(pad.l, pad.t, pw, ph);
+}
+
+function drawEmpty(ctx, W, H) {
+  ctx.fillStyle = '#3f4a5b';
+  ctx.font = '12px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText('Clique em PROCESSAR para gerar o sinal', W / 2, H / 2);
+}
+
+// ── Resize ──
+window.addEventListener('resize', () => {
+  if (state.inputSignal.length) { drawTimeDomain(); drawFreqDomain(); }
+});
+
+// ── Presets ──
+function loadSigPreset(name) {
+  switch(name) {
+    case 'voice':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 1000;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 30;
+      document.getElementById('snr-val').textContent = '30 dB';
+      break;
+    case 'dtmf':
+      document.getElementById('waveform').value = 'multi';
+      document.getElementById('multi-freqs').value = '697,1209';
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 60;
+      document.getElementById('snr-val').textContent = '60 dB';
+      break;
+    case 'chirp50':
+      document.getElementById('waveform').value = 'chirp';
+      document.getElementById('sig-freq').value = 50;
+      document.getElementById('chirp-end').value = 4000;
+      document.getElementById('fs').value = 16000;
+      document.getElementById('noise-snr').value = 60;
+      document.getElementById('snr-val').textContent = '60 dB';
+      break;
+    case 'noisy':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 440;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 5;
+      document.getElementById('snr-val').textContent = '5 dB';
+      break;
+    case 'multi3':
+      document.getElementById('waveform').value = 'multi';
+      document.getElementById('multi-freqs').value = '200,500,1200';
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 60;
+      document.getElementById('snr-val').textContent = '60 dB';
+      break;
+  }
+  updateUI();
+}
+
+function loadExperiment(name) {
+  resetAll();
+  let notes = '';
+  switch(name) {
+    case 'aliasing':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 3500;
+      document.getElementById('fs').value = 4000;
+      document.getElementById('nfft').value = 1024;
+      notes = '<strong>Experimento: Aliasing</strong><br>O sinal de 3500 Hz e amostrado a 4000 Hz (Fs). Como f > Fs/2 = 2000 Hz, ocorre aliasing. O sinal aparece na frequencia espelhada: |Fs - f| = 500 Hz. Observe no espectro FFT a componente em 500 Hz em vez de 3500 Hz.';
+      break;
+    case 'leakage':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 123;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('nfft').value = 256;
+      document.getElementById('fft-window').value = 'rectangular';
+      notes = '<strong>Experimento: Vazamento Espectral</strong><br>Sinal de 123 Hz com N=256 e Fs=8000 Hz. A resolucao e &Delta;f=31.25 Hz, logo 123 Hz nao cai exatamente em um bin FFT, causando vazamento. Mude a janela FFT de Retangular para Hanning ou Blackman e observe a reducao dos lobos laterais. Experimente tambem aumentar N para 1024.';
+      break;
+    case 'filtering':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 200;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 5;
+      document.getElementById('snr-val').textContent = '5 dB';
+      document.getElementById('filter-type').value = 'fir-lp';
+      document.getElementById('fc1').value = 400;
+      document.getElementById('fir-order').value = 101;
+      updateFilterUI();
+      notes = '<strong>Experimento: Filtragem LP</strong><br>Sinal senoidal de 200 Hz com SNR=5 dB (muito ruido). Filtro FIR passa-baixa com fc=400 Hz e 101 taps recupera o sinal. Compare Entrada vs. Saida no dominio do tempo e observe a limpeza do ruido no espectro.';
+      break;
+    case 'quantization':
+      document.getElementById('waveform').value = 'sine';
+      document.getElementById('sig-freq').value = 200;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('quant-bits').value = 2;
+      notes = '<strong>Experimento: Quantizacao</strong><br>Sinal senoidal quantizado em apenas 2 bits (4 niveis). Observe a distorcao severa no dominio do tempo e as harmonicas geradas pelo erro de quantizacao no espectro. Aumente gradualmente para 4, 8 e 16 bits e veja a melhora. SQNR teorico: ~6 dB/bit.';
+      break;
+    case 'chirpfft':
+      document.getElementById('waveform').value = 'chirp';
+      document.getElementById('sig-freq').value = 100;
+      document.getElementById('chirp-end').value = 3000;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('nfft').value = 2048;
+      notes = '<strong>Experimento: Chirp</strong><br>Sinal chirp varrendo de 100 Hz a 3000 Hz. No espectro FFT, observe que a energia se distribui ao longo de toda a faixa. Ative a aba Spectrogr. para ver a rampa tempo-frequencia do chirp.';
+      break;
+    case 'dtmf-filter':
+      document.getElementById('waveform').value = 'multi';
+      document.getElementById('multi-freqs').value = '697,1209';
+      document.getElementById('fs').value = 8000;
+      document.getElementById('filter-type').value = 'fir-bp';
+      document.getElementById('fc1').value = 600;
+      document.getElementById('fc2').value = 800;
+      document.getElementById('fir-order').value = 101;
+      updateFilterUI();
+      notes = '<strong>Experimento: DTMF + Filtro BP</strong><br>Sinal DTMF (tecla 1: 697+1209 Hz). Filtro passa-banda entre 600-800 Hz isola apenas a componente de 697 Hz. Observe no espectro como a componente de 1209 Hz e eliminada apos a filtragem.';
+      break;
+    case 'ma-smooth':
+      document.getElementById('waveform').value = 'square';
+      document.getElementById('sig-freq').value = 50;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('noise-snr').value = 15;
+      document.getElementById('snr-val').textContent = '15 dB';
+      document.getElementById('filter-type').value = 'ma';
+      document.getElementById('ma-len').value = 20;
+      updateFilterUI();
+      notes = '<strong>Experimento: Media Movel</strong><br>Onda quadrada ruidosa (SNR=15 dB) processada com media movel de 20 pontos. Observe a suavizacao do ruido mas tambem o arredondamento das bordas. A media movel e o filtro FIR mais simples, atuando como passa-baixa.';
+      break;
+    case 'gibbs':
+      document.getElementById('waveform').value = 'square';
+      document.getElementById('sig-freq').value = 100;
+      document.getElementById('fs').value = 8000;
+      document.getElementById('nfft').value = 1024;
+      document.getElementById('filter-type').value = 'fir-lp';
+      document.getElementById('fc1').value = 1000;
+      document.getElementById('fir-order').value = 51;
+      updateFilterUI();
+      notes = '<strong>Experimento: Fenomeno de Gibbs</strong><br>Onda quadrada de 100 Hz filtrada com LP fc=1000 Hz (permite apenas ~10 harmonicas). Observe as oscilacoes (ripple) nas bordas da onda quadrada filtrada — este e o fenomeno de Gibbs, causado pela truncagem da serie de Fourier.';
+      break;
+  }
+  document.getElementById('exp-notes').innerHTML = notes;
+  // Open notes section
+  const notesSec = document.getElementById('res-notes-body');
+  if (!notesSec.classList.contains('open')) {
+    notesSec.classList.add('open');
+    notesSec.previousElementSibling.classList.add('open');
+  }
+  updateUI();
+  runDSP();
+}
+
+// ── Init ──
+updateUI();
+updateFilterUI();
+updateNyquistInfo();
+// draw empty canvases
+setTimeout(() => {
+  const c1 = document.getElementById('c-time');
+  const r1 = c1.parentElement.getBoundingClientRect();
+  c1.width = r1.width * devicePixelRatio; c1.height = r1.height * devicePixelRatio;
+  const ctx1 = c1.getContext('2d');
+  ctx1.scale(devicePixelRatio, devicePixelRatio);
+  drawEmpty(ctx1, r1.width, r1.height);
+  const c2 = document.getElementById('c-freq');
+  const r2 = c2.parentElement.getBoundingClientRect();
+  c2.width = r2.width * devicePixelRatio; c2.height = r2.height * devicePixelRatio;
+  const ctx2 = c2.getContext('2d');
+  ctx2.scale(devicePixelRatio, devicePixelRatio);
+  drawEmpty(ctx2, r2.width, r2.height);
+}, 100);
+</script>
+
+</body>
+</html>

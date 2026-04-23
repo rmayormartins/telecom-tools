@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IoT Lab — Laboratório de Comunicação IoT</title>
+<meta name="description" content="Laboratório interativo de comunicação IoT: link budget, simulação de protocolos (LoRa, WiFi, BLE, Zigbee), topologia de rede e análise de cobertura." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+
+  --teal: #2dd4bf;
+
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #0d2137 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #1a0d2b 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+/* ========== header ========== */
+header.top-bar {
+  display: flex; align-items: center; gap: 20px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.95), rgba(10,14,20,0.7));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand .logo-mark {
+  display: inline-flex; width: 28px; height: 28px;
+  align-items: center; justify-content: center; position: relative;
+}
+.brand .logo-mark::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1px solid var(--cyan); border-radius: 4px;
+  animation: pulse-iot 3s ease-in-out infinite;
+}
+.brand .logo-mark::after {
+  content: ''; position: absolute;
+  width: 6px; height: 6px;
+  background: var(--cyan); border-radius: 50%;
+  box-shadow: 0 0 12px var(--cyan);
+}
+@keyframes pulse-iot {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.1) rotate(3deg); opacity: 0.5; }
+}
+.brand h1 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 700; font-size: 18px; letter-spacing: 0.18em;
+}
+.brand .tag {
+  color: var(--text-2); font-size: 10px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+}
+.brand .tag em {
+  font-style: italic; font-family: var(--font-serif);
+  font-size: 13px; color: var(--cyan); letter-spacing: 0.04em;
+}
+
+.top-stats {
+  display: flex; gap: 18px; margin-left: auto;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.top-stat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-right: 18px; border-right: 1px solid var(--border);
+}
+.top-stat:last-child { border-right: none; padding-right: 0; }
+.top-stat .label {
+  color: var(--text-2); font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.top-stat .value { color: var(--text-0); font-weight: 500; }
+.top-stat.live .value { color: var(--phos); }
+.top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300; }
+
+.btn {
+  background: var(--bg-2); color: var(--text-0);
+  border: 1px solid var(--border-strong);
+  padding: 7px 14px; border-radius: var(--radius);
+  font-family: var(--font-display); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--bg-3); border-color: var(--text-2); }
+.btn.primary {
+  background: linear-gradient(180deg, #1a3d5e, #0f2841);
+  border-color: var(--cyan); color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan-glow), inset 0 1px 0 #38bdf820;
+}
+.btn.primary:hover { background: linear-gradient(180deg, #224d6e, #144a5d); }
+
+/* ========== main grid ========== */
+main {
+  display: grid;
+  grid-template-columns: 350px 1fr 340px;
+  gap: 1px;
+  background: var(--border-soft);
+  min-height: 0;
+}
+
+.panel {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.35), rgba(30,40,56,0.1));
+  position: sticky; top: 0; z-index: 3;
+}
+.panel-header h2 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-0);
+}
+.panel-header .panel-sub {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); letter-spacing: 0.06em;
+}
+.panel-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar { width: 6px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* ========== sections ========== */
+.section {
+  border: 1px solid var(--border); background: var(--bg-1);
+  border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+}
+.section-head {
+  display: flex; align-items: center;
+  padding: 9px 12px; cursor: pointer;
+  background: linear-gradient(180deg, #141a25, #0d121a);
+  border-bottom: 1px solid transparent;
+  transition: background .15s; user-select: none;
+}
+.section-head:hover { background: #151c28; }
+.section-head.open { border-bottom-color: var(--border); }
+.section-head h3 {
+  margin: 0 auto 0 0;
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-1); display: flex; align-items: center; gap: 8px;
+}
+.section-head h3 .dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+}
+.section-head h3 .dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.section-head h3 .dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.section-head h3 .dot.violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
+.section-head h3 .dot.teal { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+.chev {
+  color: var(--text-2); font-family: var(--font-mono); font-size: 11px;
+  transition: transform .2s;
+}
+.section-head.open .chev { transform: rotate(90deg); }
+.section-body { padding: 12px; display: none; }
+.section-body.open { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ========== form ========== */
+.field { margin-bottom: 10px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.field label, .field-row label, .field-row-3 label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-family: var(--font-display);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-2); margin-bottom: 4px;
+}
+input[type="number"], input[type="text"], select, textarea {
+  width: 100%; background: var(--bg-0); color: var(--text-0);
+  border: 1px solid var(--border);
+  padding: 7px 10px; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 12px;
+  transition: border-color .15s, background .15s;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--cyan); background: #090d13;
+  box-shadow: 0 0 0 2px var(--cyan-glow);
+}
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+                    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position: right 10px top 50%, right 6px top 50%;
+  background-size: 4px 4px; background-repeat: no-repeat;
+  padding-right: 24px;
+}
+textarea { resize: vertical; min-height: 70px; line-height: 1.45; }
+
+.help {
+  font-size: 10px; color: var(--text-2);
+  margin-top: 3px; line-height: 1.4; font-family: var(--font-mono);
+}
+.tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; border: 1px solid var(--border-strong);
+  border-radius: 50%; color: var(--text-2);
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 10px; cursor: help; position: relative;
+}
+.tip:hover { color: var(--cyan); border-color: var(--cyan); }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%); width: 230px;
+  background: var(--bg-3); border: 1px solid var(--border-strong);
+  color: var(--text-1); padding: 8px 10px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 10.5px; font-style: normal;
+  letter-spacing: 0; text-transform: none; line-height: 1.5;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+  z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.5); text-align: left;
+}
+.tip:hover::after { opacity: 1; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  padding: 5px 10px; background: var(--bg-2);
+  border: 1px solid var(--border); border-radius: 3px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  cursor: pointer; transition: all .15s; color: var(--text-1);
+}
+.chip:hover { border-color: var(--text-2); color: var(--text-0); }
+.chip.active { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+.chip.active-green { background: var(--phos-soft); border-color: var(--phos); color: var(--phos); }
+
+/* ========== viz area ========== */
+.viz {
+  display: grid; grid-template-rows: 1fr 260px;
+  min-height: 0;
+}
+.canvas-wrap {
+  position: relative; min-height: 0; background: #04070c;
+}
+#net-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  cursor: grab;
+}
+#net-canvas.dragging { cursor: grabbing; }
+
+.canvas-legend {
+  position: absolute; top: 10px; left: 10px;
+  background: rgba(7,9,13,0.88); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 8px 12px;
+  z-index: 500; font-family: var(--font-mono);
+  font-size: 10px; color: var(--text-1);
+  backdrop-filter: blur(8px);
+  display: flex; gap: 14px;
+}
+.canvas-legend .li { display: flex; align-items: center; gap: 6px; }
+.canvas-legend .sw {
+  display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+}
+
+.canvas-badge {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(7,9,13,0.88); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 8px 12px;
+  z-index: 500; font-family: var(--font-mono);
+  font-size: 10px; color: var(--text-1);
+  backdrop-filter: blur(8px); text-align: right;
+}
+.canvas-badge .big {
+  font-family: var(--font-display); font-size: 14px;
+  letter-spacing: 0.08em; color: var(--phos);
+}
+.canvas-badge .big.warn { color: var(--amber); }
+.canvas-badge .big.bad { color: var(--rose); }
+
+/* mode toggle */
+.mode-toggle {
+  position: absolute; bottom: 10px; left: 10px;
+  display: flex; gap: 1px;
+  background: var(--border); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); padding: 1px; z-index: 600;
+  font-family: var(--font-mono); backdrop-filter: blur(8px);
+}
+.mt-btn {
+  background: rgba(7,9,13,0.9); color: var(--text-2);
+  border: none; padding: 6px 10px;
+  font-size: 10.5px; letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: all .15s; border-radius: 2px;
+}
+.mt-btn:hover { color: var(--text-0); }
+.mt-btn.active {
+  background: var(--cyan-soft); color: var(--cyan);
+  box-shadow: 0 0 8px rgba(56,189,248,0.25);
+}
+
+/* bottom strip */
+.bottom-strip {
+  display: grid; grid-template-columns: 320px 1fr;
+  gap: 1px; background: var(--border-soft); min-height: 0;
+}
+.card {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+}
+.card-header h3 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 500; font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-1);
+}
+.card-header .meta {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
+}
+.card .card-body { flex: 1; position: relative; padding: 8px; }
+#spectrum-canvas { width: 100%; height: 100%; }
+#chart-canvas { width: 100%; height: 100%; }
+
+/* ========== results panel ========== */
+.kv {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 6px 10px; padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.kv:last-child { border-bottom: none; }
+.kv .k {
+  font-family: var(--font-display); font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-2); display: flex; align-items: center; gap: 6px;
+}
+.kv .v {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-0); text-align: right; white-space: nowrap;
+}
+.kv .v .unit { color: var(--text-2); margin-left: 3px; font-weight: 300; font-size: 10px; }
+.kv .v.good { color: var(--phos); }
+.kv .v.warn { color: var(--amber); }
+.kv .v.bad { color: var(--rose); }
+.kv .v.acc { color: var(--cyan); }
+
+.live-dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+.live-dot.off { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+.live-dot.standby { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+/* gauge bar */
+.gauge { margin-top: 6px; height: 10px; background: var(--bg-0); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; position: relative; }
+.gauge-fill { height: 100%; border-radius: 1px; transition: width 0.4s ease, background 0.4s ease; }
+.gauge-fill.good { background: linear-gradient(90deg, #14532d, var(--phos)); box-shadow: 0 0 8px var(--phos-glow); }
+.gauge-fill.warn { background: linear-gradient(90deg, #78350f, var(--amber)); box-shadow: 0 0 8px var(--amber-glow); }
+.gauge-fill.bad { background: linear-gradient(90deg, #7f1d1d, var(--rose)); }
+.gauge-label {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 8px; color: var(--text-0);
+  letter-spacing: 0.08em; text-shadow: 0 0 4px rgba(0,0,0,0.8);
+}
+
+/* info box */
+.info-box {
+  margin: 10px 0; padding: 10px 12px;
+  background: rgba(56,189,248,0.04);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--cyan);
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 10.5px;
+  line-height: 1.55; color: var(--text-1);
+}
+.info-box.warn-box {
+  background: rgba(251,191,36,0.04);
+  border-left-color: var(--amber);
+}
+.info-box.danger-box {
+  background: rgba(251,113,133,0.04);
+  border-left-color: var(--rose);
+}
+.info-box strong { color: var(--text-0); }
+
+/* packet animation overlay */
+.packet-anim {
+  position: absolute; pointer-events: none; z-index: 10;
+}
+
+/* footer */
+footer {
+  padding: 6px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.7), rgba(10,14,20,0.95));
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+footer .author { display: flex; align-items: center; gap: 8px; }
+footer .author a { color: var(--cyan); text-decoration: none; }
+footer .author a:hover { text-decoration: underline; }
+footer .ts { color: var(--text-3); }
+
+/* scrollbar for all */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- ========== HEADER ========== -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"></span>
+    <h1>IOT LAB</h1>
+    <span class="tag">Laboratorio de <em>Comunicacao IoT</em></span>
+  </div>
+
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Link Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Protocolo</span>
+      <span class="value" id="hdr-proto">LoRa</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Frequencia</span>
+      <span class="value" id="hdr-freq">915<span class="unit">MHz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Alcance Est.</span>
+      <span class="value" id="hdr-range">--<span class="unit">km</span></span>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <button class="btn primary" onclick="runSimulation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+      Simular
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<!-- ========== MAIN ========== -->
+<main>
+
+<!-- LEFT PANEL: Configuration -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao</h2>
+    <span class="panel-sub">TX / RX / ENV</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- PROTOCOLO -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Protocolo &amp; Frequencia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Protocolo de comunicacao <span class="tip" data-tip="Protocolo de camada fisica/enlace utilizado na comunicacao IoT. Cada um tem caracteristicas distintas de alcance, taxa e consumo.">i</span></label>
+          <select id="protocol" onchange="onProtocolChange()">
+            <option value="lora">LoRa / LoRaWAN</option>
+            <option value="wifi">Wi-Fi (802.11b/g/n)</option>
+            <option value="ble">Bluetooth Low Energy (BLE)</option>
+            <option value="zigbee">Zigbee (802.15.4)</option>
+            <option value="nb-iot">NB-IoT (Celular)</option>
+            <option value="sigfox">Sigfox</option>
+            <option value="mqtt-wifi">MQTT sobre Wi-Fi</option>
+            <option value="coap-wifi">CoAP sobre Wi-Fi</option>
+            <option value="lorawan-otaa">LoRaWAN (OTAA)</option>
+            <option value="lorawan-abp">LoRaWAN (ABP)</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Frequencia <span class="tip" data-tip="Frequencia central de operacao. Frequencias menores tem maior alcance; maiores suportam mais dados.">i</span></label>
+            <select id="frequency" onchange="onFreqChange()">
+              <option value="433">433 MHz</option>
+              <option value="868">868 MHz (EU)</option>
+              <option value="915" selected>915 MHz (US/BR)</option>
+              <option value="2400">2.4 GHz</option>
+              <option value="5800">5.8 GHz</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Banda / BW <span class="tip" data-tip="Largura de banda do canal. LoRa tipicamente usa 125/250/500 kHz. Wi-Fi usa 20/40 MHz.">i</span></label>
+            <select id="bandwidth">
+              <option value="125">125 kHz</option>
+              <option value="250">250 kHz</option>
+              <option value="500">500 kHz</option>
+              <option value="20000">20 MHz</option>
+              <option value="40000">40 MHz</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="sf-field">
+          <label>Spreading Factor (SF) <span class="tip" data-tip="Fator de espalhamento LoRa (SF7-SF12). Maior SF = maior alcance e robustez, menor taxa de dados.">i</span></label>
+          <select id="sf">
+            <option value="7">SF7 (rapido, curto alcance)</option>
+            <option value="8">SF8</option>
+            <option value="9">SF9</option>
+            <option value="10">SF10</option>
+            <option value="11">SF11</option>
+            <option value="12">SF12 (lento, longo alcance)</option>
+          </select>
+        </div>
+
+        <div class="info-box" id="proto-info">
+          <strong>LoRa</strong> — Modulacao CSS (Chirp Spread Spectrum). Alcance tipico: 2-15 km (urbano/rural). Taxa: 0.3-50 kbps. Excelente para sensores de baixa taxa.
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSMISSOR -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot"></span>Transmissor (TX)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Dispositivo TX <span class="tip" data-tip="Modulo/dispositivo transmissor. Cada um tem diferentes potencias maximas e sensibilidades.">i</span></label>
+          <select id="tx-device" onchange="onTxDeviceChange()">
+            <option value="esp32-lora">ESP32 + SX1276 (LoRa)</option>
+            <option value="esp32-wifi">ESP32 (Wi-Fi)</option>
+            <option value="esp8266">ESP8266 (Wi-Fi)</option>
+            <option value="esp32-ble">ESP32 (BLE)</option>
+            <option value="heltec-v3">Heltec WiFi LoRa 32 V3</option>
+            <option value="ttgo-beam">TTGO T-Beam (GPS+LoRa)</option>
+            <option value="rak4631">RAK4631 (nRF52840+SX1262)</option>
+            <option value="arduino-mkrwan">Arduino MKR WAN 1310</option>
+            <option value="stm32wl">STM32WL (SoC LoRa)</option>
+            <option value="xbee-s2c">XBee S2C (Zigbee)</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Potencia TX (dBm) <span class="tip" data-tip="Potencia de transmissao em dBm. 14 dBm = 25 mW, 20 dBm = 100 mW, 30 dBm = 1W.">i</span></label>
+            <input type="number" id="tx-power" value="14" step="1" min="-10" max="33">
+          </div>
+          <div class="field">
+            <label>Ganho Antena TX (dBi) <span class="tip" data-tip="Ganho da antena transmissora. Antenas chip: ~1 dBi. Omnidirecional: 2-5 dBi. Direcional: 6-15 dBi.">i</span></label>
+            <input type="number" id="tx-gain" value="2.15" step="0.1">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Perda cabo TX (dB)</label>
+            <input type="number" id="tx-loss" value="1.0" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Tipo Antena TX</label>
+            <select id="tx-ant-type">
+              <option value="chip">Chip / PCB</option>
+              <option value="whip" selected>Whip / Monopolo</option>
+              <option value="dipole">Dipolo</option>
+              <option value="yagi">Yagi</option>
+              <option value="patch">Patch</option>
+              <option value="colinear">Colinear</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEPTOR -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Receptor (RX) / Gateway</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Dispositivo RX / Gateway <span class="tip" data-tip="Receptor ou gateway IoT. Gateways LoRaWAN podem atender milhares de end-devices simultaneamente.">i</span></label>
+          <select id="rx-device" onchange="onRxDeviceChange()">
+            <option value="gw-sx1301">Gateway LoRa (SX1301/8ch)</option>
+            <option value="gw-sx1302">Gateway LoRa (SX1302/8ch)</option>
+            <option value="gw-rak7268">RAK7268 (Indoor GW)</option>
+            <option value="gw-rak7289">RAK7289 (Outdoor GW)</option>
+            <option value="gw-kerlink">Kerlink Wirnet Station</option>
+            <option value="gw-multitech">MultiTech Conduit</option>
+            <option value="esp32-rx">ESP32 (ponto-a-ponto)</option>
+            <option value="wifi-ap">Access Point Wi-Fi</option>
+            <option value="zigbee-coord">Coordenador Zigbee</option>
+            <option value="nb-iot-bs">Estacao Base NB-IoT</option>
+            <option value="custom-rx">Personalizado</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Sensibilidade RX (dBm) <span class="tip" data-tip="Menor nivel de sinal que o receptor consegue decodificar. LoRa SF12: -137 dBm. Wi-Fi: -90 dBm. BLE: -95 dBm.">i</span></label>
+            <input type="number" id="rx-sensitivity" value="-137" step="1" max="0">
+          </div>
+          <div class="field">
+            <label>Ganho Antena RX (dBi)</label>
+            <input type="number" id="rx-gain" value="6" step="0.1">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Perda cabo RX (dB)</label>
+            <input type="number" id="rx-loss" value="2.0" step="0.1" min="0">
+          </div>
+          <div class="field">
+            <label>Altura Antena GW (m)</label>
+            <input type="number" id="gw-height" value="10" step="1" min="1" max="200">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Tipo Antena RX</label>
+          <select id="rx-ant-type">
+            <option value="omni" selected>Omnidirecional</option>
+            <option value="sector">Setorial</option>
+            <option value="yagi">Yagi</option>
+            <option value="colinear">Colinear</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMBIENTE -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Ambiente / Canal</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Modelo de propagacao <span class="tip" data-tip="Modelo matematico para estimar perda de percurso. FSPL: espaco livre. Log-dist: ambientes reais. Okumura-Hata: urbano/sub.">i</span></label>
+          <select id="prop-model">
+            <option value="fspl">Espaco Livre (FSPL)</option>
+            <option value="log-dist" selected>Log-Distance</option>
+            <option value="okumura">Okumura-Hata</option>
+            <option value="cost231">COST 231 Hata</option>
+            <option value="itu-indoor">ITU Indoor</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Cenario / Ambiente</label>
+          <select id="environment" onchange="onEnvChange()">
+            <option value="rural">Rural / Campo aberto</option>
+            <option value="suburban" selected>Suburbano</option>
+            <option value="urban">Urbano</option>
+            <option value="dense-urban">Urbano Denso</option>
+            <option value="indoor">Indoor (escritorio)</option>
+            <option value="industrial">Industrial / Fabrica</option>
+            <option value="forest">Floresta</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Distancia TX-RX (m) <span class="tip" data-tip="Distancia em metros entre o dispositivo transmissor e o receptor/gateway.">i</span></label>
+            <input type="number" id="distance" value="2000" step="100" min="1" max="100000">
+          </div>
+          <div class="field">
+            <label>Altura Disp. TX (m)</label>
+            <input type="number" id="tx-height" value="1.5" step="0.5" min="0.1" max="50">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Margem de Fading (dB) <span class="tip" data-tip="Margem adicional para compensar variabilidade do sinal (fading, multipercurso). Tipico: 5-15 dB.">i</span></label>
+            <input type="number" id="fading-margin" value="10" step="1" min="0">
+          </div>
+          <div class="field">
+            <label>Perdas adicionais (dB) <span class="tip" data-tip="Outras perdas: absorcao corporal, penetracao em paredes, vegetacao, etc.">i</span></label>
+            <input type="number" id="misc-loss" value="0" step="1" min="0">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Numero de obstaculos (paredes)</label>
+          <input type="number" id="walls" value="0" step="1" min="0" max="20">
+        </div>
+        <p class="help">Para indoor: cada parede acrescenta ~3-6 dB de atenuacao.</p>
+      </div>
+    </div>
+
+    <!-- PAYLOAD / APLICACAO -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Payload / Aplicacao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Tamanho payload (bytes)</label>
+            <input type="number" id="payload-size" value="20" step="1" min="1" max="256">
+          </div>
+          <div class="field">
+            <label>Intervalo envio (s)</label>
+            <input type="number" id="send-interval" value="60" step="1" min="1">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Tipo de sensor</label>
+          <select id="sensor-type">
+            <option value="temp-hum">Temperatura + Umidade (BME280/DHT22)</option>
+            <option value="pressure">Pressao Barometrica (BMP280)</option>
+            <option value="air-quality">Qualidade do Ar (MQ-135/SGP30)</option>
+            <option value="soil-moisture">Umidade do Solo</option>
+            <option value="gps">GPS (NEO-6M/NEO-M8N)</option>
+            <option value="accelerometer">Acelerometro (MPU6050)</option>
+            <option value="energy">Medidor de Energia (PZEM-004T)</option>
+            <option value="ultrasonic">Ultrassonico (HC-SR04)</option>
+            <option value="camera">Camera (ESP32-CAM)</option>
+            <option value="custom-sensor">Personalizado</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Tensao Bateria (V)</label>
+            <input type="number" id="battery-voltage" value="3.7" step="0.1" min="1" max="12">
+          </div>
+          <div class="field">
+            <label>Capacidade (mAh)</label>
+            <input type="number" id="battery-cap" value="3000" step="100" min="100">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER: Visualization -->
+<div class="panel viz">
+  <div class="canvas-wrap">
+    <canvas id="net-canvas"></canvas>
+
+    <div class="canvas-legend">
+      <div class="li"><span class="sw" style="background:var(--cyan);border-radius:50%"></span> TX Device</div>
+      <div class="li"><span class="sw" style="background:var(--amber);border-radius:50%"></span> Gateway/RX</div>
+      <div class="li"><span class="sw" style="background:var(--phos);height:3px;border-radius:0"></span> Link Ativo</div>
+      <div class="li"><span class="sw" style="background:var(--rose);height:3px;border-radius:0;opacity:0.5"></span> Sem Link</div>
+      <div class="li"><span class="sw" style="background:rgba(56,189,248,0.15);border:1px solid var(--cyan);border-radius:50%"></span> Cobertura</div>
+    </div>
+
+    <div class="canvas-badge" id="topo-badge">
+      <div style="font-size:9px;color:var(--text-2);letter-spacing:0.12em;text-transform:uppercase;">Topologia</div>
+      <div class="big" id="topo-type">STAR</div>
+      <div style="margin-top:2px" id="topo-count">1 GW + 1 Node</div>
+    </div>
+
+    <div class="mode-toggle">
+      <button class="mt-btn active" data-mode="topology" onclick="setVizMode('topology', this)">Topologia</button>
+      <button class="mt-btn" data-mode="coverage" onclick="setVizMode('coverage', this)">Cobertura</button>
+      <button class="mt-btn" data-mode="packet" onclick="setVizMode('packet', this)">Pacotes</button>
+    </div>
+  </div>
+
+  <div class="bottom-strip">
+    <!-- Spectrum -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Espectro / Canal</h3>
+        <span class="meta" id="spectrum-meta">915 MHz / BW 125 kHz</span>
+      </div>
+      <div class="card-body">
+        <canvas id="spectrum-canvas"></canvas>
+      </div>
+    </div>
+    <!-- Link chart -->
+    <div class="card">
+      <div class="card-header">
+        <h3>RSSI vs Distancia</h3>
+        <span class="meta" id="chart-meta">Log-Distance Model</span>
+      </div>
+      <div class="card-body">
+        <canvas id="chart-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL: Results -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub" id="result-ts">--:--:--</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- Link Budget -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Link Budget</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="lb-results">
+        <div class="kv"><span class="k">EIRP</span><span class="v acc" id="r-eirp">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Perda Percurso (PL)</span><span class="v" id="r-pl">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda Total</span><span class="v" id="r-total-loss">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Pot. Recebida (Pr)</span><span class="v" id="r-pr">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Sensibilidade RX</span><span class="v" id="r-sens">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k"><span class="live-dot standby" id="link-dot"></span> Margem do Link</span><span class="v" id="r-margin">--<span class="unit">dB</span></span></div>
+
+        <div class="gauge" style="margin-top:10px;">
+          <div class="gauge-fill good" id="margin-bar" style="width:0%"></div>
+          <div class="gauge-label" id="margin-bar-label">-- dB</div>
+        </div>
+        <p class="help" style="margin-top:6px;">Margem > 10 dB: confiavel. 5-10 dB: aceitavel. &lt; 5 dB: instavel.</p>
+      </div>
+    </div>
+
+    <!-- Performance -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot"></span>Performance</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Taxa de Dados</span><span class="v acc" id="r-datarate">--<span class="unit">kbps</span></span></div>
+        <div class="kv"><span class="k">Time on Air (ToA)</span><span class="v" id="r-toa">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">Duty Cycle Efetivo</span><span class="v" id="r-duty">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">Max Msgs/Hora</span><span class="v" id="r-maxmsg">--</span></div>
+        <div class="kv"><span class="k">SNR Estimado</span><span class="v" id="r-snr">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Alcance Maximo</span><span class="v good" id="r-maxrange">--<span class="unit">km</span></span></div>
+      </div>
+    </div>
+
+    <!-- Energia -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Energia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Corrente TX</span><span class="v" id="r-itx">--<span class="unit">mA</span></span></div>
+        <div class="kv"><span class="k">Corrente Sleep</span><span class="v" id="r-isleep">--<span class="unit">uA</span></span></div>
+        <div class="kv"><span class="k">Consumo Medio</span><span class="v" id="r-iavg">--<span class="unit">mA</span></span></div>
+        <div class="kv"><span class="k">Vida da Bateria</span><span class="v good" id="r-battery">--</span></div>
+
+        <div class="gauge" style="margin-top:10px;">
+          <div class="gauge-fill good" id="battery-bar" style="width:0%"></div>
+          <div class="gauge-label" id="battery-bar-label">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zona de Fresnel -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Zona de Fresnel</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Raio 1a Zona (meio)</span><span class="v acc" id="r-fresnel">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">60% Desobstruido?</span><span class="v" id="r-fresnel-ok">--</span></div>
+        <div class="info-box">
+          Para link confiavel, ao menos 60% da 1a zona de Fresnel deve estar livre de obstaculos. A zona depende de frequencia e distancia.
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumo Didatico -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Resumo Didatico</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="info-box" id="didactic-box">
+          Clique em <strong>Simular</strong> para obter um resumo explicativo dos resultados do link budget e performance da comunicacao IoT configurada.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div class="author">
+    IoT Lab v1.0 &mdash; Prof. Ramon Mayor Martins &mdash;
+    <a href="https://github.com/rmayormartins" target="_blank">github.com/rmayormartins</a>
+    &mdash; IFSC Campus Sao Jose
+  </div>
+  <div class="ts" id="footer-time">--</div>
+</footer>
+
+</div><!-- .app -->
+
+<script>
+// ========================================================================
+//  IoT Lab — Engine
+// ========================================================================
+
+// --- Protocol DB ---
+const PROTOCOLS = {
+  'lora':         { name:'LoRa', freqs:[433,868,915], bws:[125,250,500], hasSF:true, sens:-137, maxPow:20, dataRate:5.47, txCurrent:120, sleepCurrent:10, info:'<strong>LoRa</strong> — Modulacao CSS (Chirp Spread Spectrum). Alcance tipico: 2-15 km (urbano/rural). Taxa: 0.3-50 kbps. Excelente para sensores de baixa taxa.' },
+  'wifi':         { name:'Wi-Fi', freqs:[2400,5800], bws:[20000,40000], hasSF:false, sens:-90, maxPow:20, dataRate:54000, txCurrent:200, sleepCurrent:20, info:'<strong>Wi-Fi</strong> — IEEE 802.11b/g/n. Alcance: 30-100m. Taxa: ate 150+ Mbps. Alto consumo. Ideal para dados volumosos em curto alcance.' },
+  'ble':          { name:'BLE', freqs:[2400], bws:[2000], hasSF:false, sens:-95, maxPow:4, dataRate:1000, txCurrent:15, sleepCurrent:3, info:'<strong>BLE 5.0</strong> — Bluetooth Low Energy. Alcance: 10-100m. Taxa: 1-2 Mbps. Baixissimo consumo. Ideal para wearables e sensores pessoais.' },
+  'zigbee':       { name:'Zigbee', freqs:[2400], bws:[2000], hasSF:false, sens:-100, maxPow:5, dataRate:250, txCurrent:30, sleepCurrent:5, info:'<strong>Zigbee</strong> — IEEE 802.15.4. Alcance: 10-100m. Taxa: 250 kbps. Suporta redes mesh com ate 65.000 nos. Otimo para automacao.' },
+  'nb-iot':       { name:'NB-IoT', freqs:[868,915], bws:[200], hasSF:false, sens:-141, maxPow:23, dataRate:200, txCurrent:220, sleepCurrent:5, info:'<strong>NB-IoT</strong> — Narrowband IoT (3GPP). Alcance: 10+ km. Taxa: ~200 kbps. Usa infraestrutura celular. Excelente penetracao em edificios.' },
+  'sigfox':       { name:'Sigfox', freqs:[868,915], bws:[100], hasSF:false, sens:-142, maxPow:14, dataRate:0.1, txCurrent:50, sleepCurrent:2, info:'<strong>Sigfox</strong> — Ultra-narrowband. Alcance: 10-50 km. Taxa: 100 bps. Max 140 msgs/dia. Ideal para rastreamento e alarmes simples.' },
+  'mqtt-wifi':    { name:'MQTT/Wi-Fi', freqs:[2400,5800], bws:[20000,40000], hasSF:false, sens:-90, maxPow:20, dataRate:54000, txCurrent:200, sleepCurrent:20, info:'<strong>MQTT sobre Wi-Fi</strong> — Protocolo pub/sub leve sobre TCP. Broker central. QoS 0/1/2. Ideal para telemetria IoT com infraestrutura Wi-Fi.' },
+  'coap-wifi':    { name:'CoAP/Wi-Fi', freqs:[2400,5800], bws:[20000,40000], hasSF:false, sens:-90, maxPow:20, dataRate:54000, txCurrent:200, sleepCurrent:20, info:'<strong>CoAP sobre Wi-Fi</strong> — Constrained Application Protocol (UDP). Modelo REST. Menor overhead que HTTP. Ideal para dispositivos restritos.' },
+  'lorawan-otaa': { name:'LoRaWAN OTAA', freqs:[433,868,915], bws:[125,250,500], hasSF:true, sens:-137, maxPow:20, dataRate:5.47, txCurrent:120, sleepCurrent:10, info:'<strong>LoRaWAN OTAA</strong> — Over-The-Air Activation. Join procedure seguro com AppKey. ADR adapta SF/potencia. Recomendado para producao.' },
+  'lorawan-abp':  { name:'LoRaWAN ABP', freqs:[433,868,915], bws:[125,250,500], hasSF:true, sens:-137, maxPow:20, dataRate:5.47, txCurrent:120, sleepCurrent:10, info:'<strong>LoRaWAN ABP</strong> — Activation By Personalization. Chaves pre-configuradas. Sem join. Mais simples, menos seguro. Usado em testes.' },
+};
+
+const DEVICES_TX = {
+  'esp32-lora':    { name:'ESP32+SX1276', pow:14, gain:2.15, loss:1.0, itx:120, isleep:10 },
+  'esp32-wifi':    { name:'ESP32 Wi-Fi', pow:20, gain:2.0, loss:0.5, itx:200, isleep:20 },
+  'esp8266':       { name:'ESP8266', pow:20, gain:2.0, loss:0.5, itx:170, isleep:20 },
+  'esp32-ble':     { name:'ESP32 BLE', pow:4, gain:1.0, loss:0.5, itx:15, isleep:3 },
+  'heltec-v3':     { name:'Heltec V3', pow:19, gain:2.15, loss:1.0, itx:130, isleep:8 },
+  'ttgo-beam':     { name:'TTGO T-Beam', pow:20, gain:3.0, loss:1.0, itx:140, isleep:12 },
+  'rak4631':       { name:'RAK4631', pow:22, gain:2.15, loss:0.5, itx:85, isleep:2 },
+  'arduino-mkrwan':{ name:'MKR WAN 1310', pow:14, gain:2.15, loss:1.0, itx:100, isleep:6 },
+  'stm32wl':       { name:'STM32WL', pow:22, gain:2.15, loss:0.5, itx:90, isleep:2 },
+  'xbee-s2c':      { name:'XBee S2C', pow:5, gain:1.5, loss:0.5, itx:33, isleep:3 },
+  'custom':        { name:'Personalizado', pow:14, gain:2.15, loss:1.0, itx:120, isleep:10 },
+};
+
+const DEVICES_RX = {
+  'gw-sx1301':   { name:'GW SX1301', sens:-137, gain:6, loss:2, channels:8 },
+  'gw-sx1302':   { name:'GW SX1302', sens:-141, gain:6, loss:1.5, channels:8 },
+  'gw-rak7268':  { name:'RAK7268', sens:-139, gain:3, loss:1, channels:8 },
+  'gw-rak7289':  { name:'RAK7289', sens:-139, gain:6, loss:2, channels:8 },
+  'gw-kerlink':  { name:'Kerlink Wirnet', sens:-141, gain:6, loss:2, channels:8 },
+  'gw-multitech':{ name:'MultiTech Conduit', sens:-139, gain:5, loss:2, channels:8 },
+  'esp32-rx':    { name:'ESP32 P2P', sens:-132, gain:2.15, loss:1, channels:1 },
+  'wifi-ap':     { name:'Access Point', sens:-90, gain:5, loss:1, channels:13 },
+  'zigbee-coord':{ name:'Coord. Zigbee', sens:-100, gain:2, loss:0.5, channels:16 },
+  'nb-iot-bs':   { name:'BS NB-IoT', sens:-141, gain:15, loss:3, channels:200 },
+  'custom-rx':   { name:'Personalizado', sens:-137, gain:6, loss:2, channels:8 },
+};
+
+// environment path loss exponents
+const ENV_PLE = {
+  'rural':       { n:2.4, sigma:4, wallLoss:0 },
+  'suburban':    { n:3.0, sigma:7, wallLoss:0 },
+  'urban':       { n:3.5, sigma:8, wallLoss:0 },
+  'dense-urban': { n:4.0, sigma:10, wallLoss:0 },
+  'indoor':      { n:3.0, sigma:5, wallLoss:5 },
+  'industrial':  { n:3.5, sigma:8, wallLoss:4 },
+  'forest':      { n:3.2, sigma:9, wallLoss:0 },
+};
+
+// LoRa data rates by SF (BW=125kHz)
+const LORA_DR = {
+  7:  { rate:5.47, sens:-123, toa_factor:1.0 },
+  8:  { rate:3.13, sens:-126, toa_factor:1.8 },
+  9:  { rate:1.76, sens:-129, toa_factor:3.2 },
+  10: { rate:0.98, sens:-132, toa_factor:5.7 },
+  11: { rate:0.54, sens:-134.5, toa_factor:10.2 },
+  12: { rate:0.29, sens:-137, toa_factor:18.4 },
+};
+
+// --- State ---
+let vizMode = 'topology';
+let simResults = null;
+let packetAnimFrame = null;
+let packets = [];
+
+// --- Helpers ---
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseFloat($(id).value) || 0; }
+function sval(id) { return $(id).value; }
+
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function updateClock() {
+  const now = new Date();
+  $('footer-time').textContent = now.toLocaleTimeString('pt-BR');
+  $('result-ts').textContent = now.toLocaleTimeString('pt-BR');
+}
+setInterval(updateClock, 1000); updateClock();
+
+// --- Protocol change ---
+function onProtocolChange() {
+  const p = sval('protocol');
+  const proto = PROTOCOLS[p];
+  if (!proto) return;
+
+  // update freq options
+  const fSel = $('frequency');
+  fSel.innerHTML = '';
+  proto.freqs.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f;
+    const label = f >= 1000 ? (f/1000).toFixed(1)+' GHz' : f+' MHz';
+    opt.textContent = label;
+    fSel.appendChild(opt);
+  });
+
+  // BW
+  const bSel = $('bandwidth');
+  bSel.innerHTML = '';
+  proto.bws.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b;
+    opt.textContent = b >= 1000 ? (b/1000)+' MHz' : b+' kHz';
+    bSel.appendChild(opt);
+  });
+
+  // SF field
+  $('sf-field').style.display = proto.hasSF ? '' : 'none';
+
+  // update sensitivity
+  $('rx-sensitivity').value = proto.sens;
+
+  // info
+  $('proto-info').innerHTML = proto.info;
+
+  // header
+  $('hdr-proto').textContent = proto.name;
+  onFreqChange();
+}
+
+function onFreqChange() {
+  const f = val('frequency');
+  const label = f >= 1000 ? (f/1000).toFixed(1)+' GHz' : f+' MHz';
+  $('hdr-freq').innerHTML = label;
+  $('spectrum-meta').textContent = label + ' / BW ' + (val('bandwidth')>=1000 ? (val('bandwidth')/1000)+' MHz' : val('bandwidth')+' kHz');
+}
+
+function onTxDeviceChange() {
+  const d = DEVICES_TX[sval('tx-device')];
+  if (!d) return;
+  $('tx-power').value = d.pow;
+  $('tx-gain').value = d.gain;
+  $('tx-loss').value = d.loss;
+}
+
+function onRxDeviceChange() {
+  const d = DEVICES_RX[sval('rx-device')];
+  if (!d) return;
+  $('rx-sensitivity').value = d.sens;
+  $('rx-gain').value = d.gain;
+  $('rx-loss').value = d.loss;
+}
+
+function onEnvChange() {}
+
+// ========================================================================
+//  SIMULATION ENGINE
+// ========================================================================
+function runSimulation() {
+  const proto = PROTOCOLS[sval('protocol')];
+  const sf = val('sf');
+  const freq = val('frequency');  // MHz
+  const bw = val('bandwidth');    // kHz
+  const txPow = val('tx-power');
+  const txGain = val('tx-gain');
+  const txLoss = val('tx-loss');
+  const rxSens = val('rx-sensitivity');
+  const rxGain = val('rx-gain');
+  const rxLoss = val('rx-loss');
+  const dist = val('distance');   // meters
+  const fadingMargin = val('fading-margin');
+  const miscLoss = val('misc-loss');
+  const walls = val('walls');
+  const env = ENV_PLE[sval('environment')];
+  const propModel = sval('prop-model');
+  const payloadSize = val('payload-size');
+  const sendInterval = val('send-interval');
+  const batCap = val('battery-cap');
+  const gwHeight = val('gw-height');
+  const txHeight = val('tx-height');
+
+  // EIRP
+  const eirp = txPow + txGain - txLoss;
+
+  // Path Loss
+  let pathLoss = 0;
+  const freqHz = freq * 1e6;
+  const distKm = dist / 1000;
+  const c = 3e8;
+  const lambda = c / freqHz;
+
+  if (propModel === 'fspl') {
+    pathLoss = 20*Math.log10(dist) + 20*Math.log10(freqHz) - 147.55;
+  } else if (propModel === 'log-dist') {
+    const d0 = 1; // reference 1m
+    const pl0 = 20*Math.log10(4*Math.PI*d0/lambda);
+    pathLoss = pl0 + 10*env.n*Math.log10(dist/d0);
+  } else if (propModel === 'okumura') {
+    // Hata model (150-1500 MHz, extended)
+    const fc = Math.min(Math.max(freq, 150), 2000);
+    const hb = gwHeight;
+    const hm = txHeight;
+    const ahm = (1.1*Math.log10(fc)-0.7)*hm - (1.56*Math.log10(fc)-0.8);
+    pathLoss = 69.55 + 26.16*Math.log10(fc) - 13.82*Math.log10(hb) - ahm + (44.9-6.55*Math.log10(hb))*Math.log10(distKm);
+    if (sval('environment')==='rural') pathLoss -= 4.78*Math.pow(Math.log10(fc),2) + 18.33*Math.log10(fc) - 40.94;
+    else if (sval('environment')==='suburban') pathLoss -= 2*Math.pow(Math.log10(fc/28),2) - 5.4;
+  } else if (propModel === 'cost231') {
+    const fc = Math.min(Math.max(freq, 1500), 2000);
+    const hb = gwHeight;
+    const hm = txHeight;
+    const ahm = (1.1*Math.log10(fc)-0.7)*hm - (1.56*Math.log10(fc)-0.8);
+    const cm = sval('environment').includes('urban') ? 3 : 0;
+    pathLoss = 46.3 + 33.9*Math.log10(fc) - 13.82*Math.log10(hb) - ahm + (44.9-6.55*Math.log10(hb))*Math.log10(distKm) + cm;
+  } else if (propModel === 'itu-indoor') {
+    const N = env.n * 10;
+    pathLoss = 20*Math.log10(freqHz/1e6) + N*Math.log10(dist) - 28;
+  }
+
+  // Wall loss
+  const wallLoss = walls * (env.wallLoss || 5);
+
+  // Total loss
+  const totalLoss = pathLoss + fadingMargin + miscLoss + wallLoss + rxLoss;
+
+  // Received power
+  const pr = eirp + rxGain - totalLoss;
+
+  // Link margin
+  const margin = pr - rxSens;
+
+  // Data rate
+  let dataRate = proto.dataRate;
+  let sensitivity = rxSens;
+  if (proto.hasSF && LORA_DR[sf]) {
+    dataRate = LORA_DR[sf].rate * (bw / 125);
+    sensitivity = LORA_DR[sf].sens;
+  }
+
+  // Time on Air (LoRa approx)
+  let toa = (payloadSize * 8) / (dataRate * 1000) * 1000; // ms
+  if (proto.hasSF && LORA_DR[sf]) {
+    toa = LORA_DR[sf].toa_factor * (payloadSize / 20) * (125 / bw) * 50; // rough approx ms
+  }
+
+  // Duty cycle
+  const dutyCycle = toa / (sendInterval * 1000) * 100;
+
+  // Max messages per hour
+  const maxMsgHour = Math.floor(3600 / sendInterval);
+
+  // SNR estimate
+  const noisePower = -174 + 10*Math.log10(bw*1000); // thermal noise
+  const snr = pr - noisePower;
+
+  // Max range (where margin = 0)
+  let maxRange = 0;
+  const maxBudget = eirp + rxGain - rxLoss - fadingMargin - miscLoss - wallLoss - rxSens;
+  if (propModel === 'fspl') {
+    maxRange = Math.pow(10, (maxBudget - 20*Math.log10(freqHz) + 147.55) / 20);
+  } else if (propModel === 'log-dist') {
+    const d0 = 1;
+    const pl0 = 20*Math.log10(4*Math.PI*d0/lambda);
+    maxRange = d0 * Math.pow(10, (maxBudget - pl0) / (10*env.n));
+  } else {
+    // Iterative for Hata models
+    for (let d = 100; d <= 200000; d += 100) {
+      let pl = 0;
+      if (propModel === 'okumura') {
+        const fc = Math.min(Math.max(freq,150),2000);
+        const hb=gwHeight,hm=txHeight;
+        const ahm=(1.1*Math.log10(fc)-0.7)*hm-(1.56*Math.log10(fc)-0.8);
+        pl=69.55+26.16*Math.log10(fc)-13.82*Math.log10(hb)-ahm+(44.9-6.55*Math.log10(hb))*Math.log10(d/1000);
+      } else {
+        const fc = Math.min(Math.max(freq,1500),2000);
+        const hb=gwHeight,hm=txHeight;
+        const ahm=(1.1*Math.log10(fc)-0.7)*hm-(1.56*Math.log10(fc)-0.8);
+        const cm=sval('environment').includes('urban')?3:0;
+        pl=46.3+33.9*Math.log10(fc)-13.82*Math.log10(hb)-ahm+(44.9-6.55*Math.log10(hb))*Math.log10(d/1000)+cm;
+      }
+      if (pl + fadingMargin + miscLoss + wallLoss + rxLoss > eirp + rxGain - rxSens) { maxRange = d; break; }
+      maxRange = d;
+    }
+  }
+
+  // Fresnel zone radius
+  const fresnelR = Math.sqrt(lambda * (dist/2)) / 2; // 1st zone at midpoint (simplified)
+  const fresnelR1 = 0.5 * Math.sqrt(lambda * dist); // better formula
+
+  // Energy
+  const txDev = DEVICES_TX[sval('tx-device')] || DEVICES_TX['custom'];
+  const itx = txDev.itx;
+  const isleep = txDev.isleep;
+  const toaSec = toa / 1000;
+  const avgCurrent = (itx * toaSec + (isleep/1000) * (sendInterval - toaSec)) / sendInterval;
+  const batteryHours = batCap / avgCurrent;
+  const batteryDays = batteryHours / 24;
+
+  // Store results
+  simResults = { eirp, pathLoss, totalLoss, pr, rxSens:sensitivity, margin, dataRate, toa, dutyCycle, maxMsgHour, snr, maxRange, fresnelR:fresnelR1, itx, isleep:isleep/1000, avgCurrent, batteryDays, dist, freq, bw, sf, proto:sval('protocol') };
+
+  // Update UI
+  updateResults();
+  drawChart();
+  drawSpectrum();
+  drawViz();
+}
+
+function updateResults() {
+  if (!simResults) return;
+  const r = simResults;
+
+  $('r-eirp').innerHTML = r.eirp.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-pl').innerHTML = r.pathLoss.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-total-loss').innerHTML = r.totalLoss.toFixed(1) + '<span class="unit">dB</span>';
+
+  $('r-pr').innerHTML = r.pr.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-pr').className = 'v ' + (r.pr > r.rxSens + 10 ? 'good' : r.pr > r.rxSens ? 'warn' : 'bad');
+
+  $('r-sens').innerHTML = r.rxSens.toFixed(0) + '<span class="unit">dBm</span>';
+
+  $('r-margin').innerHTML = r.margin.toFixed(1) + '<span class="unit">dB</span>';
+  const mClass = r.margin > 10 ? 'good' : r.margin > 0 ? 'warn' : 'bad';
+  $('r-margin').className = 'v ' + mClass;
+
+  // Link dot
+  const dot = $('link-dot');
+  dot.className = 'live-dot' + (r.margin > 10 ? '' : r.margin > 0 ? ' standby' : ' off');
+
+  // Margin bar
+  const barPct = Math.min(100, Math.max(0, (r.margin + 10) / 50 * 100));
+  $('margin-bar').style.width = barPct + '%';
+  $('margin-bar').className = 'gauge-fill ' + mClass;
+  $('margin-bar-label').textContent = r.margin.toFixed(1) + ' dB';
+
+  // Performance
+  $('r-datarate').innerHTML = (r.dataRate >= 1000 ? (r.dataRate/1000).toFixed(1)+'<span class="unit">Mbps</span>' : r.dataRate.toFixed(2)+'<span class="unit">kbps</span>');
+  $('r-toa').innerHTML = r.toa.toFixed(1) + '<span class="unit">ms</span>';
+  $('r-duty').innerHTML = r.dutyCycle.toFixed(3) + '<span class="unit">%</span>';
+  $('r-duty').className = 'v ' + (r.dutyCycle < 1 ? 'good' : r.dutyCycle < 10 ? 'warn' : 'bad');
+  $('r-maxmsg').innerHTML = r.maxMsgHour;
+  $('r-snr').innerHTML = r.snr.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-snr').className = 'v ' + (r.snr > 10 ? 'good' : r.snr > 0 ? 'warn' : 'bad');
+
+  const maxR = r.maxRange >= 1000 ? (r.maxRange/1000).toFixed(1)+'<span class="unit">km</span>' : r.maxRange.toFixed(0)+'<span class="unit">m</span>';
+  $('r-maxrange').innerHTML = maxR;
+  $('hdr-range').innerHTML = r.maxRange >= 1000 ? (r.maxRange/1000).toFixed(1)+'<span class="unit">km</span>' : r.maxRange.toFixed(0)+'<span class="unit">m</span>';
+
+  // Energy
+  $('r-itx').innerHTML = r.itx.toFixed(0) + '<span class="unit">mA</span>';
+  $('r-isleep').innerHTML = (r.isleep*1000).toFixed(0) + '<span class="unit">uA</span>';
+  $('r-iavg').innerHTML = r.avgCurrent.toFixed(2) + '<span class="unit">mA</span>';
+  const batLabel = r.batteryDays >= 365 ? (r.batteryDays/365).toFixed(1)+' anos' : r.batteryDays >= 30 ? (r.batteryDays/30).toFixed(1)+' meses' : r.batteryDays.toFixed(0)+' dias';
+  $('r-battery').innerHTML = batLabel;
+  $('r-battery').className = 'v ' + (r.batteryDays > 365 ? 'good' : r.batteryDays > 30 ? 'warn' : 'bad');
+
+  const batPct = Math.min(100, r.batteryDays / 365 * 100);
+  $('battery-bar').style.width = batPct + '%';
+  $('battery-bar').className = 'gauge-fill ' + (r.batteryDays > 365 ? 'good' : r.batteryDays > 30 ? 'warn' : 'bad');
+  $('battery-bar-label').textContent = batLabel;
+
+  // Fresnel
+  $('r-fresnel').innerHTML = r.fresnelR.toFixed(2) + '<span class="unit">m</span>';
+  const fresnelOk = r.fresnelR * 0.6 < val('gw-height');
+  $('r-fresnel-ok').innerHTML = fresnelOk ? 'SIM' : 'NAO';
+  $('r-fresnel-ok').className = 'v ' + (fresnelOk ? 'good' : 'bad');
+
+  // Header status
+  $('hdr-status').textContent = r.margin > 10 ? 'LINK OK' : r.margin > 0 ? 'MARGINAL' : 'SEM LINK';
+  $('hdr-status').style.color = r.margin > 10 ? 'var(--phos)' : r.margin > 0 ? 'var(--amber)' : 'var(--rose)';
+
+  // Didactic summary
+  generateDidactic(r);
+}
+
+function generateDidactic(r) {
+  const proto = PROTOCOLS[sval('protocol')];
+  let html = '';
+
+  html += `<strong>Resumo da simulacao:</strong><br><br>`;
+  html += `O <strong>${proto.name}</strong> opera em <strong>${r.freq >= 1000 ? (r.freq/1000).toFixed(1)+' GHz' : r.freq+' MHz'}</strong>. `;
+  html += `A potencia efetiva irradiada (EIRP) e de <strong>${r.eirp.toFixed(1)} dBm</strong>.<br><br>`;
+
+  html += `<strong>Link Budget:</strong> A perda de percurso estimada e <strong>${r.pathLoss.toFixed(1)} dB</strong> para ${r.dist >= 1000 ? (r.dist/1000).toFixed(1)+' km' : r.dist+' m'}. `;
+  html += `A potencia recebida (Pr) e <strong>${r.pr.toFixed(1)} dBm</strong>, `;
+
+  if (r.margin > 10) {
+    html += `resultando em margem de <strong style="color:var(--phos)">${r.margin.toFixed(1)} dB</strong> — link <strong>confiavel</strong>.`;
+  } else if (r.margin > 0) {
+    html += `resultando em margem de <strong style="color:var(--amber)">${r.margin.toFixed(1)} dB</strong> — link <strong>marginal</strong>, suscetivel a fading.`;
+  } else {
+    html += `resultando em margem <strong style="color:var(--rose)">negativa (${r.margin.toFixed(1)} dB)</strong> — <strong>sem comunicacao</strong>. Reduza distancia, aumente potencia ou use antena com maior ganho.`;
+  }
+
+  html += `<br><br><strong>Performance:</strong> Taxa de ${r.dataRate >= 1000 ? (r.dataRate/1000).toFixed(1)+' Mbps' : r.dataRate.toFixed(2)+' kbps'}. `;
+  html += `ToA: ${r.toa.toFixed(1)} ms. `;
+  if (r.dutyCycle > 1) html += `<span style="color:var(--amber)">Atencao: duty cycle de ${r.dutyCycle.toFixed(2)}% pode violar regulamentacao!</span> `;
+
+  html += `<br><br><strong>Energia:</strong> Consumo medio de ${r.avgCurrent.toFixed(2)} mA. Estimativa de bateria: <strong>${r.batteryDays >= 365 ? (r.batteryDays/365).toFixed(1)+' anos' : r.batteryDays.toFixed(0)+' dias'}</strong>.`;
+
+  if (proto.hasSF) {
+    html += `<br><br><strong>Dica LoRa:</strong> Aumentar o SF melhora alcance e sensibilidade, mas reduz taxa e aumenta ToA. `;
+    html += `SF7 e mais rapido (~5.5 kbps), SF12 vai mais longe (sens. -137 dBm) mas e ~18x mais lento.`;
+  }
+
+  $('didactic-box').innerHTML = html;
+}
+
+// ========================================================================
+//  CHARTS
+// ========================================================================
+function drawChart() {
+  const canvas = $('chart-canvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!simResults) return;
+  const r = simResults;
+
+  const freq = r.freq;
+  const env = ENV_PLE[sval('environment')];
+  const propModel = sval('prop-model');
+  const c = 3e8;
+  const freqHz = freq * 1e6;
+  const lambda = c / freqHz;
+  const eirp = r.eirp;
+  const rxGain = val('rx-gain');
+  const rxLoss = val('rx-loss');
+  const fadingMargin = val('fading-margin');
+  const miscLoss = val('misc-loss');
+  const wallLoss = val('walls') * (env.wallLoss || 5);
+  const sensitivity = r.rxSens;
+
+  // Generate RSSI vs Distance
+  const maxDist = Math.min(r.maxRange * 2, 100000);
+  const steps = 120;
+  const points = [];
+
+  for (let i = 1; i <= steps; i++) {
+    const d = (maxDist / steps) * i;
+    let pl = 0;
+    if (propModel === 'fspl') {
+      pl = 20*Math.log10(d) + 20*Math.log10(freqHz) - 147.55;
+    } else if (propModel === 'log-dist') {
+      const d0=1; const pl0=20*Math.log10(4*Math.PI*d0/lambda);
+      pl=pl0+10*env.n*Math.log10(d/d0);
+    } else {
+      pl = 20*Math.log10(d) + 20*Math.log10(freqHz) - 147.55; // fallback
+    }
+    const pr = eirp + rxGain - pl - fadingMargin - miscLoss - wallLoss - rxLoss;
+    points.push({ d, pr });
+  }
+
+  // Chart area
+  const pad = { t: 16, r: 16, b: 32, l: 50 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+
+  const minRSSI = Math.min(sensitivity - 10, points[points.length-1].pr - 5);
+  const maxRSSI = Math.max(0, points[0].pr + 5);
+
+  const xScale = (d) => pad.l + (d / maxDist) * cw;
+  const yScale = (pr) => pad.t + (1 - (pr - minRSSI) / (maxRSSI - minRSSI)) * ch;
+
+  // Grid
+  ctx.strokeStyle = '#1e283820';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + ch * i / 5;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    const val = maxRSSI - (maxRSSI-minRSSI)*i/5;
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(0)+' dBm', pad.l-6, y+3);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + cw * i / 5;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
+    const dv = maxDist * i / 5;
+    ctx.fillStyle = '#6b7889';
+    ctx.textAlign = 'center';
+    ctx.fillText(dv>=1000?(dv/1000).toFixed(1)+'km':dv.toFixed(0)+'m', x, H-pad.b+14);
+  }
+
+  // Sensitivity line
+  const sensY = yScale(sensitivity);
+  if (sensY > pad.t && sensY < H - pad.b) {
+    ctx.strokeStyle = '#fb718550';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, sensY); ctx.lineTo(W-pad.r, sensY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#fb7185';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('Sensibilidade RX: '+sensitivity+' dBm', pad.l+4, sensY-4);
+  }
+
+  // RSSI curve
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#38bdf840';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  points.forEach((p, i) => {
+    const x = xScale(p.d);
+    const y = Math.max(pad.t, Math.min(H-pad.b, yScale(p.pr)));
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Fill below sensitivity as danger zone
+  ctx.fillStyle = 'rgba(251,113,133,0.06)';
+  if (sensY > pad.t && sensY < H-pad.b) {
+    ctx.fillRect(pad.l, sensY, cw, H-pad.b-sensY);
+  }
+
+  // Current distance marker
+  const curX = xScale(r.dist);
+  const curPr = r.pr;
+  const curY = Math.max(pad.t, Math.min(H-pad.b, yScale(curPr)));
+  if (curX > pad.l && curX < W-pad.r) {
+    ctx.strokeStyle = '#4ade8060';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(curX, pad.t); ctx.lineTo(curX, H-pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath(); ctx.arc(curX, curY, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#e6ecf5';
+    ctx.font = 'bold 9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(curPr.toFixed(1)+' dBm', curX+8, curY-4);
+  }
+
+  $('chart-meta').textContent = sval('prop-model').replace('-',' ').toUpperCase() + ' / ' + sval('environment');
+}
+
+function drawSpectrum() {
+  const canvas = $('spectrum-canvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, W, H);
+
+  const freq = val('frequency');
+  const bw = val('bandwidth');
+  const txPow = val('tx-power');
+
+  const pad = { t: 14, r: 10, b: 28, l: 38 };
+  const cw = W - pad.l - pad.r;
+  const ch = H - pad.t - pad.b;
+
+  // Frequency range (centered on carrier)
+  const fSpan = bw * 4; // show 4x BW
+  const fMin = freq*1000 - fSpan/2; // in kHz
+  const fMax = freq*1000 + fSpan/2;
+
+  // Grid
+  ctx.strokeStyle = '#1e283818';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch*i/4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    const v = txPow - (txPow+40)*i/4;
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '8px JetBrains Mono';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(0)+' dBm', pad.l-4, y+3);
+  }
+  for (let i = 0; i <= 6; i++) {
+    const x = pad.l + cw*i/6;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
+    const fv = fMin + (fMax-fMin)*i/6;
+    const label = fv >= 1e6 ? (fv/1e6).toFixed(2)+'GHz' : fv >= 1000 ? (fv/1000).toFixed(1)+'MHz' : fv.toFixed(0)+'kHz';
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '8px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, H-pad.b+12);
+  }
+
+  // Noise floor
+  const noiseY = pad.t + ch * 0.85;
+  ctx.strokeStyle = '#3f4a5b30';
+  ctx.setLineDash([2,2]);
+  ctx.beginPath(); ctx.moveTo(pad.l, noiseY); ctx.lineTo(W-pad.r, noiseY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#3f4a5b';
+  ctx.font = '8px JetBrains Mono';
+  ctx.fillText('Noise Floor', pad.l+4, noiseY-3);
+
+  // Random noise
+  ctx.strokeStyle = '#3f4a5b40';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  for (let x = pad.l; x <= W-pad.r; x++) {
+    const y = noiseY + (Math.random()-0.5)*8;
+    if (x === pad.l) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Signal peak (raised cosine shape)
+  const fCenter = freq * 1000;
+  const halfBW = bw / 2;
+
+  ctx.fillStyle = 'rgba(56,189,248,0.1)';
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#38bdf840'; ctx.shadowBlur = 6;
+
+  ctx.beginPath();
+  const signalPoints = [];
+  for (let x = pad.l; x <= W - pad.r; x++) {
+    const fkHz = fMin + (fMax-fMin) * (x-pad.l)/cw;
+    const df = Math.abs(fkHz - fCenter);
+    let power;
+    if (df <= halfBW * 0.6) {
+      power = txPow;
+    } else if (df <= halfBW) {
+      const t = (df - halfBW*0.6) / (halfBW*0.4);
+      power = txPow - 30 * t * t;
+    } else if (df <= halfBW * 2) {
+      const t = (df - halfBW) / halfBW;
+      power = txPow - 30 - 20*t;
+    } else {
+      power = -40;
+    }
+    power += (Math.random()-0.5)*1.5; // noise
+
+    const yNorm = (txPow - power) / (txPow + 40);
+    const y = pad.t + yNorm * ch;
+    signalPoints.push({x, y: Math.max(pad.t, Math.min(H-pad.b, y))});
+    if (x === pad.l) ctx.moveTo(x, signalPoints[0].y); else ctx.lineTo(x, signalPoints[signalPoints.length-1].y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Fill
+  ctx.lineTo(W-pad.r, H-pad.b);
+  ctx.lineTo(pad.l, H-pad.b);
+  ctx.closePath();
+  ctx.fill();
+
+  // BW markers
+  const bwLeftX = pad.l + ((fCenter - halfBW) - fMin) / (fMax-fMin) * cw;
+  const bwRightX = pad.l + ((fCenter + halfBW) - fMin) / (fMax-fMin) * cw;
+  ctx.strokeStyle = '#fbbf2450';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(bwLeftX, pad.t); ctx.lineTo(bwLeftX, H-pad.b); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bwRightX, pad.t); ctx.lineTo(bwRightX, H-pad.b); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // BW label
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  const bwLabel = bw >= 1000 ? (bw/1000)+' MHz' : bw+' kHz';
+  ctx.fillText('BW: '+bwLabel, (bwLeftX+bwRightX)/2, pad.t+10);
+}
+
+// ========================================================================
+//  NETWORK TOPOLOGY VISUALIZATION
+// ========================================================================
+function drawViz() {
+  const canvas = $('net-canvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+
+  ctx.fillStyle = '#04070c';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle radial grid
+  const cx = W/2, cy = H/2;
+  ctx.strokeStyle = '#1e283815';
+  ctx.lineWidth = 1;
+  for (let r = 60; r < Math.max(W,H); r += 60) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+  }
+  // Cross lines
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+
+  if (vizMode === 'topology') drawTopology(ctx, W, H);
+  else if (vizMode === 'coverage') drawCoverage(ctx, W, H);
+  else if (vizMode === 'packet') drawPacketView(ctx, W, H);
+}
+
+function drawTopology(ctx, W, H) {
+  const cx = W/2, cy = H/2;
+  const hasLink = simResults && simResults.margin > 0;
+  const linkColor = hasLink ? '#4ade80' : '#fb7185';
+
+  // Gateway (center)
+  drawGateway(ctx, cx, cy);
+
+  // Nodes around (simulate a star topology with some nodes)
+  const nodeCount = 5;
+  const mainDist = Math.min(W, H) * 0.32;
+  const userDist = simResults ? Math.min(mainDist * (simResults.dist / (simResults.maxRange || simResults.dist*2)), mainDist * 0.95) : mainDist * 0.5;
+
+  // Main node (user configured)
+  const mainAngle = -Math.PI/2;
+  const mnx = cx + Math.cos(mainAngle) * userDist;
+  const mny = cy + Math.sin(mainAngle) * userDist;
+
+  // Draw coverage circle
+  if (simResults) {
+    const covRadius = mainDist * 1.1;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, covRadius);
+    grad.addColorStop(0, 'rgba(56,189,248,0.04)');
+    grad.addColorStop(0.7, 'rgba(56,189,248,0.02)');
+    grad.addColorStop(1, 'rgba(56,189,248,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, covRadius, 0, Math.PI*2); ctx.fill();
+
+    ctx.strokeStyle = 'rgba(56,189,248,0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.arc(cx, cy, covRadius, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Link line to main node
+  drawLink(ctx, cx, cy, mnx, mny, linkColor, hasLink);
+  drawDevice(ctx, mnx, mny, sval('tx-device'), true);
+
+  // Label
+  ctx.fillStyle = '#e6ecf5';
+  ctx.font = 'bold 10px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText(DEVICES_TX[sval('tx-device')]?.name || 'TX', mnx, mny - 22);
+  if (simResults) {
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillStyle = hasLink ? '#4ade80' : '#fb7185';
+    ctx.fillText((simResults.pr).toFixed(1)+' dBm', mnx, mny + 30);
+    ctx.fillStyle = '#6b7889';
+    ctx.fillText((simResults.dist >= 1000 ? (simResults.dist/1000).toFixed(1)+'km' : simResults.dist+'m'), mnx, mny + 42);
+  }
+
+  // Other demo nodes
+  const otherAngles = [Math.PI*0.15, Math.PI*0.55, Math.PI*0.85, Math.PI*1.3];
+  const otherNames = ['Sensor Temp', 'Medidor H2O', 'GPS Tracker', 'Cam ESP32'];
+  const otherDists = [0.45, 0.65, 0.35, 0.8];
+
+  otherAngles.forEach((a, i) => {
+    const d = mainDist * otherDists[i];
+    const nx = cx + Math.cos(a) * d;
+    const ny = cy + Math.sin(a) * d;
+    const inRange = d < mainDist;
+    drawLink(ctx, cx, cy, nx, ny, inRange ? '#4ade8040' : '#fb718540', false);
+    drawDevice(ctx, nx, ny, 'esp32-lora', false);
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(otherNames[i], nx, ny + 28);
+  });
+
+  // Gateway label
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 11px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText(DEVICES_RX[sval('rx-device')]?.name || 'Gateway', cx, cy - 30);
+
+  $('topo-type').textContent = 'STAR';
+  $('topo-count').textContent = '1 GW + ' + (nodeCount) + ' Nodes';
+}
+
+function drawCoverage(ctx, W, H) {
+  const cx = W/2, cy = H/2;
+  if (!simResults) {
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '12px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('Clique em Simular para visualizar cobertura', cx, cy);
+    return;
+  }
+
+  const maxR = Math.min(W, H) * 0.42;
+
+  // Concentric zones
+  const zones = [
+    { pct: 0.3, color: 'rgba(74,222,128,0.12)', label: 'Excelente (>20dB)' },
+    { pct: 0.55, color: 'rgba(251,191,36,0.08)', label: 'Bom (10-20dB)' },
+    { pct: 0.8, color: 'rgba(56,189,248,0.06)', label: 'Marginal (0-10dB)' },
+    { pct: 1.0, color: 'rgba(251,113,133,0.04)', label: 'Sem cobertura' },
+  ];
+
+  zones.reverse().forEach(z => {
+    ctx.fillStyle = z.color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxR * z.pct, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = z.color.replace(/[\d.]+\)$/, '0.3)');
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Labels
+  zones.reverse();
+  zones.forEach((z, i) => {
+    const y = cy - maxR * z.pct + 14;
+    ctx.fillStyle = '#b6c2d4';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(z.label, cx, y);
+  });
+
+  // GW at center
+  drawGateway(ctx, cx, cy);
+
+  // Distance rings labels
+  const distPerPx = (simResults.maxRange || 1000) / (maxR * 0.8);
+  [0.3, 0.55, 0.8].forEach(pct => {
+    const d = pct * maxR * distPerPx;
+    const label = d >= 1000 ? (d/1000).toFixed(1)+' km' : d.toFixed(0)+' m';
+    ctx.fillStyle = '#3f4a5b';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, cx + pct*maxR + 6, cy + 4);
+  });
+
+  $('topo-type').textContent = 'COBERTURA';
+  $('topo-count').textContent = 'Raio max: ' + (simResults.maxRange >= 1000 ? (simResults.maxRange/1000).toFixed(1)+' km' : simResults.maxRange.toFixed(0)+' m');
+}
+
+function drawPacketView(ctx, W, H) {
+  const cx = W/2, cy = H/2;
+  if (!simResults) {
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '12px Chakra Petch';
+    ctx.textAlign = 'center';
+    ctx.fillText('Clique em Simular para ver animacao de pacotes', cx, cy);
+    return;
+  }
+
+  // Draw GW and Node
+  const nodeDist = Math.min(W, H) * 0.3;
+  const nx = cx - nodeDist;
+  const gx = cx + nodeDist;
+
+  drawDevice(ctx, nx, cy, sval('tx-device'), true);
+  drawGateway(ctx, gx, cy);
+
+  // Labels
+  ctx.fillStyle = '#e6ecf5';
+  ctx.font = 'bold 10px Chakra Petch';
+  ctx.textAlign = 'center';
+  ctx.fillText('TX Node', nx, cy - 28);
+  ctx.fillText('Gateway', gx, cy - 38);
+
+  // Static link line
+  ctx.strokeStyle = '#1e2838';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(nx+16, cy); ctx.lineTo(gx-16, cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Animated packets
+  const now = Date.now();
+  const interval = val('send-interval') * 1000;
+  const toaMs = simResults.toa;
+  const travelTime = 800; // animation travel time ms
+
+  // Phase within interval
+  const phase = (now % Math.min(interval, 3000)) / Math.min(interval, 3000);
+  const hasLink = simResults.margin > 0;
+
+  if (hasLink) {
+    // Uplink packet
+    const pktProgress = Math.min(1, phase * 3);
+    if (pktProgress < 1) {
+      const px = nx + 16 + (gx - nx - 32) * pktProgress;
+      drawPacket(ctx, px, cy, '#4ade80', 'UP');
+    }
+
+    // Downlink ACK (delayed)
+    const ackPhase = Math.max(0, phase * 3 - 1.5);
+    if (ackPhase > 0 && ackPhase < 1) {
+      const ax = gx - 16 - (gx - nx - 32) * ackPhase;
+      drawPacket(ctx, ax, cy - 12, '#38bdf8', 'ACK');
+    }
+  } else {
+    // Failed packet
+    const pktProgress = Math.min(1, phase * 3);
+    if (pktProgress < 1) {
+      const px = nx + 16 + (gx - nx - 32) * pktProgress * 0.6;
+      drawPacket(ctx, px, cy, '#fb7185', 'FAIL');
+
+      if (pktProgress > 0.5) {
+        ctx.fillStyle = '#fb718560';
+        ctx.font = 'bold 12px Chakra Petch';
+        ctx.textAlign = 'center';
+        ctx.fillText('PACKET LOST', (nx+gx)/2, cy - 30);
+      }
+    }
+  }
+
+  // Protocol stack
+  const proto = PROTOCOLS[sval('protocol')];
+  const stackX = cx;
+  const stackY = cy + 60;
+  const layers = [];
+  if (sval('protocol').includes('mqtt')) layers.push('MQTT', 'TCP', 'IP', 'Wi-Fi PHY');
+  else if (sval('protocol').includes('coap')) layers.push('CoAP', 'UDP', 'IP', 'Wi-Fi PHY');
+  else if (sval('protocol').includes('lorawan')) layers.push('App', 'LoRaWAN MAC', 'LoRa PHY');
+  else if (sval('protocol') === 'lora') layers.push('App', 'LoRa PHY');
+  else if (sval('protocol') === 'wifi') layers.push('App', 'TCP/UDP', 'IP', '802.11 PHY');
+  else if (sval('protocol') === 'ble') layers.push('App', 'ATT/GATT', 'L2CAP', 'BLE PHY');
+  else if (sval('protocol') === 'zigbee') layers.push('App', 'APS', 'NWK', '802.15.4 PHY');
+  else layers.push('App', 'MAC', 'PHY');
+
+  const layerH = 20;
+  const layerW = 160;
+  const startY = stackY;
+  const colors = ['#38bdf830', '#4ade8020', '#a78bfa20', '#fbbf2420'];
+
+  layers.forEach((l, i) => {
+    const ly = startY + i * (layerH + 2);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.strokeStyle = colors[i % colors.length].replace('20','60');
+    ctx.lineWidth = 1;
+    roundRect(ctx, stackX - layerW/2, ly, layerW, layerH, 3);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#b6c2d4';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(l, stackX, ly + 13);
+  });
+
+  ctx.fillStyle = '#3f4a5b';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('PILHA DE PROTOCOLOS', stackX, startY - 8);
+
+  $('topo-type').textContent = 'PACOTES';
+  const pps = (1/val('send-interval')).toFixed(2);
+  $('topo-count').textContent = pps + ' pkt/s | ToA ' + (simResults?.toa?.toFixed(1)||'--') + ' ms';
+}
+
+function drawGateway(ctx, x, y) {
+  // Tower icon
+  ctx.fillStyle = '#fbbf24';
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+
+  // Base
+  ctx.beginPath();
+  ctx.moveTo(x-8, y+12); ctx.lineTo(x+8, y+12);
+  ctx.lineTo(x+4, y-4); ctx.lineTo(x-4, y-4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Antenna
+  ctx.beginPath(); ctx.moveTo(x, y-4); ctx.lineTo(x, y-16); ctx.stroke();
+
+  // Signal arcs
+  ctx.strokeStyle = '#fbbf2470'; ctx.lineWidth = 1.5;
+  [-1, 1].forEach(dir => {
+    [8, 14].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(x, y-16, r, -Math.PI*0.3*dir - Math.PI/2, Math.PI*0.3*dir - Math.PI/2);
+      ctx.stroke();
+    });
+  });
+
+  // Glow
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 24);
+  glow.addColorStop(0, 'rgba(251,191,36,0.15)');
+  glow.addColorStop(1, 'rgba(251,191,36,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI*2); ctx.fill();
+}
+
+function drawDevice(ctx, x, y, devType, isMain) {
+  const size = isMain ? 14 : 10;
+  const color = isMain ? '#38bdf8' : '#6b7889';
+
+  // Chip shape
+  ctx.fillStyle = color + (isMain ? '' : '80');
+  roundRect(ctx, x-size, y-size*0.7, size*2, size*1.4, 3);
+  ctx.fill();
+
+  // Pins
+  ctx.fillStyle = color + '60';
+  [-0.6, -0.2, 0.2, 0.6].forEach(p => {
+    ctx.fillRect(x + p*size*1.6 - 1, y - size*0.7 - 3, 2, 3);
+    ctx.fillRect(x + p*size*1.6 - 1, y + size*0.7, 2, 3);
+  });
+
+  // LED dot
+  ctx.fillStyle = isMain ? '#4ade80' : '#4ade8060';
+  ctx.beginPath(); ctx.arc(x + size*0.5, y - size*0.3, 2, 0, Math.PI*2); ctx.fill();
+  if (isMain) {
+    ctx.shadowColor = '#4ade80'; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(x + size*0.5, y - size*0.3, 2, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawLink(ctx, x1, y1, x2, y2, color, animated) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = animated ? 2 : 1;
+  if (!animated) ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (animated) {
+    // Signal dots along line
+    const now = Date.now();
+    const speed = 2000;
+    const phase = (now % speed) / speed;
+    for (let i = 0; i < 3; i++) {
+      const t = (phase + i/3) % 1;
+      const dx = x1 + (x2-x1)*t;
+      const dy = y1 + (y2-y1)*t;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 1 - t;
+      ctx.beginPath(); ctx.arc(dx, dy, 3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawPacket(ctx, x, y, color, label) {
+  ctx.fillStyle = color;
+  ctx.shadowColor = color; ctx.shadowBlur = 8;
+  roundRect(ctx, x-14, y-8, 28, 16, 3);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#07090d';
+  ctx.font = 'bold 8px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y + 3);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function setVizMode(mode, btn) {
+  vizMode = mode;
+  document.querySelectorAll('.mt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawViz();
+}
+
+// --- Animation loop ---
+let animRunning = false;
+function animLoop() {
+  if (vizMode === 'packet' && simResults) {
+    drawViz();
+  }
+  if (vizMode === 'topology' && simResults) {
+    drawViz();
+  }
+  requestAnimationFrame(animLoop);
+}
+
+function resetAll() {
+  simResults = null;
+  $('hdr-status').textContent = 'STANDBY';
+  $('hdr-status').style.color = '';
+  $('hdr-range').innerHTML = '--<span class="unit">km</span>';
+  drawViz(); drawChart(); drawSpectrum();
+}
+
+// --- Resize handler ---
+window.addEventListener('resize', () => {
+  drawViz(); drawChart(); drawSpectrum();
+});
+
+// --- Init ---
+window.addEventListener('DOMContentLoaded', () => {
+  onProtocolChange();
+
+  // Open first sections
+  document.querySelectorAll('.section-head.open').forEach(sh => {
+    sh.classList.add('open');
+    sh.nextElementSibling.classList.add('open');
+  });
+
+  drawViz();
+  drawChart();
+  drawSpectrum();
+  animLoop();
+});
+</script>
+</body>
+</html>

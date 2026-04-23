@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digital Comm Lab — Laboratório de Comunicações Digitais</title>
+<meta name="description" content="Laboratório interativo de comunicações digitais baseado no diagrama de Bernard Sklar: codificação de fonte, canal, modulação, AWGN, BER, constelação e diagrama de olho." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+
+  --opt: #818cf8;
+  --opt-soft: rgba(129,140,248,0.12);
+  --opt-bright: #a5b4fc;
+
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #0d2137 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #1a0d2b 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  letter-spacing: 0.01em;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ========== HEADER ========== */
+header.top-bar {
+  display: flex; align-items: center; gap: 20px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.95), rgba(10,14,20,0.7));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 100;
+}
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand .logo-mark {
+  display: inline-flex; width: 28px; height: 28px;
+  align-items: center; justify-content: center; position: relative;
+}
+.brand .logo-mark::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1px solid var(--cyan); border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+}
+.brand .logo-mark::after {
+  content: ''; position: absolute;
+  width: 6px; height: 6px;
+  background: var(--cyan); border-radius: 50%;
+  box-shadow: 0 0 12px var(--cyan);
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+}
+.brand h1 {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 18px; letter-spacing: 0.18em;
+}
+.brand .tag {
+  color: var(--text-2); font-size: 10px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+}
+.brand .tag em {
+  font-style: italic; font-family: var(--font-serif);
+  font-size: 13px; color: var(--cyan); letter-spacing: 0.04em;
+}
+
+.top-stats { display: flex; gap: 18px; margin-left: auto; font-family: var(--font-mono); font-size: 11px; }
+.top-stat { display: flex; flex-direction: column; gap: 2px; padding-right: 18px; border-right: 1px solid var(--border); }
+.top-stat:last-child { border-right: none; padding-right: 0; }
+.top-stat .label { color: var(--text-2); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
+.top-stat .value { color: var(--text-0); font-weight: 500; }
+.top-stat.live .value { color: var(--phos); }
+.top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300; }
+
+.top-actions { display: flex; gap: 8px; }
+.btn {
+  background: var(--bg-2); color: var(--text-0);
+  border: 1px solid var(--border-strong);
+  padding: 7px 14px; border-radius: var(--radius);
+  font-family: var(--font-display); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: all .15s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--bg-3); border-color: var(--text-2); }
+.btn.primary {
+  background: linear-gradient(180deg, #1a3d5e, #0f2840);
+  border-color: var(--cyan); color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan-glow), inset 0 1px 0 #38bdf820;
+}
+.btn.primary:hover { background: linear-gradient(180deg, #225080, #164060); }
+.btn svg { width: 12px; height: 12px; }
+
+/* ========== MAIN LAYOUT ========== */
+main {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  gap: 1px;
+  background: var(--border-soft);
+  flex: 1;
+  min-height: 0;
+}
+
+/* ========== PANELS ========== */
+.panel {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.panel-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+  position: sticky; top: 0; z-index: 10;
+}
+.panel-header h2 {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--text-0);
+}
+.panel-header .panel-sub {
+  font-family: var(--font-mono); font-size: 9px;
+  color: var(--text-2); letter-spacing: 0.15em;
+}
+.panel-body { padding: 10px 14px; }
+
+.section { margin-bottom: 6px; }
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; cursor: pointer; user-select: none;
+}
+.section-head h3 {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-1); display: flex; align-items: center; gap: 8px;
+}
+.section-head .chev {
+  font-size: 8px; color: var(--text-2); transition: transform .2s;
+}
+.section-head.open .chev { transform: rotate(90deg); }
+.section-body { display: none; padding: 4px 0 8px 0; }
+.section-head.open + .section-body, .section-body.open { display: block; }
+
+.dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+}
+.dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.dot.green { background: var(--phos); box-shadow: 0 0 6px var(--phos); }
+.dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.dot.rose { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+.dot.violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
+.dot.indigo { background: var(--opt); box-shadow: 0 0 6px var(--opt); }
+
+.field { margin-bottom: 8px; }
+.field label {
+  display: block; font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-2); margin-bottom: 4px;
+}
+.field select, .field input[type="number"], .field input[type="text"] {
+  width: 100%; background: var(--bg-0); color: var(--text-0);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 8px; font-family: var(--font-mono); font-size: 12px;
+  outline: none; transition: border-color .15s;
+}
+.field select:focus, .field input:focus { border-color: var(--cyan); }
+.field .help { font-family: var(--font-mono); font-size: 9px; color: var(--text-3); margin-top: 2px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid var(--text-3); color: var(--text-3);
+  font-style: italic; font-size: 10px; cursor: help; position: relative;
+  margin-left: 4px;
+}
+.tip:hover { color: var(--cyan); border-color: var(--cyan); }
+.tip::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%); width: 240px; background: var(--bg-3);
+  border: 1px solid var(--border-strong); color: var(--text-1);
+  padding: 8px 10px; border-radius: var(--radius); font-family: var(--font-body);
+  font-size: 10.5px; font-style: normal; letter-spacing: 0; text-transform: none;
+  line-height: 1.5; opacity: 0; pointer-events: none; transition: opacity .15s;
+  z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.5); text-align: left; white-space: normal;
+}
+.tip:hover::after { opacity: 1; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  padding: 5px 10px; background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 3px; font-family: var(--font-mono); font-size: 10.5px;
+  cursor: pointer; transition: all .15s; color: var(--text-1);
+}
+.chip:hover { border-color: var(--text-2); color: var(--text-0); }
+.chip.active { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+
+.slider-wrap { display: flex; align-items: center; gap: 8px; }
+.slider-wrap input[type="range"] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 4px; background: var(--bg-0); border: 1px solid var(--border);
+  border-radius: 2px; outline: none;
+}
+.slider-wrap input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--cyan); cursor: pointer;
+  box-shadow: 0 0 6px var(--cyan-glow);
+}
+.slider-val {
+  font-family: var(--font-mono); font-size: 11px; color: var(--cyan);
+  min-width: 50px; text-align: right;
+}
+
+/* ========== CENTER VIZ ========== */
+.viz-area {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow-y: auto;
+}
+.viz-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+  position: sticky; top: 0; z-index: 10;
+}
+.viz-tab {
+  padding: 8px 16px; font-family: var(--font-display);
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-2); cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.viz-tab:hover { color: var(--text-1); }
+.viz-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+.viz-content { flex: 1; padding: 12px; }
+.viz-pane { display: none; }
+.viz-pane.active { display: block; }
+
+/* Block diagram */
+.block-diagram {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 10px;
+}
+.block-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; flex-wrap: wrap;
+}
+.block-box {
+  padding: 8px 12px; background: var(--bg-2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: var(--font-display); font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-1); text-align: center;
+  min-width: 90px; cursor: default; transition: all .2s;
+  position: relative;
+}
+.block-box:hover { border-color: var(--cyan); color: var(--text-0); }
+.block-box.active { border-color: var(--cyan); background: var(--cyan-soft); color: var(--cyan); }
+.block-box.tx { border-left: 3px solid var(--phos); }
+.block-box.ch { border-left: 3px solid var(--amber); }
+.block-box.rx { border-left: 3px solid var(--violet); }
+.block-arrow { color: var(--text-3); font-size: 14px; }
+.block-label {
+  font-family: var(--font-mono); font-size: 8px;
+  color: var(--text-3); text-align: center; letter-spacing: 0.15em;
+}
+
+/* Canvas containers */
+.canvas-card {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 10px;
+}
+.canvas-card .card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 12px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+}
+.canvas-card .card-header h3 {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-1);
+}
+.canvas-card .card-header .meta {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
+}
+.canvas-card canvas { width: 100%; height: 200px; display: block; }
+.canvas-card.tall canvas { height: 280px; }
+
+/* Signal grid */
+.signal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ========== RESULTS PANEL ========== */
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 5px 0; border-bottom: 1px dashed var(--border); }
+.kv:last-child { border-bottom: none; }
+.kv .k {
+  font-family: var(--font-display); font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2);
+  display: flex; align-items: center; gap: 6px;
+}
+.kv .v {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-0);
+  text-align: right; white-space: nowrap;
+}
+.kv .v .unit { color: var(--text-2); margin-left: 3px; font-weight: 300; font-size: 10px; }
+.kv .v.good { color: var(--phos); }
+.kv .v.warn { color: var(--amber); }
+.kv .v.bad { color: var(--rose); }
+.kv .v.acc { color: var(--cyan); }
+
+.live-dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+.live-dot.off { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+
+.gauge { margin-top: 4px; height: 10px; background: var(--bg-0); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; position: relative; }
+.gauge-fill { height: 100%; border-radius: 1px; transition: width 0.4s ease, background 0.4s ease; }
+.gauge-fill.good { background: linear-gradient(90deg, #14532d, var(--phos)); box-shadow: 0 0 8px var(--phos-glow); }
+.gauge-fill.warn { background: linear-gradient(90deg, #78350f, var(--amber)); }
+.gauge-fill.bad { background: linear-gradient(90deg, #7f1d1d, var(--rose)); }
+
+.info-box {
+  margin: 8px 0; padding: 8px 10px; background: rgba(129,140,248,0.04);
+  border: 1px solid var(--border); border-left: 3px solid var(--opt);
+  border-radius: var(--radius); font-family: var(--font-mono); font-size: 10px;
+  line-height: 1.55; color: var(--text-1);
+}
+.info-box.ok { border-left-color: var(--phos); background: rgba(74,222,128,0.03); }
+.info-box.warn-box { border-left-color: var(--amber); background: rgba(251,191,36,0.04); }
+.info-box strong { color: var(--text-0); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+/* ========== FOOTER ========== */
+footer {
+  padding: 6px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.7), rgba(10,14,20,0.95));
+  border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); display: flex; align-items: center; justify-content: space-between;
+}
+footer .author { display: flex; align-items: center; gap: 8px; }
+footer .author a { color: var(--opt-bright); text-decoration: none; }
+footer .author a:hover { text-decoration: underline; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  main { grid-template-columns: 1fr; }
+  .panel { max-height: 400px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ==================== HEADER ==================== -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"></span>
+    <h1>DIGITAL COMM LAB</h1>
+    <span class="tag">Laboratorio de <em>Comunicacoes Digitais</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Modulacao</span>
+      <span class="value" id="hdr-mod">QPSK</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Rb</span>
+      <span class="value" id="hdr-rb">1.0<span class="unit">Mbps</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Eb/N0</span>
+      <span class="value" id="hdr-ebno">10<span class="unit">dB</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">BER</span>
+      <span class="value" id="hdr-ber">--</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn primary" onclick="runSimulation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+      Simular
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<!-- ==================== MAIN ==================== -->
+<main>
+
+<!-- ===== LEFT PANEL: TX CONFIG ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao do Sistema</h2>
+    <span class="panel-sub">FONTE / COD / MOD / CANAL</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- PRESETS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Cenarios Predefinidos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="chips" id="preset-chips">
+          <span class="chip active" onclick="loadPreset('voip')">VoIP</span>
+          <span class="chip" onclick="loadPreset('video')">Video HD</span>
+          <span class="chip" onclick="loadPreset('iot')">IoT / LPWAN</span>
+          <span class="chip" onclick="loadPreset('5g')">5G NR</span>
+          <span class="chip" onclick="loadPreset('satellite')">Satelite</span>
+          <span class="chip" onclick="loadPreset('deepspace')">Deep Space</span>
+          <span class="chip" onclick="loadPreset('wifi6')">Wi-Fi 6</span>
+          <span class="chip" onclick="loadPreset('dvbt2')">DVB-T2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Fonte de Informacao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Tipo de Fonte <span class="tip" data-tip="Selecione o tipo de sinal de informacao. Texto usa codificacao ASCII 7-bit. Senoidal gera tom puro para teste. Aleatorio gera bits equiprovaveis.">i</span></label>
+          <select id="src-type">
+            <option value="text">Texto (ASCII)</option>
+            <option value="random" selected>Bits Aleatorios</option>
+            <option value="sine">Senoidal (PCM)</option>
+            <option value="image">Imagem (Grayscale)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Mensagem / Num. Bits</label>
+          <input type="text" id="src-msg" value="4096" />
+          <div class="help">Para texto: mensagem. Para aleatorio: numero de bits.</div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Taxa de Bits (Rb)</label>
+            <input type="number" id="src-rb" value="1" step="0.1" min="0.001" max="1000" />
+            <div class="help">Mbps</div>
+          </div>
+          <div class="field">
+            <label>Freq. Amostragem</label>
+            <input type="number" id="src-fs" value="8" step="1" min="1" max="100" />
+            <div class="help">amostras/simbolo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOURCE CODING -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Codificacao de Fonte</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Algoritmo <span class="tip" data-tip="Codificacao de fonte remove redundancia. PCM: quantizacao uniforme. Mu-Law/A-Law: companding logaritmico para voz (ITU G.711). Huffman: codificacao de comprimento variavel.">i</span></label>
+          <select id="src-coding">
+            <option value="none">Nenhum (Bypass)</option>
+            <option value="pcm" selected>PCM Uniforme</option>
+            <option value="mulaw">Mu-Law (G.711)</option>
+            <option value="alaw">A-Law (G.711)</option>
+            <option value="huffman">Huffman</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Bits/Amostra</label>
+            <select id="src-bits">
+              <option value="4">4 bits</option>
+              <option value="8" selected>8 bits</option>
+              <option value="12">12 bits</option>
+              <option value="16">16 bits</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Companding &mu;</label>
+            <input type="number" id="src-mu" value="255" step="1" min="1" max="1000" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANNEL CODING -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Codificacao de Canal (FEC)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Codigo <span class="tip" data-tip="FEC adiciona redundancia controlada para correcao de erros. Hamming: corrige 1 erro por bloco. Conv: Viterbi decoding. LDPC/Turbo: Near-Shannon-limit. Reed-Solomon: erros em rajada.">i</span></label>
+          <select id="ch-coding">
+            <option value="none">Nenhum (Sem FEC)</option>
+            <option value="hamming" selected>Hamming (7,4)</option>
+            <option value="hamming1511">Hamming (15,11)</option>
+            <option value="repetition">Repeticao (3x)</option>
+            <option value="conv">Convolucional (R=1/2, K=7)</option>
+            <option value="conv13">Convolucional (R=1/3, K=9)</option>
+            <option value="rs">Reed-Solomon (255,223)</option>
+            <option value="turbo">Turbo Code (R=1/3)</option>
+            <option value="ldpc">LDPC (R=3/4)</option>
+            <option value="polar">Polar Code (R=1/2)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Interleaving <span class="tip" data-tip="Interleaving embaralha bits para distribuir erros em rajada, melhorando desempenho do FEC em canais com fading.">i</span></label>
+          <select id="ch-interleave">
+            <option value="none" selected>Desativado</option>
+            <option value="block">Block Interleaver</option>
+            <option value="convolutional">Convolutional Interleaver</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULATION -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Modulacao Digital</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Esquema <span class="tip" data-tip="BPSK: 1 bit/simbolo, mais robusto. QPSK: 2 bits/simbolo. 8PSK: 3 bits/sim. 16QAM: 4 bits/sim. 64QAM: 6 bits/sim. Maior M = mais eficiente mas menos robusto.">i</span></label>
+          <select id="mod-scheme" onchange="onModChange()">
+            <option value="bpsk">BPSK (M=2)</option>
+            <option value="qpsk" selected>QPSK (M=4)</option>
+            <option value="8psk">8-PSK (M=8)</option>
+            <option value="16qam">16-QAM (M=16)</option>
+            <option value="64qam">64-QAM (M=64)</option>
+            <option value="256qam">256-QAM (M=256)</option>
+            <option value="oqpsk">OQPSK</option>
+            <option value="msk">MSK</option>
+            <option value="gmsk">GMSK (BT=0.3)</option>
+            <option value="16apsk">16-APSK (DVB-S2)</option>
+            <option value="ook">OOK (On-Off Keying)</option>
+            <option value="4fsk">4-FSK</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pulse Shaping <span class="tip" data-tip="Filtro de conformacao de pulso. SRRC (Square Root Raised Cosine) com fator de roll-off alpha. Gaussian para MSK/GMSK. Rectangular: sem filtragem.">i</span></label>
+          <select id="mod-pulse">
+            <option value="srrc" selected>SRRC (Raised Cosine)</option>
+            <option value="rect">Retangular (NRZ)</option>
+            <option value="gaussian">Gaussiano</option>
+            <option value="sinc">Sinc (Nyquist ideal)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Roll-off (&alpha;)</label>
+          <div class="slider-wrap">
+            <input type="range" id="mod-alpha" min="0" max="1" step="0.05" value="0.35" oninput="document.getElementById('mod-alpha-val').textContent=this.value" />
+            <span class="slider-val" id="mod-alpha-val">0.35</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Fc (Portadora Normalizada)</label>
+          <input type="number" id="mod-fc" value="4" step="0.5" min="1" max="20" />
+          <div class="help">x Rb (multiplo da taxa de bit)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANNEL -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot rose"></span>Canal de Comunicacao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Modelo <span class="tip" data-tip="AWGN: ruido branco gaussiano aditivo. Rayleigh: fading plano sem linha de visada. Rician: fading com componente LOS (K-factor). Multipath: canal seletivo em frequencia.">i</span></label>
+          <select id="ch-model">
+            <option value="awgn" selected>AWGN</option>
+            <option value="rayleigh">Rayleigh Flat Fading</option>
+            <option value="rician">Rician Fading (K=5dB)</option>
+            <option value="multipath">Multipath (2 taps)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Eb/N0 (dB)</label>
+          <div class="slider-wrap">
+            <input type="range" id="ch-ebno" min="-5" max="30" step="0.5" value="10" oninput="document.getElementById('ch-ebno-val').textContent=this.value+' dB'" />
+            <span class="slider-val" id="ch-ebno-val">10 dB</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Faixa Eb/N0 para Curva BER</label>
+          <div class="field-row">
+            <div class="field">
+              <label>Min (dB)</label>
+              <input type="number" id="ch-ebno-min" value="-2" step="1" />
+            </div>
+            <div class="field">
+              <label>Max (dB)</label>
+              <input type="number" id="ch-ebno-max" value="16" step="1" />
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Rician K-Factor (dB)</label>
+          <input type="number" id="ch-kfactor" value="5" step="1" min="-10" max="30" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== CENTER: VISUALIZATION ===== -->
+<div class="viz-area">
+  <div class="viz-tabs">
+    <div class="viz-tab active" onclick="switchTab(this,'tab-diagram')">Diagrama</div>
+    <div class="viz-tab" onclick="switchTab(this,'tab-signals')">Sinais</div>
+    <div class="viz-tab" onclick="switchTab(this,'tab-constellation')">Constelacao</div>
+    <div class="viz-tab" onclick="switchTab(this,'tab-eye')">Diagrama de Olho</div>
+    <div class="viz-tab" onclick="switchTab(this,'tab-ber')">Curva BER</div>
+    <div class="viz-tab" onclick="switchTab(this,'tab-spectrum')">Espectro</div>
+  </div>
+  <div class="viz-content">
+
+    <!-- TAB: Block Diagram -->
+    <div class="viz-pane active" id="tab-diagram">
+      <div class="canvas-card">
+        <div class="card-header">
+          <h3>Diagrama de Blocos — Sklar</h3>
+          <span class="meta">Digital Communication System</span>
+        </div>
+        <canvas id="cvs-diagram" height="420"></canvas>
+      </div>
+      <div class="info-box">
+        <strong>Ref:</strong> Bernard Sklar, "Digital Communications: Fundamentals and Applications", Cap. 1.<br>
+        O diagrama segue o fluxo: Fonte &rarr; Cod. Fonte &rarr; Encriptacao &rarr; Cod. Canal &rarr; Multiplexacao &rarr; Pulse Shaping &rarr; Modulacao &rarr; Canal &rarr; (reverso no RX).
+      </div>
+    </div>
+
+    <!-- TAB: Signals -->
+    <div class="viz-pane" id="tab-signals">
+      <div class="signal-grid">
+        <div class="canvas-card">
+          <div class="card-header"><h3>Sinal da Fonte (Bits TX)</h3><span class="meta" id="sig-src-meta">--</span></div>
+          <canvas id="cvs-src"></canvas>
+        </div>
+        <div class="canvas-card">
+          <div class="card-header"><h3>Apos Cod. Canal</h3><span class="meta" id="sig-enc-meta">--</span></div>
+          <canvas id="cvs-enc"></canvas>
+        </div>
+        <div class="canvas-card">
+          <div class="card-header"><h3>Sinal Modulado (Bandpass)</h3><span class="meta" id="sig-mod-meta">--</span></div>
+          <canvas id="cvs-mod"></canvas>
+        </div>
+        <div class="canvas-card">
+          <div class="card-header"><h3>Sinal Recebido (c/ Ruido)</h3><span class="meta" id="sig-rx-meta">--</span></div>
+          <canvas id="cvs-rx"></canvas>
+        </div>
+        <div class="canvas-card">
+          <div class="card-header"><h3>Sinal Demodulado (Baseband)</h3><span class="meta" id="sig-demod-meta">--</span></div>
+          <canvas id="cvs-demod"></canvas>
+        </div>
+        <div class="canvas-card">
+          <div class="card-header"><h3>Bits Recuperados (RX)</h3><span class="meta" id="sig-out-meta">--</span></div>
+          <canvas id="cvs-out"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Constellation -->
+    <div class="viz-pane" id="tab-constellation">
+      <div class="signal-grid">
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>Constelacao TX (Ideal)</h3><span class="meta" id="const-tx-meta">--</span></div>
+          <canvas id="cvs-const-tx"></canvas>
+        </div>
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>Constelacao RX (c/ Ruido)</h3><span class="meta" id="const-rx-meta">--</span></div>
+          <canvas id="cvs-const-rx"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Eye Diagram -->
+    <div class="viz-pane" id="tab-eye">
+      <div class="signal-grid">
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>Diagrama de Olho — Componente I</h3><span class="meta" id="eye-i-meta">--</span></div>
+          <canvas id="cvs-eye-i"></canvas>
+        </div>
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>Diagrama de Olho — Componente Q</h3><span class="meta" id="eye-q-meta">--</span></div>
+          <canvas id="cvs-eye-q"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: BER Curve -->
+    <div class="viz-pane" id="tab-ber">
+      <div class="canvas-card tall">
+        <div class="card-header"><h3>Curva BER vs Eb/N0</h3><span class="meta" id="ber-meta">Teorico + Simulado</span></div>
+        <canvas id="cvs-ber" height="350"></canvas>
+      </div>
+      <div class="info-box">
+        Curva <strong>teorica</strong> (linha) e <strong>simulada</strong> (pontos) de BER para o esquema de modulacao selecionado. Linhas tracejadas mostram outros esquemas para comparacao.
+      </div>
+    </div>
+
+    <!-- TAB: Spectrum -->
+    <div class="viz-pane" id="tab-spectrum">
+      <div class="signal-grid">
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>PSD do Sinal Modulado</h3><span class="meta" id="psd-meta">--</span></div>
+          <canvas id="cvs-psd"></canvas>
+        </div>
+        <div class="canvas-card tall">
+          <div class="card-header"><h3>PSD do Sinal Recebido</h3><span class="meta" id="psd-rx-meta">--</span></div>
+          <canvas id="cvs-psd-rx"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== RIGHT PANEL: RESULTS ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados da Simulacao</h2>
+    <span class="panel-sub">METRICAS / DESEMPENHO</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Link Summary</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k"><span class="live-dot"></span> Status</span><span class="v good" id="r-status">STANDBY</span></div>
+        <div class="kv"><span class="k">Modulacao</span><span class="v acc" id="r-mod">QPSK</span></div>
+        <div class="kv"><span class="k">Bits/Simbolo (k)</span><span class="v" id="r-bps">2</span></div>
+        <div class="kv"><span class="k">Taxa de Simbolos (Rs)</span><span class="v" id="r-rs">0.5<span class="unit">Msps</span></span></div>
+        <div class="kv"><span class="k">Largura de Banda (BW)</span><span class="v" id="r-bw">0.675<span class="unit">MHz</span></span></div>
+        <div class="kv"><span class="k">Eficiencia Espectral</span><span class="v acc" id="r-eta">1.48<span class="unit">bps/Hz</span></span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k">Cod. Canal (FEC)</span><span class="v" id="r-fec">Hamming(7,4)</span></div>
+        <div class="kv"><span class="k">Code Rate (R)</span><span class="v" id="r-rate">4/7</span></div>
+        <div class="kv"><span class="k">Coding Gain (aprox)</span><span class="v good" id="r-gain">1.5<span class="unit">dB</span></span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Desempenho BER</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Eb/N0</span><span class="v acc" id="r-ebno">10<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">SNR</span><span class="v" id="r-snr">13<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">BER Teorica</span><span class="v good" id="r-ber-th">3.87e-6</span></div>
+        <div class="kv"><span class="k">BER Simulada</span><span class="v good" id="r-ber-sim">--</span></div>
+        <div class="kv"><span class="k">Bits TX</span><span class="v" id="r-bits-tx">4096</span></div>
+        <div class="kv"><span class="k">Bits com Erro</span><span class="v" id="r-bits-err">0</span></div>
+        <div class="gauge" id="ber-gauge">
+          <div class="gauge-fill good" id="ber-gauge-fill" style="width:95%"></div>
+        </div>
+        <div class="info-box ok" id="ber-verdict">
+          Aguardando simulacao...
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Analise do Sinal</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">EVM (RMS)</span><span class="v" id="r-evm">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">MER</span><span class="v" id="r-mer">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">PAPR</span><span class="v" id="r-papr">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Abertura do Olho</span><span class="v" id="r-eyeopen">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">Jitter RMS</span><span class="v" id="r-jitter">--<span class="unit">%T</span></span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Teorema de Shannon</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Capacidade (C)</span><span class="v acc" id="r-capacity">--<span class="unit">Mbps</span></span></div>
+        <div class="kv"><span class="k">C/BW</span><span class="v" id="r-cbw">--<span class="unit">bps/Hz</span></span></div>
+        <div class="kv"><span class="k">Rb vs C</span><span class="v" id="r-rbc">--</span></div>
+        <div class="kv"><span class="k">Shannon Limit</span><span class="v" id="r-shlimit">-1.59<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Gap to Shannon</span><span class="v" id="r-shgap">--<span class="unit">dB</span></span></div>
+        <div class="info-box" id="shannon-box">
+          <strong>C = BW &middot; log2(1 + SNR)</strong><br>
+          Limite de Shannon: Eb/N0 &ge; -1.59 dB para BER &rarr; 0 com R &rarr; 0.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <div class="author">
+    Digital Comm Lab &bull; Baseado em Bernard Sklar, <em>"Digital Communications"</em> &bull;
+    <a href="#">Prof. Ramon Mayor Martins</a> &bull; IFSC
+  </div>
+  <span class="ts" id="footer-ts">--</span>
+</footer>
+
+</div><!-- .app -->
+
+<script>
+// ===================================================================
+//  DIGITAL COMMUNICATION LAB — Full simulation engine
+//  Based on Bernard Sklar's system diagram
+// ===================================================================
+
+// ---------- UI HELPERS ----------
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+function switchTab(tabEl, paneId) {
+  document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.viz-pane').forEach(p => p.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+function setChipActive(container, chip) {
+  container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+}
+
+// ---------- MATH HELPERS ----------
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function erfc(x) {
+  const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const t = 1.0 / (1.0 + p * x);
+  const y = 1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t * Math.exp(-x*x);
+  return 1.0 - sign * y;
+}
+function qfunc(x) { return 0.5 * erfc(x / Math.sqrt(2)); }
+function dB(x) { return 10 * Math.log10(x); }
+function fromDB(x) { return Math.pow(10, x / 10); }
+
+// ---------- MODULATION PARAMS ----------
+const MOD_INFO = {
+  bpsk:    { M: 2,   k: 1, type: 'psk',  label: 'BPSK' },
+  qpsk:    { M: 4,   k: 2, type: 'psk',  label: 'QPSK' },
+  '8psk':  { M: 8,   k: 3, type: 'psk',  label: '8-PSK' },
+  '16qam': { M: 16,  k: 4, type: 'qam',  label: '16-QAM' },
+  '64qam': { M: 64,  k: 6, type: 'qam',  label: '64-QAM' },
+  '256qam':{ M: 256, k: 8, type: 'qam',  label: '256-QAM' },
+  oqpsk:   { M: 4,   k: 2, type: 'psk',  label: 'OQPSK' },
+  msk:     { M: 4,   k: 2, type: 'fsk',  label: 'MSK' },
+  gmsk:    { M: 4,   k: 2, type: 'fsk',  label: 'GMSK' },
+  '16apsk':{ M: 16,  k: 4, type: 'apsk', label: '16-APSK' },
+  ook:     { M: 2,   k: 1, type: 'ask',  label: 'OOK' },
+  '4fsk':  { M: 4,   k: 2, type: 'fsk',  label: '4-FSK' },
+};
+
+const FEC_INFO = {
+  none:       { label: 'Sem FEC', rate: 1, gain: 0 },
+  hamming:    { label: 'Hamming(7,4)', rate: 4/7, gain: 1.5 },
+  hamming1511:{ label: 'Hamming(15,11)', rate: 11/15, gain: 2.0 },
+  repetition: { label: 'Repeticao(3)', rate: 1/3, gain: 1.8 },
+  conv:       { label: 'Conv(R=1/2,K=7)', rate: 1/2, gain: 5.0 },
+  conv13:     { label: 'Conv(R=1/3,K=9)', rate: 1/3, gain: 6.5 },
+  rs:         { label: 'RS(255,223)', rate: 223/255, gain: 5.5 },
+  turbo:      { label: 'Turbo(R=1/3)', rate: 1/3, gain: 8.0 },
+  ldpc:       { label: 'LDPC(R=3/4)', rate: 3/4, gain: 7.5 },
+  polar:      { label: 'Polar(R=1/2)', rate: 1/2, gain: 6.0 },
+};
+
+// ---------- PRESETS ----------
+const PRESETS = {
+  voip:     { mod:'qpsk', fec:'conv', ebno:8, rb:0.064, msg:'2048', src:'random', pulse:'srrc', alpha:0.35, channel:'awgn' },
+  video:    { mod:'64qam', fec:'ldpc', ebno:18, rb:20, msg:'8192', src:'random', pulse:'srrc', alpha:0.2, channel:'awgn' },
+  iot:      { mod:'bpsk', fec:'repetition', ebno:5, rb:0.01, msg:'512', src:'random', pulse:'rect', alpha:0, channel:'rayleigh' },
+  '5g':     { mod:'256qam', fec:'ldpc', ebno:24, rb:100, msg:'8192', src:'random', pulse:'srrc', alpha:0.22, channel:'awgn' },
+  satellite:{ mod:'8psk', fec:'turbo', ebno:6, rb:10, msg:'4096', src:'random', pulse:'srrc', alpha:0.35, channel:'rician' },
+  deepspace:{ mod:'bpsk', fec:'conv13', ebno:2, rb:0.001, msg:'1024', src:'random', pulse:'srrc', alpha:0.5, channel:'awgn' },
+  wifi6:    { mod:'16qam', fec:'ldpc', ebno:15, rb:50, msg:'4096', src:'random', pulse:'srrc', alpha:0.25, channel:'multipath' },
+  dvbt2:    { mod:'64qam', fec:'ldpc', ebno:14, rb:30, msg:'4096', src:'random', pulse:'srrc', alpha:0.15, channel:'rayleigh' },
+};
+
+function loadPreset(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  document.getElementById('mod-scheme').value = p.mod;
+  document.getElementById('ch-coding').value = p.fec;
+  document.getElementById('ch-ebno').value = p.ebno;
+  document.getElementById('ch-ebno-val').textContent = p.ebno + ' dB';
+  document.getElementById('src-rb').value = p.rb;
+  document.getElementById('src-msg').value = p.msg;
+  document.getElementById('src-type').value = p.src;
+  document.getElementById('mod-pulse').value = p.pulse;
+  document.getElementById('mod-alpha').value = p.alpha;
+  document.getElementById('mod-alpha-val').textContent = p.alpha;
+  document.getElementById('ch-model').value = p.channel;
+  const chips = document.getElementById('preset-chips');
+  chips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  onModChange();
+}
+
+function onModChange() {
+  const mod = MOD_INFO[document.getElementById('mod-scheme').value];
+  document.getElementById('hdr-mod').textContent = mod.label;
+}
+
+// ---------- CONSTELLATION GENERATION ----------
+function generateConstellation(scheme) {
+  const info = MOD_INFO[scheme];
+  const M = info.M;
+  const points = [];
+  if (info.type === 'psk' || scheme === 'oqpsk' || scheme === 'msk' || scheme === 'gmsk') {
+    for (let i = 0; i < M; i++) {
+      const angle = 2 * Math.PI * i / M + (M > 2 ? Math.PI / 4 : 0);
+      points.push({ I: Math.cos(angle), Q: Math.sin(angle) });
+    }
+  } else if (info.type === 'qam') {
+    const side = Math.sqrt(M);
+    for (let i = 0; i < side; i++) {
+      for (let j = 0; j < side; j++) {
+        points.push({ I: 2*i - side + 1, Q: 2*j - side + 1 });
+      }
+    }
+    // normalize
+    const maxR = Math.max(...points.map(p => Math.sqrt(p.I*p.I + p.Q*p.Q)));
+    points.forEach(p => { p.I /= maxR; p.Q /= maxR; });
+  } else if (info.type === 'ask' || scheme === 'ook') {
+    points.push({ I: 0, Q: 0 });
+    points.push({ I: 1, Q: 0 });
+  } else if (info.type === 'fsk') {
+    for (let i = 0; i < M; i++) {
+      points.push({ I: Math.cos(2*Math.PI*i/M), Q: Math.sin(2*Math.PI*i/M) });
+    }
+  } else if (info.type === 'apsk') {
+    // 16-APSK: 2 rings
+    for (let i = 0; i < 4; i++) {
+      const a = 2 * Math.PI * i / 4 + Math.PI/4;
+      points.push({ I: 0.4*Math.cos(a), Q: 0.4*Math.sin(a) });
+    }
+    for (let i = 0; i < 12; i++) {
+      const a = 2 * Math.PI * i / 12;
+      points.push({ I: Math.cos(a), Q: Math.sin(a) });
+    }
+  }
+  return points;
+}
+
+// ---------- BER THEORETICAL ----------
+function berTheoretical(scheme, ebno_dB) {
+  const ebno = fromDB(ebno_dB);
+  const info = MOD_INFO[scheme];
+  const M = info.M;
+  const k = info.k;
+  if (scheme === 'bpsk' || scheme === 'ook') {
+    return qfunc(Math.sqrt(2 * ebno));
+  } else if (scheme === 'qpsk' || scheme === 'oqpsk' || scheme === 'msk' || scheme === 'gmsk') {
+    return qfunc(Math.sqrt(2 * ebno));
+  } else if (info.type === 'psk') {
+    const pe = 2 * qfunc(Math.sqrt(2 * k * ebno) * Math.sin(Math.PI / M));
+    return pe / k;
+  } else if (info.type === 'qam') {
+    const sqrtM = Math.sqrt(M);
+    const pe = 4 * (1 - 1/sqrtM) * qfunc(Math.sqrt(3 * k * ebno / (M - 1)));
+    return pe / k;
+  } else if (info.type === 'apsk') {
+    return 2 * qfunc(Math.sqrt(2 * k * ebno) * Math.sin(Math.PI / M));
+  } else if (info.type === 'fsk') {
+    return qfunc(Math.sqrt(ebno));
+  }
+  return qfunc(Math.sqrt(2 * ebno));
+}
+
+// ---------- SIMULATION ENGINE ----------
+let simResult = null;
+
+function runSimulation() {
+  const scheme = document.getElementById('mod-scheme').value;
+  const fecKey = document.getElementById('ch-coding').value;
+  const ebno_dB = parseFloat(document.getElementById('ch-ebno').value);
+  const Rb = parseFloat(document.getElementById('src-rb').value); // Mbps
+  const sps = parseInt(document.getElementById('src-fs').value);
+  const alpha = parseFloat(document.getElementById('mod-alpha').value);
+  const channelModel = document.getElementById('ch-model').value;
+  const ebnoMin = parseFloat(document.getElementById('ch-ebno-min').value);
+  const ebnoMax = parseFloat(document.getElementById('ch-ebno-max').value);
+
+  const mod = MOD_INFO[scheme];
+  const fec = FEC_INFO[fecKey];
+  const M = mod.M, k = mod.k;
+  let numBits = parseInt(document.getElementById('src-msg').value) || 4096;
+  numBits = Math.max(256, Math.min(numBits, 65536));
+  // Ensure multiple of k
+  numBits = Math.floor(numBits / k) * k;
+
+  // 1. Generate source bits
+  const txBits = new Array(numBits);
+  for (let i = 0; i < numBits; i++) txBits[i] = Math.random() < 0.5 ? 0 : 1;
+
+  // 2. Channel encoding (simplified — just expand rate)
+  let codedBits = txBits.slice();
+  if (fecKey === 'repetition') {
+    codedBits = [];
+    for (let b of txBits) { codedBits.push(b, b, b); }
+  } else if (fecKey !== 'none') {
+    // Simulate rate expansion by adding parity bits
+    const n = Math.ceil(txBits.length / fec.rate);
+    codedBits = new Array(n);
+    for (let i = 0; i < n; i++) codedBits[i] = i < txBits.length ? txBits[i] : (Math.random() < 0.5 ? 0 : 1);
+  }
+
+  // 3. Map to symbols
+  const numSymbols = Math.floor(codedBits.length / k);
+  const constellation = generateConstellation(scheme);
+
+  const txI = new Array(numSymbols);
+  const txQ = new Array(numSymbols);
+  const txSymIdx = new Array(numSymbols);
+  for (let i = 0; i < numSymbols; i++) {
+    let idx = 0;
+    for (let b = 0; b < k; b++) idx = (idx << 1) | codedBits[i * k + b];
+    idx = idx % constellation.length;
+    txSymIdx[i] = idx;
+    txI[i] = constellation[idx].I;
+    txQ[i] = constellation[idx].Q;
+  }
+
+  // 4. Pulse shaping (upsample + filter)
+  const txSigI = new Array(numSymbols * sps).fill(0);
+  const txSigQ = new Array(numSymbols * sps).fill(0);
+  for (let i = 0; i < numSymbols; i++) {
+    txSigI[i * sps] = txI[i];
+    txSigQ[i * sps] = txQ[i];
+  }
+  // SRRC filter
+  const span = 6;
+  const filterLen = span * sps * 2 + 1;
+  const h = new Array(filterLen);
+  let energy = 0;
+  for (let n = 0; n < filterLen; n++) {
+    const t = (n - span * sps) / sps;
+    if (Math.abs(t) < 1e-8) {
+      h[n] = 1 - alpha + 4 * alpha / Math.PI;
+    } else if (Math.abs(Math.abs(t) - 1 / (4 * alpha)) < 1e-8 && alpha > 0) {
+      h[n] = (alpha / Math.sqrt(2)) * ((1 + 2/Math.PI) * Math.sin(Math.PI/(4*alpha)) + (1 - 2/Math.PI) * Math.cos(Math.PI/(4*alpha)));
+    } else {
+      const pit = Math.PI * t;
+      h[n] = (Math.sin(pit * (1 - alpha)) + 4 * alpha * t * Math.cos(pit * (1 + alpha))) /
+             (pit * (1 - (4 * alpha * t) ** 2));
+    }
+    if (isNaN(h[n]) || !isFinite(h[n])) h[n] = 0;
+    energy += h[n] * h[n];
+  }
+  const norm = Math.sqrt(energy);
+  for (let n = 0; n < filterLen; n++) h[n] /= norm;
+
+  // Convolve
+  const sigLen = txSigI.length;
+  const modI = new Array(sigLen).fill(0);
+  const modQ = new Array(sigLen).fill(0);
+  for (let i = 0; i < sigLen; i++) {
+    for (let j = 0; j < filterLen; j++) {
+      const idx = i - j + span * sps;
+      if (idx >= 0 && idx < sigLen) {
+        modI[i] += txSigI[idx] * h[j];
+        modQ[i] += txSigQ[idx] * h[j];
+      }
+    }
+  }
+
+  // 5. Modulate to carrier
+  const fc = parseFloat(document.getElementById('mod-fc').value);
+  const modulated = new Array(sigLen);
+  for (let i = 0; i < sigLen; i++) {
+    const t = i / sps;
+    modulated[i] = modI[i] * Math.cos(2 * Math.PI * fc * t / sps) -
+                   modQ[i] * Math.sin(2 * Math.PI * fc * t / sps);
+  }
+
+  // 6. Channel: add noise
+  const ebno_lin = fromDB(ebno_dB);
+  const snr_lin = ebno_lin * k; // SNR per sample = Eb/N0 * k * (1/sps) but simplified
+  const noisePower = 1 / (2 * snr_lin * sps);
+  const noiseStd = Math.sqrt(noisePower);
+
+  const rxSigI = new Array(sigLen);
+  const rxSigQ = new Array(sigLen);
+  const received = new Array(sigLen);
+
+  // Fading
+  let fadingI = new Array(numSymbols).fill(1);
+  let fadingQ = new Array(numSymbols).fill(0);
+  if (channelModel === 'rayleigh') {
+    for (let i = 0; i < numSymbols; i++) {
+      fadingI[i] = randn() / Math.sqrt(2);
+      fadingQ[i] = randn() / Math.sqrt(2);
+    }
+  } else if (channelModel === 'rician') {
+    const kFact = fromDB(parseFloat(document.getElementById('ch-kfactor').value));
+    const s = Math.sqrt(kFact / (kFact + 1));
+    const sig = 1 / Math.sqrt(2 * (kFact + 1));
+    for (let i = 0; i < numSymbols; i++) {
+      fadingI[i] = s + sig * randn();
+      fadingQ[i] = sig * randn();
+    }
+  }
+
+  for (let i = 0; i < sigLen; i++) {
+    const symIdx = Math.min(Math.floor(i / sps), numSymbols - 1);
+    if (channelModel === 'awgn') {
+      rxSigI[i] = modI[i] + noiseStd * randn();
+      rxSigQ[i] = modQ[i] + noiseStd * randn();
+    } else {
+      rxSigI[i] = modI[i] * fadingI[symIdx] - modQ[i] * fadingQ[symIdx] + noiseStd * randn();
+      rxSigQ[i] = modI[i] * fadingQ[symIdx] + modQ[i] * fadingI[symIdx] + noiseStd * randn();
+    }
+    const t = i / sps;
+    received[i] = rxSigI[i] * Math.cos(2*Math.PI*fc*t/sps) - rxSigQ[i] * Math.sin(2*Math.PI*fc*t/sps);
+  }
+
+  // 7. Matched filter + sample
+  const rxFiltI = new Array(sigLen).fill(0);
+  const rxFiltQ = new Array(sigLen).fill(0);
+  for (let i = 0; i < sigLen; i++) {
+    for (let j = 0; j < filterLen; j++) {
+      const idx = i - j + span * sps;
+      if (idx >= 0 && idx < sigLen) {
+        rxFiltI[i] += rxSigI[idx] * h[j];
+        rxFiltQ[i] += rxSigQ[idx] * h[j];
+      }
+    }
+  }
+
+  // Sample at symbol times
+  const rxI = new Array(numSymbols);
+  const rxQ = new Array(numSymbols);
+  for (let i = 0; i < numSymbols; i++) {
+    const sampleIdx = i * sps + span * sps;
+    rxI[i] = sampleIdx < sigLen ? rxFiltI[sampleIdx] : 0;
+    rxQ[i] = sampleIdx < sigLen ? rxFiltQ[sampleIdx] : 0;
+  }
+
+  // 8. ML Detection
+  const rxSymIdx = new Array(numSymbols);
+  for (let i = 0; i < numSymbols; i++) {
+    let minDist = Infinity, bestIdx = 0;
+    for (let c = 0; c < constellation.length; c++) {
+      const dI = rxI[i] - constellation[c].I;
+      const dQ = rxQ[i] - constellation[c].Q;
+      const dist = dI*dI + dQ*dQ;
+      if (dist < minDist) { minDist = dist; bestIdx = c; }
+    }
+    rxSymIdx[i] = bestIdx;
+  }
+
+  // 9. Demapping
+  const rxBitsCoded = new Array(numSymbols * k);
+  for (let i = 0; i < numSymbols; i++) {
+    for (let b = 0; b < k; b++) {
+      rxBitsCoded[i * k + b] = (rxSymIdx[i] >> (k - 1 - b)) & 1;
+    }
+  }
+
+  // 10. Channel decoding (simplified)
+  let rxBits;
+  if (fecKey === 'repetition') {
+    rxBits = [];
+    for (let i = 0; i + 2 < rxBitsCoded.length; i += 3) {
+      rxBits.push((rxBitsCoded[i] + rxBitsCoded[i+1] + rxBitsCoded[i+2]) >= 2 ? 1 : 0);
+    }
+  } else if (fecKey !== 'none') {
+    rxBits = rxBitsCoded.slice(0, txBits.length);
+  } else {
+    rxBits = rxBitsCoded.slice(0, txBits.length);
+  }
+
+  // 11. BER count
+  let errors = 0;
+  const compLen = Math.min(txBits.length, rxBits.length);
+  for (let i = 0; i < compLen; i++) {
+    if (txBits[i] !== rxBits[i]) errors++;
+  }
+  const ber = errors / compLen;
+
+  // 12. BER curve
+  const berCurve = [];
+  const berTheorCurve = [];
+  const step = (ebnoMax - ebnoMin) / 20;
+  for (let e = ebnoMin; e <= ebnoMax; e += step) {
+    berTheorCurve.push({ x: e, y: berTheoretical(scheme, e) });
+  }
+  // Simulated points (quick Monte Carlo at a few Eb/N0 values)
+  const simPoints = 8;
+  for (let p = 0; p < simPoints; p++) {
+    const ebn = ebnoMin + (ebnoMax - ebnoMin) * p / (simPoints - 1);
+    const ebn_lin = fromDB(ebn);
+    const np2 = 1 / (2 * ebn_lin * k);
+    const ns = Math.sqrt(np2);
+    let errs = 0;
+    const quickBits = 4000;
+    const quickSyms = Math.floor(quickBits / k);
+    for (let s = 0; s < quickSyms; s++) {
+      let idx = 0;
+      for (let b = 0; b < k; b++) idx = (idx << 1) | (Math.random() < 0.5 ? 1 : 0);
+      idx = idx % constellation.length;
+      const nI = constellation[idx].I + ns * randn();
+      const nQ = constellation[idx].Q + ns * randn();
+      let best = 0, bd = Infinity;
+      for (let c = 0; c < constellation.length; c++) {
+        const d = (nI-constellation[c].I)**2 + (nQ-constellation[c].Q)**2;
+        if (d < bd) { bd = d; best = c; }
+      }
+      for (let b = 0; b < k; b++) {
+        if (((idx >> (k-1-b))&1) !== ((best >> (k-1-b))&1)) errs++;
+      }
+    }
+    berCurve.push({ x: ebn, y: Math.max(errs / quickBits, 1e-7) });
+  }
+
+  // 13. EVM
+  let evmSum = 0;
+  for (let i = 0; i < numSymbols; i++) {
+    const eI = rxI[i] - constellation[txSymIdx[i]].I;
+    const eQ = rxQ[i] - constellation[txSymIdx[i]].Q;
+    evmSum += eI*eI + eQ*eQ;
+  }
+  const evmRMS = Math.sqrt(evmSum / numSymbols) * 100;
+  const mer = -10 * Math.log10(evmSum / numSymbols);
+
+  // PAPR
+  let peakPow = 0, avgPow = 0;
+  for (let i = 0; i < modulated.length; i++) {
+    const p = modulated[i] * modulated[i];
+    if (p > peakPow) peakPow = p;
+    avgPow += p;
+  }
+  avgPow /= modulated.length;
+  const papr = 10 * Math.log10(peakPow / avgPow);
+
+  // Shannon
+  const Rs = Rb / k; // Msps
+  const BW = Rs * (1 + alpha); // MHz
+  const snr_dB = ebno_dB + dB(k) - dB(sps) + dB(sps); // Eb/N0 + 10log10(k)
+  const snr_lin2 = fromDB(snr_dB);
+  const capacity = BW * Math.log2(1 + snr_lin2); // Mbps
+  const eta = Rb / BW;
+
+  simResult = {
+    txBits, rxBits, codedBits, txI, txQ, rxI, rxQ,
+    modulated, received, modI, modQ, rxSigI, rxSigQ, rxFiltI, rxFiltQ,
+    constellation, txSymIdx, rxSymIdx,
+    ber, errors, compLen, berCurve, berTheorCurve,
+    evmRMS, mer, papr, scheme, mod, fec, fecKey,
+    ebno_dB, snr_dB, Rb, Rs, BW, eta, capacity,
+    numSymbols, sps, alpha, numBits
+  };
+
+  updateResults();
+  drawAll();
+  document.getElementById('hdr-status').textContent = 'ACTIVE';
+  document.getElementById('r-status').textContent = 'ACTIVE';
+  document.getElementById('footer-ts').textContent = new Date().toISOString();
+}
+
+function updateResults() {
+  const r = simResult;
+  if (!r) return;
+  document.getElementById('hdr-mod').textContent = r.mod.label;
+  document.getElementById('hdr-rb').innerHTML = r.Rb + '<span class="unit">Mbps</span>';
+  document.getElementById('hdr-ebno').innerHTML = r.ebno_dB + '<span class="unit">dB</span>';
+
+  const berStr = r.ber < 1e-10 ? '< 1e-10' : r.ber.toExponential(2);
+  document.getElementById('hdr-ber').textContent = berStr;
+  document.getElementById('r-mod').textContent = r.mod.label;
+  document.getElementById('r-bps').textContent = r.mod.k;
+  document.getElementById('r-rs').innerHTML = r.Rs.toFixed(3) + '<span class="unit">Msps</span>';
+  document.getElementById('r-bw').innerHTML = r.BW.toFixed(3) + '<span class="unit">MHz</span>';
+  document.getElementById('r-eta').innerHTML = r.eta.toFixed(2) + '<span class="unit">bps/Hz</span>';
+  document.getElementById('r-fec').textContent = r.fec.label;
+  document.getElementById('r-rate').textContent = r.fecKey === 'none' ? '1' : r.fec.rate.toFixed(3);
+  document.getElementById('r-gain').innerHTML = r.fec.gain.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-ebno').innerHTML = r.ebno_dB + '<span class="unit">dB</span>';
+  document.getElementById('r-snr').innerHTML = r.snr_dB.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-ber-th').textContent = berTheoretical(r.scheme, r.ebno_dB).toExponential(2);
+  document.getElementById('r-ber-sim').textContent = berStr;
+  document.getElementById('r-bits-tx').textContent = r.compLen;
+  document.getElementById('r-bits-err').textContent = r.errors;
+  document.getElementById('r-evm').innerHTML = r.evmRMS.toFixed(1) + '<span class="unit">%</span>';
+  document.getElementById('r-mer').innerHTML = (isFinite(r.mer) ? r.mer.toFixed(1) : '--') + '<span class="unit">dB</span>';
+  document.getElementById('r-papr').innerHTML = r.papr.toFixed(1) + '<span class="unit">dB</span>';
+  document.getElementById('r-capacity').innerHTML = r.capacity.toFixed(2) + '<span class="unit">Mbps</span>';
+  document.getElementById('r-cbw').innerHTML = (r.capacity / r.BW).toFixed(2) + '<span class="unit">bps/Hz</span>';
+  document.getElementById('r-rbc').textContent = r.Rb < r.capacity ? 'Rb < C (OK)' : 'Rb > C (!)';
+  document.getElementById('r-rbc').className = 'v ' + (r.Rb < r.capacity ? 'good' : 'bad');
+
+  // BER gauge
+  const berLog = r.ber > 0 ? -Math.log10(r.ber) : 10;
+  const pct = Math.min(berLog / 10 * 100, 100);
+  const fill = document.getElementById('ber-gauge-fill');
+  fill.style.width = pct + '%';
+  fill.className = 'gauge-fill ' + (r.ber < 1e-5 ? 'good' : r.ber < 1e-3 ? 'warn' : 'bad');
+
+  const verdict = document.getElementById('ber-verdict');
+  if (r.ber < 1e-6) {
+    verdict.className = 'info-box ok';
+    verdict.innerHTML = '<strong>Excelente!</strong> BER muito baixa. Link operando com alta qualidade.';
+  } else if (r.ber < 1e-3) {
+    verdict.className = 'info-box warn-box';
+    verdict.innerHTML = '<strong>Atencao:</strong> BER moderada. FEC pode corrigir, mas margem limitada.';
+  } else {
+    verdict.className = 'info-box bad-box';
+    verdict.innerHTML = '<strong>Critico:</strong> BER alta! Aumente Eb/N0 ou use FEC mais forte.';
+  }
+
+  // Shannon gap
+  const shGap = r.ebno_dB - (-1.59);
+  document.getElementById('r-shgap').innerHTML = shGap.toFixed(1) + '<span class="unit">dB</span>';
+}
+
+// ---------- DRAWING ----------
+function getCtx(id) {
+  const c = document.getElementById(id);
+  c.width = c.clientWidth * 2;
+  c.height = c.clientHeight * 2;
+  const ctx = c.getContext('2d');
+  ctx.scale(2, 2);
+  return { ctx, w: c.clientWidth, h: c.clientHeight };
+}
+
+function drawGrid(ctx, w, h, color='rgba(30,40,56,0.6)') {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+}
+
+function drawSignal(canvasId, data, color, maxN) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  if (!data || data.length === 0) return;
+  const n = Math.min(data.length, maxN || 500);
+  let minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < n; i++) { minV = Math.min(minV, data[i]); maxV = Math.max(maxV, data[i]); }
+  const range = maxV - minV || 1;
+  const pad = 15;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = pad + (i / (n-1)) * (w - 2*pad);
+    const y = h - pad - ((data[i] - minV) / range) * (h - 2*pad);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Zero line
+  if (minV < 0 && maxV > 0) {
+    const zy = h - pad - ((0 - minV) / range) * (h - 2*pad);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad, zy); ctx.lineTo(w-pad, zy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawBits(canvasId, bits, color, maxN) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  if (!bits || bits.length === 0) return;
+  const n = Math.min(bits.length, maxN || 200);
+  const pad = 15;
+  const bw = (w - 2*pad) / n;
+  ctx.fillStyle = color;
+  for (let i = 0; i < n; i++) {
+    const x = pad + i * bw;
+    const yTop = pad;
+    const yBot = h - pad;
+    const y = bits[i] ? yTop : yBot - 4;
+    ctx.fillRect(x, y, Math.max(bw - 1, 1), 4);
+  }
+  // NRZ waveform
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = pad + i * bw;
+    const y = bits[i] ? pad + 10 : h - pad - 10;
+    if (i === 0) ctx.moveTo(x, y);
+    else { ctx.lineTo(x, y); }
+    ctx.lineTo(x + bw, y);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+function drawConstellation(canvasId, I, Q, color, isIdeal) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  const pad = 30;
+  const size = Math.min(w, h) - 2*pad;
+  const cx = w/2, cy = h/2;
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(pad, cy); ctx.lineTo(w-pad, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, pad); ctx.lineTo(cx, h-pad); ctx.stroke();
+  // Labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '9px "JetBrains Mono"';
+  ctx.fillText('In-Phase (I)', w-pad-60, cy+14);
+  ctx.save(); ctx.translate(cx-10, pad+10); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Quadrature (Q)', 0, 0); ctx.restore();
+
+  let maxR = 1;
+  for (let i = 0; i < I.length; i++) {
+    const r = Math.sqrt(I[i]*I[i]+Q[i]*Q[i]);
+    if (r > maxR) maxR = r;
+  }
+  const scale = (size/2) / (maxR * 1.2);
+
+  const n = Math.min(I.length, 4000);
+  for (let i = 0; i < n; i++) {
+    const x = cx + I[i] * scale;
+    const y = cy - Q[i] * scale;
+    ctx.beginPath();
+    ctx.arc(x, y, isIdeal ? 4 : 1.5, 0, 2*Math.PI);
+    if (isIdeal) {
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.4;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawEyeDiagram(canvasId, signal, sps) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  if (!signal || signal.length < sps * 4) return;
+  const pad = 15;
+  const traceLen = sps * 2;
+  const numTraces = Math.min(Math.floor(signal.length / traceLen) - 1, 200);
+  let minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < signal.length; i++) { minV = Math.min(minV, signal[i]); maxV = Math.max(maxV, signal[i]); }
+  const range = maxV - minV || 1;
+
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 0.6;
+  ctx.globalAlpha = 0.15;
+
+  for (let t = 0; t < numTraces; t++) {
+    const offset = t * traceLen;
+    ctx.beginPath();
+    for (let i = 0; i < traceLen; i++) {
+      const x = pad + (i / (traceLen-1)) * (w - 2*pad);
+      const y = h - pad - ((signal[offset+i] - minV) / range) * (h - 2*pad);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Center line
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(w/2, pad); ctx.lineTo(w/2, h-pad); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Eye opening measurement
+  const mid = Math.floor(traceLen / 2);
+  let minAtMid = Infinity, maxAtMid = -Infinity;
+  for (let t = 0; t < numTraces; t++) {
+    const v = signal[t * traceLen + mid];
+    minAtMid = Math.min(minAtMid, v);
+    maxAtMid = Math.max(maxAtMid, v);
+  }
+  const eyeOpen = ((maxAtMid - minAtMid) / range * 100).toFixed(0);
+  return eyeOpen;
+}
+
+function drawBERCurve(canvasId, theorCurve, simCurve, scheme) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  const pad = 40;
+
+  // Axis ranges
+  const xMin = theorCurve[0].x, xMax = theorCurve[theorCurve.length-1].x;
+  const yMin = -7, yMax = 0; // log10 BER
+
+  function mapX(v) { return pad + (v - xMin) / (xMax - xMin) * (w - 2*pad); }
+  function mapY(v) { return pad + (yMax - v) / (yMax - yMin) * (h - 2*pad); }
+
+  // Grid lines and labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '9px "JetBrains Mono"';
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 0.5;
+  for (let x = Math.ceil(xMin); x <= xMax; x += 2) {
+    ctx.beginPath(); ctx.moveTo(mapX(x), pad); ctx.lineTo(mapX(x), h-pad); ctx.stroke();
+    ctx.fillText(x + '', mapX(x)-6, h-pad+14);
+  }
+  for (let y = yMin; y <= yMax; y++) {
+    ctx.beginPath(); ctx.moveTo(pad, mapY(y)); ctx.lineTo(w-pad, mapY(y)); ctx.stroke();
+    ctx.fillText('1e' + y, 4, mapY(y)+4);
+  }
+  ctx.fillText('Eb/N0 (dB)', w/2-25, h-5);
+  ctx.save(); ctx.translate(12, h/2+15); ctx.rotate(-Math.PI/2);
+  ctx.fillText('BER', 0, 0); ctx.restore();
+
+  // Reference curves (dashed) for other schemes
+  const refSchemes = ['bpsk','qpsk','16qam','64qam'].filter(s => s !== scheme);
+  const refColors = ['#4ade8040','#a78bfa40','#fbbf2440','#fb718540'];
+  refSchemes.forEach((rs, idx) => {
+    ctx.strokeStyle = refColors[idx];
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    let started = false;
+    for (let e = xMin; e <= xMax; e += 0.5) {
+      const b = berTheoretical(rs, e);
+      if (b <= 0 || b > 1) continue;
+      const lv = Math.log10(b);
+      if (lv < yMin) continue;
+      const px = mapX(e), py = mapY(lv);
+      started ? ctx.lineTo(px, py) : (ctx.moveTo(px, py), started = true);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Label
+    ctx.fillStyle = refColors[idx].replace('40','cc');
+    ctx.fillText(MOD_INFO[rs].label, w-pad-50, pad + 12 + idx*12);
+  });
+
+  // Theoretical curve
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let started = false;
+  for (const p of theorCurve) {
+    if (p.y <= 0) continue;
+    const lv = Math.log10(p.y);
+    if (lv < yMin) continue;
+    const px = mapX(p.x), py = mapY(lv);
+    started ? ctx.lineTo(px, py) : (ctx.moveTo(px, py), started = true);
+  }
+  ctx.stroke();
+
+  // Simulated points
+  ctx.fillStyle = '#fb7185';
+  for (const p of simCurve) {
+    if (p.y <= 0) continue;
+    const lv = Math.log10(p.y);
+    if (lv < yMin) continue;
+    const px = mapX(p.x), py = mapY(lv);
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, 2*Math.PI);
+    ctx.fill();
+  }
+
+  // Legend
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText(MOD_INFO[scheme].label + ' (Teorico)', pad + 10, pad + 12);
+  ctx.fillStyle = '#fb7185';
+  ctx.fillText(MOD_INFO[scheme].label + ' (Simulado)', pad + 10, pad + 24);
+}
+
+function drawSpectrum(canvasId, signal, color) {
+  const { ctx, w, h } = getCtx(canvasId);
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h);
+  if (!signal || signal.length < 64) return;
+
+  // Simple periodogram (FFT approximation using DFT on subset)
+  const N = Math.min(512, signal.length);
+  const mag = new Array(N/2).fill(0);
+  for (let k = 0; k < N/2; k++) {
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      const angle = -2 * Math.PI * k * n / N;
+      re += signal[n] * Math.cos(angle);
+      im += signal[n] * Math.sin(angle);
+    }
+    mag[k] = 10 * Math.log10((re*re + im*im) / N + 1e-12);
+  }
+
+  const pad = 15;
+  let maxM = -Infinity, minM = Infinity;
+  for (const m of mag) { maxM = Math.max(maxM, m); minM = Math.min(minM, m); }
+  const range = maxM - minM || 1;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  for (let i = 0; i < mag.length; i++) {
+    const x = pad + (i / (mag.length-1)) * (w - 2*pad);
+    const y = h - pad - ((mag[i] - minM) / range) * (h - 2*pad);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill
+  ctx.globalAlpha = 0.1;
+  ctx.lineTo(w-pad, h-pad);
+  ctx.lineTo(pad, h-pad);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function drawBlockDiagram() {
+  const { ctx, w, h } = getCtx('cvs-diagram');
+  ctx.fillStyle = '#0c1016';
+  ctx.fillRect(0, 0, w, h);
+  drawGrid(ctx, w, h, 'rgba(30,40,56,0.3)');
+
+  const blocks = [
+    // TX chain
+    { label: 'FONTE DE\nINFORMACAO', x: 0, y: 0, color: '#38bdf8', group: 'tx' },
+    { label: 'COD.\nFONTE', x: 1, y: 0, color: '#4ade80', group: 'tx' },
+    { label: 'ENCRIPT.', x: 2, y: 0, color: '#a78bfa', group: 'tx' },
+    { label: 'COD.\nCANAL', x: 3, y: 0, color: '#fbbf24', group: 'tx' },
+    { label: 'MULTI-\nPLEXACAO', x: 4, y: 0, color: '#f472b6', group: 'tx' },
+    { label: 'PULSE\nSHAPING', x: 5, y: 0, color: '#38bdf8', group: 'tx' },
+    { label: 'MODUL.\nDIGITAL', x: 6, y: 0, color: '#818cf8', group: 'tx' },
+    // Channel
+    { label: 'CANAL', x: 3, y: 1.2, color: '#fb7185', group: 'ch', wide: true },
+    // RX chain
+    { label: 'DEMODUL.\nDETECCAO', x: 6, y: 2.4, color: '#818cf8', group: 'rx' },
+    { label: 'EQUAL.\nSINCR.', x: 5, y: 2.4, color: '#38bdf8', group: 'rx' },
+    { label: 'DE-MUX', x: 4, y: 2.4, color: '#f472b6', group: 'rx' },
+    { label: 'DECOD.\nCANAL', x: 3, y: 2.4, color: '#fbbf24', group: 'rx' },
+    { label: 'DECRIPT.', x: 2, y: 2.4, color: '#a78bfa', group: 'rx' },
+    { label: 'DECOD.\nFONTE', x: 1, y: 2.4, color: '#4ade80', group: 'rx' },
+    { label: 'DESTINO', x: 0, y: 2.4, color: '#38bdf8', group: 'rx' },
+  ];
+
+  const bw = 80, bh = 40, gapX = 14, gapY = 20;
+  const totalW = 7 * (bw + gapX) - gapX;
+  const startX = (w - totalW) / 2;
+  const startY = 40;
+
+  // Draw group labels
+  ctx.font = '600 9px "Chakra Petch"';
+  ctx.fillStyle = '#4ade8060';
+  ctx.fillText('TRANSMISSOR (TX)', startX, startY - 8);
+  ctx.fillStyle = '#fb718560';
+  ctx.fillText('CANAL', startX + 3*(bw+gapX) + bw/2 - 15, startY + (bh + gapY) * 1.2 - 8);
+  ctx.fillStyle = '#a78bfa60';
+  ctx.fillText('RECEPTOR (RX)', startX, startY + (bh + gapY) * 2.4 - 8);
+
+  blocks.forEach(b => {
+    const x = startX + b.x * (bw + gapX);
+    const y = startY + b.y * (bh + gapY);
+    const tw = b.wide ? bw * 2 + gapX : bw;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(x+2, y+2, tw, bh);
+
+    // Box
+    ctx.fillStyle = '#11161f';
+    ctx.strokeStyle = b.color + '80';
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, tw, bh);
+    ctx.strokeRect(x, y, tw, bh);
+
+    // Left accent
+    ctx.fillStyle = b.color;
+    ctx.fillRect(x, y, 3, bh);
+
+    // Glow
+    ctx.shadowColor = b.color;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(x, y, 3, bh);
+    ctx.shadowBlur = 0;
+
+    // Text
+    ctx.fillStyle = '#e6ecf5';
+    ctx.font = '500 8px "Chakra Petch"';
+    ctx.textAlign = 'center';
+    const lines = b.label.split('\n');
+    const lineH = 10;
+    const textY = y + bh/2 - (lines.length - 1) * lineH/2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, x + tw/2, textY + i * lineH);
+    });
+    ctx.textAlign = 'left';
+  });
+
+  // Arrows TX chain
+  ctx.strokeStyle = '#4ade8060';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    const x1 = startX + i * (bw + gapX) + bw;
+    const x2 = startX + (i+1) * (bw + gapX);
+    const y = startY + bh/2;
+    ctx.beginPath(); ctx.moveTo(x1+2, y); ctx.lineTo(x2-2, y); ctx.stroke();
+    // Arrowhead
+    ctx.beginPath(); ctx.moveTo(x2-2, y); ctx.lineTo(x2-7, y-3); ctx.lineTo(x2-7, y+3); ctx.closePath();
+    ctx.fillStyle = '#4ade8060'; ctx.fill();
+  }
+
+  // Arrow TX -> Channel
+  const txEndX = startX + 6*(bw+gapX) + bw;
+  const chY = startY + 1.2*(bh+gapY);
+  const chX = startX + 3*(bw+gapX);
+  ctx.strokeStyle = '#fb718560';
+  ctx.beginPath();
+  ctx.moveTo(txEndX, startY + bh/2);
+  ctx.lineTo(txEndX + 20, startY + bh/2);
+  ctx.lineTo(txEndX + 20, chY + bh/2);
+  ctx.lineTo(chX + bw*2 + gapX, chY + bh/2);
+  ctx.stroke();
+
+  // Arrow Channel -> RX
+  const rxY = startY + 2.4*(bh+gapY);
+  ctx.strokeStyle = '#a78bfa60';
+  ctx.beginPath();
+  ctx.moveTo(chX, chY + bh/2);
+  ctx.lineTo(chX - 20, chY + bh/2);
+  ctx.lineTo(chX - 20, rxY + bh/2);
+  ctx.lineTo(startX + 6*(bw+gapX) + bw, rxY + bh/2);
+  ctx.stroke();
+
+  // Arrows RX chain (right to left)
+  ctx.strokeStyle = '#a78bfa60';
+  for (let i = 6; i > 0; i--) {
+    const x1 = startX + i * (bw + gapX);
+    const x2 = startX + (i-1) * (bw + gapX) + bw;
+    const y = rxY + bh/2;
+    ctx.beginPath(); ctx.moveTo(x1-2, y); ctx.lineTo(x2+2, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2+2, y); ctx.lineTo(x2+7, y-3); ctx.lineTo(x2+7, y+3); ctx.closePath();
+    ctx.fillStyle = '#a78bfa60'; ctx.fill();
+  }
+
+  // Title
+  ctx.fillStyle = '#e6ecf5';
+  ctx.font = '600 12px "Chakra Petch"';
+  ctx.textAlign = 'center';
+  ctx.fillText('DIAGRAMA DE BLOCOS — SISTEMA DE COMUNICACAO DIGITAL', w/2, h - 20);
+  ctx.font = '300 9px "JetBrains Mono"';
+  ctx.fillStyle = '#6b7889';
+  ctx.fillText('Ref: Bernard Sklar, "Digital Communications: Fundamentals and Applications"', w/2, h - 6);
+  ctx.textAlign = 'left';
+}
+
+function drawAll() {
+  const r = simResult;
+  if (!r) { drawBlockDiagram(); return; }
+
+  drawBlockDiagram();
+
+  // Signals tab
+  drawBits('cvs-src', r.txBits, '#4ade80', 150);
+  document.getElementById('sig-src-meta').textContent = r.txBits.length + ' bits';
+  drawBits('cvs-enc', r.codedBits, '#fbbf24', 150);
+  document.getElementById('sig-enc-meta').textContent = r.codedBits.length + ' bits | R=' + r.fec.rate.toFixed(3);
+  drawSignal('cvs-mod', r.modulated, '#818cf8', 600);
+  document.getElementById('sig-mod-meta').textContent = r.mod.label + ' | ' + r.modulated.length + ' amostras';
+  drawSignal('cvs-rx', r.received, '#fb7185', 600);
+  document.getElementById('sig-rx-meta').textContent = 'Eb/N0=' + r.ebno_dB + 'dB';
+  drawSignal('cvs-demod', r.rxFiltI, '#38bdf8', 600);
+  document.getElementById('sig-demod-meta').textContent = 'Apos matched filter';
+  drawBits('cvs-out', r.rxBits, '#4ade80', 150);
+  document.getElementById('sig-out-meta').textContent = r.errors + ' erros em ' + r.compLen + ' bits';
+
+  // Constellation
+  const constPts = r.constellation;
+  drawConstellation('cvs-const-tx', constPts.map(p=>p.I), constPts.map(p=>p.Q), '#38bdf8', true);
+  document.getElementById('const-tx-meta').textContent = r.mod.label + ' | M=' + r.mod.M;
+  drawConstellation('cvs-const-rx', r.rxI, r.rxQ, '#fb7185', false);
+  document.getElementById('const-rx-meta').textContent = 'EVM=' + r.evmRMS.toFixed(1) + '%';
+
+  // Eye diagram
+  const eyeOpenI = drawEyeDiagram('cvs-eye-i', r.rxFiltI, r.sps);
+  const eyeOpenQ = drawEyeDiagram('cvs-eye-q', r.rxFiltQ, r.sps);
+  document.getElementById('eye-i-meta').textContent = 'Abertura: ' + (eyeOpenI||'--') + '%';
+  document.getElementById('eye-q-meta').textContent = 'Abertura: ' + (eyeOpenQ||'--') + '%';
+  document.getElementById('r-eyeopen').innerHTML = (eyeOpenI||'--') + '<span class="unit">%</span>';
+
+  // BER curve
+  drawBERCurve('cvs-ber', r.berTheorCurve, r.berCurve, r.scheme);
+  document.getElementById('ber-meta').textContent = r.mod.label + ' | Teorico + Simulado';
+
+  // Spectrum
+  drawSpectrum('cvs-psd', r.modulated, '#818cf8');
+  document.getElementById('psd-meta').textContent = 'PSD TX | BW=' + r.BW.toFixed(3) + ' MHz';
+  drawSpectrum('cvs-psd-rx', r.received, '#fb7185');
+  document.getElementById('psd-rx-meta').textContent = 'PSD RX | Eb/N0=' + r.ebno_dB + ' dB';
+}
+
+function resetAll() {
+  simResult = null;
+  document.getElementById('hdr-status').textContent = 'STANDBY';
+  document.getElementById('hdr-ber').textContent = '--';
+  document.getElementById('r-status').textContent = 'STANDBY';
+  document.getElementById('r-ber-sim').textContent = '--';
+  document.getElementById('ber-verdict').className = 'info-box';
+  document.getElementById('ber-verdict').innerHTML = 'Aguardando simulacao...';
+  // Clear canvases
+  ['cvs-src','cvs-enc','cvs-mod','cvs-rx','cvs-demod','cvs-out',
+   'cvs-const-tx','cvs-const-rx','cvs-eye-i','cvs-eye-q',
+   'cvs-ber','cvs-psd','cvs-psd-rx'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) { const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); }
+  });
+  drawBlockDiagram();
+}
+
+// ---------- INIT ----------
+window.addEventListener('DOMContentLoaded', () => {
+  drawBlockDiagram();
+  document.getElementById('footer-ts').textContent = new Date().toISOString();
+});
+window.addEventListener('resize', () => { drawBlockDiagram(); if (simResult) drawAll(); });
+</script>
+</body>
+</html>

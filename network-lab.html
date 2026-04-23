@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Network Lab — Laboratório de Redes de Computadores</title>
+<meta name="description" content="Laboratório interativo de redes: topologias, equipamentos (switch, hub, roteador, servidor), protocolos TCP/IP, latência, perda de pacotes, throughput, simulação de enlaces e análise de rede." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+  --orange: #f97316;
+  --teal: #2dd4bf;
+  /* network accent — electric indigo */
+  --net: #6366f1;
+  --net-bright: #818cf8;
+  --net-soft: #3730a340;
+  --net-glow: #6366f133;
+  --net-deep: #312e81;
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#0d0d22 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d1a1a 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* HEADER */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:32px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+/* network icon: 3 nodes + lines */
+.brand .logo-mark .nd{
+  position:absolute;width:7px;height:7px;
+  background:var(--net-bright);border-radius:50%;
+  box-shadow:0 0 8px var(--net);
+}
+.brand .logo-mark .nd.n1{top:2px;left:12px;}
+.brand .logo-mark .nd.n2{bottom:2px;left:2px;}
+.brand .logo-mark .nd.n3{bottom:2px;right:2px;}
+.brand .logo-mark .ln{
+  position:absolute;background:var(--net);height:1.5px;
+  transform-origin:left center;opacity:0.6;
+  box-shadow:0 0 4px var(--net-glow);
+}
+.brand .logo-mark .ln.l1{top:6px;left:15px;width:14px;transform:rotate(120deg);}
+.brand .logo-mark .ln.l2{top:6px;left:15px;width:14px;transform:rotate(60deg);}
+.brand .logo-mark .ln.l3{bottom:5px;left:6px;width:20px;transform:rotate(0deg);}
+.brand .logo-mark .pulse-ring{
+  position:absolute;inset:-3px;
+  border:1px solid rgba(99,102,241,0.3);border-radius:50%;
+  animation:net-pulse 3s ease-in-out infinite;
+}
+@keyframes net-pulse{
+  0%,100%{transform:scale(1);opacity:0.6;}
+  50%{transform:scale(1.2);opacity:0.15;}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--net-bright);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#2d2a6e,#1a184a);
+  border-color:var(--net);color:var(--net-bright);
+  box-shadow:0 0 0 1px var(--net-glow),inset 0 1px 0 rgba(99,102,241,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#3b3888,#242160);}
+.btn svg{width:12px;height:12px;}
+
+/* MAIN */
+main{
+  display:grid;grid-template-columns:330px 1fr 320px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* SECTIONS */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.indigo{background:var(--net);box-shadow:0 0 6px var(--net);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.dot.orange{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* FORM */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--net);background:#090d13;
+  box-shadow:0 0 0 2px var(--net-glow);
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--net-bright);border-color:var(--net);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--net-soft);border-color:var(--net);color:var(--net-bright);}
+
+/* VIZ AREA */
+.viz{display:grid;grid-template-rows:1fr 240px;min-height:0;}
+.topo-wrap{position:relative;min-height:0;background:#04070c;overflow:hidden;}
+#topo-canvas{position:absolute;inset:0;width:100%!important;height:100%!important;cursor:crosshair;}
+.topo-legend{
+  position:absolute;top:10px;left:10px;background:rgba(7,9,13,0.9);
+  border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;
+  z-index:10;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
+  backdrop-filter:blur(8px);display:flex;gap:14px;flex-wrap:wrap;pointer-events:none;
+}
+.topo-legend .li{display:flex;align-items:center;gap:6px;}
+.topo-legend .sw{display:inline-block;}
+.topo-legend .sw.router{background:var(--net-bright);width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px var(--net);}
+.topo-legend .sw.switch-l{background:var(--cyan);width:8px;height:8px;border-radius:2px;box-shadow:0 0 4px var(--cyan);}
+.topo-legend .sw.hub-l{background:var(--amber);width:8px;height:8px;border-radius:50%;box-shadow:0 0 4px var(--amber);}
+.topo-legend .sw.server-l{background:var(--phos);width:8px;height:8px;border-radius:1px;box-shadow:0 0 4px var(--phos);}
+.topo-legend .sw.pc-l{background:var(--text-1);width:8px;height:8px;border-radius:1px;}
+.topo-legend .sw.link-l{background:var(--net);width:14px;height:2px;box-shadow:0 0 4px var(--net-glow);}
+.topo-legend .sw.pkt{background:var(--phos);width:5px;height:5px;border-radius:50%;box-shadow:0 0 8px var(--phos);}
+
+.topo-badge{
+  position:absolute;top:10px;right:10px;background:rgba(7,9,13,0.9);
+  border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;
+  z-index:10;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
+  backdrop-filter:blur(8px);text-align:right;display:flex;flex-direction:column;gap:3px;
+  pointer-events:none;
+}
+.topo-badge .big{font-family:var(--font-display);font-size:14px;letter-spacing:0.08em;}
+.topo-badge .big.good{color:var(--phos);}
+.topo-badge .big.warn{color:var(--amber);}
+.topo-badge .big.bad{color:var(--rose);}
+
+.topo-hint{
+  position:absolute;bottom:10px;right:10px;background:rgba(7,9,13,0.8);
+  border:1px solid var(--border);border-radius:var(--radius);padding:5px 9px;
+  z-index:10;font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);
+  backdrop-filter:blur(8px);pointer-events:none;letter-spacing:0.03em;
+}
+
+/* bottom strip */
+.bottom-strip{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.card{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);flex-shrink:0;
+}
+.card-header h3{margin:0;font-family:var(--font-display);font-weight:500;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);}
+.card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.card .card-body{flex:1;position:relative;padding:6px 8px;min-height:0;}
+.card canvas{position:absolute;inset:6px 8px;width:calc(100% - 16px)!important;height:calc(100% - 12px)!important;}
+
+/* RESULTS */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.net{color:var(--net-bright);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(99,102,241,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--net);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+/* protocol stack */
+.proto-stack{display:flex;flex-direction:column;gap:2px;margin:8px 0;}
+.proto-layer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:10.5px;
+  border:1px solid var(--border);transition:all .2s;
+}
+.proto-layer .layer-name{font-weight:600;letter-spacing:0.06em;}
+.proto-layer .layer-proto{color:var(--text-2);font-size:10px;}
+.proto-layer.l7{background:rgba(99,102,241,0.08);border-color:rgba(99,102,241,0.3);}
+.proto-layer.l7 .layer-name{color:var(--net-bright);}
+.proto-layer.l4{background:rgba(56,189,248,0.06);border-color:rgba(56,189,248,0.25);}
+.proto-layer.l4 .layer-name{color:var(--cyan);}
+.proto-layer.l3{background:rgba(74,222,128,0.06);border-color:rgba(74,222,128,0.25);}
+.proto-layer.l3 .layer-name{color:var(--phos);}
+.proto-layer.l2{background:rgba(251,191,36,0.06);border-color:rgba(251,191,36,0.25);}
+.proto-layer.l2 .layer-name{color:var(--amber);}
+.proto-layer.l1{background:rgba(251,113,133,0.06);border-color:rgba(251,113,133,0.25);}
+.proto-layer.l1 .layer-name{color:var(--rose);}
+.proto-layer.active{box-shadow:inset 0 0 12px rgba(255,255,255,0.04);transform:scale(1.01);}
+
+/* device list */
+.dev-list{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
+.dev-item{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;
+  background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;
+}
+.dev-item:hover{border-color:var(--text-2);}
+.dev-item.selected{border-color:var(--net);background:var(--net-soft);}
+.dev-item .dev-icon{width:20px;text-align:center;font-size:14px;}
+.dev-item .dev-name{color:var(--text-0);font-weight:500;min-width:60px;}
+.dev-item .dev-type{color:var(--text-2);font-size:10px;}
+.dev-item .dev-ip{color:var(--net-bright);font-size:10px;margin-left:auto;}
+.dev-item .dev-del{
+  color:var(--text-3);cursor:pointer;font-size:14px;
+  transition:color .15s;padding:0 4px;
+}
+.dev-item .dev-del:hover{color:var(--rose);}
+
+/* packet animation */
+.pkt-anim{
+  position:absolute;width:6px;height:6px;
+  background:var(--phos);border-radius:50%;
+  box-shadow:0 0 10px var(--phos),0 0 3px #fff;
+  pointer-events:none;z-index:5;
+}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--net-bright);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark">
+      <span class="nd n1"></span><span class="nd n2"></span><span class="nd n3"></span>
+      <span class="ln l1"></span><span class="ln l2"></span><span class="ln l3"></span>
+      <span class="pulse-ring"></span>
+    </span>
+    <h1>NETWORK LAB</h1>
+    <span class="tag">Laboratorio de <em>Redes de Computadores</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Topologia</span>
+      <span class="value" id="hdr-topo">Estrela</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Dispositivos</span>
+      <span class="value" id="hdr-devs">0</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Latencia</span>
+      <span class="value" id="hdr-lat">--<span class="unit">ms</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Throughput</span>
+      <span class="value" id="hdr-thr">--<span class="unit">Mbps</span></span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runSimulation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+      Simular
+    </button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+    <button class="btn" id="btn-pkt" onclick="togglePacketAnim()">Pacotes</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+<!-- LEFT PANEL -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao</h2>
+    <span class="panel-sub">TOPO / DEVICES / LINK</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- TOPOLOGY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot indigo"></span>Topologia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Topologia de Rede <span class="tip" data-tip="Selecione a topologia logica da rede. Define como os dispositivos estao interconectados.">i</span></label>
+          <select id="topo-type" onchange="onTopoChange()">
+            <option value="star">Estrela (Star)</option>
+            <option value="bus">Barramento (Bus)</option>
+            <option value="ring">Anel (Ring)</option>
+            <option value="mesh">Malha Completa (Full Mesh)</option>
+            <option value="partial-mesh">Malha Parcial (Partial Mesh)</option>
+            <option value="tree">Arvore (Tree)</option>
+            <option value="hybrid">Hibrida (Hybrid)</option>
+          </select>
+        </div>
+        <div id="topo-desc" class="info-box">
+          <strong>Estrela:</strong> Todos os nos conectados a um dispositivo central (switch/hub). Facil gerenciamento, falha de um no nao afeta os demais. Ponto unico de falha no centro.
+        </div>
+        <div class="chips" id="topo-presets">
+          <span class="chip active" onclick="loadTopoPreset('lan-small')">LAN Pequena</span>
+          <span class="chip" onclick="loadTopoPreset('lan-dept')">LAN Departamental</span>
+          <span class="chip" onclick="loadTopoPreset('campus')">Campus</span>
+          <span class="chip" onclick="loadTopoPreset('datacenter')">Data Center</span>
+          <span class="chip" onclick="loadTopoPreset('wan')">WAN Filiais</span>
+          <span class="chip" onclick="loadTopoPreset('isp')">ISP Core</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVICES -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Dispositivos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div class="field">
+            <label>Tipo</label>
+            <select id="dev-type">
+              <option value="pc">PC / Host</option>
+              <option value="server">Servidor</option>
+              <option value="switch">Switch L2</option>
+              <option value="switch-l3">Switch L3</option>
+              <option value="hub">Hub</option>
+              <option value="router">Roteador</option>
+              <option value="firewall">Firewall</option>
+              <option value="ap">Access Point</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nome</label>
+            <input type="text" id="dev-name" value="" placeholder="Auto">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>IP</label>
+            <input type="text" id="dev-ip" value="" placeholder="Auto (DHCP)">
+          </div>
+          <div class="field">
+            <label>Interface <span class="tip" data-tip="Velocidade da interface de rede do dispositivo.">i</span></label>
+            <select id="dev-iface">
+              <option value="10">10 Mbps (Ethernet)</option>
+              <option value="100">100 Mbps (Fast Ethernet)</option>
+              <option value="1000" selected>1 Gbps (Gigabit)</option>
+              <option value="10000">10 Gbps (10GbE)</option>
+              <option value="25000">25 Gbps</option>
+              <option value="40000">40 Gbps</option>
+              <option value="100000">100 Gbps</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addDevice()" style="width:100%;justify-content:center;">+ Adicionar Dispositivo</button>
+        <div class="dev-list" id="dev-list"></div>
+      </div>
+    </div>
+
+    <!-- LINK CONFIG -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Enlace / Meio Fisico</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Meio de Transmissao <span class="tip" data-tip="Tipo de cabo ou meio sem fio utilizado no enlace.">i</span></label>
+          <select id="link-medium" onchange="onMediumChange()">
+            <option value="utp-cat5e">UTP Cat 5e (100m, 1Gbps)</option>
+            <option value="utp-cat6">UTP Cat 6 (55m, 10Gbps)</option>
+            <option value="utp-cat6a" selected>UTP Cat 6a (100m, 10Gbps)</option>
+            <option value="stp">STP Blindado</option>
+            <option value="fiber-mm">Fibra Multimodo (OM3/OM4)</option>
+            <option value="fiber-sm">Fibra Monomodo (OS2)</option>
+            <option value="coax">Coaxial (RG-58)</option>
+            <option value="wifi-5">Wi-Fi 5 (802.11ac)</option>
+            <option value="wifi-6">Wi-Fi 6 (802.11ax)</option>
+            <option value="wifi-7">Wi-Fi 7 (802.11be)</option>
+          </select>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Comprimento <span class="unit">m</span></label>
+            <input type="number" id="link-length" value="25" min="1" max="100000">
+          </div>
+          <div class="field">
+            <label>Latencia Base <span class="unit">ms</span></label>
+            <input type="number" id="link-latency" value="0.5" min="0" max="500" step="0.1">
+          </div>
+          <div class="field">
+            <label>Perda Pacotes <span class="unit">%</span></label>
+            <input type="number" id="link-loss" value="0.01" min="0" max="100" step="0.01">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Bandwidth <span class="unit">Mbps</span></label>
+            <input type="number" id="link-bw" value="1000" min="1" max="400000">
+          </div>
+          <div class="field">
+            <label>Duplex</label>
+            <select id="link-duplex">
+              <option value="full">Full Duplex</option>
+              <option value="half">Half Duplex</option>
+            </select>
+          </div>
+        </div>
+        <div id="medium-info" class="info-box ok">
+          <strong>Cat 6a:</strong> Par trancado nao blindado. Suporta 10GBASE-T ate 100m. Impedancia 100&ohm;. Frequencia ate 500 MHz.
+        </div>
+      </div>
+    </div>
+
+    <!-- PROTOCOLS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Protocolos</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Protocolo de Transporte</label>
+          <select id="proto-transport">
+            <option value="tcp">TCP (Transmission Control Protocol)</option>
+            <option value="udp">UDP (User Datagram Protocol)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Protocolo de Aplicacao</label>
+          <select id="proto-app">
+            <option value="http">HTTP/1.1</option>
+            <option value="https">HTTPS (TLS 1.3)</option>
+            <option value="http2">HTTP/2</option>
+            <option value="http3">HTTP/3 (QUIC)</option>
+            <option value="ftp">FTP</option>
+            <option value="ssh">SSH</option>
+            <option value="dns">DNS</option>
+            <option value="dhcp">DHCP</option>
+            <option value="smtp">SMTP</option>
+            <option value="voip">VoIP (RTP/SIP)</option>
+            <option value="mqtt">MQTT (IoT)</option>
+            <option value="custom">Customizado</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>MTU <span class="unit">bytes</span></label>
+            <input type="number" id="proto-mtu" value="1500" min="64" max="9000">
+          </div>
+          <div class="field">
+            <label>Payload <span class="unit">bytes</span></label>
+            <input type="number" id="proto-payload" value="1460" min="1" max="8960">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Window Size <span class="unit">KB</span></label>
+            <input type="number" id="proto-window" value="64" min="1" max="65535">
+          </div>
+          <div class="field">
+            <label>Encapsulamento</label>
+            <select id="proto-encap">
+              <option value="ethernet">Ethernet II</option>
+              <option value="8021q">802.1Q (VLAN)</option>
+              <option value="pppoe">PPPoE</option>
+              <option value="gre">GRE Tunnel</option>
+              <option value="vxlan">VXLAN</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label style="font-size:10px;font-family:var(--font-display);letter-spacing:0.12em;text-transform:uppercase;color:var(--text-2);margin-bottom:6px;display:block;">Pilha TCP/IP</label>
+          <div class="proto-stack" id="proto-stack">
+            <div class="proto-layer l7"><span class="layer-name">Aplicacao</span><span class="layer-proto" id="stack-l7">HTTP</span></div>
+            <div class="proto-layer l4"><span class="layer-name">Transporte</span><span class="layer-proto" id="stack-l4">TCP :80</span></div>
+            <div class="proto-layer l3"><span class="layer-name">Rede</span><span class="layer-proto" id="stack-l3">IPv4</span></div>
+            <div class="proto-layer l2"><span class="layer-name">Enlace</span><span class="layer-proto" id="stack-l2">Ethernet II</span></div>
+            <div class="proto-layer l1"><span class="layer-name">Fisica</span><span class="layer-proto" id="stack-l1">UTP Cat6a</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULATION -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Simulacao de Trafego</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Tipo de Trafego <span class="tip" data-tip="Perfil de trafego para simulacao. Afeta tamanho de pacotes, padrao de transmissao e metricas de QoS.">i</span></label>
+          <select id="traffic-type">
+            <option value="web">Web Browsing (HTTP)</option>
+            <option value="streaming">Video Streaming (4K)</option>
+            <option value="voip">VoIP / Videoconferencia</option>
+            <option value="file">Transferencia de Arquivo</option>
+            <option value="gaming">Gaming Online</option>
+            <option value="iot">IoT Sensores</option>
+            <option value="backup">Backup / Replicacao</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Volume de Dados <span class="unit">MB</span></label>
+            <input type="number" id="traffic-volume" value="100" min="1" max="1000000">
+          </div>
+          <div class="field">
+            <label>Num Fluxos Simultaneos</label>
+            <input type="number" id="traffic-flows" value="10" min="1" max="10000">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Jitter Max <span class="unit">ms</span></label>
+            <input type="number" id="traffic-jitter" value="2" min="0" max="500" step="0.1">
+          </div>
+          <div class="field">
+            <label>QoS / DSCP</label>
+            <select id="traffic-qos">
+              <option value="be">Best Effort (DSCP 0)</option>
+              <option value="af">Assured Forwarding (AF)</option>
+              <option value="ef">Expedited Forwarding (EF)</option>
+              <option value="cs">Class Selector (CS6)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADDRESSING -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Enderecamento IP</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Rede / Sub-rede</label>
+          <input type="text" id="net-subnet" value="192.168.1.0/24">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Gateway Padrao</label>
+            <input type="text" id="net-gw" value="192.168.1.1">
+          </div>
+          <div class="field">
+            <label>DNS Primario</label>
+            <input type="text" id="net-dns" value="8.8.8.8">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>VLAN ID</label>
+            <input type="number" id="net-vlan" value="1" min="1" max="4094">
+          </div>
+          <div class="field">
+            <label>Versao IP</label>
+            <select id="net-ipver">
+              <option value="4">IPv4</option>
+              <option value="6">IPv6</option>
+              <option value="dual">Dual Stack</option>
+            </select>
+          </div>
+        </div>
+        <div id="subnet-info" class="info-box ok">
+          <strong>192.168.1.0/24</strong> — Hosts disponiveis: 254 | Broadcast: 192.168.1.255 | Classe C privada (RFC 1918)
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER VIZ -->
+<div class="panel viz">
+  <div class="topo-wrap">
+    <canvas id="topo-canvas"></canvas>
+    <div class="topo-legend">
+      <div class="li"><span class="sw router"></span>Roteador</div>
+      <div class="li"><span class="sw switch-l"></span>Switch</div>
+      <div class="li"><span class="sw hub-l"></span>Hub</div>
+      <div class="li"><span class="sw server-l"></span>Servidor</div>
+      <div class="li"><span class="sw pc-l"></span>PC</div>
+      <div class="li"><span class="sw link-l"></span>Enlace</div>
+      <div class="li"><span class="sw pkt"></span>Pacote</div>
+    </div>
+    <div class="topo-badge" id="topo-badge">
+      <div>Topologia</div>
+      <div class="big good" id="badge-topo">ESTRELA</div>
+      <div id="badge-nodes">0 nos · 0 enlaces</div>
+    </div>
+    <div class="topo-hint">Clique SIMULAR para iniciar a analise</div>
+  </div>
+  <div class="bottom-strip">
+    <div class="card">
+      <div class="card-header">
+        <h3>Latencia por Salto</h3>
+        <span class="meta" id="lat-meta">--</span>
+      </div>
+      <div class="card-body"><canvas id="chart-latency"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Throughput Efetivo</h3>
+        <span class="meta" id="thr-meta">--</span>
+      </div>
+      <div class="card-body"><canvas id="chart-throughput"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>Distribuicao de Pacotes</h3>
+        <span class="meta" id="pkt-meta">--</span>
+      </div>
+      <div class="card-body"><canvas id="chart-packets"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Analise de Rede</h2>
+    <span class="panel-sub">METRICAS / DIAG</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- STATUS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Status da Rede</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k"><span class="live-dot standby" id="net-dot"></span>Estado</span><span class="v" id="r-state">STANDBY</span></div>
+        <div class="kv"><span class="k">Topologia</span><span class="v net" id="r-topo">Estrela</span></div>
+        <div class="kv"><span class="k">Total Nos</span><span class="v" id="r-nodes">0</span></div>
+        <div class="kv"><span class="k">Total Enlaces</span><span class="v" id="r-links">0</span></div>
+        <div class="kv"><span class="k">Diametro da Rede</span><span class="v" id="r-diam">--<span class="unit">saltos</span></span></div>
+        <div class="kv"><span class="k">Redundancia</span><span class="v" id="r-redund">--</span></div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Desempenho</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Latencia Fim-a-Fim</span><span class="v" id="r-lat">--<span class="unit">ms</span></span></div>
+        <div class="gauge" id="g-lat"><div class="gauge-fill good" id="gf-lat" style="width:0%"></div><div class="gauge-label" id="gl-lat">--</div></div>
+        <div class="kv"><span class="k">Jitter</span><span class="v" id="r-jitter">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">Perda de Pacotes</span><span class="v" id="r-loss">--<span class="unit">%</span></span></div>
+        <div class="gauge" id="g-loss"><div class="gauge-fill good" id="gf-loss" style="width:0%"></div><div class="gauge-label" id="gl-loss">--</div></div>
+        <div class="kv"><span class="k">Throughput Maximo</span><span class="v" id="r-thr-max">--<span class="unit">Mbps</span></span></div>
+        <div class="kv"><span class="k">Throughput Efetivo</span><span class="v" id="r-thr-eff">--<span class="unit">Mbps</span></span></div>
+        <div class="gauge" id="g-thr"><div class="gauge-fill good" id="gf-thr" style="width:0%"></div><div class="gauge-label" id="gl-thr">--</div></div>
+        <div class="kv"><span class="k">Eficiencia do Link</span><span class="v" id="r-eff">--<span class="unit">%</span></span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k">RTT (Round Trip)</span><span class="v" id="r-rtt">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">BDP (Bandwidth-Delay)</span><span class="v" id="r-bdp">--<span class="unit">KB</span></span></div>
+        <div class="kv"><span class="k">Tempo Transferencia</span><span class="v" id="r-time">--<span class="unit">s</span></span></div>
+      </div>
+    </div>
+
+    <!-- PROTOCOL ANALYSIS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Analise de Protocolo</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Overhead de Cabecalho</span><span class="v" id="r-overhead">--<span class="unit">bytes</span></span></div>
+        <div class="kv"><span class="k">Eficiencia Protocolo</span><span class="v" id="r-proto-eff">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">Pacotes Totais</span><span class="v" id="r-pkts">--</span></div>
+        <div class="kv"><span class="k">Pacotes Perdidos</span><span class="v" id="r-pkts-lost">--</span></div>
+        <div class="kv"><span class="k">Retransmissoes (TCP)</span><span class="v" id="r-retx">--</span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k">Handshake (TCP)</span><span class="v" id="r-handshake">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">TLS Overhead</span><span class="v" id="r-tls">--<span class="unit">ms</span></span></div>
+        <div class="kv"><span class="k">Goodput</span><span class="v" id="r-goodput">--<span class="unit">Mbps</span></span></div>
+      </div>
+    </div>
+
+    <!-- EQUIPMENT INFO -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Info Equipamento</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div id="equip-info" class="info-box">
+          Selecione um dispositivo na topologia ou clique em um da lista para ver detalhes do equipamento.
+        </div>
+        <div id="equip-details" style="display:none;">
+          <div class="kv"><span class="k">Tipo</span><span class="v" id="eq-type">--</span></div>
+          <div class="kv"><span class="k">Camada OSI</span><span class="v" id="eq-layer">--</span></div>
+          <div class="kv"><span class="k">Dominio Broadcast</span><span class="v" id="eq-broadcast">--</span></div>
+          <div class="kv"><span class="k">Dominio Colisao</span><span class="v" id="eq-collision">--</span></div>
+          <div class="kv"><span class="k">Tabela</span><span class="v" id="eq-table">--</span></div>
+          <div class="kv"><span class="k">Latencia Proc.</span><span class="v" id="eq-proc-lat">--<span class="unit">µs</span></span></div>
+          <div class="kv"><span class="k">Throughput Backplane</span><span class="v" id="eq-backplane">--<span class="unit">Gbps</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAGNOSTIC -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot rose"></span>Diagnostico</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div id="diag-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="author">
+    Network Lab v1.0 — <a href="#">Prof. Ramon Mayor Martins</a> — IFSC Campus Sao Jose
+  </div>
+  <div class="ts" id="footer-ts">--</div>
+</footer>
+
+</div>
+
+<script>
+// ============================================================
+//  NETWORK LAB — Full Interactive Engine
+// ============================================================
+
+// ---- State ----
+let devices = [];
+let links = [];
+let devIdCounter = 0;
+let simulated = false;
+let packetAnimActive = false;
+let packetAnimFrame = null;
+let packets = [];
+let selectedDevId = null;
+
+const DEVICE_COLORS = {
+  pc: '#b6c2d4', server: '#4ade80', switch: '#38bdf8',
+  'switch-l3': '#38bdf8', hub: '#fbbf24', router: '#818cf8',
+  firewall: '#fb7185', ap: '#a78bfa'
+};
+const DEVICE_LABELS = {
+  pc: 'PC', server: 'SRV', switch: 'SW', 'switch-l3': 'SW3',
+  hub: 'HUB', router: 'RTR', firewall: 'FW', ap: 'AP'
+};
+const DEVICE_ICONS = {
+  pc: '💻', server: '🖥️', switch: '🔀', 'switch-l3': '🔀',
+  hub: '⭕', router: '🌐', firewall: '🛡️', ap: '📡'
+};
+
+// ---- Topology descriptions ----
+const TOPO_DESC = {
+  star: '<strong>Estrela:</strong> Todos os nos conectados a um dispositivo central (switch/hub). Facil gerenciamento, falha de um no nao afeta os demais. Ponto unico de falha no centro.',
+  bus: '<strong>Barramento:</strong> Todos os nos compartilham um unico meio de transmissao. Simples e barato. Colisoes frequentes. Padrao original Ethernet 10BASE5/10BASE2.',
+  ring: '<strong>Anel:</strong> Cada no conectado ao proximo, formando um circulo. Token Ring (IEEE 802.5). Acesso deterministico. Falha de um no interrompe o anel (a menos que dual ring).',
+  mesh: '<strong>Malha Completa:</strong> Todos os nos conectados entre si. Maxima redundancia e confiabilidade. Custo e complexidade altos. Enlaces = n(n-1)/2.',
+  'partial-mesh': '<strong>Malha Parcial:</strong> Alguns nos com multiplas conexoes, mas nao todos. Equilibrio entre redundancia e custo. Comum em WANs.',
+  tree: '<strong>Arvore:</strong> Hierarquia em niveis (core, distribuicao, acesso). Padrao em redes campus. Escalavel. VLAN por departamento.',
+  hybrid: '<strong>Hibrida:</strong> Combinacao de topologias (ex: estrelas conectadas por barramento). Flexivel e adaptavel a diferentes necessidades.'
+};
+
+// ---- Preset topologies ----
+function loadTopoPreset(p) {
+  document.querySelectorAll('#topo-presets .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+
+  devices = []; links = []; devIdCounter = 0;
+  const presets = {
+    'lan-small': () => {
+      document.getElementById('topo-type').value = 'star';
+      addDev('switch','SW-1','192.168.1.1',1000);
+      for(let i=1;i<=4;i++) addDev('pc','PC-'+i,'192.168.1.'+(10+i),1000);
+      addDev('server','SRV-1','192.168.1.100',1000);
+    },
+    'lan-dept': () => {
+      document.getElementById('topo-type').value = 'star';
+      addDev('router','RTR-1','10.0.0.1',1000);
+      addDev('switch','SW-1','10.0.1.1',1000);
+      addDev('switch','SW-2','10.0.2.1',1000);
+      for(let i=1;i<=3;i++) addDev('pc','PC-A'+i,'10.0.1.'+(10+i),1000);
+      for(let i=1;i<=3;i++) addDev('pc','PC-B'+i,'10.0.2.'+(10+i),1000);
+      addDev('server','SRV-1','10.0.0.100',1000);
+      addDev('ap','AP-1','10.0.1.50',1000);
+    },
+    'campus': () => {
+      document.getElementById('topo-type').value = 'tree';
+      addDev('router','CORE-1','10.0.0.1',10000);
+      addDev('switch-l3','DIST-1','10.0.1.1',10000);
+      addDev('switch-l3','DIST-2','10.0.2.1',10000);
+      addDev('switch','ACC-1','10.0.1.10',1000);
+      addDev('switch','ACC-2','10.0.1.11',1000);
+      addDev('switch','ACC-3','10.0.2.10',1000);
+      addDev('server','SRV-DC','10.0.0.100',10000);
+      addDev('firewall','FW-1','10.0.0.2',10000);
+    },
+    'datacenter': () => {
+      document.getElementById('topo-type').value = 'mesh';
+      addDev('router','SPINE-1','10.10.0.1',100000);
+      addDev('router','SPINE-2','10.10.0.2',100000);
+      addDev('switch-l3','LEAF-1','10.10.1.1',25000);
+      addDev('switch-l3','LEAF-2','10.10.1.2',25000);
+      addDev('switch-l3','LEAF-3','10.10.1.3',25000);
+      addDev('server','SRV-1','10.10.2.1',25000);
+      addDev('server','SRV-2','10.10.2.2',25000);
+      addDev('firewall','FW-1','10.10.0.10',25000);
+    },
+    'wan': () => {
+      document.getElementById('topo-type').value = 'partial-mesh';
+      addDev('router','HQ-RTR','10.0.0.1',1000);
+      addDev('router','BR-SP','10.1.0.1',1000);
+      addDev('router','BR-RJ','10.2.0.1',1000);
+      addDev('router','BR-MG','10.3.0.1',1000);
+      addDev('firewall','FW-HQ','10.0.0.2',1000);
+      addDev('server','SRV-HQ','10.0.0.100',1000);
+    },
+    'isp': () => {
+      document.getElementById('topo-type').value = 'mesh';
+      addDev('router','CORE-A','172.16.0.1',100000);
+      addDev('router','CORE-B','172.16.0.2',100000);
+      addDev('router','EDGE-1','172.16.1.1',10000);
+      addDev('router','EDGE-2','172.16.2.1',10000);
+      addDev('router','EDGE-3','172.16.3.1',10000);
+      addDev('switch-l3','AGG-1','172.16.10.1',10000);
+      addDev('server','DNS-1','172.16.0.53',10000);
+    }
+  };
+  if(presets[p]) presets[p]();
+  onTopoChange();
+  buildDeviceList();
+  generateLinks();
+  drawTopology();
+}
+
+function addDev(type, name, ip, iface) {
+  devIdCounter++;
+  devices.push({ id: devIdCounter, type, name, ip, iface, x:0, y:0 });
+}
+
+// ---- Section toggle ----
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ---- Topology change ----
+function onTopoChange() {
+  const t = document.getElementById('topo-type').value;
+  document.getElementById('topo-desc').innerHTML = TOPO_DESC[t] || '';
+  document.getElementById('hdr-topo').textContent = document.getElementById('topo-type').selectedOptions[0].text.split('(')[0].trim();
+  document.getElementById('badge-topo').textContent = document.getElementById('topo-type').selectedOptions[0].text.split('(')[0].trim().toUpperCase();
+  document.getElementById('r-topo').textContent = document.getElementById('topo-type').selectedOptions[0].text.split('(')[0].trim();
+}
+
+// ---- Medium change ----
+function onMediumChange() {
+  const m = document.getElementById('link-medium').value;
+  const infos = {
+    'utp-cat5e': '<strong>Cat 5e:</strong> Par trancado. 1Gbps ate 100m. 100 MHz. Padrao mais usado em LANs residenciais/SMB.',
+    'utp-cat6': '<strong>Cat 6:</strong> 10Gbps ate 55m, 1Gbps ate 100m. 250 MHz. Separadores internos reduzem crosstalk.',
+    'utp-cat6a': '<strong>Cat 6a:</strong> 10GBASE-T ate 100m. 500 MHz. Ideal para redes de alta velocidade.',
+    'stp': '<strong>STP:</strong> Par trancado blindado. Melhor imunidade a EMI. Usado em ambientes industriais.',
+    'fiber-mm': '<strong>Fibra Multimodo:</strong> OM3: 10G ate 300m. OM4: 10G ate 550m. Conectores LC/SC. Custo moderado.',
+    'fiber-sm': '<strong>Fibra Monomodo:</strong> OS2: 10G ate 10km+. Longa distancia. WAN/MAN. Laser precisao.',
+    'coax': '<strong>Coaxial RG-58:</strong> 10BASE2 (185m). Legado Ethernet fino. 10 Mbps. Conector BNC.',
+    'wifi-5': '<strong>Wi-Fi 5 (802.11ac):</strong> 5 GHz, ate 3.5 Gbps (MU-MIMO). Canais 80/160 MHz.',
+    'wifi-6': '<strong>Wi-Fi 6 (802.11ax):</strong> 2.4/5 GHz, OFDMA, ate 9.6 Gbps. Baixa latencia em alta densidade.',
+    'wifi-7': '<strong>Wi-Fi 7 (802.11be):</strong> 2.4/5/6 GHz, 320 MHz, 4K-QAM. Ate 46 Gbps teorico. MLO.'
+  };
+  document.getElementById('medium-info').innerHTML = infos[m] || '';
+  document.getElementById('stack-l1').textContent = document.getElementById('link-medium').selectedOptions[0].text.split('(')[0].trim();
+}
+
+// ---- Add device from UI ----
+function addDevice() {
+  const type = document.getElementById('dev-type').value;
+  const name = document.getElementById('dev-name').value || DEVICE_LABELS[type] + '-' + (devIdCounter + 1);
+  const ip = document.getElementById('dev-ip').value || autoIP();
+  const iface = parseInt(document.getElementById('dev-iface').value);
+  addDev(type, name, ip, iface);
+  document.getElementById('dev-name').value = '';
+  document.getElementById('dev-ip').value = '';
+  buildDeviceList();
+  generateLinks();
+  drawTopology();
+}
+
+function autoIP() {
+  const subnet = document.getElementById('net-subnet').value.split('/')[0].split('.');
+  const base = parseInt(subnet[3]) || 0;
+  return subnet[0]+'.'+subnet[1]+'.'+subnet[2]+'.'+(base + 10 + devices.length);
+}
+
+function buildDeviceList() {
+  const el = document.getElementById('dev-list');
+  el.innerHTML = '';
+  devices.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'dev-item' + (d.id === selectedDevId ? ' selected' : '');
+    div.onclick = () => selectDevice(d.id);
+    div.innerHTML = `<span class="dev-icon">${DEVICE_ICONS[d.type]}</span>
+      <span class="dev-name">${d.name}</span>
+      <span class="dev-type">${d.type.toUpperCase()}</span>
+      <span class="dev-ip">${d.ip}</span>
+      <span class="dev-del" onclick="event.stopPropagation();removeDevice(${d.id})">×</span>`;
+    el.appendChild(div);
+  });
+  document.getElementById('hdr-devs').textContent = devices.length;
+  document.getElementById('r-nodes').textContent = devices.length;
+}
+
+function removeDevice(id) {
+  devices = devices.filter(d => d.id !== id);
+  if(selectedDevId === id) selectedDevId = null;
+  generateLinks();
+  buildDeviceList();
+  drawTopology();
+}
+
+function selectDevice(id) {
+  selectedDevId = id;
+  buildDeviceList();
+  showEquipInfo(id);
+}
+
+function showEquipInfo(id) {
+  const d = devices.find(x => x.id === id);
+  if(!d) return;
+  document.getElementById('equip-info').style.display = 'none';
+  document.getElementById('equip-details').style.display = 'block';
+  const info = {
+    pc: {layer:'L2-L7 (Host)',broadcast:'Unico',collision:'Unico',table:'ARP Cache',proc:'10',backplane:'-'},
+    server: {layer:'L2-L7 (Host)',broadcast:'Unico',collision:'Unico',table:'ARP / Routing',proc:'5',backplane:'-'},
+    switch: {layer:'L2 (Enlace)',broadcast:'1 por VLAN',collision:'1 por porta',table:'MAC Address Table (CAM)',proc:'3-5',backplane:'48-128'},
+    'switch-l3': {layer:'L2-L3 (Enlace+Rede)',broadcast:'1 por VLAN',collision:'1 por porta',table:'CAM + Routing Table',proc:'5-10',backplane:'128-480'},
+    hub: {layer:'L1 (Fisica)',broadcast:'1 (todos)',collision:'1 (todos)',table:'Nenhuma',proc:'<1',backplane:'Compartilhado'},
+    router: {layer:'L3 (Rede)',broadcast:'Separa dominios',collision:'1 por porta',table:'Routing Table / ARP',proc:'10-50',backplane:'1-100+'},
+    firewall: {layer:'L3-L7 (Multi)',broadcast:'Separa',collision:'1 por porta',table:'State Table / ACL / NAT',proc:'20-200',backplane:'1-40'},
+    ap: {layer:'L1-L2 (Fisica/Enlace)',broadcast:'Bridge para WLAN',collision:'Meio compartilhado (CSMA/CA)',table:'Association Table',proc:'5-20',backplane:'1-5'}
+  };
+  const i = info[d.type] || info.pc;
+  document.getElementById('eq-type').textContent = d.type.toUpperCase() + ' — ' + d.name;
+  document.getElementById('eq-layer').textContent = i.layer;
+  document.getElementById('eq-broadcast').textContent = i.broadcast;
+  document.getElementById('eq-collision').textContent = i.collision;
+  document.getElementById('eq-table').textContent = i.table;
+  document.getElementById('eq-proc-lat').innerHTML = i.proc + '<span class="unit">µs</span>';
+  document.getElementById('eq-backplane').innerHTML = i.backplane + '<span class="unit">Gbps</span>';
+}
+
+// ---- Generate links based on topology ----
+function generateLinks() {
+  links = [];
+  const topo = document.getElementById('topo-type').value;
+  const n = devices.length;
+  if(n < 2) { updateLinkCount(); return; }
+
+  switch(topo) {
+    case 'star': {
+      // central = first switch/hub/router, or first device
+      const center = devices.find(d => ['switch','switch-l3','hub','router'].includes(d.type)) || devices[0];
+      devices.forEach(d => { if(d.id !== center.id) links.push([center.id, d.id]); });
+      break;
+    }
+    case 'bus': {
+      for(let i=0;i<n-1;i++) links.push([devices[i].id, devices[i+1].id]);
+      break;
+    }
+    case 'ring': {
+      for(let i=0;i<n;i++) links.push([devices[i].id, devices[(i+1)%n].id]);
+      break;
+    }
+    case 'mesh': {
+      for(let i=0;i<n;i++) for(let j=i+1;j<n;j++) links.push([devices[i].id, devices[j].id]);
+      break;
+    }
+    case 'partial-mesh': {
+      // connect each to at least 2 others
+      for(let i=0;i<n;i++) {
+        links.push([devices[i].id, devices[(i+1)%n].id]);
+        if(n>3) links.push([devices[i].id, devices[(i+2)%n].id]);
+      }
+      // deduplicate
+      const seen = new Set();
+      links = links.filter(([a,b]) => {
+        const k = Math.min(a,b)+'-'+Math.max(a,b);
+        if(seen.has(k)) return false;
+        seen.add(k); return true;
+      });
+      break;
+    }
+    case 'tree': {
+      // first device = root, connect in levels
+      if(n >= 2) links.push([devices[0].id, devices[1].id]);
+      for(let i=2;i<n;i++) {
+        const parent = Math.floor((i-1)/2);
+        links.push([devices[parent].id, devices[i].id]);
+      }
+      break;
+    }
+    case 'hybrid': {
+      // star core + ring peripherals
+      const center = devices[0];
+      const half = Math.ceil(n/2);
+      for(let i=1;i<half&&i<n;i++) links.push([center.id, devices[i].id]);
+      for(let i=half;i<n;i++) {
+        links.push([devices[i].id, devices[i===n-1? half : i+1].id]);
+        if(i===half) links.push([devices[1%n].id, devices[i].id]);
+      }
+      break;
+    }
+  }
+  updateLinkCount();
+}
+
+function updateLinkCount() {
+  document.getElementById('r-links').textContent = links.length;
+  document.getElementById('badge-nodes').textContent = devices.length + ' nos · ' + links.length + ' enlaces';
+}
+
+// ---- Layout & Draw Topology ----
+function layoutDevices(w, h) {
+  const topo = document.getElementById('topo-type').value;
+  const n = devices.length;
+  const cx = w/2, cy = h/2;
+  const r = Math.min(w,h)*0.35;
+
+  if(topo === 'star') {
+    const center = devices.find(d => ['switch','switch-l3','hub','router'].includes(d.type)) || devices[0];
+    center.x = cx; center.y = cy;
+    const others = devices.filter(d => d.id !== center.id);
+    others.forEach((d,i) => {
+      const a = (2*Math.PI*i)/others.length - Math.PI/2;
+      d.x = cx + r*Math.cos(a);
+      d.y = cy + r*Math.sin(a);
+    });
+  } else if(topo === 'bus') {
+    const margin = 60;
+    const span = w - margin*2;
+    devices.forEach((d,i) => {
+      d.x = margin + (n>1 ? span*i/(n-1) : span/2);
+      d.y = cy;
+    });
+  } else if(topo === 'ring') {
+    devices.forEach((d,i) => {
+      const a = (2*Math.PI*i)/n - Math.PI/2;
+      d.x = cx + r*Math.cos(a);
+      d.y = cy + r*Math.sin(a);
+    });
+  } else if(topo === 'tree') {
+    // BFS levels
+    const levels = []; let q = [0]; let visited = new Set([0]);
+    while(q.length) {
+      levels.push(q.slice());
+      const next = [];
+      q.forEach(pi => {
+        for(let ci=0;ci<n;ci++) {
+          if(!visited.has(ci) && Math.floor((ci-1)/2)===pi) {
+            visited.add(ci); next.push(ci);
+          }
+        }
+      });
+      q = next;
+    }
+    levels.forEach((lvl, li) => {
+      const yy = 50 + (h-100) * li / Math.max(levels.length-1,1);
+      lvl.forEach((di, xi) => {
+        const xx = 80 + (w-160) * (xi+0.5) / lvl.length;
+        devices[di].x = xx; devices[di].y = yy;
+      });
+    });
+  } else {
+    // circle layout for mesh, partial-mesh, hybrid
+    devices.forEach((d,i) => {
+      const a = (2*Math.PI*i)/n - Math.PI/2;
+      d.x = cx + r*Math.cos(a);
+      d.y = cy + r*Math.sin(a);
+    });
+  }
+}
+
+function drawTopology() {
+  const canvas = document.getElementById('topo-canvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0,0,W,H);
+
+  // subtle grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+  ctx.lineWidth = 0.5;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  if(devices.length === 0) {
+    ctx.fillStyle = '#3f4a5b';
+    ctx.font = '14px "Chakra Petch"';
+    ctx.textAlign = 'center';
+    ctx.fillText('Selecione um preset ou adicione dispositivos', W/2, H/2);
+    return;
+  }
+
+  layoutDevices(W, H);
+
+  // draw links
+  const devMap = {};
+  devices.forEach(d => devMap[d.id] = d);
+
+  links.forEach(([a,b]) => {
+    const da = devMap[a], db = devMap[b];
+    if(!da||!db) return;
+    ctx.beginPath();
+    ctx.moveTo(da.x, da.y);
+    ctx.lineTo(db.x, db.y);
+    ctx.strokeStyle = simulated ? 'rgba(99,102,241,0.5)' : 'rgba(99,102,241,0.25)';
+    ctx.lineWidth = simulated ? 2 : 1.5;
+    ctx.stroke();
+    if(simulated) {
+      // glow
+      ctx.strokeStyle = 'rgba(99,102,241,0.12)';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    }
+  });
+
+  // draw devices
+  devices.forEach(d => {
+    const col = DEVICE_COLORS[d.type] || '#b6c2d4';
+    const isSelected = d.id === selectedDevId;
+    const sz = isSelected ? 22 : 18;
+
+    // glow
+    if(simulated || isSelected) {
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, sz+6, 0, Math.PI*2);
+      ctx.fillStyle = col.replace(')', ',0.12)').replace('rgb','rgba');
+      if(col[0]==='#') {
+        const r2=parseInt(col.slice(1,3),16),g2=parseInt(col.slice(3,5),16),b2=parseInt(col.slice(5,7),16);
+        ctx.fillStyle = `rgba(${r2},${g2},${b2},0.12)`;
+      }
+      ctx.fill();
+    }
+
+    // shape
+    if(['router','hub','ap'].includes(d.type)) {
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, sz/2, 0, Math.PI*2);
+      ctx.fillStyle = '#0c1016';
+      ctx.fill();
+      ctx.strokeStyle = col;
+      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.stroke();
+    } else {
+      const hs = sz/2;
+      ctx.fillStyle = '#0c1016';
+      ctx.fillRect(d.x-hs, d.y-hs, sz, sz);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.strokeRect(d.x-hs, d.y-hs, sz, sz);
+    }
+
+    // label
+    ctx.fillStyle = col;
+    ctx.font = `600 ${isSelected?11:10}px "Chakra Petch"`;
+    ctx.textAlign = 'center';
+    ctx.fillText(DEVICE_LABELS[d.type], d.x, d.y+4);
+
+    // name below
+    ctx.fillStyle = '#b6c2d4';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillText(d.name, d.x, d.y + sz/2 + 14);
+
+    // IP
+    if(simulated) {
+      ctx.fillStyle = '#6b7889';
+      ctx.font = '9px "JetBrains Mono"';
+      ctx.fillText(d.ip, d.x, d.y + sz/2 + 25);
+    }
+  });
+
+  // draw packets
+  if(packetAnimActive) {
+    packets.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+      ctx.fillStyle = '#4ade80';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(74,222,128,0.2)';
+      ctx.fill();
+    });
+  }
+}
+
+// ---- Packet animation ----
+function togglePacketAnim() {
+  packetAnimActive = !packetAnimActive;
+  document.getElementById('btn-pkt').classList.toggle('active', packetAnimActive);
+  if(packetAnimActive && simulated) {
+    spawnPackets();
+    animatePackets();
+  } else {
+    cancelAnimationFrame(packetAnimFrame);
+    packets = [];
+    drawTopology();
+  }
+}
+
+function spawnPackets() {
+  packets = [];
+  const devMap = {};
+  devices.forEach(d => devMap[d.id] = d);
+  links.forEach(([a,b]) => {
+    const da = devMap[a], db = devMap[b];
+    if(!da||!db) return;
+    packets.push({ x: da.x, y: da.y, sx: da.x, sy: da.y, ex: db.x, ey: db.y, t: Math.random(), speed: 0.003 + Math.random()*0.005, dir: 1 });
+    if(Math.random()>0.5) {
+      packets.push({ x: db.x, y: db.y, sx: db.x, sy: db.y, ex: da.x, ey: da.y, t: Math.random(), speed: 0.003 + Math.random()*0.005, dir: 1 });
+    }
+  });
+}
+
+function animatePackets() {
+  packets.forEach(p => {
+    p.t += p.speed * p.dir;
+    if(p.t >= 1) { p.t = 1; p.dir = -1; }
+    if(p.t <= 0) { p.t = 0; p.dir = 1; }
+    p.x = p.sx + (p.ex - p.sx) * p.t;
+    p.y = p.sy + (p.ey - p.sy) * p.t;
+  });
+  drawTopology();
+  if(packetAnimActive) packetAnimFrame = requestAnimationFrame(animatePackets);
+}
+
+// ---- Charts ----
+function drawBarChart(canvasId, labels, values, color, maxVal) {
+  const canvas = document.getElementById(canvasId);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = (rect.width-16)*devicePixelRatio;
+  canvas.height = (rect.height-12)*devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width-16, H = rect.height-12;
+  ctx.clearRect(0,0,W,H);
+
+  if(!labels.length) return;
+  const n = labels.length;
+  const pad = 35;
+  const barW = Math.min(30, (W-pad*2)/(n*1.5));
+  const maxV = maxVal || Math.max(...values, 1);
+
+  // axis
+  ctx.strokeStyle = '#1e2838';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(pad,5);ctx.lineTo(pad,H-20);ctx.lineTo(W-5,H-20);ctx.stroke();
+
+  // grid lines
+  for(let i=0;i<4;i++){
+    const yy = 5+(H-25)*i/3;
+    ctx.strokeStyle = 'rgba(30,40,56,0.5)';
+    ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-5,yy);ctx.stroke();
+    ctx.fillStyle = '#3f4a5b';ctx.font='9px "JetBrains Mono"';ctx.textAlign='right';
+    ctx.fillText((maxV*(1-i/3)).toFixed(1), pad-4, yy+3);
+  }
+
+  // bars
+  const gap = (W-pad*2)/(n);
+  values.forEach((v,i) => {
+    const x = pad + gap*i + gap/2 - barW/2;
+    const bh = (v/maxV)*(H-30);
+    const y = H-20-bh;
+
+    const grad = ctx.createLinearGradient(x,y,x,H-20);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, color+'44');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x,y,barW,bh);
+
+    // glow
+    ctx.fillStyle = color+'18';
+    ctx.fillRect(x-2,y-2,barW+4,bh+4);
+
+    // label
+    ctx.fillStyle = '#6b7889';ctx.font='9px "JetBrains Mono"';ctx.textAlign='center';
+    ctx.fillText(labels[i], x+barW/2, H-8);
+
+    // value on top
+    ctx.fillStyle = '#b6c2d4';
+    ctx.fillText(v.toFixed(1), x+barW/2, y-4);
+  });
+}
+
+function drawLineChart(canvasId, labels, datasets) {
+  const canvas = document.getElementById(canvasId);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = (rect.width-16)*devicePixelRatio;
+  canvas.height = (rect.height-12)*devicePixelRatio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const W = rect.width-16, H = rect.height-12;
+  ctx.clearRect(0,0,W,H);
+
+  if(!labels.length) return;
+  const pad = 40;
+  const allV = datasets.flatMap(d => d.values);
+  const maxV = Math.max(...allV, 1);
+
+  ctx.strokeStyle = '#1e2838';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad,5);ctx.lineTo(pad,H-20);ctx.lineTo(W-5,H-20);ctx.stroke();
+
+  for(let i=0;i<4;i++){
+    const yy=5+(H-25)*i/3;
+    ctx.strokeStyle='rgba(30,40,56,0.5)';
+    ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(W-5,yy);ctx.stroke();
+    ctx.fillStyle='#3f4a5b';ctx.font='9px "JetBrains Mono"';ctx.textAlign='right';
+    ctx.fillText((maxV*(1-i/3)).toFixed(0),pad-4,yy+3);
+  }
+
+  labels.forEach((l,i)=>{
+    const xx=pad+(W-pad-10)*i/(labels.length-1||1);
+    ctx.fillStyle='#3f4a5b';ctx.font='9px "JetBrains Mono"';ctx.textAlign='center';
+    ctx.fillText(l,xx,H-6);
+  });
+
+  datasets.forEach(ds => {
+    ctx.beginPath();
+    ds.values.forEach((v,i) => {
+      const xx = pad+(W-pad-10)*i/(labels.length-1||1);
+      const yy = 5+(H-25)*(1-v/maxV);
+      if(i===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy);
+    });
+    ctx.strokeStyle=ds.color;ctx.lineWidth=2;ctx.stroke();
+
+    // area
+    const last = ds.values.length-1;
+    ctx.lineTo(pad+(W-pad-10)*last/(labels.length-1||1), H-20);
+    ctx.lineTo(pad, H-20);
+    ctx.closePath();
+    ctx.fillStyle=ds.color+'15';ctx.fill();
+
+    // dots
+    ds.values.forEach((v,i)=>{
+      const xx=pad+(W-pad-10)*i/(labels.length-1||1);
+      const yy=5+(H-25)*(1-v/maxV);
+      ctx.beginPath();ctx.arc(xx,yy,3,0,Math.PI*2);ctx.fillStyle=ds.color;ctx.fill();
+    });
+  });
+}
+
+// ---- Run Simulation ----
+function runSimulation() {
+  if(devices.length < 2) {
+    alert('Adicione pelo menos 2 dispositivos ou selecione um preset.');
+    return;
+  }
+
+  simulated = true;
+  generateLinks();
+
+  const bw = parseFloat(document.getElementById('link-bw').value) || 1000;
+  const baseLat = parseFloat(document.getElementById('link-latency').value) || 0.5;
+  const loss = parseFloat(document.getElementById('link-loss').value) || 0.01;
+  const mtu = parseInt(document.getElementById('proto-mtu').value) || 1500;
+  const payload = parseInt(document.getElementById('proto-payload').value) || 1460;
+  const windowKB = parseInt(document.getElementById('proto-window').value) || 64;
+  const volume = parseFloat(document.getElementById('traffic-volume').value) || 100;
+  const flows = parseInt(document.getElementById('traffic-flows').value) || 10;
+  const jitterMax = parseFloat(document.getElementById('traffic-jitter').value) || 2;
+  const transport = document.getElementById('proto-transport').value;
+  const app = document.getElementById('proto-app').value;
+  const duplex = document.getElementById('link-duplex').value;
+  const encap = document.getElementById('proto-encap').value;
+
+  // Calculate network diameter (max hops)
+  const topo = document.getElementById('topo-type').value;
+  let diameter = 1;
+  if(topo === 'star') diameter = 2;
+  else if(topo === 'bus') diameter = devices.length - 1;
+  else if(topo === 'ring') diameter = Math.floor(devices.length / 2);
+  else if(topo === 'mesh') diameter = 1;
+  else if(topo === 'partial-mesh') diameter = 2;
+  else if(topo === 'tree') diameter = Math.ceil(Math.log2(devices.length + 1)) * 2;
+  else if(topo === 'hybrid') diameter = 3;
+
+  // Overhead calc
+  let headerBytes = 14 + 20 + (transport === 'tcp' ? 20 : 8); // Eth + IP + TCP/UDP
+  if(encap === '8021q') headerBytes += 4;
+  if(encap === 'pppoe') headerBytes += 8;
+  if(encap === 'gre') headerBytes += 24;
+  if(encap === 'vxlan') headerBytes += 50;
+  const protoEff = (payload / mtu * 100);
+
+  // Latency
+  const procLatPerHop = 0.01; // ms per hop (switch/router)
+  const propDelay = parseFloat(document.getElementById('link-length').value) * 5e-6; // ~5µs/m copper
+  const totalLat = baseLat * diameter + procLatPerHop * diameter + propDelay * diameter;
+  const rtt = totalLat * 2;
+  const jitter = jitterMax * (0.3 + Math.random() * 0.7);
+
+  // Throughput
+  let thrMax = bw;
+  if(duplex === 'half') thrMax *= 0.6;
+
+  // TCP window limit
+  const windowBytes = windowKB * 1024;
+  const bdp = (bw * 1e6 * rtt / 1000) / 8; // bytes
+  const tcpThrLimit = (windowBytes / (rtt / 1000)) * 8 / 1e6; // Mbps
+
+  let thrEff;
+  if(transport === 'tcp') {
+    thrEff = Math.min(thrMax, tcpThrLimit) * (protoEff/100) * (1 - loss/100);
+  } else {
+    thrEff = thrMax * (protoEff/100) * (1 - loss/100);
+  }
+
+  // Handshake
+  const handshake = transport === 'tcp' ? rtt * 1.5 : 0;
+  let tlsOverhead = 0;
+  if(['https','http2'].includes(app)) tlsOverhead = rtt * 2;
+  if(app === 'http3') tlsOverhead = rtt; // 0-RTT
+
+  // Packet counts
+  const totalBytes = volume * 1024 * 1024;
+  const totalPkts = Math.ceil(totalBytes / payload);
+  const lostPkts = Math.round(totalPkts * loss / 100);
+  const retx = transport === 'tcp' ? lostPkts : 0;
+
+  // Transfer time
+  const transferTime = totalBytes * 8 / (thrEff * 1e6) + handshake/1000 + tlsOverhead/1000;
+
+  // Goodput
+  const goodput = (totalBytes * 8 / transferTime) / 1e6;
+
+  // Link efficiency
+  const linkEff = (thrEff / thrMax * 100);
+
+  // Redundancy
+  const maxLinks = devices.length * (devices.length - 1) / 2;
+  const redundancy = maxLinks > 0 ? (links.length / maxLinks * 100) : 0;
+
+  // Update UI
+  document.getElementById('hdr-status').textContent = 'ATIVO';
+  document.getElementById('hdr-lat').innerHTML = totalLat.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('hdr-thr').innerHTML = thrEff.toFixed(1) + '<span class="unit">Mbps</span>';
+
+  document.getElementById('net-dot').className = 'live-dot';
+  document.getElementById('r-state').textContent = 'ATIVO';
+  document.getElementById('r-state').className = 'v good';
+  document.getElementById('r-diam').innerHTML = diameter + '<span class="unit">saltos</span>';
+  document.getElementById('r-redund').textContent = redundancy.toFixed(1) + '%';
+  document.getElementById('r-redund').className = 'v ' + (redundancy > 60 ? 'good' : redundancy > 30 ? 'warn' : 'bad');
+
+  document.getElementById('r-lat').innerHTML = totalLat.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('r-lat').className = 'v ' + (totalLat < 5 ? 'good' : totalLat < 50 ? 'warn' : 'bad');
+  const latPct = Math.min(100, totalLat / 100 * 100);
+  document.getElementById('gf-lat').style.width = latPct + '%';
+  document.getElementById('gf-lat').className = 'gauge-fill ' + (totalLat < 5 ? 'good' : totalLat < 50 ? 'warn' : 'bad');
+  document.getElementById('gl-lat').textContent = totalLat.toFixed(2) + ' ms';
+
+  document.getElementById('r-jitter').innerHTML = jitter.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('r-jitter').className = 'v ' + (jitter < 5 ? 'good' : jitter < 30 ? 'warn' : 'bad');
+
+  document.getElementById('r-loss').innerHTML = loss.toFixed(3) + '<span class="unit">%</span>';
+  document.getElementById('r-loss').className = 'v ' + (loss < 0.1 ? 'good' : loss < 1 ? 'warn' : 'bad');
+  document.getElementById('gf-loss').style.width = Math.min(100, loss * 10) + '%';
+  document.getElementById('gf-loss').className = 'gauge-fill ' + (loss < 0.1 ? 'good' : loss < 1 ? 'warn' : 'bad');
+  document.getElementById('gl-loss').textContent = loss.toFixed(3) + '%';
+
+  document.getElementById('r-thr-max').innerHTML = thrMax.toFixed(0) + '<span class="unit">Mbps</span>';
+  document.getElementById('r-thr-eff').innerHTML = thrEff.toFixed(1) + '<span class="unit">Mbps</span>';
+  document.getElementById('r-thr-eff').className = 'v ' + (linkEff > 80 ? 'good' : linkEff > 50 ? 'warn' : 'bad');
+  document.getElementById('gf-thr').style.width = linkEff + '%';
+  document.getElementById('gf-thr').className = 'gauge-fill ' + (linkEff > 80 ? 'good' : linkEff > 50 ? 'warn' : 'bad');
+  document.getElementById('gl-thr').textContent = thrEff.toFixed(1) + ' Mbps';
+
+  document.getElementById('r-eff').innerHTML = linkEff.toFixed(1) + '<span class="unit">%</span>';
+  document.getElementById('r-eff').className = 'v ' + (linkEff > 80 ? 'good' : linkEff > 50 ? 'warn' : 'bad');
+
+  document.getElementById('r-rtt').innerHTML = rtt.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('r-bdp').innerHTML = (bdp/1024).toFixed(1) + '<span class="unit">KB</span>';
+  document.getElementById('r-time').innerHTML = transferTime.toFixed(2) + '<span class="unit">s</span>';
+
+  document.getElementById('r-overhead').innerHTML = headerBytes + '<span class="unit">bytes</span>';
+  document.getElementById('r-proto-eff').innerHTML = protoEff.toFixed(1) + '<span class="unit">%</span>';
+  document.getElementById('r-proto-eff').className = 'v ' + (protoEff > 95 ? 'good' : protoEff > 80 ? 'warn' : 'bad');
+  document.getElementById('r-pkts').textContent = totalPkts.toLocaleString();
+  document.getElementById('r-pkts-lost').textContent = lostPkts.toLocaleString();
+  document.getElementById('r-pkts-lost').className = 'v ' + (lostPkts === 0 ? 'good' : 'warn');
+  document.getElementById('r-retx').textContent = retx.toLocaleString();
+  document.getElementById('r-retx').className = 'v ' + (retx === 0 ? 'good' : 'warn');
+  document.getElementById('r-handshake').innerHTML = handshake.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('r-tls').innerHTML = tlsOverhead.toFixed(2) + '<span class="unit">ms</span>';
+  document.getElementById('r-goodput').innerHTML = goodput.toFixed(1) + '<span class="unit">Mbps</span>';
+  document.getElementById('r-goodput').className = 'v ' + (goodput > thrMax * 0.7 ? 'good' : goodput > thrMax * 0.3 ? 'warn' : 'bad');
+
+  // Update protocol stack
+  const appNames = {http:'HTTP :80',https:'HTTPS :443',http2:'HTTP/2 :443',http3:'HTTP/3 :443',ftp:'FTP :21',ssh:'SSH :22',dns:'DNS :53',dhcp:'DHCP :67/68',smtp:'SMTP :25',voip:'RTP/SIP :5060',mqtt:'MQTT :1883',custom:'Custom'};
+  document.getElementById('stack-l7').textContent = appNames[app] || app.toUpperCase();
+  document.getElementById('stack-l4').textContent = transport.toUpperCase() + (app==='http'?' :80':app==='https'?' :443':'');
+  document.getElementById('stack-l3').textContent = document.getElementById('net-ipver').value === '6' ? 'IPv6' : document.getElementById('net-ipver').value === 'dual' ? 'IPv4/IPv6' : 'IPv4';
+  const encapNames = {ethernet:'Ethernet II','8021q':'802.1Q VLAN',pppoe:'PPPoE',gre:'GRE',vxlan:'VXLAN'};
+  document.getElementById('stack-l2').textContent = encapNames[encap] || 'Ethernet II';
+
+  // Charts
+  // Latency per hop
+  const hopLabels = [];
+  const hopLats = [];
+  for(let i=1;i<=diameter;i++) {
+    hopLabels.push('Hop '+i);
+    hopLats.push(baseLat + procLatPerHop + propDelay + (Math.random()-0.5)*0.1);
+  }
+  document.getElementById('lat-meta').textContent = diameter + ' saltos';
+  drawBarChart('chart-latency', hopLabels, hopLats, '#6366f1');
+
+  // Throughput over time (simulated)
+  const thrLabels = ['0s','1s','2s','3s','4s','5s','6s','7s','8s'];
+  const thrVals = thrLabels.map((_,i) => {
+    if(i === 0) return 0;
+    if(transport === 'tcp' && i < 3) return thrEff * (0.3 + i * 0.25); // slow start
+    return thrEff * (0.85 + Math.random() * 0.15);
+  });
+  document.getElementById('thr-meta').textContent = thrEff.toFixed(1) + ' Mbps eff';
+  drawLineChart('chart-throughput', thrLabels, [{ values: thrVals, color: '#4ade80' }]);
+
+  // Packet distribution
+  const pktLabels = ['Entregues','Perdidos','Retx'];
+  const pktVals = [totalPkts - lostPkts, lostPkts, retx];
+  document.getElementById('pkt-meta').textContent = totalPkts.toLocaleString() + ' total';
+  drawBarChart('chart-packets', pktLabels, pktVals, '#38bdf8', totalPkts);
+
+  // Diagnostics
+  generateDiagnostics(totalLat, loss, thrEff, thrMax, jitter, topo, diameter, transport, duplex);
+
+  // Badge
+  document.getElementById('badge-topo').className = 'big ' + (linkEff > 70 ? 'good' : linkEff > 40 ? 'warn' : 'bad');
+
+  drawTopology();
+
+  if(packetAnimActive) { spawnPackets(); animatePackets(); }
+
+  document.getElementById('footer-ts').textContent = new Date().toISOString().replace('T',' ').split('.')[0] + ' UTC';
+}
+
+function generateDiagnostics(lat, loss, thrEff, thrMax, jitter, topo, diam, transport, duplex) {
+  const el = document.getElementById('diag-list');
+  el.innerHTML = '';
+  const add = (cls, msg) => {
+    const d = document.createElement('div');
+    d.className = 'info-box ' + cls;
+    d.innerHTML = msg;
+    el.appendChild(d);
+  };
+
+  if(lat < 1) add('ok', '✓ <strong>Latencia excelente</strong> (' + lat.toFixed(2) + ' ms). Adequada para qualquer aplicacao incluindo VoIP e gaming.');
+  else if(lat < 10) add('ok', '✓ <strong>Latencia boa</strong> (' + lat.toFixed(2) + ' ms). Adequada para a maioria das aplicacoes.');
+  else if(lat < 50) add('warn-box', '⚠ <strong>Latencia moderada</strong> (' + lat.toFixed(2) + ' ms). Pode impactar aplicacoes em tempo real.');
+  else add('bad-box', '✗ <strong>Latencia alta</strong> (' + lat.toFixed(2) + ' ms). Problematica para VoIP, gaming e apps interativas.');
+
+  if(loss < 0.01) add('ok', '✓ <strong>Sem perda de pacotes significativa</strong>. Rede operando em condicoes ideais.');
+  else if(loss < 0.5) add('warn-box', '⚠ <strong>Perda de pacotes detectada</strong> (' + loss + '%). TCP compensara com retransmissoes, mas throughput sera impactado.');
+  else add('bad-box', '✗ <strong>Perda de pacotes critica</strong> (' + loss + '%). Qualidade de servico severamente degradada.');
+
+  if(jitter > 20) add('bad-box', '✗ <strong>Jitter excessivo</strong> (' + jitter.toFixed(1) + ' ms). VoIP e video serao afetados. Considere QoS/traffic shaping.');
+  else if(jitter > 5) add('warn-box', '⚠ <strong>Jitter moderado</strong> (' + jitter.toFixed(1) + ' ms). Buffers de jitter podem compensar na maioria dos casos.');
+
+  const eff = thrEff / thrMax * 100;
+  if(eff < 50) add('bad-box', '✗ <strong>Eficiencia do link baixa</strong> (' + eff.toFixed(1) + '%). Verifique window size TCP, perda e overhead de protocolo.');
+  else if(eff < 80) add('warn-box', '⚠ <strong>Eficiencia moderada</strong> (' + eff.toFixed(1) + '%). Ajuste de TCP window ou MTU pode melhorar.');
+
+  if(duplex === 'half') add('warn-box', '⚠ <strong>Half duplex</strong> ativo. Colisoes possiveis. Considere full duplex para melhor desempenho.');
+  if(topo === 'star' && devices.length > 1) add('', '<strong>Ponto unico de falha:</strong> O dispositivo central e critico. Considere redundancia (stack, LACP).');
+  if(topo === 'bus') add('warn-box', '⚠ <strong>Topologia barramento</strong> — dominio de colisao compartilhado. Desempenho degrada com mais nos.');
+  if(diam > 5) add('warn-box', '⚠ <strong>Diametro de rede alto</strong> (' + diam + ' saltos). Latencia acumulada pode ser significativa.');
+}
+
+// ---- Reset ----
+function resetAll() {
+  devices = []; links = []; devIdCounter = 0; simulated = false;
+  selectedDevId = null; packetAnimActive = false;
+  cancelAnimationFrame(packetAnimFrame);
+  packets = [];
+
+  document.getElementById('hdr-status').textContent = 'STANDBY';
+  document.getElementById('hdr-devs').textContent = '0';
+  document.getElementById('hdr-lat').innerHTML = '--<span class="unit">ms</span>';
+  document.getElementById('hdr-thr').innerHTML = '--<span class="unit">Mbps</span>';
+  document.getElementById('net-dot').className = 'live-dot standby';
+  document.getElementById('r-state').textContent = 'STANDBY';
+  document.getElementById('r-state').className = 'v';
+  document.getElementById('btn-pkt').classList.remove('active');
+
+  ['r-nodes','r-links'].forEach(id => document.getElementById(id).textContent = '0');
+  ['r-diam','r-redund','r-lat','r-jitter','r-loss','r-thr-max','r-thr-eff','r-eff','r-rtt','r-bdp','r-time','r-overhead','r-proto-eff','r-pkts','r-pkts-lost','r-retx','r-handshake','r-tls','r-goodput'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'v';
+    if(el.querySelector('.unit')) el.innerHTML = '--' + el.querySelector('.unit').outerHTML;
+    else el.textContent = '--';
+  });
+  ['gf-lat','gf-loss','gf-thr'].forEach(id => document.getElementById(id).style.width = '0%');
+  ['gl-lat','gl-loss','gl-thr'].forEach(id => document.getElementById(id).textContent = '--');
+
+  document.getElementById('equip-info').style.display = 'block';
+  document.getElementById('equip-details').style.display = 'none';
+  document.getElementById('diag-list').innerHTML = '';
+
+  buildDeviceList();
+  drawTopology();
+
+  // Clear charts
+  ['chart-latency','chart-throughput','chart-packets'].forEach(id => {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+  });
+
+  document.getElementById('badge-nodes').textContent = '0 nos · 0 enlaces';
+  document.getElementById('badge-topo').className = 'big good';
+  document.getElementById('footer-ts').textContent = '--';
+}
+
+// ---- Init ----
+window.addEventListener('DOMContentLoaded', () => {
+  onTopoChange();
+  onMediumChange();
+  loadTopoPreset('lan-small');
+  drawTopology();
+  document.getElementById('footer-ts').textContent = new Date().toISOString().replace('T',' ').split('.')[0] + ' UTC';
+});
+
+window.addEventListener('resize', () => {
+  drawTopology();
+  if(simulated) {
+    // redraw charts too
+    runSimulation();
+  }
+});
+
+// Subnet info update
+document.getElementById('net-subnet').addEventListener('change', function() {
+  const parts = this.value.split('/');
+  const ip = parts[0];
+  const cidr = parseInt(parts[1]) || 24;
+  const hosts = Math.pow(2, 32 - cidr) - 2;
+  const ipParts = ip.split('.').map(Number);
+  const mask = (~0 << (32 - cidr)) >>> 0;
+  const netInt = ((ipParts[0]<<24)|(ipParts[1]<<16)|(ipParts[2]<<8)|ipParts[3]) >>> 0;
+  const bcast = (netInt | ~mask) >>> 0;
+  const b = [(bcast>>>24)&255,(bcast>>>16)&255,(bcast>>>8)&255,bcast&255].join('.');
+  const cls = cidr >= 24 ? 'C' : cidr >= 16 ? 'B' : 'A';
+  document.getElementById('subnet-info').innerHTML = `<strong>${ip}/${cidr}</strong> — Hosts disponiveis: ${hosts} | Broadcast: ${b} | Classe ${cls} privada (RFC 1918)`;
+});
+</script>
+</body>
+</html>
