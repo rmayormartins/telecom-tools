@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISS Commander — Mission Control</title>
+<meta name="description" content="Real-time ISS mission control dashboard organized by flight console (TOPO, ETHOS, SPARTAN, ADCO, VVO, CATO, ROBO, ODIN, EVA, CAPCOM). 200+ telemetry points.">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:#0d1117}
+  ::-webkit-scrollbar-thumb{background:#21262d;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#30363d}
+  html,body{
+    background:#0d1117;
+    font-family:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+    color:#c9d1d9;
+    min-height:100vh;
+    font-size:13px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  body{overflow-x:hidden}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  @keyframes dot{0%,100%{opacity:1}50%{opacity:.3}}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+  #root{min-height:100vh}
+  .btn{cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s,color .15s}
+  .caret{display:inline-block;width:8px;height:14px;background:#58a6ff;animation:blink 1.1s infinite;vertical-align:middle;margin-left:2px}
+  a{color:#58a6ff;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .console-card{
+    border:1px solid #21262d;
+    background:#0f141a;
+    border-radius:6px;
+    padding:14px 16px;
+    margin-bottom:12px;
+    transition:border-color .2s;
+  }
+  .console-card:hover{border-color:#30363d}
+  .console-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+    padding-bottom:8px;
+    border-bottom:1px solid #21262d;
+  }
+  .console-tag{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1.5px;
+    padding:2px 7px;
+    border-radius:3px;
+    text-transform:uppercase;
+  }
+  .progress-track{height:4px;background:#21262d;border-radius:2px;overflow:hidden;margin-top:4px}
+  .progress-fill{height:100%;border-radius:2px;transition:width .5s ease-out}
+  .tm-row{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;font-size:10px;border-bottom:1px dotted #21262d}
+  .tm-row:last-child{border-bottom:none}
+  .tm-label{color:#8b949e;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+  .tm-val{color:#c9d1d9;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:6px;margin-top:6px}
+  .tm-group{background:#0a0e13;border:1px solid #21262d;border-radius:4px;padding:8px}
+  .tm-group-title{font-size:9px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid #21262d}
+  .sparkline-box{background:#0a0e13;border:1px solid #21262d;border-radius:4px;padding:8px 10px;margin-bottom:8px}
+  .subcard{background:#0a0e13;border:1px solid #21262d;border-radius:4px;padding:8px 10px;margin-bottom:6px}
+  details{cursor:pointer}
+  summary{list-style:none;outline:none}
+  summary::-webkit-details-marker{display:none}
+
+  /* ─── COCKPIT ENRICHMENTS ───────────────────────────── */
+  .cockpit-frame{
+    background:linear-gradient(180deg,#0f141a 0%,#0d1117 100%);
+    box-shadow:inset 0 1px 0 #ffffff05, 0 1px 2px #00000040;
+  }
+  .led-dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    animation:dot 1.8s infinite;
+    flex-shrink:0;
+  }
+  .digital-readout{
+    font-family:"SF Mono",Menlo,Consolas,monospace;
+    letter-spacing:0.5px;
+  }
+  .console-card{position:relative;}
+  .tm-group{position:relative;}
+  .sparkline-box{
+    background:linear-gradient(180deg,#0a0e13 0%,#080b10 100%);
+  }
+  .tm-row:hover{background:#161b22;}
+  /* Canadian-style ON/ACTIVE badges */
+  .on-badge{
+    display:inline-block;
+    padding:2px 7px;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+    color:#3fb950;
+    border:1px solid #3fb95066;
+    border-radius:3px;
+    background:#3fb95011;
+    text-shadow:0 0 6px #3fb95088;
+  }
+  .off-badge{
+    display:inline-block;
+    padding:2px 7px;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+    color:#6e7681;
+    border:1px solid #30363d;
+    border-radius:3px;
+    background:#0a0e13;
+  }
+  .active-badge{
+    display:inline-block;
+    padding:2px 7px;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:1px;
+    color:#58a6ff;
+    border:1px solid #58a6ff66;
+    border-radius:3px;
+    background:#58a6ff11;
+    text-shadow:0 0 6px #58a6ff88;
+  }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lightstreamer-client-web/lightstreamer.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   STATION COMMANDER v7.0 — ISS MISSION CONTROL
+   Single-column flight console layout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const CONSOLES = {
+  TOPO:    {name:"TOPO",    fullName:"Trajectory Operations",         color:"#58a6ff", icon:"\u25B2"},
+  ETHOS:   {name:"ETHOS",   fullName:"Environmental & Thermal",        color:"#3fb950", icon:"\u25C8"},
+  SPARTAN: {name:"SPARTAN", fullName:"Station Power & Thermal",        color:"#d29922", icon:"\u26A1"},
+  ADCO:    {name:"ADCO",    fullName:"Attitude Determination & Ctrl",  color:"#a371f7", icon:"\u2299"},
+  VVO:     {name:"VVO",     fullName:"Visiting Vehicles",              color:"#f0883e", icon:"\u2B22"},
+  CAPCOM:  {name:"CAPCOM",  fullName:"Capsule Communicator",           color:"#f85149", icon:"\u25C9"},
+  CATO:    {name:"CATO",    fullName:"Comms & Tracking",               color:"#58a6ff", icon:"\u2241"},
+  ROBO:    {name:"ROBO",    fullName:"Robotics Operations",            color:"#79c0ff", icon:"\u25A3"},
+  ODIN:    {name:"ODIN",    fullName:"Onboard Data & Integration",     color:"#db61a2", icon:"\u25C6"},
+  ROS:     {name:"ROS",     fullName:"Russian Segment Operations",     color:"#ff9800", icon:"\u2726"},
+  EVA:     {name:"EVA",     fullName:"Extravehicular Activity",        color:"#4dd0e1", icon:"\u25CE"},
+};
+
+// ─── TELEMETRY DICTIONARY (220+ symbols) with realistic FALLBACK values ──
+// Source: ISS Mimic project (https://iss-mimic.github.io/Mimic/)
+// fallback: nominal value used when feed is offline (with small drift)
+const TELEMETRY = {
+  // ETHOS — Airlock
+  "AIRLOCK000049": {label:"Crewlock Pressure",unit:"torr",console:"ETHOS",group:"Airlock",fallback:0.0},
+  "AIRLOCK000050": {label:"Hi-P O\u2082 Supply Valve",unit:"",console:"ETHOS",group:"Airlock",fallback:"CLOSE"},
+  "AIRLOCK000051": {label:"Lo-P O\u2082 Supply Valve",unit:"",console:"ETHOS",group:"Airlock",fallback:"CLOSE"},
+  "AIRLOCK000052": {label:"N\u2082 Supply Valve",unit:"",console:"ETHOS",group:"Airlock",fallback:"CLOSE"},
+  "AIRLOCK000053": {label:"Airlock A/C State",unit:"",console:"ETHOS",group:"Airlock",fallback:"OFF"},
+  "AIRLOCK000054": {label:"Airlock Pressure",unit:"torr",console:"ETHOS",group:"Airlock",fallback:758.2,jitter:0.3},
+  "AIRLOCK000055": {label:"Hi-P O\u2082 Tank Press",unit:"torr",console:"ETHOS",group:"Airlock",fallback:18420,jitter:5},
+  "AIRLOCK000056": {label:"Lo-P O\u2082 Tank Press",unit:"torr",console:"ETHOS",group:"Airlock",fallback:8240,jitter:3},
+  "AIRLOCK000057": {label:"N\u2082 Tank Pressure",unit:"torr",console:"ETHOS",group:"Airlock",fallback:14380,jitter:4},
+  // ETHOS — Node 2
+  "NODE2000001": {label:"Coolant Med Temp",unit:"%",console:"ETHOS",group:"Node 2 ECLSS",fallback:48.5,jitter:0.2},
+  "NODE2000002": {label:"Coolant Low Temp",unit:"%",console:"ETHOS",group:"Node 2 ECLSS",fallback:42.1,jitter:0.2},
+  "NODE2000003": {label:"A/C State",unit:"",console:"ETHOS",group:"Node 2 ECLSS",fallback:"PROCESS"},
+  "NODE2000006": {label:"Air Cooling Temp",unit:"\u00b0C",console:"ETHOS",group:"Node 2 ECLSS",fallback:11.8,jitter:0.3},
+  "NODE2000007": {label:"Avionics Cool Temp",unit:"\u00b0C",console:"ETHOS",group:"Node 2 ECLSS",fallback:13.2,jitter:0.3},
+  // ETHOS — Node 3
+  "NODE3000001": {label:"ppO\u2082",unit:"torr",console:"ETHOS",group:"Node 3 ECLSS",fallback:165.4,jitter:0.5,chart:true},
+  "NODE3000002": {label:"ppN\u2082",unit:"torr",console:"ETHOS",group:"Node 3 ECLSS",fallback:586.2,jitter:0.8},
+  "NODE3000003": {label:"ppCO\u2082",unit:"torr",console:"ETHOS",group:"Node 3 ECLSS",fallback:2.81,jitter:0.05,chart:true},
+  "NODE3000004": {label:"Urine Processor State",unit:"",console:"ETHOS",group:"Node 3 ECLSS",fallback:"PROCESS"},
+  "NODE3000005": {label:"Urine Tank",unit:"%",console:"ETHOS",group:"Node 3 ECLSS",fallback:67.3,jitter:0.1,chart:true},
+  "NODE3000006": {label:"Water Processor State",unit:"",console:"ETHOS",group:"Node 3 ECLSS",fallback:"PROCESS"},
+  "NODE3000007": {label:"H\u2082O Proc Step",unit:"",console:"ETHOS",group:"Node 3 ECLSS",fallback:"4"},
+  "NODE3000008": {label:"Waste Water Tank",unit:"%",console:"ETHOS",group:"Node 3 ECLSS",fallback:42.6,jitter:0.1,chart:true},
+  "NODE3000009": {label:"Clean Water Tank",unit:"%",console:"ETHOS",group:"Node 3 ECLSS",fallback:88.4,jitter:0.1,chart:true},
+  "NODE3000010": {label:"O\u2082 Generator State",unit:"",console:"ETHOS",group:"Node 3 ECLSS",fallback:"PROCESS"},
+  "NODE3000011": {label:"O\u2082 Production",unit:"lb/day",console:"ETHOS",group:"Node 3 ECLSS",fallback:5.4,jitter:0.1},
+  "NODE3000012": {label:"Avionics Cool Temp",unit:"\u00b0C",console:"ETHOS",group:"Node 3 ECLSS",fallback:14.2,jitter:0.3},
+  "NODE3000013": {label:"Air Cool Temp",unit:"\u00b0C",console:"ETHOS",group:"Node 3 ECLSS",fallback:12.5,jitter:0.3},
+  "NODE3000017": {label:"Coolant Water A",unit:"%",console:"ETHOS",group:"Node 3 ECLSS",fallback:51.2,jitter:0.2},
+  "NODE3000018": {label:"A/C State",unit:"",console:"ETHOS",group:"Node 3 ECLSS",fallback:"PROCESS"},
+  "NODE3000019": {label:"Coolant Water B",unit:"%",console:"ETHOS",group:"Node 3 ECLSS",fallback:49.8,jitter:0.2},
+  // ETHOS — US Lab
+  "USLAB000053": {label:"Lab ppO\u2082",unit:"torr",console:"ETHOS",group:"US Lab",fallback:163.7,jitter:0.4},
+  "USLAB000054": {label:"Lab ppN\u2082",unit:"torr",console:"ETHOS",group:"US Lab",fallback:584.6,jitter:0.7},
+  "USLAB000055": {label:"Lab ppCO\u2082",unit:"torr",console:"ETHOS",group:"US Lab",fallback:2.74,jitter:0.04},
+  "USLAB000056": {label:"Lab Coolant Low",unit:"%",console:"ETHOS",group:"US Lab",fallback:43.5,jitter:0.2},
+  "USLAB000057": {label:"Lab Coolant Med",unit:"%",console:"ETHOS",group:"US Lab",fallback:47.8,jitter:0.2},
+  "USLAB000058": {label:"Cabin Pressure",unit:"torr",console:"ETHOS",group:"US Lab",fallback:759.4,jitter:0.4,chart:true},
+  "USLAB000059": {label:"Cabin Temperature",unit:"\u00b0C",console:"ETHOS",group:"US Lab",fallback:22.6,jitter:0.2,chart:true},
+  "USLAB000060": {label:"Lab Avionics Cool",unit:"\u00b0C",console:"ETHOS",group:"US Lab",fallback:14.4,jitter:0.3},
+  "USLAB000061": {label:"Lab Air Cool",unit:"\u00b0C",console:"ETHOS",group:"US Lab",fallback:12.8,jitter:0.3},
+  "USLAB000062": {label:"VRS Valve",unit:"",console:"ETHOS",group:"US Lab",fallback:"CLOSE"},
+  "USLAB000063": {label:"VES Valve",unit:"",console:"ETHOS",group:"US Lab",fallback:"CLOSE"},
+  "USLAB000064": {label:"Lab Port A/C",unit:"",console:"ETHOS",group:"US Lab",fallback:"PROCESS"},
+  "USLAB000065": {label:"Lab Stbd A/C",unit:"",console:"ETHOS",group:"US Lab",fallback:"PROCESS"},
+
+  // SPARTAN — Solar Arrays
+  "S4000001": {label:"PVCU 1A Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 1A",fallback:151.2,jitter:0.4,chart:true},
+  "S4000002": {label:"PVCU 1A Current",unit:"A",console:"SPARTAN",group:"Solar Array 1A",fallback:42.1,jitter:0.5},
+  "S4000007": {label:"1A BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 1A",fallback:34.6,jitter:1.2},
+  "S4000004": {label:"PVCU 3A Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 3A",fallback:150.8,jitter:0.4},
+  "S4000005": {label:"PVCU 3A Current",unit:"A",console:"SPARTAN",group:"Solar Array 3A",fallback:41.4,jitter:0.5},
+  "S4000008": {label:"3A BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 3A",fallback:-12.3,jitter:1.2},
+  "S6000001": {label:"PVCU 3B Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 3B",fallback:151.5,jitter:0.4,chart:true},
+  "S6000002": {label:"PVCU 3B Current",unit:"A",console:"SPARTAN",group:"Solar Array 3B",fallback:43.8,jitter:0.5},
+  "S6000007": {label:"3B BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 3B",fallback:78.2,jitter:1.2},
+  "S6000004": {label:"PVCU 1B Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 1B",fallback:151.0,jitter:0.4},
+  "S6000005": {label:"PVCU 1B Current",unit:"A",console:"SPARTAN",group:"Solar Array 1B",fallback:42.5,jitter:0.5},
+  "S6000008": {label:"1B BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 1B",fallback:-45.1,jitter:1.2},
+  "P4000001": {label:"PVCU 2A Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 2A",fallback:150.6,jitter:0.4,chart:true},
+  "P4000002": {label:"PVCU 2A Current",unit:"A",console:"SPARTAN",group:"Solar Array 2A",fallback:41.8,jitter:0.5},
+  "P4000007": {label:"2A BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 2A",fallback:23.4,jitter:1.2},
+  "P4000004": {label:"PVCU 4A Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 4A",fallback:151.3,jitter:0.4},
+  "P4000005": {label:"PVCU 4A Current",unit:"A",console:"SPARTAN",group:"Solar Array 4A",fallback:42.9,jitter:0.5},
+  "P4000008": {label:"4A BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 4A",fallback:-67.8,jitter:1.2},
+  "P6000001": {label:"PVCU 4B Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 4B",fallback:150.9,jitter:0.4},
+  "P6000002": {label:"PVCU 4B Current",unit:"A",console:"SPARTAN",group:"Solar Array 4B",fallback:42.2,jitter:0.5},
+  "P6000007": {label:"4B BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 4B",fallback:56.1,jitter:1.2},
+  "P6000004": {label:"PVCU 2B Voltage",unit:"V",console:"SPARTAN",group:"Solar Array 2B",fallback:151.7,jitter:0.4},
+  "P6000005": {label:"PVCU 2B Current",unit:"A",console:"SPARTAN",group:"Solar Array 2B",fallback:43.4,jitter:0.5},
+  "P6000008": {label:"2B BGA Position",unit:"\u00b0",console:"SPARTAN",group:"Solar Array 2B",fallback:-89.2,jitter:1.2},
+  // SPARTAN — Thermal
+  "S0000001": {label:"TRRJ Stbd Position",unit:"\u00b0",console:"SPARTAN",group:"Thermal",fallback:124.3,jitter:0.5},
+  "S0000002": {label:"TRRJ Port Position",unit:"\u00b0",console:"SPARTAN",group:"Thermal",fallback:-118.7,jitter:0.5},
+  "S1000001": {label:"Loop A Pump Flow",unit:"kg/hr",console:"SPARTAN",group:"Thermal",fallback:1148,jitter:5,chart:true},
+  "S1000002": {label:"Loop A PM Press",unit:"kPa",console:"SPARTAN",group:"Thermal",fallback:443,jitter:2},
+  "S1000003": {label:"Loop A PM Temp",unit:"\u00b0C",console:"SPARTAN",group:"Thermal",fallback:5.2,jitter:0.2,chart:true},
+  "P1000001": {label:"Loop B Pump Flow",unit:"kg/hr",console:"SPARTAN",group:"Thermal",fallback:1142,jitter:5},
+  "P1000002": {label:"Loop B PM Press",unit:"kPa",console:"SPARTAN",group:"Thermal",fallback:441,jitter:2},
+  "P1000003": {label:"Loop B PM Temp",unit:"\u00b0C",console:"SPARTAN",group:"Thermal",fallback:5.4,jitter:0.2},
+
+  // ADCO — CMGs
+  "USLAB000001": {label:"CMG-1 Online",unit:"",console:"ADCO",group:"CMGs",fallback:"ON"},
+  "USLAB000002": {label:"CMG-2 Online",unit:"",console:"ADCO",group:"CMGs",fallback:"ON"},
+  "USLAB000003": {label:"CMG-3 Online",unit:"",console:"ADCO",group:"CMGs",fallback:"ON"},
+  "USLAB000004": {label:"CMG-4 Online",unit:"",console:"ADCO",group:"CMGs",fallback:"ON"},
+  "USLAB000005": {label:"CMGs Online",unit:"",console:"ADCO",group:"CMGs",fallback:4},
+  "USLAB000006": {label:"Torque Roll",unit:"N-m",console:"ADCO",group:"Attitude",fallback:1.24,jitter:0.4},
+  "USLAB000007": {label:"Torque Pitch",unit:"N-m",console:"ADCO",group:"Attitude",fallback:-2.18,jitter:0.4},
+  "USLAB000008": {label:"Torque Yaw",unit:"N-m",console:"ADCO",group:"Attitude",fallback:0.85,jitter:0.4},
+  "USLAB000009": {label:"CMG Momentum",unit:"Nms",console:"ADCO",group:"CMGs",fallback:5240,jitter:50},
+  "USLAB000010": {label:"CMG Momentum",unit:"%",console:"ADCO",group:"CMGs",fallback:38.6,jitter:0.5,chart:true},
+  "USLAB000011": {label:"Desat Request",unit:"",console:"ADCO",group:"Attitude",fallback:"INHIBIT"},
+  "USLAB000012": {label:"GNC Mode",unit:"",console:"ADCO",group:"Attitude",fallback:"CMG ATT"},
+  "USLAB000013": {label:"Attitude Source",unit:"",console:"ADCO",group:"Attitude",fallback:"GPS"},
+  "USLAB000014": {label:"Rate Source",unit:"",console:"ADCO",group:"Attitude",fallback:"RGA"},
+  "USLAB000015": {label:"State Vec Source",unit:"",console:"ADCO",group:"Attitude",fallback:"GPS"},
+  "USLAB000016": {label:"Att Ctrl Type",unit:"",console:"ADCO",group:"Attitude",fallback:"USOS"},
+  "USLAB000017": {label:"Att Ref Frame",unit:"",console:"ADCO",group:"Attitude",fallback:"LVLH"},
+  "USLAB000YAW": {label:"Yaw",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:-0.124,jitter:0.05,chart:true},
+  "USLAB000PIT": {label:"Pitch",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:1.842,jitter:0.05,chart:true},
+  "USLAB000ROL": {label:"Roll",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:-0.318,jitter:0.05,chart:true},
+  "USLAB000022": {label:"Roll Error",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:0.012,jitter:0.02},
+  "USLAB000023": {label:"Pitch Error",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:-0.024,jitter:0.02},
+  "USLAB000024": {label:"Yaw Error",unit:"\u00b0",console:"ADCO",group:"Attitude",fallback:0.018,jitter:0.02},
+  "USLAB000025": {label:"Rate X",unit:"\u00b0/s",console:"ADCO",group:"Attitude",fallback:0.0042,jitter:0.001},
+  "USLAB000026": {label:"Rate Y",unit:"\u00b0/s",console:"ADCO",group:"Attitude",fallback:-0.0628,jitter:0.001},
+  "USLAB000027": {label:"Rate Z",unit:"\u00b0/s",console:"ADCO",group:"Attitude",fallback:0.0018,jitter:0.001},
+  "USLAB000039": {label:"ISS Total Mass",unit:"kg",console:"ADCO",group:"Mass",fallback:419725,jitter:10},
+  "USLAB000040": {label:"Solar Beta Angle",unit:"\u00b0",console:"ADCO",group:"Orbit",fallback:42.6,jitter:0.3,chart:true},
+  "USLAB000041": {label:"LOAC CMG Alarm",unit:"",console:"ADCO",group:"Alarms",fallback:"NORM"},
+  "USLAB000042": {label:"LOAC ISS Alarm",unit:"",console:"ADCO",group:"Alarms",fallback:"NORM"},
+  "USLAB000043": {label:"GPS-1 Status",unit:"",console:"ADCO",group:"GPS",fallback:"OPS"},
+  "USLAB000044": {label:"GPS-2 Status",unit:"",console:"ADCO",group:"GPS",fallback:"OPS"},
+  // CMG hardware (Z1)
+  "Z1000001": {label:"CMG-1 Vibration",unit:"g",console:"ADCO",group:"CMG-1",fallback:0.018,jitter:0.002},
+  "Z1000005": {label:"CMG-1 Spin Motor I",unit:"A",console:"ADCO",group:"CMG-1",fallback:0.42,jitter:0.02},
+  "Z1000009": {label:"CMG-1 Wheel Speed",unit:"rpm",console:"ADCO",group:"CMG-1",fallback:6597,jitter:8,chart:true},
+  "Z1000002": {label:"CMG-2 Vibration",unit:"g",console:"ADCO",group:"CMG-2",fallback:0.022,jitter:0.002},
+  "Z1000006": {label:"CMG-2 Spin Motor I",unit:"A",console:"ADCO",group:"CMG-2",fallback:0.44,jitter:0.02},
+  "Z1000010": {label:"CMG-2 Wheel Speed",unit:"rpm",console:"ADCO",group:"CMG-2",fallback:6603,jitter:8,chart:true},
+  "Z1000003": {label:"CMG-3 Vibration",unit:"g",console:"ADCO",group:"CMG-3",fallback:0.020,jitter:0.002},
+  "Z1000007": {label:"CMG-3 Spin Motor I",unit:"A",console:"ADCO",group:"CMG-3",fallback:0.43,jitter:0.02},
+  "Z1000011": {label:"CMG-3 Wheel Speed",unit:"rpm",console:"ADCO",group:"CMG-3",fallback:6589,jitter:8,chart:true},
+  "Z1000004": {label:"CMG-4 Vibration",unit:"g",console:"ADCO",group:"CMG-4",fallback:0.024,jitter:0.002},
+  "Z1000008": {label:"CMG-4 Spin Motor I",unit:"A",console:"ADCO",group:"CMG-4",fallback:0.45,jitter:0.02},
+  "Z1000012": {label:"CMG-4 Wheel Speed",unit:"rpm",console:"ADCO",group:"CMG-4",fallback:6612,jitter:8,chart:true},
+  "USLAB000045": {label:"CMG-1 Spin Bearing",unit:"\u00b0C",console:"ADCO",group:"CMG-1",fallback:32.4,jitter:0.4},
+  "USLAB000046": {label:"CMG-2 Spin Bearing",unit:"\u00b0C",console:"ADCO",group:"CMG-2",fallback:33.1,jitter:0.4},
+  "USLAB000047": {label:"CMG-3 Spin Bearing",unit:"\u00b0C",console:"ADCO",group:"CMG-3",fallback:32.8,jitter:0.4},
+  "USLAB000048": {label:"CMG-4 Spin Bearing",unit:"\u00b0C",console:"ADCO",group:"CMG-4",fallback:33.5,jitter:0.4},
+  "USLAB000049": {label:"CMG-1 Hall Resolver",unit:"\u00b0C",console:"ADCO",group:"CMG-1",fallback:28.6,jitter:0.3},
+  "USLAB000050": {label:"CMG-2 Hall Resolver",unit:"\u00b0C",console:"ADCO",group:"CMG-2",fallback:29.1,jitter:0.3},
+  "USLAB000051": {label:"CMG-3 Hall Resolver",unit:"\u00b0C",console:"ADCO",group:"CMG-3",fallback:28.9,jitter:0.3},
+  "USLAB000052": {label:"CMG-4 Hall Resolver",unit:"\u00b0C",console:"ADCO",group:"CMG-4",fallback:29.4,jitter:0.3},
+
+  // VVO
+  "USLAB000081": {label:"Att Maneuver In Prog",unit:"",console:"VVO",group:"Status",fallback:"FALSE"},
+  "USLAB000086": {label:"ISS Station Mode",unit:"",console:"VVO",group:"Status",fallback:"STANDARD"},
+  "S0000003": {label:"SARJ Stbd Angle",unit:"\u00b0",console:"VVO",group:"SARJ",fallback:142.6,jitter:0.8,chart:true},
+  "S0000004": {label:"SARJ Port Angle",unit:"\u00b0",console:"VVO",group:"SARJ",fallback:-138.2,jitter:0.8,chart:true},
+  "S0000005": {label:"SARJ Port Cmd Angle",unit:"\u00b0",console:"VVO",group:"SARJ",fallback:-138.0,jitter:0.5},
+  "S0000006": {label:"TRRJ Loop B Mode",unit:"",console:"VVO",group:"TRRJ",fallback:"AUTOTRACK"},
+  "S0000007": {label:"TRRJ Loop A Mode",unit:"",console:"VVO",group:"TRRJ",fallback:"AUTOTRACK"},
+  "S0000008": {label:"SARJ Port Mode",unit:"",console:"VVO",group:"SARJ",fallback:"AUTOTRACK"},
+  "S0000009": {label:"SARJ Stbd Mode",unit:"",console:"VVO",group:"SARJ",fallback:"AUTOTRACK"},
+
+  // CATO
+  "USLAB000088": {label:"Ku Video DL Ch 1",unit:"",console:"CATO",group:"Ku-Band Video",fallback:"ON"},
+  "USLAB000089": {label:"Ku Video DL Ch 2",unit:"",console:"CATO",group:"Ku-Band Video",fallback:"OFF"},
+  "USLAB000090": {label:"Ku Video DL Ch 3",unit:"",console:"CATO",group:"Ku-Band Video",fallback:"OFF"},
+  "USLAB000091": {label:"Ku Video DL Ch 4",unit:"",console:"CATO",group:"Ku-Band Video",fallback:"ON"},
+  "USLAB000092": {label:"Active S-Band String",unit:"",console:"CATO",group:"S-Band",fallback:"STR1"},
+  "USLAB000093": {label:"IAC-1 Status",unit:"",console:"CATO",group:"Audio",fallback:"ACTIVE"},
+  "USLAB000094": {label:"IAC-2 Status",unit:"",console:"CATO",group:"Audio",fallback:"BACKUP"},
+  "USLAB000095": {label:"Video Src DL 1",unit:"",console:"CATO",group:"Video Routing",fallback:"CAM 1"},
+  "USLAB000096": {label:"Video Src DL 2",unit:"",console:"CATO",group:"Video Routing",fallback:"NONE"},
+  "USLAB000097": {label:"Video Src DL 3",unit:"",console:"CATO",group:"Video Routing",fallback:"NONE"},
+  "USLAB000098": {label:"Video Src DL 4",unit:"",console:"CATO",group:"Video Routing",fallback:"CAM 4"},
+  "USLAB000099": {label:"S2S UHF-1 Power",unit:"",console:"CATO",group:"UHF Radio",fallback:"ON"},
+  "USLAB000100": {label:"S2S UHF-2 Power",unit:"",console:"CATO",group:"UHF Radio",fallback:"STBY"},
+  "USLAB000101": {label:"S2S Frame Sync",unit:"",console:"CATO",group:"UHF Radio",fallback:"LOCK"},
+  "S1000004": {label:"RFG-1 Azimuth",unit:"\u00b0",console:"CATO",group:"S-Band",fallback:127.4,jitter:1.5},
+  "S1000005": {label:"RFG-1 Elevation",unit:"\u00b0",console:"CATO",group:"S-Band",fallback:42.8,jitter:1.5},
+  "S1000009": {label:"RFG-1 Status",unit:"",console:"CATO",group:"S-Band",fallback:"ON"},
+  "P1000004": {label:"RFG-2 Azimuth",unit:"\u00b0",console:"CATO",group:"S-Band",fallback:-118.6,jitter:1.5},
+  "P1000005": {label:"RFG-2 Elevation",unit:"\u00b0",console:"CATO",group:"S-Band",fallback:38.4,jitter:1.5},
+  "P1000007": {label:"RFG-2 Status",unit:"",console:"CATO",group:"S-Band",fallback:"STBY"},
+  "Z1000013": {label:"Ku-Band Transmit",unit:"",console:"CATO",group:"Ku-Band",fallback:"ON"},
+  "Z1000014": {label:"SGANT Elevation",unit:"\u00b0",console:"CATO",group:"Ku-Band",fallback:62.3,jitter:1.5},
+  "Z1000015": {label:"SGANT X-Elevation",unit:"\u00b0",console:"CATO",group:"Ku-Band",fallback:-24.7,jitter:1.5},
+
+  // TOPO
+  "USLAB000032": {label:"J2000 Pos X",unit:"km",console:"TOPO",group:"State Vector",fallback:4287.3,jitter:80},
+  "USLAB000033": {label:"J2000 Pos Y",unit:"km",console:"TOPO",group:"State Vector",fallback:-2156.8,jitter:80},
+  "USLAB000034": {label:"J2000 Pos Z",unit:"km",console:"TOPO",group:"State Vector",fallback:4521.6,jitter:80},
+  "USLAB000035": {label:"J2000 Vel X",unit:"m/s",console:"TOPO",group:"State Vector",fallback:5234.6,jitter:30},
+  "USLAB000036": {label:"J2000 Vel Y",unit:"m/s",console:"TOPO",group:"State Vector",fallback:4123.8,jitter:30},
+  "USLAB000037": {label:"J2000 Vel Z",unit:"m/s",console:"TOPO",group:"State Vector",fallback:-3456.2,jitter:30},
+  "USLAB000ALT": {label:"ISS Altitude",unit:"km",console:"TOPO",group:"Orbit",fallback:418.4,jitter:0.3,chart:true},
+  "USLAB000102": {label:"State Vec Time Tag",unit:"",console:"TOPO",group:"State Vector",fallback:"ACTIVE"},
+
+  // ODIN
+  "USLAB000082": {label:"Std Cmd Counter",unit:"",console:"ODIN",group:"Counters",fallback:842614,jitter:1},
+  "USLAB000083": {label:"Data Load Counter",unit:"",console:"ODIN",group:"Counters",fallback:124286,jitter:1},
+  "USLAB000084": {label:"OBT Coarse",unit:"",console:"ODIN",group:"Time",fallback:"804728541"},
+  "USLAB000085": {label:"OBT Fine",unit:"",console:"ODIN",group:"Time",fallback:"42"},
+  "USLAB000087": {label:"Active Laptops",unit:"",console:"ODIN",group:"Network",fallback:24,jitter:0.4},
+
+  // ROBO
+  "CSASSRMS002": {label:"SSRMS Base Location",unit:"",console:"ROBO",group:"SSRMS",fallback:"MBS PDGF 1"},
+  "CSASSRMS003": {label:"SSRMS Operating Base",unit:"",console:"ROBO",group:"SSRMS",fallback:"MBS"},
+  "CSASSRMS011": {label:"SSRMS Tip LEE Payload",unit:"",console:"ROBO",group:"SSRMS",fallback:"NONE"},
+  "CSASSRMS004": {label:"SSRMS SR Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:84.2,jitter:0.5},
+  "CSASSRMS005": {label:"SSRMS SY Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:-12.6,jitter:0.5},
+  "CSASSRMS006": {label:"SSRMS SP Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:147.8,jitter:0.5},
+  "CSASSRMS007": {label:"SSRMS EP Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:-91.4,jitter:0.5},
+  "CSASSRMS008": {label:"SSRMS WP Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:38.7,jitter:0.5},
+  "CSASSRMS009": {label:"SSRMS WY Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:-156.3,jitter:0.5},
+  "CSASSRMS010": {label:"SSRMS WR Joint",unit:"\u00b0",console:"ROBO",group:"SSRMS Joints",fallback:22.1,jitter:0.5},
+  "CSASPDM0002": {label:"SPDM Base",unit:"",console:"ROBO",group:"SPDM",fallback:"SSRMS LEE B"},
+  "CSASPDM0020": {label:"SPDM Body Roll",unit:"\u00b0",console:"ROBO",group:"SPDM",fallback:0.0,jitter:0.1},
+  "CSASPDM0022": {label:"SPDM Body Payload",unit:"",console:"ROBO",group:"SPDM",fallback:"NONE"},
+  "CSASPDM0010": {label:"SPDM Arm1 OTCM Payload",unit:"",console:"ROBO",group:"SPDM Arm 1",fallback:"NONE"},
+  "CSASPDM0003": {label:"SPDM1 SR Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 1",fallback:0.0,jitter:0.1},
+  "CSASPDM0004": {label:"SPDM1 SY Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 1",fallback:0.0,jitter:0.1},
+  "CSASPDM0005": {label:"SPDM1 SP Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 1",fallback:0.0,jitter:0.1},
+  "CSASPDM0019": {label:"SPDM Arm2 OTCM Payload",unit:"",console:"ROBO",group:"SPDM Arm 2",fallback:"NONE"},
+  "CSASPDM0011": {label:"SPDM2 SR Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 2",fallback:0.0,jitter:0.1},
+  "CSASPDM0012": {label:"SPDM2 SY Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 2",fallback:0.0,jitter:0.1},
+  "CSASPDM0013": {label:"SPDM2 SP Joint",unit:"\u00b0",console:"ROBO",group:"SPDM Arm 2",fallback:0.0,jitter:0.1},
+  "CSAMT000001": {label:"MT Position",unit:"cm",console:"ROBO",group:"Mobile Base",fallback:0.0,jitter:0.1},
+  "CSAMT000002": {label:"MT Utility Port",unit:"",console:"ROBO",group:"Mobile Base",fallback:"4"},
+  "CSAMBS00002": {label:"MBS MCAS Payload",unit:"",console:"ROBO",group:"Mobile Base",fallback:"NONE"},
+  "CSAMBA00004": {label:"MBS POA Payload",unit:"",console:"ROBO",group:"Mobile Base",fallback:"NONE"},
+
+  // ROS
+  "RUSSEG000001": {label:"RS Station Mode",unit:"",console:"ROS",group:"Status",fallback:"STANDARD"},
+  "RUSSEG000002": {label:"Kurs-1 Operating",unit:"",console:"ROS",group:"Kurs",fallback:"OFF"},
+  "RUSSEG000003": {label:"Kurs-2 Operating",unit:"",console:"ROS",group:"Kurs",fallback:"OFF"},
+  "RUSSEG000005": {label:"SM Kurs Range",unit:"m",console:"ROS",group:"Kurs",fallback:0.0},
+  "RUSSEG000006": {label:"SM Kurs Rate",unit:"m/s",console:"ROS",group:"Kurs",fallback:0.0},
+  "RUSSEG000012": {label:"SM Docking Flag",unit:"",console:"ROS",group:"Docking",fallback:"NONE"},
+  "RUSSEG000013": {label:"SM Fwd Docked",unit:"",console:"ROS",group:"Docking",fallback:"FREE"},
+  "RUSSEG000014": {label:"SM Aft Docked",unit:"",console:"ROS",group:"Docking",fallback:"OCCUPIED"},
+  "RUSSEG000015": {label:"SM Nadir Docked",unit:"",console:"ROS",group:"Docking",fallback:"FREE"},
+  "RUSSEG000016": {label:"FGB Nadir Docked",unit:"",console:"ROS",group:"Docking",fallback:"OCCUPIED"},
+  "RUSSEG000017": {label:"Prichal Docked",unit:"",console:"ROS",group:"Docking",fallback:"FREE"},
+  "RUSSEG000018": {label:"MRM-1 Docked",unit:"",console:"ROS",group:"Docking",fallback:"OCCUPIED"},
+  "RUSSEG000019": {label:"MRM-2 Docked",unit:"",console:"ROS",group:"Docking",fallback:"OCCUPIED"},
+  "RUSSEG000021": {label:"SM GNC Att Mode",unit:"",console:"ROS",group:"GNC",fallback:"INERTIAL"},
+  "RUSSEG000022": {label:"SM GNC Motion",unit:"",console:"ROS",group:"GNC",fallback:"DAMPING"},
+  "RUSSEG000025": {label:"SM GNC Dynamic",unit:"",console:"ROS",group:"GNC",fallback:"INDICATION"},
+
+  // Time
+  "TIME_000001": {label:"GMT",unit:"",console:"ODIN",group:"Time",fallback:"AUTO"},
+  "TIME_000002": {label:"Year",unit:"",console:"ODIN",group:"Time",fallback:"2026"},
+};
+
+// ─── LAND MASK ─────────────────────────────────────────────────────────
+const LAND_REGIONS = [
+  {latMin:25,latMax:50,lonMin:-130,lonMax:-65},{latMin:50,latMax:72,lonMin:-170,lonMax:-55},
+  {latMin:15,latMax:30,lonMin:-118,lonMax:-85},{latMin:8,latMax:22,lonMin:-90,lonMax:-60},
+  {latMin:-5,latMax:12,lonMin:-82,lonMax:-50},{latMin:-25,latMax:-5,lonMin:-75,lonMax:-35},
+  {latMin:-40,latMax:-25,lonMin:-72,lonMax:-48},{latMin:-55,latMax:-40,lonMin:-75,lonMax:-62},
+  {latMin:36,latMax:60,lonMin:-10,lonMax:30},{latMin:55,latMax:71,lonMin:5,lonMax:40},
+  {latMin:38,latMax:45,lonMin:-10,lonMax:5},{latMin:20,latMax:37,lonMin:-17,lonMax:35},
+  {latMin:0,latMax:20,lonMin:-18,lonMax:50},{latMin:-15,latMax:0,lonMin:10,lonMax:42},
+  {latMin:-35,latMax:-15,lonMin:15,lonMax:40},{latMin:40,latMax:55,lonMin:30,lonMax:60},
+  {latMin:50,latMax:72,lonMin:40,lonMax:180},{latMin:35,latMax:50,lonMin:60,lonMax:140},
+  {latMin:20,latMax:42,lonMin:65,lonMax:125},{latMin:5,latMax:20,lonMin:68,lonMax:92},
+  {latMin:-10,latMax:20,lonMin:95,lonMax:140},{latMin:30,latMax:42,lonMin:125,lonMax:145},
+  {latMin:12,latMax:38,lonMin:32,lonMax:62},{latMin:-40,latMax:-12,lonMin:114,lonMax:153},
+  {latMin:-47,latMax:-34,lonMin:166,lonMax:178},{latMin:60,latMax:83,lonMin:-55,lonMax:-15},
+  {latMin:50,latMax:59,lonMin:-11,lonMax:2},{latMin:-8,latMax:8,lonMin:95,lonMax:130},
+  {latMin:5,latMax:20,lonMin:117,lonMax:127},
+];
+const isLand = (lat,lon) => LAND_REGIONS.some(r => lat>=r.latMin && lat<=r.latMax && lon>=r.lonMin && lon<=r.lonMax);
+
+function simulateOrbit(t, inc, perMin, phase) {
+  phase = phase || 0;
+  var perMs = perMin*60*1000;
+  var frac = ((t+phase)%perMs)/perMs;
+  var rawLon = (frac*360+180)%360 - 180;
+  var earthRot = ((t/60000)*0.25)%360;
+  var lon = ((rawLon - earthRot + 540) % 360) - 180;
+  var lat = inc * Math.sin(frac*2*Math.PI);
+  return {latitude:lat, longitude:lon};
+}
+
+// ─── CREW ──────────────────────────────────────────────────────────────
+const CREW = [
+  {name:"Sergey Kud-Sverchkov",role:"ISS Commander",flag:"RU",agency:"Roscosmos",vehicle:"Soyuz MS-27",days:198},
+  {name:"Sergei Mikayev",role:"Flight Engineer",flag:"RU",agency:"Roscosmos",vehicle:"Soyuz MS-27",days:198},
+  {name:"Christopher Williams",role:"Flight Engineer",flag:"US",agency:"NASA",vehicle:"Crew-11 ext.",days:242},
+  {name:"Jessica Meir",role:"Crew-12 Commander",flag:"US",agency:"NASA",vehicle:"Crew-12 Dragon",days:50},
+  {name:"Jack Hathaway",role:"Crew-12 Pilot",flag:"US",agency:"NASA",vehicle:"Crew-12 Dragon",days:50},
+  {name:"Sophie Adenot",role:"Mission Specialist",flag:"FR",agency:"ESA",vehicle:"Crew-12 Dragon",days:50},
+  {name:"Andrey Fedyaev",role:"Mission Specialist",flag:"RU",agency:"Roscosmos",vehicle:"Crew-12 Dragon",days:50},
+];
+
+const VISITING_VEHICLES = [
+  {port:"Harmony Forward",vehicle:"Crew Dragon Freedom",mission:"Crew-12",arrived:"Feb 14, 2026",departure:"~Aug 2026",status:"DOCKED",type:"crew",color:"#3fb950"},
+  {port:"Harmony Zenith",vehicle:null,mission:"",arrived:"",departure:"",status:"FREE",type:"crew",color:"#6e7681"},
+  {port:"Unity Nadir",vehicle:"Cygnus XL",mission:"NG-23",arrived:"Expected Apr 8",departure:"~Jul 2026",status:"RSVD",type:"cargo",color:"#d29922"},
+  {port:"Poisk Zenith",vehicle:"Soyuz MS-27",mission:"Expedition 74",arrived:"Sep 15, 2025",departure:"~Apr 15, 2026",status:"DOCKED",type:"crew",color:"#3fb950"},
+  {port:"Rassvet Nadir",vehicle:"Soyuz MS-28",mission:"Crew rotation",arrived:"Mar 28, 2026",departure:"~Sep 2026",status:"DOCKED",type:"crew",color:"#3fb950"},
+  {port:"Zvezda Aft",vehicle:"Progress MS-31",mission:"Resupply",arrived:"Mar 22, 2026",departure:"~Jun 2026",status:"DOCKED",type:"cargo",color:"#d29922"},
+  {port:"Nauka Nadir",vehicle:"Progress MS-30",mission:"Reboost Apr 10",arrived:"Jan 12, 2026",departure:"~May 2026",status:"DOCKED",type:"cargo",color:"#d29922"},
+];
+
+// ─── UPCOMING EVENTS ───────────────────────────────────────────────────
+const UPCOMING = [
+  {date:"Apr 8, 2026",time:"~14:00 UTC",type:"ARRIVAL",color:"#d29922",title:"Cygnus XL (NG-23) capture",desc:"Northrop Grumman Cygnus enhanced cargo. Capture by Canadarm2, berthing at Unity Nadir CBM.",vehicle:"Cygnus XL"},
+  {date:"Apr 10, 2026",time:"~09:30 UTC",type:"REBOOST",color:"#a371f7",title:"Progress MS-30 reboost burn",desc:"Orbital reboost using Progress thrusters. Targets ~1.5 km altitude raise to compensate for atmospheric drag.",vehicle:"Progress MS-30"},
+  {date:"Apr 15, 2026",time:"~06:45 UTC",type:"DEPARTURE",color:"#f85149",title:"Soyuz MS-26 undocking & landing",desc:"Three-cosmonaut rotation. Undocking from Rassvet Nadir, deorbit burn, landing in Kazakhstan steppe.",vehicle:"Soyuz MS-26"},
+  {date:"Apr 22, 2026",time:"~12:00 UTC",type:"EVA",color:"#4dd0e1",title:"USOS EVA #91",desc:"Spacewalk to install IROSA solar array mounting bracket on P4 truss. Williams (EV1) + Hathaway (EV2). ~6.5 hr duration.",vehicle:"EMU 3008/3013"},
+  {date:"May 2, 2026",time:"~03:15 UTC",type:"LAUNCH",color:"#3fb950",title:"SpaceX Crew-13 launch",desc:"Falcon 9 / Dragon C214 from LC-39A. New international crew for Expedition 75 handover.",vehicle:"Crew Dragon"},
+  {date:"May 4, 2026",time:"~07:30 UTC",type:"DOCKING",color:"#3fb950",title:"Crew-13 Dragon docking",desc:"Autonomous rendezvous and docking at Harmony Zenith IDA-3. Hatch opening ~2 hr after capture.",vehicle:"Crew Dragon"},
+  {date:"May 12, 2026",time:"~18:00 UTC",type:"DEPARTURE",color:"#f85149",title:"Crew-12 Dragon undocking",desc:"Crew handover complete. Undocking from Harmony Forward, splashdown off Florida coast ~30 hours later.",vehicle:"Dragon Freedom"},
+  {date:"Jun 2026",time:"TBD",type:"LAUNCH",color:"#3fb950",title:"Progress MS-32 launch",desc:"Roscosmos cargo resupply from Baikonur. Carries propellant, water, food, and science payloads.",vehicle:"Progress MS-32"},
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════
+function StationCommander() {
+  const [iss, setIss] = useState(null);
+  const [time, setTime] = useState(Date.now());
+  const [issTrail, setIssTrail] = useState([]);
+  const [apiStatus, setApiStatus] = useState("connecting");
+  const [telemetry, setTelemetry] = useState({});
+  const [history, setHistory] = useState({});
+  const [lsStatus, setLsStatus] = useState("connecting");
+
+  // ─── ISS POSITION ──────────────────────────────────────────────────
+  const fetchISS = useCallback(function(){
+    fetch("https://api.wheretheiss.at/v1/satellites/25544")
+      .then(function(r){if(!r.ok)throw new Error();return r.json();})
+      .then(function(d){
+        setIss(Object.assign({},d,{live:true}));
+        setApiStatus("online");
+        setIssTrail(function(p){return p.slice(-300).concat([{lat:d.latitude,lon:d.longitude,t:Date.now()}]);});
+      })
+      .catch(function(){
+        setApiStatus("offline");
+        var s=simulateOrbit(Date.now(),51.64,92.68,0);
+        var d={latitude:s.latitude,longitude:s.longitude,altitude:418+Math.random()*5,velocity:27580+Math.random()*40,visibility:Math.random()>0.4?"daylight":"eclipsed",live:false};
+        setIss(d);
+        setIssTrail(function(p){return p.slice(-300).concat([{lat:d.latitude,lon:d.longitude,t:Date.now()}]);});
+      });
+  },[]);
+
+  // ─── LIGHTSTREAMER ──────────────────────────────────────────────────
+  useEffect(function(){
+    let client, sub;
+    let retries = 0;
+
+    // Resolve LightstreamerClient/Subscription constructors from any of the possible namespaces.
+    // Lightstreamer Web Client SDK 9.2+ exposes these as DIRECT GLOBALS on window
+    // (window.LightstreamerClient, window.Subscription).
+    // Older 9.0/9.1 versions exposed them under the "Ls" namespace (Ls.LightstreamerClient).
+    // Some builds also use "lightstreamer" lowercase. We try all three so the code is robust.
+    function resolveLs(){
+      // Direct globals (current SDK 9.2+)
+      if(typeof window.LightstreamerClient === "function" && typeof window.Subscription === "function"){
+        return { LightstreamerClient: window.LightstreamerClient, Subscription: window.Subscription, source: "global" };
+      }
+      // Ls namespace (older 9.0/9.1)
+      if(window.Ls && typeof window.Ls.LightstreamerClient === "function"){
+        return { LightstreamerClient: window.Ls.LightstreamerClient, Subscription: window.Ls.Subscription, source: "Ls" };
+      }
+      // lightstreamer namespace (some builds)
+      if(window.lightstreamer && typeof window.lightstreamer.LightstreamerClient === "function"){
+        return { LightstreamerClient: window.lightstreamer.LightstreamerClient, Subscription: window.lightstreamer.Subscription, source: "lightstreamer" };
+      }
+      return null;
+    }
+
+    function tryConnect(){
+      const ns = resolveLs();
+      if(!ns){
+        retries++;
+        if(retries < 60){
+          setTimeout(tryConnect, 250);
+        } else {
+          console.warn("[LS] library not loaded after 60 retries — check that the unpkg CDN is reachable");
+          setLsStatus("library-missing");
+        }
+        return;
+      }
+      try {
+        console.log("[LS] Library loaded from namespace:", ns.source);
+        console.log("[LS] Connecting to push.lightstreamer.com / ISSLIVE ...");
+        client = new ns.LightstreamerClient("https://push.lightstreamer.com","ISSLIVE");
+        client.addListener({
+          onStatusChange: function(status){
+            console.log("[LS] status:", status);
+            if(status.indexOf("CONNECTED") === 0) setLsStatus("online");
+            else if(status.indexOf("DISCONNECTED") === 0) setLsStatus("offline");
+            else if(status.indexOf("STALLED") === 0) setLsStatus("stalled");
+            else setLsStatus("connecting");
+          },
+          onServerError: function(code, msg){
+            console.error("[LS] server error:", code, msg);
+            setLsStatus("error");
+          }
+        });
+        client.connect();
+        const symbols = Object.keys(TELEMETRY);
+        console.log("[LS] Subscribing to", symbols.length, "symbols");
+        sub = new ns.Subscription("MERGE", symbols, ["TimeStamp","Value"]);
+        sub.setRequestedSnapshot("yes");
+        sub.setRequestedMaxFrequency("1.0");
+        sub.addListener({
+          onSubscription: function(){ console.log("[LS] ✓ subscribed OK"); },
+          onSubscriptionError: function(code, msg){ console.error("[LS] sub error:", code, msg); },
+          onItemUpdate: function(update){
+            const itemName = update.getItemName();
+            const value = update.getValue("Value");
+            const ts = update.getValue("TimeStamp");
+            if(value === null || value === undefined) return;
+            setTelemetry(function(prev){ return Object.assign({},prev,{[itemName]:{value:value,ts:ts}}); });
+            if(TELEMETRY[itemName] && TELEMETRY[itemName].chart){
+              const numV = parseFloat(value);
+              if(!isNaN(numV)){
+                setHistory(function(prev){
+                  const arr = (prev[itemName] || []).concat([{t:Date.now(), v:numV}]);
+                  return Object.assign({}, prev, {[itemName]: arr.slice(-60)});
+                });
+              }
+            }
+          }
+        });
+        client.subscribe(sub);
+      } catch(e) {
+        console.error("[LS] init error:",e);
+        setLsStatus("error");
+      }
+    }
+    tryConnect();
+    return function(){ try { if(client) client.disconnect(); } catch(e){} };
+  },[]);
+
+  // ─── SIMULATED FALLBACK: keep history populated even without LS ────
+  useEffect(function(){
+    const i = setInterval(function(){
+      // For each chart symbol, if no real data yet, push a simulated value
+      setHistory(function(prev){
+        const next = Object.assign({}, prev);
+        Object.keys(TELEMETRY).forEach(function(sym){
+          const meta = TELEMETRY[sym];
+          if(!meta.chart) return;
+          // If we have real LS data, do nothing
+          if(telemetry[sym]) return;
+          // Simulate
+          const base = typeof meta.fallback === "number" ? meta.fallback : 0;
+          const j = meta.jitter || 0;
+          const v = base + (Math.random()*2-1)*j*2;
+          const arr = (next[sym] || []).concat([{t:Date.now(), v:v}]);
+          next[sym] = arr.slice(-60);
+        });
+        return next;
+      });
+    }, 2000);
+    return function(){ clearInterval(i); };
+  },[telemetry]);
+
+  useEffect(function(){
+    fetchISS();
+    var i=setInterval(function(){fetchISS();},5000);
+    return function(){clearInterval(i);};
+  },[fetchISS]);
+  useEffect(function(){var i=setInterval(function(){setTime(Date.now());},1000);return function(){clearInterval(i);};},[]);
+
+  const landDots = useMemo(function(){
+    var d=[];
+    for(var la=-58;la<=74;la+=2)for(var lo=-178;lo<=178;lo+=2)if(isLand(la,lo))d.push({la:la,lo:lo});
+    return d;
+  },[]);
+
+  const contHab = new Date("2000-11-02T09:21:00Z").getTime();
+  const habDays = Math.floor((time - contHab)/86400000);
+  const fmtCoord=function(v,p,n){return v!=null?Math.abs(v).toFixed(4)+"\u00b0 "+(v>=0?p:n):"---";};
+
+  // tm: get value with simulated fallback drift if no LS data
+  const tm = useCallback(function(sym){
+    const meta = TELEMETRY[sym];
+    if(!meta) return "---";
+    if(telemetry[sym] && telemetry[sym].value && telemetry[sym].value !== "n/a" && telemetry[sym].value !== "null"){
+      return telemetry[sym].value;
+    }
+    // Simulated drift around fallback
+    if(meta.fallback === undefined || meta.fallback === null) return "---";
+    if(typeof meta.fallback === "number"){
+      const j = meta.jitter || 0;
+      // Time-based smooth drift instead of pure random for stability
+      const driftSeed = Math.sin(Date.now()/8000 + sym.charCodeAt(0)) * j;
+      return (meta.fallback + driftSeed).toString();
+    }
+    return meta.fallback.toString();
+  },[telemetry]);
+
+  const tmNum = useCallback(function(sym, decimals){
+    const v = tm(sym);
+    if(v === "---") return "---";
+    const n = parseFloat(v);
+    if(isNaN(n)) return v;
+    if(decimals != null) return n.toFixed(decimals);
+    return Math.abs(n) >= 1000 ? n.toFixed(0) : Math.abs(n) >= 100 ? n.toFixed(1) : n.toFixed(2);
+  },[tm]);
+
+  const lsLive = lsStatus === "online";
+  const dataMode = lsLive ? "LIVE" : "SIM";
+  const dataModeColor = lsLive ? "#3fb950" : "#d29922";
+
+  return (
+    <div style={{minHeight:"100vh",color:"#c9d1d9",padding:"0",maxWidth:1200,margin:"0 auto"}}>
+
+      {/* ═══ TOP NAV ═══ */}
+      <div style={{borderBottom:"1px solid #21262d",padding:"14px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,background:"#0d1117",position:"sticky",top:0,zIndex:100}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,fontSize:13}}>
+          <a href="https://rmayormartins.github.io" target="_blank" rel="noopener" style={{color:"#58a6ff",fontWeight:500}}>Ramon Mayor Martins</a>
+          <span style={{color:"#8b949e"}}>~/iss-commander</span>
+          <span style={{color:"#30363d"}}>·</span>
+          <a href="https://www.ifsc.edu.br" target="_blank" rel="noopener" style={{color:"#8b949e",fontSize:12}}>IFSC</a>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12,fontSize:12,color:"#8b949e"}}>
+          <span style={{display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:dataModeColor,animation:"dot 1.8s infinite",display:"inline-block"}}/>
+            <span style={{color:dataModeColor}}>TM:{dataMode}</span>
+          </span>
+          <span style={{color:"#30363d"}}>·</span>
+          <span style={{display:"flex",alignItems:"center",gap:5}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:apiStatus==="online"?"#3fb950":"#f0883e",animation:"dot 1.8s infinite",display:"inline-block"}}/>
+            <span style={{color:apiStatus==="online"?"#3fb950":"#f0883e"}}>POS:{apiStatus==="online"?"LIVE":"SIM"}</span>
+          </span>
+          <span style={{color:"#30363d"}}>·</span>
+          <span>{new Date(time).toISOString().slice(11,19)} UTC</span>
+        </div>
+      </div>
+
+      {/* ═══ TITLE ═══ */}
+      <div style={{padding:"24px 22px 14px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:14}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+              <span className="led-dot" style={{background:"#3fb950",boxShadow:"0 0 8px #3fb950"}}/>
+              <span style={{fontSize:9,color:"#3fb950",letterSpacing:1.5,fontWeight:700,padding:"2px 7px",border:"1px solid #3fb95044",borderRadius:2}}>EXP 74 · NOMINAL</span>
+              <span style={{color:"#30363d",fontSize:9}}>·</span>
+              <span style={{fontSize:9,color:"#58a6ff",letterSpacing:1}}>MCC-H ↔ ISS</span>
+              <span style={{color:"#30363d",fontSize:9}}>·</span>
+              <span style={{fontSize:9,color:"#8b949e",letterSpacing:1}}>FLIGHT DAY {Math.floor((time - new Date("2025-09-15T00:00:00Z").getTime())/86400000)}</span>
+            </div>
+            <h1 style={{fontSize:26,fontWeight:700,color:"#e6edf3",margin:"0 0 6px",letterSpacing:"-0.3px"}}>
+              ISS Commander <span style={{color:"#58a6ff"}}>—</span> Mission Control
+            </h1>
+            <p style={{color:"#8b949e",fontSize:12,margin:0,lineHeight:1.5}}>
+              {Object.keys(TELEMETRY).length} telemetry points · NASA MCC-H flight console layout · Live + simulated fallback
+              <span className="caret"/>
+            </p>
+          </div>
+          <div style={{textAlign:"right",padding:"8px 14px",background:"#0a0e13",border:"1px solid #21262d",borderRadius:4,position:"relative"}}>
+            <div style={{fontSize:9,color:"#8b949e",marginBottom:2,textTransform:"uppercase",letterSpacing:1}}>Continuous Habitation</div>
+            <div className="digital-readout" style={{fontSize:22,fontWeight:700,color:"#3fb950",lineHeight:1,fontVariantNumeric:"tabular-nums",textShadow:"0 0 12px #3fb95066"}}>{habDays.toLocaleString()} <span style={{fontSize:11,color:"#8b949e"}}>DAYS</span></div>
+            <div style={{fontSize:9,color:"#6e7681",marginTop:2}}>since Nov 2, 2000</div>
+          </div>
+        </div>
+
+        {/* Telemetry feed status strip */}
+        <div style={{marginTop:14,padding:"10px 14px",background:lsLive?"linear-gradient(90deg,#3fb95015 0%,#3fb95005 100%)":"linear-gradient(90deg,#d2992215 0%,#d2992205 100%)",border:"1px solid "+(lsLive?"#3fb95033":"#d2992233"),borderRadius:4,fontSize:10,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,position:"relative"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+            <span className="led-dot" style={{background:dataModeColor,boxShadow:"0 0 8px "+dataModeColor}}/>
+            <span style={{color:dataModeColor,fontWeight:700,letterSpacing:0.8}}>
+              {lsLive ? "▸ LIVE TELEMETRY ACQ" : "▸ SIMULATED FALLBACK"}
+            </span>
+            <span style={{color:"#8b949e"}}>
+              Broker: <a href="https://lightstreamer.com/customer-story/how-nasa-is-using-lightstreamer/" target="_blank" rel="noopener" style={{color:"#58a6ff"}}>push.lightstreamer.com / ISSLIVE</a>
+            </span>
+            <span style={{color:"#6e7681"}}>·</span>
+            <span style={{color:"#8b949e"}}>Symbols: <span className="digital-readout" style={{color:"#c9d1d9",fontWeight:700}}>{Object.keys(telemetry).length}</span> live / <span className="digital-readout" style={{color:"#c9d1d9",fontWeight:700}}>{Object.keys(TELEMETRY).length}</span> total</span>
+            <span style={{color:"#6e7681"}}>·</span>
+            <span style={{color:"#8b949e"}}>Status: <span style={{color:dataModeColor,fontWeight:700,letterSpacing:0.5}}>{lsStatus.toUpperCase()}</span></span>
+          </div>
+          <div style={{color:"#6e7681",fontSize:9}}>
+            {lsLive ? "● Real telemetry from NASA MCC-H Houston" : "○ NASA feed unavailable — showing nominal values with realistic drift"}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ CONTENT WRAPPER ═══ */}
+      <div style={{padding:"6px 22px 40px"}}>
+
+      {/* ═══ ISS SCHEMATIC ═══ */}
+      <ISSSchematic/>
+
+      {/* ═══ TOPO ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.TOPO}>
+        <div style={{marginBottom:8,fontSize:11,color:"#8b949e",display:"flex",flexWrap:"wrap",gap:14}}>
+          <span><span style={{color:"#58a6ff"}}>LAT</span> {fmtCoord(iss?iss.latitude:null,"N","S")}</span>
+          <span><span style={{color:"#58a6ff"}}>LON</span> {fmtCoord(iss?iss.longitude:null,"E","W")}</span>
+          <span><span style={{color:"#58a6ff"}}>ALT</span> {iss?iss.altitude.toFixed(1)+" km":"---"}</span>
+          <span><span style={{color:"#58a6ff"}}>VEL</span> {iss?iss.velocity.toFixed(0)+" km/h":"---"}</span>
+          <span><span style={{color:"#58a6ff"}}>VIS</span> {iss?(iss.visibility||"---").toUpperCase():"---"}</span>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1.4fr 1fr",gap:12,marginBottom:8}}>
+          <div>
+            <div style={{border:"1px solid #21262d",background:"#000",borderRadius:3,overflow:"hidden"}}>
+              <svg viewBox="0 0 1200 460" style={{width:"100%",display:"block"}}>
+                <rect width="1200" height="460" fill="#0a0e13"/>
+                {[-60,-30,0,30,60].map(function(la){return (
+                  <g key={"la"+la}>
+                    <line x1="0" y1={((90-la)/180)*460} x2="1200" y2={((90-la)/180)*460} stroke="#21262d" strokeWidth="0.5" strokeDasharray={la===0?"none":"3,4"}/>
+                    <text x="6" y={((90-la)/180)*460-3} fill="#30363d" fontSize="9" fontFamily="monospace">{la>0?"+":""}{la}°</text>
+                  </g>
+                );})}
+                {[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(function(lo){return (
+                  <g key={"lo"+lo}>
+                    <line x1={((lo+180)/360)*1200} y1="0" x2={((lo+180)/360)*1200} y2="460" stroke="#21262d" strokeWidth="0.5" strokeDasharray={lo===0?"none":"3,4"}/>
+                    <text x={((lo+180)/360)*1200+3} y="455" fill="#30363d" fontSize="9" fontFamily="monospace">{lo>0?"+":""}{lo}°</text>
+                  </g>
+                );})}
+                {landDots.map(function(d){return <rect key={d.la+","+d.lo} x={((d.lo+180)/360)*1200-0.8} y={((90-d.la)/180)*460-0.8} width="1.6" height="1.6" fill="#30363d"/>;})}
+                <rect x="0" y={((90-51.64)/180)*460} width="1200" height={((90-(-51.64))/180)*460-((90-51.64)/180)*460} fill="#58a6ff05" stroke="#58a6ff15" strokeWidth="0.5" strokeDasharray="3,5"/>
+                {issTrail.map(function(p,i){if(!i)return null;const q=issTrail[i-1];if(Math.abs(p.lon-q.lon)>100)return null;return (
+                  <line key={"it"+i} x1={((q.lon+180)/360)*1200} y1={((90-q.lat)/180)*460} x2={((p.lon+180)/360)*1200} y2={((90-p.lat)/180)*460} stroke="#58a6ff" strokeWidth="1.4" opacity={0.2+(i/issTrail.length)*0.7}/>
+                );}).filter(Boolean)}
+                {iss && (function(){
+                  const segs=[];
+                  const inc=51.64;
+                  const ratio=Math.max(-1,Math.min(1,iss.latitude/inc));
+                  let phaseFromLat=Math.asin(ratio)/(2*Math.PI);
+                  if(issTrail.length>=2){
+                    const prev=issTrail[issTrail.length-2];
+                    if(iss.latitude<prev.lat) phaseFromLat=0.5-phaseFromLat;
+                  }
+                  const points=[];
+                  for(let k=0;k<=60;k++){
+                    const tFrac=k/60;
+                    const phaseT=(phaseFromLat+tFrac)%1;
+                    const lat=inc*Math.sin(phaseT*2*Math.PI);
+                    const groundDrift=tFrac*(-22.5);
+                    const orbitalLon=(iss.longitude+tFrac*360+groundDrift+540)%360-180;
+                    points.push({lat:lat,lon:orbitalLon});
+                  }
+                  for(let k=1;k<points.length;k++){
+                    const p=points[k],q=points[k-1];
+                    if(Math.abs(p.lon-q.lon)>180)continue;
+                    segs.push(
+                      <line key={"ipred"+k} x1={((q.lon+180)/360)*1200} y1={((90-q.lat)/180)*460} x2={((p.lon+180)/360)*1200} y2={((90-p.lat)/180)*460} stroke="#58a6ff" strokeWidth="1" strokeDasharray="4,4" opacity={0.5-(k/points.length)*0.35}/>
+                    );
+                  }
+                  return <g>{segs}</g>;
+                })()}
+                {iss && (
+                  <g>
+                    <circle cx={((iss.longitude+180)/360)*1200} cy={((90-iss.latitude)/180)*460} r="22" fill="#58a6ff22">
+                      <animate attributeName="r" values="14;26;14" dur="2.5s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle cx={((iss.longitude+180)/360)*1200} cy={((90-iss.latitude)/180)*460} r="5" fill="#58a6ff"/>
+                    <text x={((iss.longitude+180)/360)*1200+10} y={((90-iss.latitude)/180)*460-7} fill="#58a6ff" fontSize="12" fontWeight="bold" fontFamily="monospace">ISS</text>
+                    <text x={((iss.longitude+180)/360)*1200+10} y={((90-iss.latitude)/180)*460+8} fill="#58a6ffaa" fontSize="9" fontFamily="monospace">{iss.altitude.toFixed(0)}km</text>
+                  </g>
+                )}
+              </svg>
+            </div>
+            <div style={{marginTop:8}}>
+              <Sparkline title="Altitude" data={history["USLAB000ALT"]} color="#58a6ff" unit="km" variant="bars"/>
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            <TmGroup title="Orbital Parameters">
+              <KV l="Inclination" v="51.64°"/>
+              <KV l="Period" v="92.68 min"/>
+              <KV l="Apogee" v="422 km"/>
+              <KV l="Perigee" v="418 km"/>
+              <KV l="Eccentricity" v="0.000656"/>
+              <KV l="Revolutions" v="#155001"/>
+            </TmGroup>
+            <TmGroup title="State Vector (J2000)">
+              <Row sym="USLAB000032" tm={tm} tmNum={tmNum}/>
+              <Row sym="USLAB000033" tm={tm} tmNum={tmNum}/>
+              <Row sym="USLAB000034" tm={tm} tmNum={tmNum}/>
+            </TmGroup>
+            <TmGroup title="Velocity Vector (J2000)">
+              <Row sym="USLAB000035" tm={tm} tmNum={tmNum}/>
+              <Row sym="USLAB000036" tm={tm} tmNum={tmNum}/>
+              <Row sym="USLAB000037" tm={tm} tmNum={tmNum}/>
+            </TmGroup>
+          </div>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ ETHOS ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.ETHOS}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:8,marginBottom:8}}>
+          <Sparkline title="Cabin Pressure" data={history["USLAB000058"]} color="#3fb950" unit="torr"variant="filled" />
+          <Sparkline title="Cabin Temperature" data={history["USLAB000059"]} color="#3fb950" unit="°C"variant="dots" />
+          <Sparkline title="ppO₂" data={history["NODE3000001"]} color="#3fb950" unit="torr"variant="filled" />
+          <Sparkline title="ppCO₂" data={history["NODE3000003"]} color="#d29922" unit="torr"variant="histogram" />
+        </div>
+        <div className="tm-grid">
+          <TmGroup title="US Lab Atmosphere">
+            <Row sym="USLAB000058" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000059" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000053" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000054" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000055" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Node 3 ECLSS">
+            <Row sym="NODE3000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000003" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000010" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000011" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Water Recovery">
+            <Row sym="NODE3000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000008" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000009" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Node 2/3 Cooling">
+            <Row sym="NODE2000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE2000007" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000012" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE3000013" tm={tm} tmNum={tmNum}/>
+            <Row sym="NODE2000003" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="US Lab Cooling">
+            <Row sym="USLAB000056" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000057" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000060" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000061" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000064" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000065" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Vacuum & Valves">
+            <Row sym="USLAB000062" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000063" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ SPARTAN ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.SPARTAN}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:8,marginBottom:8}}>
+          <Sparkline title="1A Voltage" data={history["S4000001"]} color="#d29922" unit="V"variant="filled" />
+          <Sparkline title="3B Voltage" data={history["S6000001"]} color="#d29922" unit="V"variant="filled" />
+          <Sparkline title="2A Voltage" data={history["P4000001"]} color="#d29922" unit="V"variant="filled" />
+          <Sparkline title="Loop A Pump Flow" data={history["S1000001"]} color="#d29922" unit="kg/hr" variant="bars"/>
+          <Sparkline title="Loop A Out Temp" data={history["S1000003"]} color="#d29922" unit="°C"variant="ramp" />
+        </div>
+        <div className="tm-grid">
+          <TmGroup title="Solar Array 1A (Stbd)">
+            <Row sym="S4000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="S4000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="S4000007" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 3A (Stbd)">
+            <Row sym="S4000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="S4000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="S4000008" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 3B (Stbd)">
+            <Row sym="S6000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="S6000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="S6000007" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 1B (Stbd)">
+            <Row sym="S6000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="S6000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="S6000008" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 2A (Port)">
+            <Row sym="P4000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="P4000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="P4000007" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 4A (Port)">
+            <Row sym="P4000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="P4000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="P4000008" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 4B (Port)">
+            <Row sym="P6000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="P6000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="P6000007" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Solar Array 2B (Port)">
+            <Row sym="P6000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="P6000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="P6000008" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Thermal Loop A (Stbd)">
+            <Row sym="S0000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="S1000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="S1000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="S1000003" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Thermal Loop B (Port)">
+            <Row sym="S0000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="P1000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="P1000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="P1000003" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ ADCO ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.ADCO}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:8,marginBottom:8}}>
+          <Sparkline title="Yaw" data={history["USLAB000YAW"]} color="#a371f7" unit="°"variant="histogram" />
+          <Sparkline title="Pitch" data={history["USLAB000PIT"]} color="#a371f7" unit="°"variant="histogram" />
+          <Sparkline title="Roll" data={history["USLAB000ROL"]} color="#a371f7" unit="°"variant="histogram" />
+          <Sparkline title="CMG Momentum" data={history["USLAB000010"]} color="#a371f7" unit="%"variant="ramp" />
+          <Sparkline title="Solar Beta" data={history["USLAB000040"]} color="#a371f7" unit="°"variant="ramp" />
+          <Sparkline title="CMG-1 RPM" data={history["Z1000009"]} color="#a371f7" unit="rpm"variant="dots" />
+          <Sparkline title="CMG-2 RPM" data={history["Z1000010"]} color="#a371f7" unit="rpm"variant="dots" />
+          <Sparkline title="CMG-3 RPM" data={history["Z1000011"]} color="#a371f7" unit="rpm"variant="dots" />
+          <Sparkline title="CMG-4 RPM" data={history["Z1000012"]} color="#a371f7" unit="rpm"variant="dots" />
+        </div>
+        <div className="tm-grid">
+          <TmGroup title="CMG Status">
+            <Row sym="USLAB000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000003" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000009" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000010" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Attitude State">
+            <Row sym="USLAB000YAW" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000PIT" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000ROL" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000022" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000023" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000024" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Inertial Rates">
+            <Row sym="USLAB000025" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000026" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000027" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="CMG Torques">
+            <Row sym="USLAB000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000007" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000008" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="GNC Configuration">
+            <Row sym="USLAB000012" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000013" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000014" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000016" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000017" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000011" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Mass / Beta / GPS">
+            <Row sym="USLAB000039" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000040" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000043" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000044" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000041" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000042" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="CMG-1 Hardware">
+            <Row sym="Z1000009" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000045" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000049" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="CMG-2 Hardware">
+            <Row sym="Z1000010" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000046" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000050" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="CMG-3 Hardware">
+            <Row sym="Z1000011" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000007" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000003" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000047" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000051" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="CMG-4 Hardware">
+            <Row sym="Z1000012" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000008" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000048" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000052" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ VVO ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.VVO}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:8,marginBottom:8}}>
+          <Sparkline title="SARJ Stbd" data={history["S0000003"]} color="#f0883e" unit="°"variant="filled" />
+          <Sparkline title="SARJ Port" data={history["S0000004"]} color="#f0883e" unit="°"variant="filled" />
+        </div>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:8,padding:"6px 8px",background:"#0a0e13",borderRadius:3}}>
+          {VISITING_VEHICLES.filter(function(v){return v.status==="DOCKED";}).length}/{VISITING_VEHICLES.length} ports occupied · next arrival: Cygnus XL (Apr 8)
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:6,marginBottom:10}}>
+          {VISITING_VEHICLES.map(function(v,i){return (
+            <div key={i} style={{padding:"7px 9px",background:"#161b22",border:"1px solid #21262d",borderLeft:"3px solid "+v.color,borderRadius:3}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{minWidth:0,flex:1}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#e6edf3"}}>{v.vehicle || "— available —"}</div>
+                  <div style={{fontSize:9,color:"#8b949e",marginTop:2}}>{v.port}</div>
+                  {v.mission && <div style={{fontSize:9,color:"#8b949e"}}>{v.mission}</div>}
+                </div>
+                <span style={{fontSize:8,color:v.color,padding:"2px 5px",border:"1px solid "+v.color+"55",borderRadius:2,fontWeight:700}}>{v.status}</span>
+              </div>
+              {v.vehicle && <div style={{fontSize:8,color:"#6e7681",marginTop:3}}>arr: {v.arrived} · dep: {v.departure}</div>}
+            </div>
+          );})}
+        </div>
+        <div className="tm-grid">
+          <TmGroup title="SARJ Status">
+            <Row sym="S0000003" tm={tm} tmNum={tmNum}/>
+            <Row sym="S0000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="S0000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="S0000008" tm={tm} tmNum={tmNum}/>
+            <Row sym="S0000009" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="TRRJ + Station Mode">
+            <Row sym="S0000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="S0000007" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000086" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000081" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ CATO — FULL COMMS ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.CATO}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Communications and Tracking Officer · S/Ku/Ka-Band · UHF · TDRS Constellation · Optical (ILLUMA-T)</div>
+
+        {/* Bands Overview Strip */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:6,marginBottom:12}}>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>S-BAND</div>
+              <span className="on-badge">● ON</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>2.0–2.3 GHz</div>
+            <div style={{color:"#8b949e",fontSize:9}}>Voice + TT&C</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>192 kbps · always-on</div>
+          </div>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>Ku-BAND</div>
+              <span className="on-badge">● ON</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>13.775 GHz</div>
+            <div style={{color:"#8b949e",fontSize:9}}>HD video + science</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>50 Mbps · SGANT</div>
+          </div>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>Ka-BAND</div>
+              <span className="active-badge">● ACTIVE</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>25.5–27 GHz</div>
+            <div style={{color:"#8b949e",fontSize:9}}>ILLUMA-T optical</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>1.2 Gbps · LCRD</div>
+          </div>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>UHF</div>
+              <span className="off-badge">○ STBY</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>414.2 MHz</div>
+            <div style={{color:"#8b949e",fontSize:9}}>EVA suit comms</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>4 kbps · biomed</div>
+          </div>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>TDRS</div>
+              <span className="active-badge">● AOS</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>3 satellites GEO</div>
+            <div style={{color:"#8b949e",fontSize:9}}>~80% coverage</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>White Sands gnd</div>
+          </div>
+          <div className="subcard" style={{borderLeft:"3px solid #58a6ff",position:"relative"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <div style={{color:"#58a6ff",fontWeight:700,fontSize:10}}>S2S RADIO</div>
+              <span className="on-badge">● ON</span>
+            </div>
+            <div style={{color:"#8b949e",fontSize:9}}>Visiting vehicle</div>
+            <div style={{color:"#8b949e",fontSize:9}}>UHF prox-ops</div>
+            <div style={{color:"#c9d1d9",fontSize:9}}>Crew/Cargo Dragon</div>
+          </div>
+        </div>
+
+        <div className="tm-grid">
+          <TmGroup title="S-Band Active String">
+            <Row sym="USLAB000092" tm={tm} tmNum={tmNum}/>
+            <Row sym="S1000009" tm={tm} tmNum={tmNum}/>
+            <Row sym="P1000007" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="S-Band RFG-1 (Stbd)">
+            <Row sym="S1000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="S1000005" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="S-Band RFG-2 (Port)">
+            <Row sym="P1000004" tm={tm} tmNum={tmNum}/>
+            <Row sym="P1000005" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Ku-Band SGANT">
+            <Row sym="Z1000013" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000014" tm={tm} tmNum={tmNum}/>
+            <Row sym="Z1000015" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Ku-Band Video Channels">
+            <Row sym="USLAB000088" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000089" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000090" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000091" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Video Source Routing">
+            <Row sym="USLAB000095" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000096" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000097" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000098" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Internal Audio Controllers">
+            <Row sym="USLAB000093" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000094" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Space-to-Space UHF">
+            <Row sym="USLAB000099" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000100" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000101" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+
+          <TmGroup title="Modulation & Encoding">
+            <KV l="S-Band Fwd" v="BPSK / 72 kbps"/>
+            <KV l="S-Band Rtn" v="BPSK / 192 kbps"/>
+            <KV l="Ku-Band Fwd" v="QPSK / 6 Mbps"/>
+            <KV l="Ku-Band Rtn" v="QPSK / 50 Mbps"/>
+            <KV l="UHF (EVA/S2S)" v="FM narrow / 4 kbps"/>
+            <KV l="Ka-Band (ILLUMA-T)" v="OOK optical / 1.2 Gbps"/>
+            <KV l="Forward Error Corr" v="Reed-Solomon + Viterbi"/>
+          </TmGroup>
+
+          <TmGroup title="RF Transmit Power">
+            <KV l="S-Band RFG (×2)" v="5 W EIRP"/>
+            <KV l="Ku-Band SGANT" v="50 W (100 W peak)"/>
+            <KV l="UHF S2S Radio" v="5 W"/>
+            <KV l="Ka-Band ILLUMA-T" v="0.5 W laser"/>
+            <KV l="Antenna gain (Ku)" v="38 dBi"/>
+            <KV l="Antenna gain (S)" v="12 dBi"/>
+          </TmGroup>
+
+          <TmGroup title="Link Budget (via TDRS)">
+            <KV l="S-Band Uplink" v="−112 dBm @ ISS"/>
+            <KV l="Ku-Band Uplink" v="−98 dBm @ ISS"/>
+            <KV l="Fwd latency" v="~0.5 s one-way"/>
+            <KV l="BER target" v="< 1E-6"/>
+            <KV l="Rain margin" v="3 dB (Ku)"/>
+            <KV l="TDRS assets" v="TD-7 / TD-10 / TD-11"/>
+          </TmGroup>
+
+          <TmGroup title="SSTV & Amateur Radio">
+            <KV l="MAI-75 (ROS)" v="145.800 MHz FM"/>
+            <KV l="SSTV mode" v="PD-120 / Robot-36"/>
+            <KV l="Transmitter" v="Kenwood TM-D710GA"/>
+            <KV l="Location" v="Service Module (Zvezda)"/>
+            <KV l="ARISS school" v="437.525 MHz FM"/>
+            <KV l="Packet radio" v="145.825 MHz APRS"/>
+            <KV l="Callsign" v="NA1SS / RS0ISS"/>
+          </TmGroup>
+
+          <TmGroup title="TDRS Coverage & Handovers">
+            <KV l="Current asset" v="TDRS-11 (171° W)"/>
+            <KV l="Next handover" v="TDRS-7 in 8 min"/>
+            <KV l="ZOE (zone of exclusion)" v="~15% per orbit"/>
+            <KV l="AOS/LOS events/day" v="~32"/>
+            <KV l="Ground station" v="White Sands, NM"/>
+            <KV l="Mission ops" v="MCC-H Houston"/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ ROBO ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.ROBO}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Canadarm2 SSRMS · SPDM Dextre · Mobile Base System</div>
+        <div className="tm-grid">
+          <TmGroup title="SSRMS Canadarm2 Base">
+            <Row sym="CSASSRMS002" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS003" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS011" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="SSRMS Joints (7-DOF)">
+            <Row sym="CSASSRMS004" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS005" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS006" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS007" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS008" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS009" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASSRMS010" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="SPDM Dextre">
+            <Row sym="CSASPDM0002" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0020" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0022" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="SPDM Arm 1">
+            <Row sym="CSASPDM0010" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0003" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0004" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0005" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="SPDM Arm 2">
+            <Row sym="CSASPDM0019" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0011" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0012" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSASPDM0013" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Mobile Base System">
+            <Row sym="CSAMT000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSAMT000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSAMBS00002" tm={tm} tmNum={tmNum}/>
+            <Row sym="CSAMBA00004" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ ODIN ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.ODIN}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Onboard data handling · C&C computer counters · Network · Time</div>
+        <div className="tm-grid">
+          <TmGroup title="Command Counters">
+            <Row sym="USLAB000082" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000083" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000087" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Onboard Time">
+            <Row sym="TIME_000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="TIME_000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000084" tm={tm} tmNum={tmNum}/>
+            <Row sym="USLAB000085" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ EVA ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.EVA}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Airlock systems · EMU power · Pressure & valves</div>
+        <div className="tm-grid">
+          <TmGroup title="Airlock Pressures">
+            <Row sym="AIRLOCK000049" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000054" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000055" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000056" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000057" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Supply Valves & A/C">
+            <Row sym="AIRLOCK000050" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000051" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000052" tm={tm} tmNum={tmNum}/>
+            <Row sym="AIRLOCK000053" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ CAPCOM ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.CAPCOM}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Expedition 74 · 7 crew onboard · voice loop SG1 active</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:6}}>
+          {CREW.map(function(c,i){return (
+            <div key={i} style={{padding:"8px 10px",background:"#161b22",border:"1px solid #21262d",borderRadius:3}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div style={{minWidth:0,flex:1}}>
+                  <div style={{fontSize:11,fontWeight:600,color:"#e6edf3",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                    <span style={{fontSize:8,marginRight:5,padding:"1px 5px",border:"1px solid #f8514944",background:"#0d1117",color:"#f85149",borderRadius:2,fontWeight:700}}>{c.flag}</span>
+                    {c.name}
+                  </div>
+                  <div style={{fontSize:9,color:"#8b949e",marginTop:2}}>{c.role}</div>
+                  <div style={{fontSize:9,color:"#6e7681",marginTop:1}}>{c.agency} · {c.vehicle}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:14,fontWeight:600,color:"#f85149",lineHeight:1,fontVariantNumeric:"tabular-nums"}}>{c.days}</div>
+                  <div style={{fontSize:7,color:"#6e7681",marginTop:2}}>DAYS</div>
+                </div>
+              </div>
+            </div>
+          );})}
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ ROS — Russian Segment ═══ */}
+      <ConsoleCard consoleInfo={CONSOLES.ROS}>
+        <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>Russian segment ops · Zvezda · Zarya · Nauka · Kurs docking</div>
+        <div className="tm-grid">
+          <TmGroup title="Station Mode + GNC">
+            <Row sym="RUSSEG000001" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000021" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000022" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000025" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Kurs Docking System">
+            <Row sym="RUSSEG000002" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000003" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000005" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000006" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000012" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+          <TmGroup title="Docking Ports">
+            <Row sym="RUSSEG000013" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000014" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000015" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000016" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000017" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000018" tm={tm} tmNum={tmNum}/>
+            <Row sym="RUSSEG000019" tm={tm} tmNum={tmNum}/>
+          </TmGroup>
+        </div>
+      </ConsoleCard>
+
+      {/* ═══ LIVE CAM ═══ */}
+      <CamSection/>
+
+      {/* ═══ SPACE CONDITIONS ═══ */}
+      <SpaceConditions/>
+
+      {/* ═══ UPCOMING ═══ */}
+      <div className="console-card" style={{borderLeft:"3px solid #d29922"}}>
+        <div className="console-header">
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{color:"#d29922",fontSize:14}}>◷</span>
+            <span className="console-tag" style={{color:"#d29922",background:"#d2992215",border:"1px solid #d2992233"}}>UPCOMING</span>
+            <span style={{color:"#8b949e",fontSize:11}}>Scheduled events · launches · arrivals · departures · EVAs · reboost</span>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:8}}>
+          {UPCOMING.map(function(e,i){return (
+            <div key={i} style={{padding:"8px 10px",background:"#161b22",border:"1px solid #21262d",borderLeft:"2px solid "+e.color,borderRadius:3}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+                <div>
+                  <div style={{fontSize:10,color:e.color,fontWeight:700}}>{e.date}</div>
+                  <div style={{fontSize:8,color:"#6e7681",marginTop:1}}>{e.time}</div>
+                </div>
+                <span style={{fontSize:8,color:e.color,padding:"2px 6px",border:"1px solid "+e.color+"55",borderRadius:2,fontWeight:700,letterSpacing:0.5}}>{e.type}</span>
+              </div>
+              <div style={{fontSize:11,color:"#e6edf3",fontWeight:600,marginBottom:3}}>{e.title}</div>
+              <div style={{fontSize:9,color:"#8b949e",lineHeight:1.4,marginBottom:4}}>{e.desc}</div>
+              <div style={{fontSize:8,color:"#6e7681"}}>Vehicle: <span style={{color:"#c9d1d9"}}>{e.vehicle}</span></div>
+            </div>
+          );})}
+        </div>
+        <div style={{marginTop:10,fontSize:9,color:"#6e7681",textAlign:"center",padding:"6px",background:"#0a0e13",border:"1px solid #21262d",borderRadius:3}}>
+          Schedule subject to change · Source: NASA MCC-H Flight Operations · Roscosmos TsUP · Last update: April 2026
+        </div>
+      </div>
+
+      {/* ═══ FOOTER ═══ */}
+      <div style={{borderTop:"1px solid #21262d",paddingTop:18,marginTop:18,fontSize:11,color:"#8b949e",lineHeight:1.8}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:14,marginBottom:12}}>
+          <div>
+            <div style={{color:"#e6edf3",fontSize:13,fontWeight:600,marginBottom:4}}>Author: <a href="https://rmayormartins.github.io" target="_blank" rel="noopener" style={{color:"#58a6ff"}}>Ramon Mayor Martins, Ph.D.</a></div>
+            <div><a href="https://www.ifsc.edu.br" target="_blank" rel="noopener" style={{color:"#8b949e"}}>Federal Institute of Santa Catarina (IFSC)</a> · Brazil</div>
+          </div>
+          <div style={{textAlign:"right",color:"#6e7681"}}>
+            <div>{new Date(time).toISOString().slice(0,10)} · {new Date(time).toISOString().slice(11,19)} UTC</div>
+            <div>continuous habitation: <span style={{color:"#3fb950"}}>{habDays.toLocaleString()}</span> days</div>
+          </div>
+        </div>
+        <div style={{borderTop:"1px solid #21262d",paddingTop:10,fontSize:10,color:"#6e7681"}}>
+          <div>ISS Commander v7.1 · Mission Control · {Object.keys(TELEMETRY).length} telemetry symbols · NASA MCC-H flight console layout</div>
+          <div>Live telemetry: <a href="https://lightstreamer.com/customer-story/how-nasa-is-using-lightstreamer/" target="_blank" rel="noopener">Lightstreamer ISSLIVE feed</a> · Position: <a href="https://wheretheiss.at/w/developer" target="_blank" rel="noopener">wheretheiss.at</a></div>
+          <div>Symbol dictionary: <a href="https://github.com/ISS-Mimic/Mimic" target="_blank" rel="noopener">ISS Mimic project</a> (MIT) · Crew: NASA MCC-H · Updated April 2026</div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════
+function ConsoleCard({consoleInfo,children}){
+  return (
+    <div className="console-card cockpit-frame" style={{borderLeft:"3px solid "+consoleInfo.color,position:"relative"}}>
+      <div className="console-header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span className="led-dot" style={{background:consoleInfo.color,boxShadow:"0 0 6px "+consoleInfo.color}}/>
+          <span style={{color:consoleInfo.color,fontSize:14}}>{consoleInfo.icon}</span>
+          <span className="console-tag" style={{color:consoleInfo.color,background:consoleInfo.color+"15",border:"1px solid "+consoleInfo.color+"33"}}>{consoleInfo.name}</span>
+          <span style={{color:"#8b949e",fontSize:11}}>{consoleInfo.fullName}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#6e7681"}}>
+          <span style={{padding:"1px 6px",border:"1px solid "+consoleInfo.color+"55",borderRadius:2,color:consoleInfo.color,fontWeight:700,letterSpacing:0.8}}>NOM</span>
+          <span style={{color:"#30363d"}}>·</span>
+          <span style={{letterSpacing:0.5}}>STS:OK</span>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function TmGroup({title, children}){
+  return (
+    <div className="tm-group">
+      <div className="tm-group-title">
+        <span style={{color:"#58a6ff"}}>▸</span> {title}
+        <span style={{float:"right",color:"#3fb950",fontSize:7,letterSpacing:0.8}}>● ACQ</span>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function Row({sym, tm, tmNum}){
+  const meta = TELEMETRY[sym];
+  if(!meta) return null;
+  const raw = tm(sym);
+  let display = raw;
+  if(raw !== "---" && !isNaN(parseFloat(raw))){
+    const n = parseFloat(raw);
+    display = Math.abs(n) >= 10000 ? n.toFixed(0) : Math.abs(n) >= 100 ? n.toFixed(1) : Math.abs(n) >= 10 ? n.toFixed(2) : n.toFixed(3);
+  }
+  return (
+    <div className="tm-row">
+      <span style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#3fb95066",marginRight:5,verticalAlign:"middle"}}/>
+      <span className="tm-label" title={sym}>{meta.label}</span>
+      <span className="tm-val">{display} <span style={{color:"#6e7681",fontSize:9}}>{meta.unit}</span></span>
+    </div>
+  );
+}
+
+function KV({l,v}){
+  return (
+    <div className="tm-row">
+      <span style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#58a6ff66",marginRight:5,verticalAlign:"middle"}}/>
+      <span className="tm-label">{l}</span>
+      <span className="tm-val">{v}</span>
+    </div>
+  );
+}
+
+// Sparkline: mini SVG time-series chart with multiple visual variants
+function Sparkline({title, data, color, unit, variant}){
+  variant = variant || "area";
+  const points = (data || []).filter(function(p){return !isNaN(p.v);});
+  const hasData = points.length >= 2;
+
+  let latest = "---";
+  let minV = 0, maxV = 0;
+
+  const w = 260, h = 36;
+  let renderedChart = null;
+
+  if(hasData){
+    const vs = points.map(function(p){return p.v;});
+    minV = Math.min.apply(null, vs);
+    maxV = Math.max.apply(null, vs);
+    const range = (maxV - minV) || 1;
+    const step = w / (points.length - 1);
+
+    latest = points[points.length-1].v;
+    if(Math.abs(latest) >= 100) latest = latest.toFixed(0);
+    else if(Math.abs(latest) >= 10) latest = latest.toFixed(1);
+    else latest = latest.toFixed(2);
+
+    // Compute Y pixel for each point
+    const xy = points.map(function(p,i){
+      return {
+        x: i*step,
+        y: h - ((p.v - minV)/range) * h
+      };
+    });
+
+    if(variant === "area"){
+      // Line + gradient area under
+      const path = xy.map(function(p,i){return (i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1);}).join(" ");
+      const areaPath = path + " L"+w+","+h+" L0,"+h+" Z";
+      const id = "grad-area-"+title.replace(/[^a-z0-9]/gi,"")+"-"+color.replace("#","");
+      renderedChart = (
+        <g>
+          <defs>
+            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity="0.4"/>
+              <stop offset="100%" stopColor={color} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill={"url(#"+id+")"}/>
+          <path d={path} stroke={color} strokeWidth="1.5" fill="none" filter={"drop-shadow(0 0 2px "+color+"88)"}/>
+          <circle cx={xy[xy.length-1].x} cy={xy[xy.length-1].y} r="2.5" fill={color}>
+            <animate attributeName="r" values="2;3.5;2" dur="1.8s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      );
+    } else if(variant === "bars"){
+      // Vertical bars - waveform style like "ALT (24h)"
+      const barW = Math.max(1, step*0.6);
+      renderedChart = (
+        <g>
+          {xy.map(function(p,i){
+            const barH = h - p.y;
+            return (
+              <rect key={i}
+                x={p.x - barW/2}
+                y={p.y}
+                width={barW}
+                height={Math.max(0.5, barH)}
+                fill={color}
+                opacity={0.5 + (i/xy.length)*0.5}
+              />
+            );
+          })}
+        </g>
+      );
+    } else if(variant === "dots"){
+      // Scatter + thin connecting line
+      const path = xy.map(function(p,i){return (i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1);}).join(" ");
+      renderedChart = (
+        <g>
+          <path d={path} stroke={color} strokeWidth="0.8" fill="none" opacity="0.4"/>
+          {xy.map(function(p,i){
+            const isLast = i === xy.length-1;
+            return <circle key={i} cx={p.x} cy={p.y} r={isLast?2.5:1.5} fill={color} opacity={isLast?1:(0.4+(i/xy.length)*0.5)}/>;
+          })}
+        </g>
+      );
+    } else if(variant === "filled"){
+      // Thick solid area fill (no line on top) - like "SPD (24h)"
+      const path = xy.map(function(p,i){return (i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1);}).join(" ");
+      const areaPath = path + " L"+w+","+h+" L0,"+h+" Z";
+      renderedChart = (
+        <g>
+          <path d={areaPath} fill={color} opacity="0.7"/>
+          <path d={path} stroke={color} strokeWidth="1" fill="none" opacity="1"/>
+        </g>
+      );
+    } else if(variant === "ramp"){
+      // Thick line only - simple ramp style for slow-changing values like "β 24h"
+      const path = xy.map(function(p,i){return (i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1);}).join(" ");
+      renderedChart = (
+        <g>
+          <path d={path} stroke={color} strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" filter={"drop-shadow(0 0 3px "+color+")"}/>
+        </g>
+      );
+    } else if(variant === "histogram"){
+      // Histogram-style bars with baseline at mid
+      const mid = h/2;
+      const range2 = (maxV - minV) || 1;
+      const midV = (maxV + minV)/2;
+      renderedChart = (
+        <g>
+          <line x1="0" y1={mid} x2={w} y2={mid} stroke={color} strokeWidth="0.5" opacity="0.3"/>
+          {xy.map(function(p,i){
+            const delta = (points[i].v - midV);
+            const bh = Math.abs(delta/range2 * h/2);
+            const y = delta >= 0 ? mid - bh : mid;
+            return <rect key={i} x={p.x-0.8} y={y} width="1.6" height={bh} fill={color} opacity={0.6+(i/xy.length)*0.4}/>;
+          })}
+        </g>
+      );
+    }
+  }
+
+  return (
+    <div className="sparkline-box" style={{position:"relative"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
+        <span style={{fontSize:9,color:"#8b949e",textTransform:"uppercase",letterSpacing:0.5,display:"flex",alignItems:"center",gap:4}}>
+          <span style={{display:"inline-block",width:5,height:5,borderRadius:"50%",background:color,boxShadow:"0 0 4px "+color,animation:"dot 1.8s infinite"}}/>
+          {title}
+        </span>
+        <span className="digital-readout" style={{fontSize:13,color:color,fontWeight:700,fontVariantNumeric:"tabular-nums",textShadow:"0 0 8px "+color+"66"}}>
+          {latest} <span style={{color:"#6e7681",fontSize:9,textShadow:"none"}}>{unit}</span>
+        </span>
+      </div>
+      <svg viewBox={"0 0 "+w+" "+h} style={{width:"100%",height:32,display:"block"}}>
+        {[0.25,0.5,0.75].map(function(f){return (
+          <line key={f} x1="0" y1={h*f} x2={w} y2={h*f} stroke="#21262d" strokeWidth="0.5" strokeDasharray="2,3"/>
+        );})}
+        {[0.25,0.5,0.75].map(function(f){return (
+          <line key={"v"+f} x1={w*f} y1="0" x2={w*f} y2={h} stroke="#21262d" strokeWidth="0.5" strokeDasharray="2,3"/>
+        );})}
+        {hasData ? renderedChart : (
+          <text x={w/2} y={h/2+4} fill="#6e7681" fontSize="9" textAnchor="middle" fontFamily="monospace">acquiring data...</text>
+        )}
+      </svg>
+      {hasData && (
+        <div style={{fontSize:8,color:"#6e7681",display:"flex",justifyContent:"space-between",marginTop:3,letterSpacing:0.5}}>
+          <span>MIN {minV.toFixed(2)}</span>
+          <span style={{color:"#3fb95088"}}>● {points.length} SMP</span>
+          <span>MAX {maxV.toFixed(2)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CAM SECTION with stable video IDs + robust fallback ──────────────
+function CamSection(){
+  const [source, setSource] = useState("nasa_channel");
+  const [loaded, setLoaded] = useState(false);
+  // YouTube embed approach: click-to-load pattern.
+  // The iframe is NOT loaded automatically — the user clicks "PLAY" to request it.
+  // This avoids the silent failure mode where YouTube shows "Video unavailable"
+  // on top of our fallback without any way to recover.
+  const sources = {
+    nasa_channel: {
+      name: "NASA",
+      badge: "OFFICIAL",
+      embed: "https://www.youtube-nocookie.com/embed/live_stream?channel=UCLA_DiR1FfKNvjuUpBHmylQ&autoplay=1&mute=1&rel=0",
+      external: "https://www.youtube.com/@NASA/live",
+      desc: "Official NASA YouTube — live events, ISS Earth views, EVA coverage, Mission Control audio",
+      region: "30% 40%"
+    },
+    spacevids: {
+      name: "Space Videos",
+      badge: "24/7 HD",
+      embed: "https://www.youtube-nocookie.com/embed/live_stream?channel=UCakgsb0w7QB0VHdNCFCrAWg&autoplay=1&mute=1&rel=0",
+      external: "https://www.youtube.com/@SpaceVideos/live",
+      desc: "Popular 24/7 HD re-stream of NASA ISS external cameras — very reliable continuous feed",
+      region: "60% 50%"
+    },
+    sen: {
+      name: "Sen 4K",
+      badge: "4K UHD",
+      embed: "https://www.youtube-nocookie.com/embed/live_stream?channel=UCvQH_PAcrhgV8UZPQiNlh6g&autoplay=1&mute=1&rel=0",
+      external: "https://www.sen.com/live",
+      desc: "Sen SpaceTV-1 — commercial 4K UHD cameras mounted on Columbus Bartolomeo platform",
+      region: "40% 60%"
+    }
+  };
+  const current = sources[source];
+
+  // When user switches tab, reset loaded state
+  function switchSource(key){
+    setSource(key);
+    setLoaded(false);
+  }
+
+  return (
+    <div className="console-card cockpit-frame" style={{position:"relative",borderLeft:"3px solid #f85149"}}>
+      <div className="console-header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span className="led-dot" style={{background:"#f85149",boxShadow:"0 0 6px #f85149"}}/>
+          <span style={{color:"#f85149",fontSize:14}}>◉</span>
+          <span className="console-tag" style={{color:"#f85149",background:"#f8514915",border:"1px solid #f8514933"}}>LIVE CAM</span>
+          <span style={{color:"#8b949e",fontSize:11}}>External video feed — visible light downlink</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#6e7681"}}>
+          <span className="on-badge">{loaded ? "● RX" : "○ STBY"}</span>
+          <span style={{letterSpacing:0.5}}>HDEV</span>
+        </div>
+      </div>
+
+      {/* Source selector tabs */}
+      <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+        {Object.keys(sources).map(function(key){
+          const s = sources[key];
+          const active = source === key;
+          return (
+            <button
+              key={key}
+              className="btn"
+              onClick={function(){switchSource(key);}}
+              style={{
+                padding:"6px 12px",
+                fontSize:10,
+                background:active?"#f8514922":"#0a0e13",
+                border:"1px solid "+(active?"#f85149":"#21262d"),
+                color:active?"#f85149":"#8b949e",
+                borderRadius:3,
+                fontWeight:active?700:400,
+                letterSpacing:0.5,
+                textTransform:"uppercase",
+                fontFamily:"inherit",
+                display:"flex",
+                alignItems:"center",
+                gap:6
+              }}>
+              {active && <span style={{display:"inline-block",width:5,height:5,borderRadius:"50%",background:"#f85149",boxShadow:"0 0 4px #f85149"}}/>}
+              ▸ {s.name}
+              <span style={{fontSize:8,opacity:0.7,letterSpacing:0.8}}>· {s.badge}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{position:"relative",paddingBottom:"56.25%",background:"#000",borderRadius:3,overflow:"hidden",border:"1px solid #21262d"}}>
+        {!loaded ? (
+          /* Click-to-load thumbnail */
+          <div style={{
+            position:"absolute",top:0,left:0,width:"100%",height:"100%",
+            background:"radial-gradient(ellipse at "+current.region+", #0a2640 0%, #050a14 50%, #000000 90%)",
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            textAlign:"center",padding:20,zIndex:0
+          }}>
+            {/* Star field */}
+            <svg width="100%" height="100%" style={{position:"absolute",top:0,left:0,opacity:0.8,pointerEvents:"none"}}>
+              {Array.from({length:120}).map(function(_,i){
+                const cx = (i*97.3)%100;
+                const cy = (i*53.7)%100;
+                const r = (i%5)*0.35+0.2;
+                return <circle key={i} cx={cx+"%"} cy={cy+"%"} r={r} fill="#ffffff" opacity={0.2+((i%9)/12)}/>;
+              })}
+              {/* Earth limb curve on bottom */}
+              <ellipse cx="50%" cy="130%" rx="80%" ry="50%" fill="url(#earth-grad)" stroke="#1f6feb66" strokeWidth="1"/>
+              <defs>
+                <radialGradient id="earth-grad" cx="50%" cy="20%">
+                  <stop offset="0%" stopColor="#1f6feb66"/>
+                  <stop offset="60%" stopColor="#0a2640"/>
+                  <stop offset="100%" stopColor="#000000"/>
+                </radialGradient>
+              </defs>
+              {/* Atmospheric glow */}
+              <ellipse cx="50%" cy="128%" rx="82%" ry="52%" fill="none" stroke="#4dd0e166" strokeWidth="2" opacity="0.5"/>
+            </svg>
+
+            <div style={{fontSize:10,color:"#58a6ff",letterSpacing:2,fontWeight:700,marginBottom:4,textShadow:"0 0 8px #58a6ff",zIndex:1}}>◉ {current.name.toUpperCase()} · {current.badge}</div>
+            <div style={{fontSize:9,color:"#6e7681",marginBottom:16,zIndex:1,letterSpacing:1}}>LIVE FEED — CLICK TO ACQUIRE</div>
+
+            {/* PLAY button */}
+            <button
+              onClick={function(){setLoaded(true);}}
+              style={{
+                padding:"14px 32px",
+                background:"#58a6ff",
+                color:"#0d1117",
+                border:"none",
+                fontSize:13,
+                fontWeight:700,
+                letterSpacing:1.5,
+                borderRadius:3,
+                textTransform:"uppercase",
+                boxShadow:"0 0 18px #58a6ffaa, 0 0 4px #58a6ff",
+                cursor:"pointer",
+                fontFamily:"inherit",
+                display:"inline-flex",
+                alignItems:"center",
+                gap:10,
+                zIndex:1,
+                marginBottom:10
+              }}>
+              ▶ PLAY {current.name.toUpperCase()}
+            </button>
+
+            <div style={{fontSize:9,color:"#8b949e",maxWidth:460,lineHeight:1.5,zIndex:1}}>
+              If the player shows "Video unavailable" after you click play, the selected channel has no active live stream right now. Click <a href={current.external} target="_blank" rel="noopener" style={{color:"#58a6ff",fontWeight:700}}>▸ OPEN IN NEW TAB ↗</a> to go directly to the source, or try a different tab above.
+            </div>
+          </div>
+        ) : (
+          /* Actual iframe — only rendered after click */
+          <iframe
+            src={current.embed}
+            style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:0,zIndex:1}}
+            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            title="ISS Live Stream"
+          />
+        )}
+
+        {loaded && (
+          <button
+            onClick={function(){setLoaded(false);}}
+            style={{
+              position:"absolute",top:6,right:6,zIndex:2,
+              padding:"4px 10px",fontSize:9,
+              background:"#0d1117cc",border:"1px solid #f8514966",
+              color:"#f85149",borderRadius:3,cursor:"pointer",
+              fontFamily:"inherit",fontWeight:700,letterSpacing:0.5
+            }}>
+            ■ STOP
+          </button>
+        )}
+      </div>
+
+      <div style={{marginTop:8,padding:"8px 12px",background:"#0a0e13",border:"1px solid #21262d",borderRadius:3,fontSize:9,color:"#6e7681"}}>
+        <div style={{marginBottom:6}}>
+          <span style={{color:"#58a6ff",fontWeight:700}}>▸ {current.name}:</span> <span style={{color:"#c9d1d9"}}>{current.desc}</span>
+        </div>
+        <div style={{color:"#8b949e",lineHeight:1.5,marginBottom:6}}>
+          <strong style={{color:"#c9d1d9"}}>Why embeds are click-to-play:</strong> NASA retired its 24/7 NASA TV feed in August 2024. YouTube's <code style={{background:"#161b22",padding:"1px 4px",color:"#58a6ff"}}>live_stream?channel</code> endpoint only works if the channel has a live stream active at that exact moment, and unlike most players it fails silently with a white "Video unavailable" screen. The click-to-play pattern lets you retry different sources easily, and the "Open in new tab" links below always work regardless.
+        </div>
+        <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:6,paddingTop:6,borderTop:"1px dashed #21262d"}}>
+          <span style={{color:"#8b949e",fontWeight:700,letterSpacing:0.5}}>OPEN IN NEW TAB:</span>
+          <a href="https://www.youtube.com/@NASA/live" target="_blank" rel="noopener">▸ NASA</a>
+          <a href="https://www.youtube.com/@SpaceVideos/live" target="_blank" rel="noopener">▸ Space Videos</a>
+          <a href="https://www.sen.com/live" target="_blank" rel="noopener">▸ Sen 4K</a>
+          <a href="https://isslivenow.com/" target="_blank" rel="noopener">▸ isslivenow.com</a>
+          <a href="https://www.n2yo.com/space-station/" target="_blank" rel="noopener">▸ n2yo tracker</a>
+          <a href="https://eol.jsc.nasa.gov/ESRS/HDEV/" target="_blank" rel="noopener">▸ NASA HDEV</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SPACE CONDITIONS — NOAA SWPC real-time space weather ────────────
+function SpaceConditions(){
+  const [data, setData] = useState({
+    kp: null,
+    kpTime: null,
+    solarWind: null,
+    scales: null,
+    f107: null,
+    loaded: false,
+    error: null
+  });
+
+  useEffect(function(){
+    async function fetchAll(){
+      const urls = {
+        kp: "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+        wind: "https://services.swpc.noaa.gov/products/solar-wind/plasma-5-minute.json",
+        mag: "https://services.swpc.noaa.gov/products/solar-wind/mag-5-minute.json",
+        scales: "https://services.swpc.noaa.gov/products/noaa-scales.json",
+        f107: "https://services.swpc.noaa.gov/products/10cm-flux-30-day.json"
+      };
+      try {
+        const results = await Promise.allSettled(
+          Object.values(urls).map(function(u){return fetch(u).then(function(r){return r.json();});})
+        );
+        const [kpR, windR, magR, scalesR, f107R] = results;
+        const out = {loaded:true,error:null};
+        // kp index - array of arrays, first row is header
+        if(kpR.status === "fulfilled" && Array.isArray(kpR.value) && kpR.value.length > 1){
+          const latest = kpR.value[kpR.value.length-1];
+          out.kp = parseFloat(latest[1]);
+          out.kpTime = latest[0];
+          // Keep recent history for chart
+          out.kpHistory = kpR.value.slice(1).slice(-24).map(function(r){return {t:r[0], v:parseFloat(r[1])};});
+        }
+        // solar wind plasma - [[time, density, speed, temperature], ...]
+        if(windR.status === "fulfilled" && Array.isArray(windR.value) && windR.value.length > 1){
+          const rows = windR.value.slice(1);
+          const latest = rows[rows.length-1];
+          out.solarWind = {
+            density: parseFloat(latest[1]),
+            speed: parseFloat(latest[2]),
+            temperature: parseFloat(latest[3]),
+            time: latest[0]
+          };
+        }
+        // magnetometer - [[time, bx, by, bz, lon, lat, bt], ...]
+        if(magR.status === "fulfilled" && Array.isArray(magR.value) && magR.value.length > 1){
+          const rows = magR.value.slice(1);
+          const latest = rows[rows.length-1];
+          out.mag = {
+            bt: parseFloat(latest[6]),
+            bz: parseFloat(latest[3]),
+            time: latest[0]
+          };
+        }
+        // NOAA scales (R/S/G)
+        if(scalesR.status === "fulfilled" && scalesR.value){
+          out.scales = scalesR.value;
+        }
+        // F10.7 flux
+        if(f107R.status === "fulfilled" && Array.isArray(f107R.value) && f107R.value.length > 0){
+          const latest = f107R.value[f107R.value.length-1];
+          out.f107 = parseFloat(latest.flux || latest.observed_flux || latest.f107);
+        }
+        setData(out);
+      } catch(e) {
+        console.error("[SpaceWx] fetch error:", e);
+        setData(function(d){return Object.assign({},d,{loaded:true,error:e.message});});
+      }
+    }
+    fetchAll();
+    const i = setInterval(fetchAll, 300000); // 5 min
+    return function(){clearInterval(i);};
+  },[]);
+
+  // Helper: get severity level color for Kp
+  function kpColor(kp){
+    if(kp === null || kp === undefined) return "#8b949e";
+    if(kp < 4) return "#3fb950";    // quiet
+    if(kp < 5) return "#d29922";    // unsettled
+    if(kp < 6) return "#f0883e";    // minor storm
+    if(kp < 7) return "#f85149";    // moderate
+    return "#ff5370";               // severe
+  }
+  function kpLabel(kp){
+    if(kp === null || kp === undefined) return "---";
+    if(kp < 4) return "QUIET";
+    if(kp < 5) return "UNSETTLED";
+    if(kp < 6) return "G1 MINOR";
+    if(kp < 7) return "G2 MOD";
+    if(kp < 8) return "G3 STRONG";
+    if(kp < 9) return "G4 SEVERE";
+    return "G5 EXTREME";
+  }
+  // NOAA R-scale (radio blackout) label
+  const nowScales = data.scales && data.scales[0];
+  const rScale = nowScales ? (nowScales.R ? nowScales.R.Scale : "0") : "---";
+  const sScale = nowScales ? (nowScales.S ? nowScales.S.Scale : "0") : "---";
+  const gScale = nowScales ? (nowScales.G ? nowScales.G.Scale : "0") : "---";
+
+  function scaleColor(s){
+    if(s === "---") return "#8b949e";
+    const n = parseInt(s, 10) || 0;
+    if(n === 0) return "#3fb950";
+    if(n === 1) return "#d29922";
+    if(n === 2) return "#f0883e";
+    if(n === 3) return "#f85149";
+    return "#ff5370";
+  }
+  function scaleLabel(s, letter){
+    const labels = {
+      "R": ["NO BLACKOUT","R1 MINOR","R2 MODERATE","R3 STRONG","R4 SEVERE","R5 EXTREME"],
+      "S": ["NO STORM","S1 MINOR","S2 MODERATE","S3 STRONG","S4 SEVERE","S5 EXTREME"],
+      "G": ["NO STORM","G1 MINOR","G2 MODERATE","G3 STRONG","G4 SEVERE","G5 EXTREME"]
+    };
+    const n = parseInt(s, 10) || 0;
+    return labels[letter][n] || "---";
+  }
+
+  return (
+    <div className="console-card cockpit-frame" style={{position:"relative",borderLeft:"3px solid #f0883e"}}>
+      <div className="console-header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span className="led-dot" style={{background:"#f0883e",boxShadow:"0 0 6px #f0883e"}}/>
+          <span style={{color:"#f0883e",fontSize:14}}>☀</span>
+          <span className="console-tag" style={{color:"#f0883e",background:"#f0883e15",border:"1px solid #f0883e33"}}>SPACE WX</span>
+          <span style={{color:"#8b949e",fontSize:11}}>Space weather & radiation environment · NOAA SWPC real-time</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#6e7681"}}>
+          <span className="on-badge">{data.loaded && !data.error ? "● LIVE" : "○ WAIT"}</span>
+          <span style={{letterSpacing:0.5}}>SWPC</span>
+        </div>
+      </div>
+
+      <div style={{fontSize:10,color:"#8b949e",marginBottom:10}}>
+        NOAA Space Weather Prediction Center · Updated every 5 minutes · Important for EVA planning, radio comms, and astronaut radiation exposure
+      </div>
+
+      {/* NOAA Scales R/S/G */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:6,marginBottom:10}}>
+        <div className="subcard" style={{borderLeft:"3px solid "+scaleColor(rScale)}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+            <div style={{color:"#f0883e",fontWeight:700,fontSize:10}}>R-SCALE</div>
+            <span style={{fontSize:9,padding:"2px 6px",border:"1px solid "+scaleColor(rScale)+"66",color:scaleColor(rScale),borderRadius:3,fontWeight:700,letterSpacing:0.8,textShadow:"0 0 6px "+scaleColor(rScale)+"88"}}>{scaleLabel(rScale,"R")}</span>
+          </div>
+          <div style={{color:"#8b949e",fontSize:9}}>Radio Blackouts</div>
+          <div style={{color:"#8b949e",fontSize:9}}>HF comms &amp; GPS</div>
+          <div className="digital-readout" style={{color:scaleColor(rScale),fontSize:18,marginTop:3,textShadow:"0 0 10px "+scaleColor(rScale)+"66"}}>R {rScale}</div>
+        </div>
+        <div className="subcard" style={{borderLeft:"3px solid "+scaleColor(sScale)}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+            <div style={{color:"#f0883e",fontWeight:700,fontSize:10}}>S-SCALE</div>
+            <span style={{fontSize:9,padding:"2px 6px",border:"1px solid "+scaleColor(sScale)+"66",color:scaleColor(sScale),borderRadius:3,fontWeight:700,letterSpacing:0.8,textShadow:"0 0 6px "+scaleColor(sScale)+"88"}}>{scaleLabel(sScale,"S")}</span>
+          </div>
+          <div style={{color:"#8b949e",fontSize:9}}>Solar Radiation</div>
+          <div style={{color:"#8b949e",fontSize:9}}>Proton flux (EVA risk)</div>
+          <div className="digital-readout" style={{color:scaleColor(sScale),fontSize:18,marginTop:3,textShadow:"0 0 10px "+scaleColor(sScale)+"66"}}>S {sScale}</div>
+        </div>
+        <div className="subcard" style={{borderLeft:"3px solid "+scaleColor(gScale)}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+            <div style={{color:"#f0883e",fontWeight:700,fontSize:10}}>G-SCALE</div>
+            <span style={{fontSize:9,padding:"2px 6px",border:"1px solid "+scaleColor(gScale)+"66",color:scaleColor(gScale),borderRadius:3,fontWeight:700,letterSpacing:0.8,textShadow:"0 0 6px "+scaleColor(gScale)+"88"}}>{scaleLabel(gScale,"G")}</span>
+          </div>
+          <div style={{color:"#8b949e",fontSize:9}}>Geomagnetic Storms</div>
+          <div style={{color:"#8b949e",fontSize:9}}>Aurora &amp; drag</div>
+          <div className="digital-readout" style={{color:scaleColor(gScale),fontSize:18,marginTop:3,textShadow:"0 0 10px "+scaleColor(gScale)+"66"}}>G {gScale}</div>
+        </div>
+      </div>
+
+      {/* Kp Index, Solar Wind, Magnetic Field, F10.7 */}
+      <div className="tm-grid">
+        <TmGroup title="Planetary Kp Index">
+          <KV l="Current Kp" v={data.kp !== null ? <span style={{color:kpColor(data.kp),fontWeight:700,textShadow:"0 0 6px "+kpColor(data.kp)+"66"}}>{data.kp.toFixed(2)}</span> : "---"}/>
+          <KV l="Condition" v={<span style={{color:kpColor(data.kp)}}>{kpLabel(data.kp)}</span>}/>
+          <KV l="Last update" v={data.kpTime ? data.kpTime.slice(5,16) : "---"}/>
+          <KV l="Impact" v={data.kp !== null && data.kp >= 5 ? "⚠ AURORA VISIBLE" : "nominal"}/>
+        </TmGroup>
+        <TmGroup title="Solar Wind (DSCOVR)">
+          <KV l="Speed" v={data.solarWind ? data.solarWind.speed.toFixed(0) + " km/s" : "---"}/>
+          <KV l="Density" v={data.solarWind ? data.solarWind.density.toFixed(1) + " p/cm³" : "---"}/>
+          <KV l="Temp" v={data.solarWind ? (data.solarWind.temperature/1000).toFixed(0) + "K K" : "---"}/>
+          <KV l="L1 point" v="1.5M km sunward"/>
+        </TmGroup>
+        <TmGroup title="Interplanetary Magnetic Field">
+          <KV l="Bt (total)" v={data.mag ? data.mag.bt.toFixed(1) + " nT" : "---"}/>
+          <KV l="Bz" v={data.mag ? <span style={{color:data.mag.bz < 0 ? "#f85149" : "#3fb950"}}>{data.mag.bz.toFixed(1) + " nT"}</span> : "---"}/>
+          <KV l="Bz orientation" v={data.mag ? (data.mag.bz < 0 ? "south ⚠" : "north ✓") : "---"}/>
+          <KV l="Coupling" v={data.mag ? (data.mag.bz < -5 ? "strong" : "weak") : "---"}/>
+        </TmGroup>
+        <TmGroup title="Solar Activity">
+          <KV l="F10.7 flux" v={data.f107 ? data.f107.toFixed(0) + " sfu" : "---"}/>
+          <KV l="Solar cycle" v="SC25 (declining)"/>
+          <KV l="Activity level" v={data.f107 ? (data.f107 > 150 ? "high" : data.f107 > 100 ? "moderate" : "low") : "---"}/>
+          <KV l="X-ray class" v={nowScales && nowScales.R ? (nowScales.R.Scale >= "1" ? "M+ class" : "< M1.0") : "< M1.0"}/>
+        </TmGroup>
+      </div>
+
+      {/* EVA / Crew radiation risk summary */}
+      <div style={{marginTop:10,padding:"8px 12px",background:"#0a0e13",border:"1px solid #21262d",borderRadius:3,fontSize:9,color:"#8b949e"}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:14,alignItems:"center"}}>
+          <span style={{color:"#f0883e",fontWeight:700,letterSpacing:0.5}}>▸ CREW RADIATION:</span>
+          <span>Nominal SAA passes: <span style={{color:"#c9d1d9"}}>~6/day</span></span>
+          <span>·</span>
+          <span>EVA go/no-go: <span style={{color:parseInt(sScale,10) >= 2 ? "#f85149" : "#3fb950",fontWeight:700}}>{parseInt(sScale,10) >= 2 ? "NO-GO (S{sScale})" : "GO (nominal)"}</span></span>
+          <span>·</span>
+          <span>HF radio impact: <span style={{color:scaleColor(rScale),fontWeight:700}}>{scaleLabel(rScale,"R")}</span></span>
+        </div>
+        <div style={{marginTop:6,paddingTop:6,borderTop:"1px dashed #21262d",fontSize:8,color:"#6e7681"}}>
+          Source: <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">NOAA Space Weather Prediction Center</a> · Kp via planetary-k-index · Solar wind via DSCOVR L1 · Scales via noaa-scales · F10.7 via Penticton observatory {data.error && <span style={{color:"#f85149",marginLeft:8}}>⚠ {data.error}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ISS SCHEMATIC LAYOUT ────────────────────────────────────────────
+function ISSSchematic(){
+  const [highlight, setHighlight] = useState(null);
+  // Port state based on VISITING_VEHICLES data
+  const ports = {
+    harmony_fwd: {docked:true, vehicle:"Crew Dragon Freedom", label:"Harmony FWD"},
+    harmony_zen: {docked:false, label:"Harmony Zenith IDA-3"},
+    unity_nad:  {docked:false, rsvd:true, label:"Unity Nadir"},
+    poisk_zen:  {docked:true, vehicle:"Soyuz MS-27", label:"Poisk Zenith"},
+    rassvet_nad:{docked:true, vehicle:"Soyuz MS-28", label:"Rassvet Nadir"},
+    zvezda_aft: {docked:true, vehicle:"Progress MS-31", label:"Zvezda Aft"},
+    nauka_nad:  {docked:true, vehicle:"Progress MS-30", label:"Nauka Nadir"},
+  };
+  // LED colors
+  const ledActive = "#3fb950";
+  const ledFree = "#6e7681";
+  const ledRsvd = "#d29922";
+
+  function portStatus(p){
+    if(p.docked) return {color:ledActive,label:"DOCKED",glow:"0 0 8px "+ledActive};
+    if(p.rsvd)   return {color:ledRsvd,label:"RSVD",glow:"0 0 6px "+ledRsvd};
+    return       {color:ledFree,label:"FREE",glow:"none"};
+  }
+
+  return (
+    <div className="console-card cockpit-frame" style={{position:"relative",borderLeft:"3px solid #79c0ff"}}>
+      <div className="console-header">
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span className="led-dot" style={{background:"#79c0ff",boxShadow:"0 0 6px #79c0ff"}}/>
+          <span style={{color:"#79c0ff",fontSize:14}}>▦</span>
+          <span className="console-tag" style={{color:"#79c0ff",background:"#79c0ff15",border:"1px solid #79c0ff33"}}>ISS LAYOUT</span>
+          <span style={{color:"#8b949e",fontSize:11}}>Schematic diagram · live module &amp; port status</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,fontSize:9,color:"#6e7681"}}>
+          <span className="on-badge">● LIVE</span>
+          <span style={{letterSpacing:0.5}}>Expedition 74</span>
+        </div>
+      </div>
+
+      <div style={{background:"#0a0e13",border:"1px solid #21262d",borderRadius:3,padding:8}}>
+        <svg viewBox="0 0 1000 420" style={{width:"100%",display:"block",maxHeight:420}}>
+          <defs>
+            <radialGradient id="module-grad" cx="50%" cy="30%">
+              <stop offset="0%" stopColor="#3a4147"/>
+              <stop offset="100%" stopColor="#1c2128"/>
+            </radialGradient>
+            <radialGradient id="module-grad-rus" cx="50%" cy="30%">
+              <stop offset="0%" stopColor="#4a3a2e"/>
+              <stop offset="100%" stopColor="#2a1f14"/>
+            </radialGradient>
+            <linearGradient id="truss-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#30363d"/>
+              <stop offset="100%" stopColor="#161b22"/>
+            </linearGradient>
+          </defs>
+
+          {/* Main truss horizontal beam */}
+          <rect x="60" y="200" width="880" height="28" fill="url(#truss-grad)" stroke="#30363d" strokeWidth="1"/>
+          <text x="500" y="218" fill="#8b949e" fontSize="9" textAnchor="middle" fontFamily="monospace">INTEGRATED TRUSS STRUCTURE (ITS)</text>
+
+          {/* Truss segment labels */}
+          {["P6","P4","P3","P1","S1","S3","S4","S6"].map(function(seg,i){
+            const x = 100 + i*105;
+            return (
+              <g key={seg}>
+                <line x1={x} y1="200" x2={x} y2="228" stroke="#21262d" strokeWidth="0.5"/>
+                <text x={x} y="243" fill="#6e7681" fontSize="8" textAnchor="middle" fontFamily="monospace">{seg}</text>
+              </g>
+            );
+          })}
+
+          {/* PORT (left) solar arrays - 4 pairs */}
+          {[[70,70],[70,160],[180,70],[180,160]].map(function(pos,i){
+            const labels = ["4B","2B","4A","2A"];
+            return (
+              <g key={"psa"+i}>
+                <rect x={pos[0]} y={pos[1]} width="90" height="28" fill="#58a6ff22" stroke="#58a6ff66" strokeWidth="1"/>
+                {Array.from({length:8}).map(function(_,j){
+                  return <line key={j} x1={pos[0]+5+j*11} y1={pos[1]+2} x2={pos[0]+5+j*11} y2={pos[1]+26} stroke="#58a6ff44" strokeWidth="0.5"/>;
+                })}
+                <text x={pos[0]+45} y={pos[1]+18} fill="#58a6ff" fontSize="10" textAnchor="middle" fontFamily="monospace" fontWeight="bold">{labels[i]}</text>
+                <circle cx={pos[0]+85} cy={pos[1]+4} r="2" fill={ledActive}>
+                  <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                </circle>
+              </g>
+            );
+          })}
+
+          {/* STBD (right) solar arrays */}
+          {[[740,70],[740,160],[850,70],[850,160]].map(function(pos,i){
+            const labels = ["1B","3B","1A","3A"];
+            return (
+              <g key={"ssa"+i}>
+                <rect x={pos[0]} y={pos[1]} width="90" height="28" fill="#58a6ff22" stroke="#58a6ff66" strokeWidth="1"/>
+                {Array.from({length:8}).map(function(_,j){
+                  return <line key={j} x1={pos[0]+5+j*11} y1={pos[1]+2} x2={pos[0]+5+j*11} y2={pos[1]+26} stroke="#58a6ff44" strokeWidth="0.5"/>;
+                })}
+                <text x={pos[0]+45} y={pos[1]+18} fill="#58a6ff" fontSize="10" textAnchor="middle" fontFamily="monospace" fontWeight="bold">{labels[i]}</text>
+                <circle cx={pos[0]+5} cy={pos[1]+4} r="2" fill={ledActive}>
+                  <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+                </circle>
+              </g>
+            );
+          })}
+
+          {/* Radiators */}
+          <g>
+            <rect x="320" y="108" width="90" height="24" fill="#d2992222" stroke="#d2992266" strokeWidth="1"/>
+            <text x="365" y="124" fill="#d29922" fontSize="8" textAnchor="middle" fontFamily="monospace">RADIATOR A</text>
+            <rect x="590" y="108" width="90" height="24" fill="#d2992222" stroke="#d2992266" strokeWidth="1"/>
+            <text x="635" y="124" fill="#d29922" fontSize="8" textAnchor="middle" fontFamily="monospace">RADIATOR B</text>
+          </g>
+
+          {/* USOS modules cluster (center) */}
+          {/* Harmony (Node 2) - central connector */}
+          <g>
+            <rect x="440" y="250" width="60" height="36" fill="url(#module-grad)" stroke="#79c0ff" strokeWidth="1.5" rx="3"/>
+            <text x="470" y="272" fill="#c9d1d9" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">HARMONY</text>
+          </g>
+          {/* US Lab Destiny */}
+          <g>
+            <rect x="360" y="250" width="80" height="36" fill="url(#module-grad)" stroke="#3fb950" strokeWidth="1.5" rx="3"/>
+            <text x="400" y="267" fill="#c9d1d9" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">DESTINY</text>
+            <text x="400" y="278" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">US Lab</text>
+          </g>
+          {/* Columbus (ESA) */}
+          <g>
+            <rect x="500" y="290" width="70" height="32" fill="url(#module-grad)" stroke="#58a6ff" strokeWidth="1.5" rx="3"/>
+            <text x="535" y="306" fill="#c9d1d9" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="bold">COLUMBUS</text>
+            <text x="535" y="316" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">ESA</text>
+          </g>
+          {/* Kibo (JAXA) */}
+          <g>
+            <rect x="500" y="214" width="70" height="32" fill="url(#module-grad)" stroke="#f85149" strokeWidth="1.5" rx="3"/>
+            <text x="535" y="230" fill="#c9d1d9" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="bold">KIBO JEM</text>
+            <text x="535" y="240" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">JAXA</text>
+          </g>
+          {/* Node 3 Tranquility + Cupola */}
+          <g>
+            <rect x="290" y="290" width="60" height="32" fill="url(#module-grad)" stroke="#79c0ff" strokeWidth="1.5" rx="3"/>
+            <text x="320" y="306" fill="#c9d1d9" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="bold">NODE 3</text>
+            <text x="320" y="316" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">TRANQUILITY</text>
+          </g>
+          <g>
+            <circle cx="320" cy="340" r="10" fill="url(#module-grad)" stroke="#3fb950" strokeWidth="1.5"/>
+            <text x="320" y="343" fill="#3fb950" fontSize="7" textAnchor="middle" fontFamily="monospace">CUP</text>
+          </g>
+          {/* Airlock Quest */}
+          <g>
+            <rect x="360" y="290" width="50" height="32" fill="url(#module-grad)" stroke="#4dd0e1" strokeWidth="1.5" rx="3"/>
+            <text x="385" y="306" fill="#c9d1d9" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="bold">QUEST</text>
+            <text x="385" y="316" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">A/L</text>
+          </g>
+          {/* Unity Node 1 */}
+          <g>
+            <rect x="290" y="250" width="60" height="36" fill="url(#module-grad)" stroke="#79c0ff" strokeWidth="1.5" rx="3"/>
+            <text x="320" y="272" fill="#c9d1d9" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">UNITY</text>
+          </g>
+          {/* PMM Leonardo */}
+          <g>
+            <rect x="220" y="290" width="60" height="28" fill="url(#module-grad)" stroke="#8b949e" strokeWidth="1.5" rx="3"/>
+            <text x="250" y="307" fill="#c9d1d9" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="bold">PMM</text>
+          </g>
+          {/* BEAM */}
+          <g>
+            <circle cx="250" cy="340" r="8" fill="url(#module-grad)" stroke="#8b949e" strokeWidth="1"/>
+            <text x="250" y="343" fill="#8b949e" fontSize="6" textAnchor="middle" fontFamily="monospace">BEAM</text>
+          </g>
+
+          {/* Russian Segment (right of USOS center) */}
+          <g>
+            <rect x="560" y="250" width="70" height="36" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1.5" rx="3"/>
+            <text x="595" y="267" fill="#ff9800" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ZARYA</text>
+            <text x="595" y="278" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">FGB</text>
+          </g>
+          <g>
+            <rect x="630" y="250" width="70" height="36" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1.5" rx="3"/>
+            <text x="665" y="267" fill="#ff9800" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ZVEZDA</text>
+            <text x="665" y="278" fill="#8b949e" fontSize="7" textAnchor="middle" fontFamily="monospace">SM</text>
+          </g>
+          <g>
+            <rect x="593" y="214" width="34" height="30" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1" rx="2"/>
+            <text x="610" y="232" fill="#ff9800" fontSize="7" textAnchor="middle" fontFamily="monospace">POISK</text>
+          </g>
+          <g>
+            <rect x="593" y="292" width="34" height="30" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1" rx="2"/>
+            <text x="610" y="310" fill="#ff9800" fontSize="7" textAnchor="middle" fontFamily="monospace">NAUKA</text>
+          </g>
+          <g>
+            <rect x="555" y="292" width="34" height="30" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1" rx="2"/>
+            <text x="572" y="310" fill="#ff9800" fontSize="7" textAnchor="middle" fontFamily="monospace">RASS</text>
+          </g>
+          <g>
+            <rect x="630" y="292" width="34" height="30" fill="url(#module-grad-rus)" stroke="#ff9800" strokeWidth="1" rx="2"/>
+            <text x="647" y="310" fill="#ff9800" fontSize="7" textAnchor="middle" fontFamily="monospace">PRIC</text>
+          </g>
+
+          {/* SGANT (Ku-Band antenna) on Z1 truss */}
+          <g>
+            <circle cx="470" cy="180" r="10" fill="none" stroke="#58a6ff" strokeWidth="1.5"/>
+            <circle cx="470" cy="180" r="5" fill="#58a6ff44"/>
+            <text x="490" y="183" fill="#58a6ff" fontSize="8" fontFamily="monospace">SGANT (Ku)</text>
+            <circle cx="455" cy="180" r="2" fill={ledActive}>
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          {/* RFG-2 (S-Band Port) on P1 truss */}
+          <g>
+            <circle cx="285" cy="190" r="7" fill="none" stroke="#58a6ff" strokeWidth="1.2"/>
+            <line x1="285" y1="195" x2="285" y2="200" stroke="#58a6ff" strokeWidth="1"/>
+            <text x="255" y="182" fill="#58a6ff" fontSize="7" fontFamily="monospace">RFG-2 (S)</text>
+            <circle cx="278" cy="190" r="1.8" fill={ledActive}>
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          {/* RFG-1 (S-Band Stbd) on S1 truss */}
+          <g>
+            <circle cx="715" cy="190" r="7" fill="none" stroke="#58a6ff" strokeWidth="1.2"/>
+            <line x1="715" y1="195" x2="715" y2="200" stroke="#58a6ff" strokeWidth="1"/>
+            <text x="725" y="182" fill="#58a6ff" fontSize="7" fontFamily="monospace">RFG-1 (S)</text>
+            <circle cx="722" cy="190" r="1.8" fill={ledActive}>
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          {/* UHF Antenna (EVA comms) on Lab/Columbus area */}
+          <g>
+            <rect x="428" y="242" width="4" height="8" fill="#f0883e"/>
+            <line x1="426" y1="242" x2="434" y2="242" stroke="#f0883e" strokeWidth="1"/>
+            <line x1="425" y1="245" x2="435" y2="245" stroke="#f0883e" strokeWidth="1"/>
+            <text x="400" y="238" fill="#f0883e" fontSize="7" fontFamily="monospace">UHF (EVA)</text>
+            <circle cx="438" cy="246" r="1.8" fill={ledActive}>
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          {/* Ka-Band ILLUMA-T on Columbus Bartolomeo */}
+          <g>
+            <circle cx="535" cy="336" r="5" fill="none" stroke="#a371f7" strokeWidth="1"/>
+            <line x1="535" y1="322" x2="535" y2="331" stroke="#a371f7" strokeWidth="0.8"/>
+            <text x="545" y="340" fill="#a371f7" fontSize="7" fontFamily="monospace">ILLUMA-T (Ka)</text>
+            <circle cx="539" cy="336" r="1.5" fill={ledActive}>
+              <animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          {/* TDRS relay indicator (up-arrow to GEO) */}
+          <g transform="translate(470, 40)">
+            <text x="0" y="0" fill="#58a6ff" fontSize="8" textAnchor="middle" fontFamily="monospace">↑ TDRS GEO</text>
+            <text x="0" y="10" fill="#6e7681" fontSize="7" textAnchor="middle" fontFamily="monospace">36,000 km</text>
+            <line x1="-30" y1="18" x2="-30" y2="135" stroke="#58a6ff" strokeWidth="0.5" strokeDasharray="2,3" opacity="0.5"/>
+            <line x1="30" y1="18" x2="30" y2="135" stroke="#58a6ff" strokeWidth="0.5" strokeDasharray="2,3" opacity="0.5"/>
+          </g>
+
+          {/* CMG Z1 truss */}
+          <g>
+            <rect x="430" y="164" width="40" height="22" fill="url(#module-grad)" stroke="#a371f7" strokeWidth="1"/>
+            <text x="450" y="179" fill="#a371f7" fontSize="7" textAnchor="middle" fontFamily="monospace">CMG×4</text>
+          </g>
+
+          {/* SSRMS Canadarm2 sketch */}
+          <g>
+            <path d="M 470,260 Q 410,150 300,180" fill="none" stroke="#79c0ff" strokeWidth="2.5" strokeLinecap="round"/>
+            <circle cx="300" cy="180" r="4" fill="#79c0ff"/>
+            <text x="305" y="172" fill="#79c0ff" fontSize="8" fontFamily="monospace">SSRMS</text>
+          </g>
+
+          {/* Docking Ports with LEDs */}
+          {[
+            {x:470,y:240,key:"harmony_zen",lbl:"FWD-Z"},
+            {x:470,y:296,key:"harmony_fwd",lbl:"FWD"},
+            {x:320,y:250,key:"unity_nad",lbl:"NAD"},
+            {x:610,y:214,key:"poisk_zen",lbl:"ZEN"},
+            {x:572,y:322,key:"rassvet_nad",lbl:"NAD"},
+            {x:700,y:268,key:"zvezda_aft",lbl:"AFT"},
+            {x:610,y:322,key:"nauka_nad",lbl:"NAD"},
+          ].map(function(port,i){
+            const p = ports[port.key];
+            const st = portStatus(p);
+            return (
+              <g key={port.key} onMouseEnter={function(){setHighlight(port.key);}} onMouseLeave={function(){setHighlight(null);}} style={{cursor:"pointer"}}>
+                <circle cx={port.x} cy={port.y} r="6" fill={st.color} opacity="0.9" filter={"drop-shadow("+st.glow+")"}>
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur={p.docked?"1.5s":"3s"} repeatCount="indefinite"/>
+                </circle>
+                <circle cx={port.x} cy={port.y} r="3" fill="#0a0e13"/>
+                <circle cx={port.x} cy={port.y} r="1.5" fill={st.color}/>
+              </g>
+            );
+          })}
+
+          {/* Legend in bottom-left corner of SVG */}
+          <g transform="translate(20, 370)">
+            <text x="0" y="0" fill="#8b949e" fontSize="9" fontFamily="monospace" fontWeight="bold">LEGEND</text>
+            <circle cx="10" cy="14" r="4" fill={ledActive}/>
+            <text x="20" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">DOCKED</text>
+            <circle cx="80" cy="14" r="4" fill={ledRsvd}/>
+            <text x="90" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">RESERVED</text>
+            <circle cx="160" cy="14" r="4" fill={ledFree}/>
+            <text x="170" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">FREE</text>
+          </g>
+          <g transform="translate(300, 370)">
+            <rect x="0" y="8" width="20" height="10" fill="#58a6ff22" stroke="#58a6ff66"/>
+            <text x="26" y="17" fill="#58a6ff" fontSize="8" fontFamily="monospace">SOLAR ARRAYS (8)</text>
+            <rect x="140" y="8" width="20" height="10" fill="#d2992222" stroke="#d2992266"/>
+            <text x="166" y="17" fill="#d29922" fontSize="8" fontFamily="monospace">RADIATORS</text>
+          </g>
+          <g transform="translate(600, 370)">
+            <rect x="0" y="8" width="20" height="10" fill="url(#module-grad)" stroke="#79c0ff"/>
+            <text x="26" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">USOS</text>
+            <rect x="70" y="8" width="20" height="10" fill="url(#module-grad-rus)" stroke="#ff9800"/>
+            <text x="96" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">ROS</text>
+            <circle cx="140" cy="13" r="5" fill="none" stroke="#58a6ff"/>
+            <text x="150" y="17" fill="#8b949e" fontSize="8" fontFamily="monospace">ANTENNAS</text>
+            <text x="220" y="17" fill="#79c0ff" fontSize="8" fontFamily="monospace">— SSRMS</text>
+          </g>
+        </svg>
+      </div>
+
+      {/* Port status list */}
+      <div style={{marginTop:10,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:6}}>
+        {Object.keys(ports).map(function(key){
+          const p = ports[key];
+          const st = portStatus(p);
+          const active = highlight === key;
+          return (
+            <div key={key} style={{
+              padding:"6px 10px",
+              background:active?"#161b22":"#0a0e13",
+              border:"1px solid "+(active?st.color+"66":"#21262d"),
+              borderLeft:"2px solid "+st.color,
+              borderRadius:3,
+              transition:"all .15s"
+            }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                <span style={{fontSize:10,color:"#c9d1d9",fontWeight:600}}>{p.label}</span>
+                <span style={{fontSize:8,padding:"1px 5px",border:"1px solid "+st.color+"66",color:st.color,borderRadius:2,fontWeight:700,letterSpacing:0.5,textShadow:"0 0 4px "+st.color+"66"}}>● {st.label}</span>
+              </div>
+              <div style={{fontSize:9,color:"#8b949e"}}>
+                {p.vehicle || "— available —"}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<StationCommander/>);
+</script>
+</body>
+</html>
