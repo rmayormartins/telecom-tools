@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cellular Lab — Laboratório de Redes Celulares e Cobertura</title>
+<meta name="description" content="Laboratório interativo de redes celulares: ERBs no mapa, link budget, propagação (Okumura-Hata, COST-231, 3GPP), heatmap de cobertura, morfologia, modulações 2G–5G." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+
+  --orange: #f97316;
+  --teal: #2dd4bf;
+
+  /* cellular accent — warm red/crimson */
+  --cell: #ef4444;
+  --cell-bright: #f87171;
+  --cell-soft: #7f1d1d40;
+  --cell-glow: #ef444433;
+  --cell-deep: #991b1b;
+
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#200d0d 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d0d20 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* ===== HEADER ===== */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:30px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+.brand .logo-mark::before{
+  content:'';position:absolute;
+  width:3px;height:16px;background:var(--cell);border-radius:1px;
+  box-shadow:0 0 10px var(--cell);top:2px;
+}
+.brand .logo-mark .sig1{
+  position:absolute;width:12px;height:12px;top:6px;left:9px;
+  border-right:2px solid rgba(239,68,68,0.7);border-top:2px solid rgba(239,68,68,0.7);
+  border-radius:0 50% 0 0;
+  animation:sig-pulse 2s ease-in-out infinite;
+}
+.brand .logo-mark .sig2{
+  position:absolute;width:18px;height:18px;top:3px;left:6px;
+  border-right:2px solid rgba(239,68,68,0.4);border-top:2px solid rgba(239,68,68,0.4);
+  border-radius:0 50% 0 0;
+  animation:sig-pulse 2s ease-in-out infinite 0.3s;
+}
+.brand .logo-mark .sig3{
+  position:absolute;width:24px;height:24px;top:0;left:3px;
+  border-right:2px solid rgba(239,68,68,0.2);border-top:2px solid rgba(239,68,68,0.2);
+  border-radius:0 50% 0 0;
+  animation:sig-pulse 2s ease-in-out infinite 0.6s;
+}
+@keyframes sig-pulse{
+  0%,100%{opacity:1;}
+  50%{opacity:0.2;}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--cell-bright);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#5e1a1a,#3d0f0f);
+  border-color:var(--cell);color:var(--cell-bright);
+  box-shadow:0 0 0 1px var(--cell-glow),inset 0 1px 0 rgba(239,68,68,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#7a2222,#4d1515);}
+.btn.active{background:var(--cell-soft);border-color:var(--cell);color:var(--cell-bright);}
+.btn svg{width:12px;height:12px;}
+
+/* ===== MAIN ===== */
+main{
+  display:grid;grid-template-columns:340px 1fr 330px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* ===== SECTIONS ===== */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.red{background:var(--cell);box-shadow:0 0 6px var(--cell);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.dot.orange{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* ===== FORM ===== */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--cell);background:#090d13;
+  box-shadow:0 0 0 2px var(--cell-glow);
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--cell-bright);border-color:var(--cell);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--cell-soft);border-color:var(--cell);color:var(--cell-bright);}
+
+/* ===== ERB LIST ===== */
+.erb-list{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
+.erb-item{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;
+  background:var(--bg-0);border:1px solid var(--border);border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .15s;
+}
+.erb-item:hover{border-color:var(--text-2);}
+.erb-item.selected{border-color:var(--cell);background:var(--cell-soft);}
+.erb-item .erb-id{color:var(--cell-bright);font-weight:600;min-width:55px;}
+.erb-item .erb-tech{color:var(--text-2);font-size:10px;}
+.erb-item .erb-del{
+  margin-left:auto;color:var(--text-3);cursor:pointer;font-size:14px;
+  transition:color .15s;padding:0 4px;
+}
+.erb-item .erb-del:hover{color:var(--rose);}
+
+/* ===== VIZ ===== */
+.viz{display:grid;grid-template-rows:1fr 240px;min-height:0;}
+.map-wrap{position:relative;min-height:0;background:#000;}
+#map{position:absolute;inset:0;background:#04070c;}
+.leaflet-container{background:#04070c !important;font-family:var(--font-mono);}
+.leaflet-control-zoom a{background:var(--bg-2)!important;color:var(--text-0)!important;border-color:var(--border)!important;}
+.leaflet-control-zoom a:hover{background:var(--bg-3)!important;}
+.leaflet-tooltip{background:var(--bg-3);color:var(--text-0);border:1px solid var(--border-strong);box-shadow:none;font-family:var(--font-mono);font-size:11px;}
+
+.map-legend{
+  position:absolute;top:10px;left:10px;background:rgba(7,9,13,0.9);
+  border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;
+  z-index:500;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
+  backdrop-filter:blur(8px);display:flex;gap:14px;flex-wrap:wrap;
+}
+.map-legend .li{display:flex;align-items:center;gap:6px;}
+.map-legend .sw{display:inline-block;}
+.map-legend .sw.erb{background:var(--cell);width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px var(--cell);}
+.map-legend .sw.cov-good{background:var(--phos);width:12px;height:8px;border-radius:2px;opacity:0.7;}
+.map-legend .sw.cov-mid{background:var(--amber);width:12px;height:8px;border-radius:2px;opacity:0.7;}
+.map-legend .sw.cov-weak{background:var(--rose);width:12px;height:8px;border-radius:2px;opacity:0.7;}
+.map-legend .sw.sector{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid rgba(239,68,68,0.4);}
+.map-legend .sw.ue{background:var(--cyan);width:6px;height:6px;border-radius:50%;box-shadow:0 0 4px var(--cyan);}
+
+.map-badge{
+  position:absolute;top:10px;right:10px;background:rgba(7,9,13,0.9);
+  border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;
+  z-index:500;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
+  backdrop-filter:blur(8px);text-align:right;display:flex;flex-direction:column;gap:3px;
+}
+.map-badge .big{font-family:var(--font-display);font-size:14px;letter-spacing:0.08em;}
+.map-badge .big.good{color:var(--phos);}
+.map-badge .big.warn{color:var(--amber);}
+.map-badge .big.bad{color:var(--rose);}
+
+.map-toolbar{
+  position:absolute;bottom:10px;left:10px;
+  display:flex;gap:4px;z-index:600;
+}
+.map-toolbar .btn{
+  font-size:10px;padding:6px 10px;
+  background:rgba(7,9,13,0.9);backdrop-filter:blur(8px);
+}
+
+.map-instructions{
+  position:absolute;bottom:10px;right:10px;
+  background:rgba(7,9,13,0.8);border:1px solid var(--border);
+  border-radius:var(--radius);padding:5px 9px;z-index:500;
+  font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);
+  backdrop-filter:blur(8px);pointer-events:none;letter-spacing:0.03em;
+}
+
+/* bottom strip */
+.bottom-strip{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.card{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);flex-shrink:0;
+}
+.card-header h3{margin:0;font-family:var(--font-display);font-weight:500;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);}
+.card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.card .card-body{flex:1;position:relative;padding:6px 8px;min-height:0;}
+.card canvas{position:absolute;inset:6px 8px;width:calc(100% - 16px)!important;height:calc(100% - 12px)!important;}
+
+/* ===== RESULTS ===== */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.cell{color:var(--cell-bright);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(239,68,68,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--cell);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--cell-bright);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"><span class="sig1"></span><span class="sig2"></span><span class="sig3"></span></span>
+    <h1>CELLULAR LAB</h1>
+    <span class="tag">Laboratorio de <em>Redes Celulares</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">STANDBY</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Tecnologia</span>
+      <span class="value" id="hdr-tech">4G LTE</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Banda</span>
+      <span class="value" id="hdr-band">B7<span class="unit">2600MHz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">ERBs Ativas</span>
+      <span class="value" id="hdr-erbs">0</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Cobertura</span>
+      <span class="value" id="hdr-cov">--<span class="unit">%</span></span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runSimulation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
+      Simular
+    </button>
+    <button class="btn" id="btn-add-erb" onclick="toggleAddMode()">+ ERB</button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+<!-- ===== LEFT PANEL ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Configuracao</h2>
+    <span class="panel-sub">ERB / RF / ENV</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- ERB MANAGEMENT -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot red"></span>ERBs (Estacoes Radio Base)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="help" style="margin-bottom:8px;">Clique em "+ ERB" e depois no mapa para posicionar. Selecione uma ERB na lista para editar.</div>
+        <div class="erb-list" id="erb-list">
+          <div style="color:var(--text-3);font-family:var(--font-mono);font-size:10px;text-align:center;padding:12px;">Nenhuma ERB adicionada</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TECHNOLOGY & BAND -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Tecnologia &amp; Banda</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Tecnologia celular <span class="tip" data-tip="Geracao de rede movel. Cada uma define modulacoes, larguras de banda e capacidades distintas.">i</span></label>
+          <select id="technology" onchange="onTechChange()">
+            <option value="2g">2G — GSM / GPRS / EDGE</option>
+            <option value="3g">3G — UMTS / HSPA+</option>
+            <option value="4g" selected>4G — LTE / LTE-A</option>
+            <option value="5g-sub6">5G NR — Sub-6 GHz</option>
+            <option value="5g-mmwave">5G NR — mmWave</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Banda de frequencia <span class="tip" data-tip="Banda de frequencia alocada pela Anatel/ITU para a tecnologia selecionada.">i</span></label>
+          <select id="band" onchange="onBandChange()">
+            <option value="700" data-bw="10">B28 — 700 MHz (LTE FDD)</option>
+            <option value="850" data-bw="10">B5 — 850 MHz</option>
+            <option value="900" data-bw="5">B8 — 900 MHz</option>
+            <option value="1800" data-bw="15">B3 — 1800 MHz (DCS)</option>
+            <option value="2100" data-bw="15">B1 — 2100 MHz (UMTS)</option>
+            <option value="2600" data-bw="20" selected>B7 — 2600 MHz (LTE)</option>
+            <option value="3500" data-bw="100">n78 — 3500 MHz (5G NR)</option>
+            <option value="26000" data-bw="400">n258 — 26 GHz (mmWave)</option>
+            <option value="28000" data-bw="400">n257 — 28 GHz (mmWave)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Largura de banda <span class="unit">(MHz)</span></label>
+            <input type="number" id="bandwidth" value="20" min="1" max="800" step="1" />
+          </div>
+          <div class="field">
+            <label>Duplexacao</label>
+            <select id="duplex">
+              <option value="fdd" selected>FDD</option>
+              <option value="tdd">TDD</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Modulacao (Downlink)</label>
+          <select id="modulation">
+            <option value="qpsk">QPSK — robusta</option>
+            <option value="16qam">16-QAM — balanceada</option>
+            <option value="64qam" selected>64-QAM — alta taxa</option>
+            <option value="256qam">256-QAM — muito alta taxa</option>
+            <option value="1024qam">1024-QAM (5G NR)</option>
+            <option value="gmsk">GMSK (GSM)</option>
+            <option value="8psk">8PSK (EDGE)</option>
+          </select>
+        </div>
+        <div class="chips" id="tech-presets" style="margin-top:6px;">
+          <span class="chip" onclick="loadTechPreset('gsm900')">GSM 900</span>
+          <span class="chip" onclick="loadTechPreset('umts2100')">UMTS 2100</span>
+          <span class="chip active" onclick="loadTechPreset('lte2600')">LTE 2600</span>
+          <span class="chip" onclick="loadTechPreset('lte700')">LTE 700</span>
+          <span class="chip" onclick="loadTechPreset('nr3500')">5G 3500</span>
+          <span class="chip" onclick="loadTechPreset('nrmmw')">5G mmWave</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TX / ANTENNA CONFIG -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot orange"></span>Transmissor &amp; Antena</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field-row">
+          <div class="field">
+            <label>Potencia TX <span class="unit">(dBm)</span> <span class="tip" data-tip="Potencia total de saida do transmissor da ERB (antes de perdas de cabos).">i</span></label>
+            <input type="number" id="tx-power" value="43" min="0" max="60" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Ganho antena <span class="unit">(dBi)</span></label>
+            <input type="number" id="tx-gain" value="18" min="0" max="40" step="0.5"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Perda cabos/conect <span class="unit">(dB)</span></label>
+            <input type="number" id="cable-loss" value="2" min="0" max="20" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Altura antena <span class="unit">(m)</span></label>
+            <input type="number" id="ant-height" value="30" min="1" max="200" step="1"/>
+          </div>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Setores</label>
+            <select id="sectors">
+              <option value="1">1 (Omni)</option>
+              <option value="3" selected>3 (120°)</option>
+              <option value="4">4 (90°)</option>
+              <option value="6">6 (60°)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tilt Eletrico <span class="unit">(°)</span></label>
+            <input type="number" id="e-tilt" value="4" min="0" max="15" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Azimute base <span class="unit">(°)</span></label>
+            <input type="number" id="azimuth" value="0" min="0" max="359" step="1"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>MIMO Config</label>
+          <select id="mimo">
+            <option value="1x1">SISO (1x1)</option>
+            <option value="2x2" selected>MIMO 2x2</option>
+            <option value="4x4">MIMO 4x4</option>
+            <option value="8x8">Massive MIMO 8x8</option>
+            <option value="32x32">Massive MIMO 32x32</option>
+            <option value="64x64">Massive MIMO 64x64</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEPTOR (UE) -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Receptor (UE)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Ganho antena UE <span class="unit">(dBi)</span></label>
+            <input type="number" id="ue-gain" value="0" min="-5" max="10" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Perda corpo <span class="unit">(dB)</span></label>
+            <input type="number" id="body-loss" value="3" min="0" max="10" step="0.5"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Altura UE <span class="unit">(m)</span></label>
+            <input type="number" id="ue-height" value="1.5" min="0.5" max="30" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Figura de ruido <span class="unit">(dB)</span></label>
+            <input type="number" id="ue-nf" value="7" min="1" max="15" step="0.5"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Sensibilidade <span class="unit">(dBm)</span> <span class="tip" data-tip="Nivel minimo de sinal para decodificacao, depende da modulacao e largura de banda. Calculado automaticamente.">i</span></label>
+          <input type="number" id="sensitivity" value="-100" min="-130" max="-50" step="1" />
+        </div>
+      </div>
+    </div>
+
+    <!-- PROPAGATION MODEL -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Modelo de Propagacao</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Modelo <span class="tip" data-tip="Modelo empirico de propagacao. Okumura-Hata: 150-1500 MHz, COST-231: 1500-2000 MHz, 3GPP TR 38.901 para 5G.">i</span></label>
+          <select id="prop-model" onchange="onModelChange()">
+            <option value="fspl">Free Space (FSPL)</option>
+            <option value="okumura-hata">Okumura-Hata</option>
+            <option value="cost231-hata" selected>COST-231 Hata</option>
+            <option value="cost231-wim">COST-231 Walfisch-Ikegami</option>
+            <option value="3gpp-uma">3GPP UMa (TR 38.901)</option>
+            <option value="3gpp-umi">3GPP UMi (TR 38.901)</option>
+            <option value="3gpp-rma">3GPP RMa (TR 38.901)</option>
+            <option value="itu-r-p1411">ITU-R P.1411 (curta dist.)</option>
+            <option value="sui">SUI (Stanford Univ. Interim)</option>
+            <option value="ecc33">ECC-33</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Morfologia / Ambiente <span class="tip" data-tip="Tipo de ambiente urbano afeta drasticamente a perda de propagacao. Centros urbanos densos sofrem 15-25 dB a mais de perda que areas rurais.">i</span></label>
+          <select id="morphology">
+            <option value="dense-urban">Urbano Denso (centro comercial)</option>
+            <option value="urban" selected>Urbano (residencial)</option>
+            <option value="suburban">Suburbano</option>
+            <option value="rural">Rural</option>
+            <option value="open">Area Aberta</option>
+            <option value="industrial">Industrial</option>
+            <option value="indoor">Indoor (penetracao)</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Margem desvanecimento <span class="unit">(dB)</span></label>
+            <input type="number" id="fade-margin" value="8" min="0" max="20" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Perda penetracao <span class="unit">(dB)</span></label>
+            <input type="number" id="indoor-loss" value="0" min="0" max="30" step="1"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Perda por vegetacao <span class="unit">(dB)</span></label>
+          <input type="number" id="foliage-loss" value="0" min="0" max="20" step="0.5"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEATMAP CONFIG -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Heatmap &amp; Cobertura</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Raio maximo <span class="unit">(km)</span></label>
+            <input type="number" id="hm-radius" value="5" min="0.5" max="50" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Resolucao grid <span class="unit">(m)</span></label>
+            <select id="hm-resolution">
+              <option value="50">50 m (alta)</option>
+              <option value="100" selected>100 m (media)</option>
+              <option value="200">200 m (rapida)</option>
+              <option value="500">500 m (preview)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Metrica exibida</label>
+          <select id="hm-metric">
+            <option value="rsrp" selected>RSRP (dBm)</option>
+            <option value="sinr">SINR (dB)</option>
+            <option value="rsrq">RSRQ (dB)</option>
+            <option value="throughput">Throughput est. (Mbps)</option>
+          </select>
+        </div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Bom <span class="unit">(dBm)</span></label>
+            <input type="number" id="thr-good" value="-80" step="1"/>
+          </div>
+          <div class="field">
+            <label>Medio <span class="unit">(dBm)</span></label>
+            <input type="number" id="thr-mid" value="-100" step="1"/>
+          </div>
+          <div class="field">
+            <label>Fraco <span class="unit">(dBm)</span></label>
+            <input type="number" id="thr-weak" value="-115" step="1"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Opacidade heatmap</label>
+          <input type="number" id="hm-opacity" value="0.45" min="0.1" max="0.9" step="0.05"/>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== CENTER: MAP + CHARTS ===== -->
+<div class="panel viz">
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="li"><span class="sw erb"></span>ERB</div>
+      <div class="li"><span class="sw cov-good"></span>Bom</div>
+      <div class="li"><span class="sw cov-mid"></span>Medio</div>
+      <div class="li"><span class="sw cov-weak"></span>Fraco</div>
+      <div class="li"><span class="sw sector"></span>Setor</div>
+      <div class="li"><span class="sw ue"></span>UE</div>
+    </div>
+    <div class="map-badge">
+      <div>Cobertura estimada</div>
+      <div class="big good" id="map-cov-pct">--</div>
+      <div id="map-model-label" style="font-size:9px;color:var(--text-3);">COST-231 Hata</div>
+    </div>
+    <div class="map-toolbar">
+      <button class="btn" id="btn-toggle-hm" onclick="toggleHeatmap()">Heatmap</button>
+      <button class="btn" id="btn-toggle-sectors" onclick="toggleSectors()">Setores</button>
+      <button class="btn" onclick="clearHeatmap()">Limpar HM</button>
+    </div>
+    <div class="map-instructions" id="map-instr">Clique "+ ERB" para posicionar torres no mapa</div>
+  </div>
+  <div class="bottom-strip">
+    <div class="card">
+      <div class="card-header">
+        <h3>Perda de Propagacao vs Distancia</h3>
+        <span class="meta" id="chart-model-label">COST-231 Hata</span>
+      </div>
+      <div class="card-body">
+        <canvas id="prop-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3>RSRP vs Distancia</h3>
+        <span class="meta" id="chart-rsrp-label">dBm</span>
+      </div>
+      <div class="card-body">
+        <canvas id="rsrp-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RIGHT PANEL: RESULTS ===== -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>Resultados</h2>
+    <span class="panel-sub">LINK / COV / KPI</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- LINK BUDGET -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot red"></span>Link Budget</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-link">
+        <div class="kv"><span class="k">EIRP</span><span class="v" id="r-eirp">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">EIRP (W)</span><span class="v" id="r-eirp-w">--<span class="unit">W</span></span></div>
+        <div class="kv"><span class="k">Perda propagacao (1km)</span><span class="v" id="r-pl1">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda propagacao (borda)</span><span class="v" id="r-plmax">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Margem desvanecim.</span><span class="v" id="r-fade">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perda indoor</span><span class="v" id="r-indoor">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">MAPL (Max Path Loss)</span><span class="v acc" id="r-mapl">--<span class="unit">dB</span></span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k"><span class="live-dot standby" id="r-link-dot"></span> Status enlace</span><span class="v" id="r-link-status">STANDBY</span></div>
+      </div>
+    </div>
+
+    <!-- CELL COVERAGE -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot green"></span>Cobertura Celular</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-cov">
+        <div class="kv"><span class="k">Raio celula est.</span><span class="v cell" id="r-cellrad">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Area celula</span><span class="v" id="r-cellarea">--<span class="unit">km²</span></span></div>
+        <div class="kv"><span class="k">Area total (todas ERBs)</span><span class="v" id="r-totalarea">--<span class="unit">km²</span></span></div>
+        <div class="kv"><span class="k">% Area coberta (bom)</span><span class="v good" id="r-covgood">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">% Area coberta (medio)</span><span class="v warn" id="r-covmid">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">% Area coberta (fraco)</span><span class="v bad" id="r-covweak">--<span class="unit">%</span></span></div>
+        <div class="gauge" id="gauge-cov"><div class="gauge-fill good" id="gauge-cov-fill" style="width:0%"></div><div class="gauge-label" id="gauge-cov-label">--</div></div>
+      </div>
+    </div>
+
+    <!-- CAPACITY -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot cyan"></span>Capacidade &amp; Throughput</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body" id="res-cap">
+        <div class="kv"><span class="k">Throughput pico (DL)</span><span class="v acc" id="r-tput-peak">--<span class="unit">Mbps</span></span></div>
+        <div class="kv"><span class="k">Throughput borda (DL)</span><span class="v" id="r-tput-edge">--<span class="unit">Mbps</span></span></div>
+        <div class="kv"><span class="k">Efic. espectral pico</span><span class="v" id="r-se-peak">--<span class="unit">bps/Hz</span></span></div>
+        <div class="kv"><span class="k">Efic. espectral borda</span><span class="v" id="r-se-edge">--<span class="unit">bps/Hz</span></span></div>
+        <div class="kv"><span class="k">PRBs disponiveis</span><span class="v" id="r-prbs">--</span></div>
+        <div class="kv"><span class="k">Subcarriers</span><span class="v" id="r-subcarriers">--</span></div>
+        <div class="kv"><span class="k">MIMO ganho</span><span class="v" id="r-mimo-gain">--<span class="unit">×</span></span></div>
+        <div class="kv"><span class="k">Usuarios simult. est.</span><span class="v" id="r-users">--</span></div>
+      </div>
+    </div>
+
+    <!-- RF PARAMETERS -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot amber"></span>Parametros RF</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body" id="res-rf">
+        <div class="kv"><span class="k">Comprimento onda</span><span class="v" id="r-wavelength">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">Ruido termico</span><span class="v" id="r-thermal">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Noise floor (UE)</span><span class="v" id="r-noisefloor">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">SNR requerido</span><span class="v" id="r-snr-req">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Sensib. calculada</span><span class="v" id="r-sens-calc">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Zona Fresnel r1 (1km)</span><span class="v" id="r-fresnel">--<span class="unit">m</span></span></div>
+      </div>
+    </div>
+
+    <!-- TECH INFO -->
+    <div class="section">
+      <div class="section-head" onclick="toggleSection(this)">
+        <h3><span class="dot violet"></span>Info Tecnologia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body">
+        <div class="info-box" id="tech-info-box">
+          <strong>4G LTE (B7 — 2600 MHz):</strong> Long Term Evolution com 20 MHz de largura de banda. OFDMA no downlink, SC-FDMA no uplink. Suporta 64-QAM com MIMO 2x2, throughput teorico ate ~150 Mbps DL.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="author">
+    Cellular Lab v1.0 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
+  </div>
+  <div class="ts" id="footer-ts"></div>
+</footer>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+// ============================================================
+//  CELLULAR LAB — Full simulation engine
+// ============================================================
+
+// ---- State ----
+let erbs = [];
+let erbIdCounter = 0;
+let selectedErbIdx = -1;
+let addMode = false;
+let heatmapVisible = true;
+let sectorsVisible = true;
+let heatmapLayer = null;
+let sectorLayers = [];
+let erbMarkers = [];
+
+// ---- Map init ----
+const map = L.map('map', {
+  center: [-27.6003, -48.5190], // Sao Jose / Florianopolis
+  zoom: 13,
+  zoomControl: true
+});
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+}).addTo(map);
+
+// ---- Toggle section ----
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ---- Utility ----
+function $(id) { return document.getElementById(id); }
+function val(id) { return parseFloat($(id).value) || 0; }
+function setVal(id, v) { $(id).value = v; }
+function setText(id, t) { $(id).textContent = t; }
+function setHTML(id, h) { $(id).innerHTML = h; }
+
+// ---- Technology presets ----
+const TECH_PRESETS = {
+  gsm900: { tech:'2g', band:'900', bw:0.2, duplex:'fdd', mod:'gmsk', txp:43, gain:15, sectors:3, height:30, mimo:'1x1' },
+  umts2100: { tech:'3g', band:'2100', bw:5, duplex:'fdd', mod:'16qam', txp:43, gain:18, sectors:3, height:30, mimo:'1x1' },
+  lte2600: { tech:'4g', band:'2600', bw:20, duplex:'fdd', mod:'64qam', txp:43, gain:18, sectors:3, height:30, mimo:'2x2' },
+  lte700: { tech:'4g', band:'700', bw:10, duplex:'fdd', mod:'64qam', txp:46, gain:15, sectors:3, height:35, mimo:'2x2' },
+  nr3500: { tech:'5g-sub6', band:'3500', bw:100, duplex:'tdd', mod:'256qam', txp:46, gain:24, sectors:3, height:25, mimo:'32x32' },
+  nrmmw: { tech:'5g-mmwave', band:'26000', bw:400, duplex:'tdd', mod:'256qam', txp:40, gain:30, sectors:4, height:10, mimo:'64x64' }
+};
+
+function loadTechPreset(key) {
+  const p = TECH_PRESETS[key];
+  $(  'technology').value = p.tech;
+  // find band option
+  const bandSel = $('band');
+  for (let i=0; i<bandSel.options.length; i++) {
+    if (bandSel.options[i].value === String(p.band)) { bandSel.selectedIndex = i; break; }
+  }
+  setVal('bandwidth', p.bw);
+  $('duplex').value = p.duplex;
+  $('modulation').value = p.mod;
+  setVal('tx-power', p.txp);
+  setVal('tx-gain', p.gain);
+  $('sectors').value = String(p.sectors);
+  setVal('ant-height', p.height);
+  $('mimo').value = p.mimo;
+  // chips
+  document.querySelectorAll('#tech-presets .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  onTechChange();
+  onBandChange();
+}
+
+function onTechChange() {
+  const t = $('technology').value;
+  $('hdr-tech').textContent = {
+    '2g':'2G GSM','3g':'3G UMTS','4g':'4G LTE','5g-sub6':'5G NR Sub6','5g-mmwave':'5G mmWave'
+  }[t] || t;
+  updateTechInfo();
+}
+
+function onBandChange() {
+  const sel = $('band');
+  const opt = sel.options[sel.selectedIndex];
+  const freq = parseInt(sel.value);
+  const bw = opt.getAttribute('data-bw');
+  if (bw) setVal('bandwidth', parseInt(bw));
+  const label = opt.textContent.split('—')[0].trim();
+  $('hdr-band').innerHTML = label + '<span class="unit">' + freq + 'MHz</span>';
+  $('hdr-freq').innerHTML = (freq >= 1000 ? (freq/1000).toFixed(1) : freq) + '<span class="unit">' + (freq >= 1000 ? 'GHz' : 'MHz') + '</span>';
+}
+
+function onModelChange() {
+  const m = $('prop-model').value;
+  const labels = {
+    'fspl':'Free Space','okumura-hata':'Okumura-Hata','cost231-hata':'COST-231 Hata',
+    'cost231-wim':'COST-231 W-I','3gpp-uma':'3GPP UMa','3gpp-umi':'3GPP UMi',
+    '3gpp-rma':'3GPP RMa','itu-r-p1411':'ITU-R P.1411','sui':'SUI','ecc33':'ECC-33'
+  };
+  $('map-model-label').textContent = labels[m] || m;
+  $('chart-model-label').textContent = labels[m] || m;
+  $('hdr-model') && ($('hdr-model').textContent = labels[m] || m);
+}
+
+// ---- Tech info ----
+function updateTechInfo() {
+  const t = $('technology').value;
+  const infos = {
+    '2g': '<strong>2G GSM/GPRS/EDGE:</strong> Modulacao GMSK (GSM) ou 8PSK (EDGE). Canais de 200 kHz. Throughput max: 9.6 kbps (GSM), 384 kbps (EDGE). TDMA com 8 timeslots. Faixa tipica: 900/1800 MHz.',
+    '3g': '<strong>3G UMTS/HSPA+:</strong> WCDMA com spreading factor variavel. Canais de 5 MHz. HSPA+ com 64-QAM e MIMO 2x2 atinge 42 Mbps DL. Faixas: 850/900/2100 MHz.',
+    '4g': '<strong>4G LTE/LTE-A:</strong> OFDMA (DL) e SC-FDMA (UL). Largura 1.4-20 MHz. Subcarrier spacing 15 kHz. PRB = 12 subcarriers × 1 slot. LTE-A com CA ate 100 MHz. Throughput teorico: 150 Mbps (cat4) a 1 Gbps (cat16).',
+    '5g-sub6': '<strong>5G NR Sub-6 GHz:</strong> OFDMA flexivel com SCS 15/30/60 kHz. Largura ate 100 MHz. Massive MIMO com beamforming. Throughput: ate 2-4 Gbps. Latencia &lt; 4ms. Faixas: 3.3-3.8 GHz (n77/n78).',
+    '5g-mmwave': '<strong>5G NR mmWave:</strong> Ondas milimetricas (24-40 GHz). SCS 120 kHz. Largura ate 400 MHz por CC. Beamforming essencial. Throughput &gt; 10 Gbps. Alcance limitado (100-300m). Alta atenuacao.'
+  };
+  setHTML('tech-info-box', infos[t] || '');
+}
+
+// ---- ERB Management ----
+function toggleAddMode() {
+  addMode = !addMode;
+  const btn = $('btn-add-erb');
+  btn.classList.toggle('active', addMode);
+  $('map-instr').textContent = addMode ? 'Clique no mapa para posicionar a ERB' : 'Clique "+ ERB" para posicionar torres no mapa';
+  map.getContainer().style.cursor = addMode ? 'crosshair' : '';
+}
+
+map.on('click', function(e) {
+  if (!addMode) return;
+  addErb(e.latlng.lat, e.latlng.lng);
+  toggleAddMode();
+});
+
+function addErb(lat, lng) {
+  erbIdCounter++;
+  const tech = $('technology').value;
+  const erb = {
+    id: erbIdCounter,
+    lat, lng,
+    tech: $('technology').value,
+    band: $('band').value,
+    bw: val('bandwidth'),
+    txPower: val('tx-power'),
+    txGain: val('tx-gain'),
+    cableLoss: val('cable-loss'),
+    antHeight: val('ant-height'),
+    sectors: parseInt($('sectors').value),
+    eTilt: val('e-tilt'),
+    azimuth: val('azimuth'),
+    mimo: $('mimo').value,
+    label: 'ERB-' + String(erbIdCounter).padStart(3,'0')
+  };
+  erbs.push(erb);
+  selectedErbIdx = erbs.length - 1;
+  updateErbList();
+  addErbMarker(erb);
+  $('hdr-erbs').textContent = erbs.length;
+}
+
+function addErbMarker(erb) {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="
+      width:16px;height:16px;background:var(--cell);border:2px solid #fff;
+      border-radius:50%;box-shadow:0 0 12px rgba(239,68,68,0.6);
+      position:relative;
+    "><div style="
+      position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+      font-family:'JetBrains Mono';font-size:9px;color:#ef4444;
+      white-space:nowrap;text-shadow:0 0 4px #000,0 0 8px #000;
+      font-weight:600;letter-spacing:0.05em;
+    ">${erb.label}</div></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
+  const marker = L.marker([erb.lat, erb.lng], { icon, draggable: true })
+    .addTo(map)
+    .bindTooltip(`${erb.label} | ${erb.lat.toFixed(4)}, ${erb.lng.toFixed(4)}`, { direction: 'right', offset: [12, 0] });
+
+  marker.on('dragend', function(e) {
+    const pos = e.target.getLatLng();
+    const idx = erbs.findIndex(x => x.id === erb.id);
+    if (idx >= 0) { erbs[idx].lat = pos.lat; erbs[idx].lng = pos.lng; }
+  });
+  marker.on('click', function() {
+    const idx = erbs.findIndex(x => x.id === erb.id);
+    if (idx >= 0) { selectedErbIdx = idx; updateErbList(); loadErbConfig(idx); }
+  });
+  erbMarkers.push({ id: erb.id, marker });
+}
+
+function updateErbList() {
+  const list = $('erb-list');
+  if (erbs.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-3);font-family:var(--font-mono);font-size:10px;text-align:center;padding:12px;">Nenhuma ERB adicionada</div>';
+    return;
+  }
+  list.innerHTML = erbs.map((e, i) => {
+    const techLabel = {'2g':'GSM','3g':'UMTS','4g':'LTE','5g-sub6':'5G','5g-mmwave':'mmW'}[e.tech]||e.tech;
+    return `<div class="erb-item ${i===selectedErbIdx?'selected':''}" onclick="selectErb(${i})">
+      <span class="erb-id">${e.label}</span>
+      <span class="erb-tech">${techLabel} ${e.band}MHz ${e.txPower}dBm</span>
+      <span class="erb-del" onclick="event.stopPropagation();removeErb(${i})">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function selectErb(idx) {
+  selectedErbIdx = idx;
+  updateErbList();
+  loadErbConfig(idx);
+}
+
+function loadErbConfig(idx) {
+  const e = erbs[idx];
+  $('technology').value = e.tech;
+  // find band
+  const bandSel = $('band');
+  for (let i=0; i<bandSel.options.length; i++) {
+    if (bandSel.options[i].value === String(e.band)) { bandSel.selectedIndex = i; break; }
+  }
+  setVal('bandwidth', e.bw);
+  setVal('tx-power', e.txPower);
+  setVal('tx-gain', e.txGain);
+  setVal('cable-loss', e.cableLoss);
+  setVal('ant-height', e.antHeight);
+  $('sectors').value = String(e.sectors);
+  setVal('e-tilt', e.eTilt);
+  setVal('azimuth', e.azimuth);
+  $('mimo').value = e.mimo;
+  onTechChange();
+  onBandChange();
+}
+
+function removeErb(idx) {
+  const erb = erbs[idx];
+  const mk = erbMarkers.find(m => m.id === erb.id);
+  if (mk) { map.removeLayer(mk.marker); erbMarkers = erbMarkers.filter(m => m.id !== erb.id); }
+  erbs.splice(idx, 1);
+  if (selectedErbIdx >= erbs.length) selectedErbIdx = erbs.length - 1;
+  updateErbList();
+  $('hdr-erbs').textContent = erbs.length;
+}
+
+function saveCurrentErbConfig() {
+  if (selectedErbIdx < 0 || selectedErbIdx >= erbs.length) return;
+  const e = erbs[selectedErbIdx];
+  e.tech = $('technology').value;
+  e.band = $('band').value;
+  e.bw = val('bandwidth');
+  e.txPower = val('tx-power');
+  e.txGain = val('tx-gain');
+  e.cableLoss = val('cable-loss');
+  e.antHeight = val('ant-height');
+  e.sectors = parseInt($('sectors').value);
+  e.eTilt = val('e-tilt');
+  e.azimuth = val('azimuth');
+  e.mimo = $('mimo').value;
+  updateErbList();
+}
+
+// ---- Propagation Models ----
+function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
+  if (distKm <= 0) distKm = 0.001;
+  const f = freqMHz;
+  const d = distKm;
+
+  switch(model) {
+    case 'fspl':
+      return 32.44 + 20*Math.log10(f) + 20*Math.log10(d);
+
+    case 'okumura-hata': {
+      // valid 150-1500 MHz, 1-20 km
+      const fc = Math.min(Math.max(f, 150), 1500);
+      let aHm;
+      if (morphology === 'dense-urban' || morphology === 'urban') {
+        aHm = 3.2 * Math.pow(Math.log10(11.75*hm), 2) - 4.97;
+      } else {
+        aHm = (1.1*Math.log10(fc) - 0.7)*hm - (1.56*Math.log10(fc) - 0.8);
+      }
+      let L = 69.55 + 26.16*Math.log10(fc) - 13.82*Math.log10(hb) - aHm
+              + (44.9 - 6.55*Math.log10(hb))*Math.log10(d);
+      // corrections
+      if (morphology === 'suburban') L -= 2*Math.pow(Math.log10(fc/28),2) - 5.4;
+      else if (morphology === 'rural' || morphology === 'open') L -= 4.78*Math.pow(Math.log10(fc),2) + 18.33*Math.log10(fc) - 40.94;
+      return L;
+    }
+
+    case 'cost231-hata': {
+      // valid 1500-2000 MHz
+      const fc = Math.min(Math.max(f, 1500), 2000);
+      let aHm;
+      if (morphology === 'dense-urban' || morphology === 'urban') {
+        aHm = 3.2 * Math.pow(Math.log10(11.75*hm), 2) - 4.97;
+      } else {
+        aHm = (1.1*Math.log10(fc) - 0.7)*hm - (1.56*Math.log10(fc) - 0.8);
+      }
+      const Cm = (morphology === 'dense-urban' || morphology === 'urban') ? 3 : 0;
+      return 46.3 + 33.9*Math.log10(fc) - 13.82*Math.log10(hb) - aHm
+             + (44.9 - 6.55*Math.log10(hb))*Math.log10(d) + Cm;
+    }
+
+    case '3gpp-uma': {
+      // TR 38.901 UMa LOS/NLOS simplified
+      const fc_ghz = f / 1000;
+      const d3d = Math.sqrt(d*d*1e6 + (hb-hm)*(hb-hm)) / 1000; // in km
+      const dkm = Math.max(d3d, 0.01);
+      // NLOS
+      const PL = 13.54 + 39.08*Math.log10(dkm*1000) + 20*Math.log10(fc_ghz) - 0.6*(hm-1.5);
+      return Math.max(PL, pathLoss('fspl', f, d, hb, hm, morphology));
+    }
+
+    case '3gpp-umi': {
+      const fc_ghz = f / 1000;
+      const dm = d * 1000;
+      const PL = 22.4 + 35.3*Math.log10(Math.max(dm,10)) + 21.3*Math.log10(fc_ghz) - 0.3*(hm-1.5);
+      return Math.max(PL, pathLoss('fspl', f, d, hb, hm, morphology));
+    }
+
+    case '3gpp-rma': {
+      const fc_ghz = f / 1000;
+      const dm = d * 1000;
+      const PL = 20.478 + 31.3*Math.log10(Math.max(dm,10)) + 20*Math.log10(fc_ghz);
+      return Math.max(PL, pathLoss('fspl', f, d, hb, hm, morphology));
+    }
+
+    case 'cost231-wim': {
+      // simplified Walfisch-Ikegami NLOS
+      const Lfs = 32.44 + 20*Math.log10(f) + 20*Math.log10(d);
+      const Lrts = -16.9 - 10*Math.log10(Math.max(val('bandwidth'),1)) + 10*Math.log10(f) + 20*Math.log10(Math.max(15-hm,1));
+      const Lmsd = -18*Math.log10(1 + Math.max(hb-15,0)) + 54 + 18*Math.log10(d) + (morphology === 'dense-urban' ? 4 : -4);
+      return Lfs + Math.max(Lrts + Lmsd, 0);
+    }
+
+    case 'sui': {
+      // Stanford University Interim
+      const A = morphology === 'dense-urban' ? 4.6 : (morphology === 'suburban' ? 4.0 : 3.6);
+      const B = morphology === 'dense-urban' ? 0.0075 : (morphology === 'suburban' ? 0.0065 : 0.005);
+      const C = morphology === 'dense-urban' ? 12.6 : (morphology === 'suburban' ? 17.1 : 20.0);
+      const d0 = 0.1; // 100m ref
+      const gamma = A - B*hb + C/hb;
+      const Xf = 6*Math.log10(f/2000);
+      const Xh = -10.8*Math.log10(hm/2);
+      return 20*Math.log10(4*Math.PI*d0*1000/(300/f)) + 10*gamma*Math.log10(d/d0) + Xf + Xh;
+    }
+
+    case 'ecc33': {
+      const Afs = 92.4 + 20*Math.log10(d) + 20*Math.log10(f/1000);
+      const Abm = 20.41 + 9.83*Math.log10(d) + 7.894*Math.log10(f/1000) + 9.56*Math.pow(Math.log10(f/1000),2);
+      const Gb = Math.log10(hb/200) * (13.958 + 5.8*Math.pow(Math.log10(d),2));
+      const Gm = (42.57 + 13.7*Math.log10(f/1000)) * (Math.log10(hm) - 0.585);
+      return Afs + Abm - Gb - Gm;
+    }
+
+    case 'itu-r-p1411': {
+      // short range outdoor
+      const dm = d * 1000;
+      const Lbp = Math.abs(20*Math.log10(Math.pow(300/f, 2) / (8*Math.PI*hb*hm)));
+      const dbp = 4*hb*hm*f*1e6 / 3e8;
+      if (dm < dbp) {
+        return 20*Math.log10(4*Math.PI*dm/(300/f));
+      } else {
+        return Lbp + 40*Math.log10(dm/dbp);
+      }
+    }
+
+    default:
+      return 32.44 + 20*Math.log10(f) + 20*Math.log10(d);
+  }
+}
+
+// ---- Modulation specs ----
+const MOD_SPECS = {
+  'gmsk': { se: 0.27, snr: 6 },
+  '8psk': { se: 0.59, snr: 10 },
+  'qpsk': { se: 0.88, snr: 2 },
+  '16qam': { se: 1.76, snr: 10 },
+  '64qam': { se: 2.73, snr: 16 },
+  '256qam': { se: 3.61, snr: 22 },
+  '1024qam': { se: 4.41, snr: 28 }
+};
+
+// ---- Simulation ----
+function runSimulation() {
+  saveCurrentErbConfig();
+  const freq = parseFloat($('band').value);
+  const bw = val('bandwidth');
+  const txPow = val('tx-power');
+  const txGain = val('tx-gain');
+  const cableLoss = val('cable-loss');
+  const hb = val('ant-height');
+  const hm = val('ue-height');
+  const ueGain = val('ue-gain');
+  const bodyLoss = val('body-loss');
+  const nf = val('ue-nf');
+  const fadeMargin = val('fade-margin');
+  const indoorLoss = val('indoor-loss');
+  const foliageLoss = val('foliage-loss');
+  const model = $('prop-model').value;
+  const morph = $('morphology').value;
+  const mod = $('modulation').value;
+  const mimoStr = $('mimo').value;
+  const sectors = parseInt($('sectors').value);
+
+  // EIRP
+  const eirp = txPow + txGain - cableLoss;
+  const eirpW = Math.pow(10, eirp/10) / 1000;
+
+  // Noise floor
+  const thermalNoise = -174 + 10*Math.log10(bw * 1e6); // dBm
+  const noiseFloor = thermalNoise + nf;
+
+  // SNR required
+  const modSpec = MOD_SPECS[mod] || MOD_SPECS['64qam'];
+  const snrReq = modSpec.snr;
+
+  // Sensitivity
+  const sensitivity = noiseFloor + snrReq;
+  setVal('sensitivity', sensitivity.toFixed(1));
+
+  // MAPL (Maximum Allowable Path Loss)
+  const mapl = eirp + ueGain - bodyLoss - fadeMargin - indoorLoss - foliageLoss - sensitivity;
+
+  // Path loss at reference distances
+  const pl1km = pathLoss(model, freq, 1, hb, hm, morph);
+
+  // Estimate cell radius: find distance where PL = MAPL
+  let cellRadius = 0.1;
+  for (let d = 0.1; d <= 50; d += 0.05) {
+    const pl = pathLoss(model, freq, d, hb, hm, morph);
+    if (pl > mapl) { cellRadius = d; break; }
+    cellRadius = d;
+  }
+
+  const plEdge = pathLoss(model, freq, cellRadius, hb, hm, morph);
+  const cellArea = Math.PI * cellRadius * cellRadius;
+  const totalArea = cellArea * erbs.length;
+
+  // Wavelength
+  const wavelength = 300 / freq;
+
+  // Fresnel zone r1 at 1km
+  const fresnel1km = Math.sqrt(wavelength * 500);
+
+  // MIMO gain
+  const mimoGain = parseInt(mimoStr.split('x')[0]) || 1;
+
+  // Capacity
+  const se_peak = modSpec.se * mimoGain;
+  const se_edge = modSpec.se * 0.3 * Math.min(mimoGain, 4);
+  const tput_peak = se_peak * bw;
+  const tput_edge = se_edge * bw;
+
+  // PRBs (LTE: 12 subcarriers × 180kHz per PRB, 15kHz SCS)
+  const scs = freq >= 3000 ? 30 : 15; // kHz
+  const prbBw = 12 * scs / 1000; // MHz per PRB
+  const numPRBs = Math.floor(bw / prbBw);
+  const subcarriers = numPRBs * 12;
+  const estUsers = Math.floor(numPRBs / 4) * sectors;
+
+  // Coverage quality percentages (simplified)
+  const thrGood = val('thr-good');
+  const thrMid = val('thr-mid');
+  const thrWeak = val('thr-weak');
+
+  // Estimate coverage tiers by distance
+  let dGood = 0, dMid = 0, dWeak = cellRadius;
+  for (let d = 0.05; d <= cellRadius; d += 0.05) {
+    const rsrp = eirp - pathLoss(model, freq, d, hb, hm, morph) - bodyLoss;
+    if (rsrp >= thrGood) dGood = d;
+    if (rsrp >= thrMid) dMid = d;
+  }
+  const pctGood = cellRadius > 0 ? Math.min(100, (dGood*dGood)/(cellRadius*cellRadius)*100) : 0;
+  const pctMid = cellRadius > 0 ? Math.min(100, (dMid*dMid)/(cellRadius*cellRadius)*100) : 0;
+  const pctWeak = 100;
+
+  // ---- Update UI ----
+  $('r-eirp').innerHTML = eirp.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-eirp-w').innerHTML = (eirpW > 1 ? eirpW.toFixed(1) : (eirpW*1000).toFixed(0) + 'm') + '<span class="unit">W</span>';
+  $('r-pl1').innerHTML = pl1km.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-plmax').innerHTML = plEdge.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-fade').innerHTML = fadeMargin.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-indoor').innerHTML = indoorLoss.toFixed(1) + '<span class="unit">dB</span>';
+
+  const maplClass = mapl > 140 ? 'good' : (mapl > 120 ? 'acc' : (mapl > 100 ? 'warn' : 'bad'));
+  $('r-mapl').className = 'v ' + maplClass;
+  $('r-mapl').innerHTML = mapl.toFixed(1) + '<span class="unit">dB</span>';
+
+  $('r-cellrad').innerHTML = cellRadius.toFixed(2) + '<span class="unit">km</span>';
+  $('r-cellarea').innerHTML = cellArea.toFixed(2) + '<span class="unit">km²</span>';
+  $('r-totalarea').innerHTML = totalArea.toFixed(2) + '<span class="unit">km²</span>';
+  $('r-covgood').innerHTML = pctGood.toFixed(1) + '<span class="unit">%</span>';
+  $('r-covmid').innerHTML = pctMid.toFixed(1) + '<span class="unit">%</span>';
+  $('r-covweak').innerHTML = (pctWeak - pctMid).toFixed(1) + '<span class="unit">%</span>';
+
+  const covPct = pctMid;
+  const gCls = covPct > 70 ? 'good' : (covPct > 40 ? 'warn' : 'bad');
+  $('gauge-cov-fill').className = 'gauge-fill ' + gCls;
+  $('gauge-cov-fill').style.width = covPct + '%';
+  $('gauge-cov-label').textContent = covPct.toFixed(0) + '% media+';
+
+  $('r-tput-peak').innerHTML = tput_peak.toFixed(1) + '<span class="unit">Mbps</span>';
+  $('r-tput-edge').innerHTML = tput_edge.toFixed(1) + '<span class="unit">Mbps</span>';
+  $('r-se-peak').innerHTML = se_peak.toFixed(2) + '<span class="unit">bps/Hz</span>';
+  $('r-se-edge').innerHTML = se_edge.toFixed(2) + '<span class="unit">bps/Hz</span>';
+  $('r-prbs').textContent = numPRBs;
+  $('r-subcarriers').textContent = subcarriers;
+  $('r-mimo-gain').innerHTML = mimoGain + '<span class="unit">×</span>';
+  $('r-users').textContent = estUsers;
+
+  $('r-wavelength').innerHTML = (wavelength > 0.01 ? wavelength.toFixed(4) : (wavelength*1000).toFixed(2) + 'm') + '<span class="unit">m</span>';
+  $('r-thermal').innerHTML = thermalNoise.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-noisefloor').innerHTML = noiseFloor.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-snr-req').innerHTML = snrReq.toFixed(1) + '<span class="unit">dB</span>';
+  $('r-sens-calc').innerHTML = sensitivity.toFixed(1) + '<span class="unit">dBm</span>';
+  $('r-fresnel').innerHTML = fresnel1km.toFixed(2) + '<span class="unit">m</span>';
+
+  // Header updates
+  $('hdr-status').textContent = 'ACTIVE';
+  $('hdr-status').style.color = 'var(--phos)';
+  $('hdr-range') && ($('hdr-range').textContent = cellRadius.toFixed(1));
+  $('hdr-cov').innerHTML = pctMid.toFixed(0) + '<span class="unit">%</span>';
+  $('map-cov-pct').textContent = pctMid.toFixed(0) + '%';
+  $('map-cov-pct').className = 'big ' + gCls;
+
+  // Link status
+  const linkOk = mapl > pl1km;
+  $('r-link-dot').className = 'live-dot' + (linkOk ? '' : ' off');
+  $('r-link-status').textContent = linkOk ? 'LINK OK' : 'MARGEM INSUF.';
+  $('r-link-status').className = 'v ' + (linkOk ? 'good' : 'bad');
+
+  // Draw charts
+  drawPropChart(model, freq, hb, hm, morph, cellRadius);
+  drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak);
+
+  // Draw heatmap on map
+  if (erbs.length > 0) {
+    drawHeatmap(model, freq, hb, hm, morph, eirp, bodyLoss, thrGood, thrMid, thrWeak, cellRadius);
+    drawSectors(cellRadius);
+  }
+}
+
+// ---- Heatmap ----
+function drawHeatmap(model, freq, hb, hm, morph, eirp, bodyLoss, thrGood, thrMid, thrWeak, cellRadius) {
+  clearHeatmap();
+  if (!heatmapVisible) return;
+
+  const resolution = parseInt($('hm-resolution').value);
+  const opacity = parseFloat($('hm-opacity').value);
+  const radiusM = cellRadius * 1000;
+
+  const rects = [];
+  const stepDeg = resolution / 111320; // approx meters to degrees
+
+  erbs.forEach(erb => {
+    const cLat = erb.lat;
+    const cLng = erb.lng;
+    const erbEirp = erb.txPower + erb.txGain - erb.cableLoss;
+    const stepsR = Math.ceil(radiusM / resolution);
+
+    for (let i = -stepsR; i <= stepsR; i++) {
+      for (let j = -stepsR; j <= stepsR; j++) {
+        const pLat = cLat + i * stepDeg;
+        const pLng = cLng + j * stepDeg / Math.cos(cLat * Math.PI / 180);
+
+        const dLat = (pLat - cLat) * 111320;
+        const dLng = (pLng - cLng) * 111320 * Math.cos(cLat * Math.PI / 180);
+        const distM = Math.sqrt(dLat*dLat + dLng*dLng);
+        const distKm = distM / 1000;
+
+        if (distKm > cellRadius * 1.2) continue;
+
+        const pl = pathLoss(model, parseFloat(erb.band), Math.max(distKm, 0.01), erb.antHeight, hm, morph);
+        const rsrp = erbEirp - pl - bodyLoss;
+
+        let color;
+        if (rsrp >= thrGood) color = 'rgba(74,222,128,' + opacity + ')';
+        else if (rsrp >= thrMid) color = 'rgba(251,191,36,' + (opacity*0.8) + ')';
+        else if (rsrp >= thrWeak) color = 'rgba(251,113,133,' + (opacity*0.6) + ')';
+        else continue;
+
+        const halfStep = stepDeg / 2;
+        const halfStepLng = halfStep / Math.cos(cLat * Math.PI / 180);
+        rects.push(L.rectangle(
+          [[pLat - halfStep, pLng - halfStepLng], [pLat + halfStep, pLng + halfStepLng]],
+          { color: 'transparent', fillColor: color.replace(/rgba?\([^)]+\)/, function(m) {
+            return m;
+          }), fillOpacity: 1, weight: 0, fillColor: color, className: 'hm-cell' }
+        ));
+      }
+    }
+  });
+
+  // Best server: for overlapping, we already just layer them
+  heatmapLayer = L.layerGroup(rects).addTo(map);
+}
+
+function clearHeatmap() {
+  if (heatmapLayer) { map.removeLayer(heatmapLayer); heatmapLayer = null; }
+}
+
+function toggleHeatmap() {
+  heatmapVisible = !heatmapVisible;
+  $('btn-toggle-hm').classList.toggle('active', heatmapVisible);
+  if (!heatmapVisible) clearHeatmap();
+}
+
+// ---- Sectors ----
+function drawSectors(cellRadius) {
+  sectorLayers.forEach(l => map.removeLayer(l));
+  sectorLayers = [];
+  if (!sectorsVisible) return;
+
+  erbs.forEach(erb => {
+    const numSec = erb.sectors;
+    const secWidth = 360 / numSec;
+    const baseAz = erb.azimuth || 0;
+
+    for (let s = 0; s < numSec; s++) {
+      const startAngle = baseAz + s * secWidth - secWidth/2;
+      const endAngle = startAngle + secWidth;
+      // Draw sector as a polygon
+      const pts = [[erb.lat, erb.lng]];
+      const steps = 20;
+      for (let i = 0; i <= steps; i++) {
+        const angle = (startAngle + i * (endAngle - startAngle) / steps) * Math.PI / 180;
+        const dLat = cellRadius / 111.32 * Math.cos(angle - Math.PI/2);
+        const dLng = cellRadius / (111.32 * Math.cos(erb.lat * Math.PI/180)) * Math.sin(angle - Math.PI/2);
+        // Convert: 0° = North, CW
+        const lat = erb.lat + cellRadius/111.32 * Math.cos((startAngle + i*(endAngle-startAngle)/steps) * Math.PI/180);
+        const lng = erb.lng + cellRadius/(111.32*Math.cos(erb.lat*Math.PI/180)) * Math.sin((startAngle + i*(endAngle-startAngle)/steps) * Math.PI/180);
+        pts.push([lat, lng]);
+      }
+      pts.push([erb.lat, erb.lng]);
+
+      const sector = L.polygon(pts, {
+        color: 'rgba(239,68,68,0.5)', weight: 1,
+        fillColor: 'rgba(239,68,68,0.08)', fillOpacity: 1,
+        dashArray: '4 4'
+      }).addTo(map);
+      sectorLayers.push(sector);
+    }
+  });
+}
+
+function toggleSectors() {
+  sectorsVisible = !sectorsVisible;
+  $('btn-toggle-sectors').classList.toggle('active', sectorsVisible);
+  if (!sectorsVisible) { sectorLayers.forEach(l => map.removeLayer(l)); sectorLayers = []; }
+}
+
+// ---- Charts (Canvas) ----
+function drawPropChart(model, freq, hb, hm, morph, cellRadius) {
+  const canvas = $('prop-chart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width - 16;
+  canvas.height = rect.height - 12;
+  const W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const maxDist = Math.max(cellRadius * 1.5, 2);
+  const dists = [];
+  const losses = [];
+  const fsplLosses = [];
+  for (let d = 0.05; d <= maxDist; d += maxDist/100) {
+    dists.push(d);
+    losses.push(pathLoss(model, freq, d, hb, hm, morph));
+    fsplLosses.push(pathLoss('fspl', freq, d, hb, hm, morph));
+  }
+
+  const minL = Math.min(...losses, ...fsplLosses) - 5;
+  const maxL = Math.max(...losses, ...fsplLosses) + 10;
+
+  const pad = { l: 50, r: 15, t: 10, b: 28 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  // Grid
+  ctx.strokeStyle = '#1e2838';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + (i/5) * cH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#6b7889';
+    ctx.font = '9px JetBrains Mono';
+    ctx.textAlign = 'right';
+    ctx.fillText((maxL - i*(maxL-minL)/5).toFixed(0), pad.l - 4, y + 3);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + (i/5) * cW;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
+    ctx.fillStyle = '#6b7889';
+    ctx.textAlign = 'center';
+    ctx.fillText((i*maxDist/5).toFixed(1), x, H - pad.b + 14);
+  }
+
+  // FSPL line
+  ctx.strokeStyle = '#3f4a5b';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  dists.forEach((d, i) => {
+    const x = pad.l + (d/maxDist) * cW;
+    const y = pad.t + ((maxL - fsplLosses[i])/(maxL - minL)) * cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Model line
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#ef444466';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  dists.forEach((d, i) => {
+    const x = pad.l + (d/maxDist) * cW;
+    const y = pad.t + ((maxL - losses[i])/(maxL - minL)) * cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Axis labels
+  ctx.fillStyle = '#6b7889';
+  ctx.font = '9px JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('Distância (km)', W/2, H - 2);
+  ctx.save();
+  ctx.translate(10, H/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText('Path Loss (dB)', 0, 0);
+  ctx.restore();
+}
+
+function drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak) {
+  const canvas = $('rsrp-chart');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width - 16;
+  canvas.height = rect.height - 12;
+  const W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const maxDist = Math.max(cellRadius * 1.5, 2);
+  const dists = [];
+  const rsrps = [];
+  for (let d = 0.05; d <= maxDist; d += maxDist/100) {
+    dists.push(d);
+    const pl = pathLoss(model, freq, d, hb, hm, morph);
+    rsrps.push(eirp - pl - bodyLoss);
+  }
+
+  const minR = Math.min(...rsrps, thrWeak) - 5;
+  const maxR = Math.max(...rsrps) + 5;
+
+  const pad = { l: 50, r: 15, t: 10, b: 28 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  // Grid
+  ctx.strokeStyle = '#1e2838'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.t + (i/5)*cH;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right';
+    ctx.fillText((maxR - i*(maxR-minR)/5).toFixed(0), pad.l-4, y+3);
+  }
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.l + (i/5)*cW;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center';
+    ctx.fillText((i*maxDist/5).toFixed(1), x, H-pad.b+14);
+  }
+
+  // Threshold lines
+  const thresholds = [
+    { val: thrGood, color: '#4ade80', label: 'Bom' },
+    { val: thrMid, color: '#fbbf24', label: 'Medio' },
+    { val: thrWeak, color: '#fb7185', label: 'Fraco' }
+  ];
+  thresholds.forEach(t => {
+    if (t.val >= minR && t.val <= maxR) {
+      const y = pad.t + ((maxR - t.val)/(maxR - minR))*cH;
+      ctx.strokeStyle = t.color + '66';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = t.color;
+      ctx.font = '8px JetBrains Mono';
+      ctx.textAlign = 'left';
+      ctx.fillText(t.label + ' ' + t.val, W-pad.r-55, y-3);
+    }
+  });
+
+  // RSRP curve
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#38bdf866';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  dists.forEach((d, i) => {
+    const x = pad.l + (d/maxDist)*cW;
+    const y = pad.t + ((maxR - rsrps[i])/(maxR - minR))*cH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Fill zones
+  ctx.globalAlpha = 0.06;
+  // Good zone
+  const yGood = pad.t + ((maxR - thrGood)/(maxR - minR))*cH;
+  ctx.fillStyle = '#4ade80';
+  ctx.fillRect(pad.l, pad.t, cW, yGood - pad.t);
+  // Mid zone
+  const yMid = pad.t + ((maxR - thrMid)/(maxR - minR))*cH;
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillRect(pad.l, yGood, cW, yMid - yGood);
+  // Weak zone
+  ctx.fillStyle = '#fb7185';
+  ctx.fillRect(pad.l, yMid, cW, cH + pad.t - yMid);
+  ctx.globalAlpha = 1;
+
+  // Axis labels
+  ctx.fillStyle = '#6b7889'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('Distância (km)', W/2, H-2);
+  ctx.save(); ctx.translate(10, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('RSRP (dBm)', 0, 0); ctx.restore();
+}
+
+// ---- Reset ----
+function resetAll() {
+  // Remove all ERBs
+  erbMarkers.forEach(m => map.removeLayer(m.marker));
+  erbMarkers = [];
+  sectorLayers.forEach(l => map.removeLayer(l));
+  sectorLayers = [];
+  clearHeatmap();
+  erbs = [];
+  erbIdCounter = 0;
+  selectedErbIdx = -1;
+  updateErbList();
+
+  $('hdr-erbs').textContent = '0';
+  $('hdr-status').textContent = 'STANDBY';
+  $('hdr-status').style.color = '';
+  $('hdr-cov').innerHTML = '--<span class="unit">%</span>';
+  $('map-cov-pct').textContent = '--';
+  $('map-cov-pct').className = 'big good';
+
+  // Clear results
+  ['r-eirp','r-eirp-w','r-pl1','r-plmax','r-fade','r-indoor','r-mapl',
+   'r-cellrad','r-cellarea','r-totalarea','r-covgood','r-covmid','r-covweak',
+   'r-tput-peak','r-tput-edge','r-se-peak','r-se-edge','r-prbs','r-subcarriers',
+   'r-mimo-gain','r-users','r-wavelength','r-thermal','r-noisefloor','r-snr-req',
+   'r-sens-calc','r-fresnel'].forEach(id => {
+    const el = $(id);
+    if (el) el.innerHTML = '--';
+  });
+  $('r-link-status').textContent = 'STANDBY';
+  $('r-link-status').className = 'v';
+  $('r-link-dot').className = 'live-dot standby';
+  $('gauge-cov-fill').style.width = '0%';
+  $('gauge-cov-label').textContent = '--';
+
+  // Clear charts
+  ['prop-chart','rsrp-chart'].forEach(id => {
+    const c = $(id);
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, c.width, c.height);
+  });
+}
+
+// ---- Footer timestamp ----
+function updateTimestamp() {
+  const now = new Date();
+  $('footer-ts').textContent = now.toISOString().replace('T',' ').substring(0,19) + ' UTC';
+}
+setInterval(updateTimestamp, 1000);
+updateTimestamp();
+
+// ---- Init ----
+onTechChange();
+onBandChange();
+onModelChange();
+
+// Auto-open first few sections, close others
+document.querySelectorAll('.section-head').forEach((el, i) => {
+  if (!el.classList.contains('open') && i < 4) {
+    // leave as is
+  }
+});
+
+// Resize handler for charts
+window.addEventListener('resize', () => {
+  if (erbs.length > 0 || $('hdr-status').textContent === 'ACTIVE') {
+    // re-run if active
+  }
+});
+</script>
+
+</body>
+</html>
