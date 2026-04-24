@@ -654,6 +654,9 @@ textarea {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .card-header .meta {
   font-family: var(--font-mono);
@@ -671,11 +674,19 @@ textarea {
 #skyplot { width: 100%; height: 100%; max-height: 220px; }
 
 .chart-card .card-body {
-  flex: 1;
+  flex: 1 1 0;
+  min-height: 0;
   position: relative;
   padding: 4px 6px 10px 6px;
+  overflow: hidden;
 }
-#linkchart { width: 100%; height: 100%; }
+#linkchart {
+  position: absolute;
+  inset: 4px 6px 10px 6px;
+  display: block;
+  width: auto;
+  height: auto;
+}
 
 /* ========== results panel (right) ========== */
 .kv {
@@ -1535,7 +1546,9 @@ footer a:hover { color: var(--phos); }
 
     <div class="chart-card">
       <div class="card-header">
-        <h3>Link Budget @ Passagem — Slant / Elev / Margem</h3>
+        <h3>Link Budget @ Passagem — Slant / Elev / Margem
+          <span class="tip" data-tip="Evolução temporal durante UMA passagem (AOS → LOS). Eixo esquerdo: elevação (°) e margem (dB). Eixo direito: slant range (km). A margem (verde/amarelo/vermelho) muda de cor conforme a qualidade do enlace. Mostra pedagogicamente que a margem não é constante durante a passagem: é pior perto do horizonte e melhor no TCA.">i</span>
+        </h3>
         <span class="meta" id="chart-meta">—</span>
       </div>
       <div class="card-body">
@@ -2623,11 +2636,24 @@ function initChart() {
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  const rect = chartCanvas.getBoundingClientRect();
-  chartCanvas.width = Math.max(100, rect.width * dpr);
-  chartCanvas.height = Math.max(80, rect.height * dpr);
-  chartCtx.setTransform(1, 0, 0, 1, 0, 0);
-  chartCtx.scale(dpr, dpr);
+  const parent = chartCanvas.parentElement; // .card-body
+  // measure the parent content area (stable), not the canvas itself
+  const rect = parent.getBoundingClientRect();
+  // subtract parent padding so canvas fits the inner content box
+  const cs = getComputedStyle(parent);
+  const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const padY = parseFloat(cs.paddingTop)  + parseFloat(cs.paddingBottom);
+  const cssW = Math.max(100, Math.floor(rect.width  - padX));
+  const cssH = Math.max(80,  Math.floor(rect.height - padY));
+  const targetW = Math.round(cssW * dpr);
+  const targetH = Math.round(cssH * dpr);
+  // only resize when actually different — avoids the feedback-loop growth
+  if (chartCanvas.width !== targetW || chartCanvas.height !== targetH) {
+    chartCanvas.width  = targetW;
+    chartCanvas.height = targetH;
+  }
+  // setTransform is reset when canvas dimensions change; re-apply dpr scale every call
+  chartCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function buildPassChartData(pass) {
@@ -2693,9 +2719,11 @@ function computeLBForSatState(sat) {
 function drawChart() {
   if (!chartCtx) return;
   resizeCanvas();
-  const rect = chartCanvas.getBoundingClientRect();
-  const W = rect.width, H = rect.height;
-  const padL = 40, padR = 40, padT = 12, padB = 22;
+  const dpr = window.devicePixelRatio || 1;
+  // working in CSS pixels because we applied setTransform(dpr, 0, 0, dpr, 0, 0)
+  const W = chartCanvas.width  / dpr;
+  const H = chartCanvas.height / dpr;
+  const padL = 40, padR = 50, padT = 14, padB = 22;
   const cx = chartCtx;
   cx.clearRect(0, 0, W, H);
 
