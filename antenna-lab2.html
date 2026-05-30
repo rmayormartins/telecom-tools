@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Antenna Lab 2 — NEC Core (Method of Moments)</title>
+<meta name="description" content="Laboratorio de antenas baseado em Metodo dos Momentos (NEC-like): modela fios em 3D, resolve correntes, impedancia, SWR, ganho e diagramas." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+  --orange: #f97316;
+  --teal: #2dd4bf;
+  --magenta: #e879f9;
+  --magenta-soft: #701a7540;
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%,#1a0d24 0%,transparent 60%),
+    radial-gradient(800px 400px at -10% 100%,#0d1a1f 0%,transparent 55%),
+    var(--bg-0);
+  color:var(--text-0);font-family:var(--font-body);font-size:13px;
+  overflow:hidden;letter-spacing:0.01em;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    linear-gradient(to right,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(to bottom,rgba(255,255,255,0.012) 1px,transparent 1px) 0 0/48px 48px;
+  pointer-events:none;z-index:0;
+}
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto 1fr auto;height:100vh;}
+
+/* HEADER */
+header.top-bar{
+  display:flex;align-items:center;gap:20px;padding:10px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.95),rgba(10,14,20,0.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand .logo-mark{
+  display:inline-flex;width:30px;height:30px;
+  align-items:center;justify-content:center;position:relative;
+}
+.brand .logo-mark::before{
+  content:'';position:absolute;inset:0;
+  border:1.5px solid var(--magenta);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite;
+}
+.brand .logo-mark::after{
+  content:'';position:absolute;width:2px;height:14px;
+  background:var(--magenta);border-radius:1px;
+  box-shadow:0 0 10px var(--magenta),0 -8px 0 var(--magenta);
+  top:4px;
+}
+.brand .logo-mark .wave1{
+  position:absolute;width:20px;height:20px;inset:5px;
+  border:1px solid rgba(232,121,249,0.3);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite 0.2s;
+}
+.brand .logo-mark .wave2{
+  position:absolute;inset:-4px;
+  border:1px solid rgba(232,121,249,0.15);border-radius:50%;
+  animation:pulse-ant 2.8s ease-in-out infinite 0.5s;
+}
+@keyframes pulse-ant{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.15);opacity:0.3;}
+}
+.brand h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:0.18em;}
+.brand .tag{color:var(--text-2);font-size:10px;letter-spacing:0.25em;text-transform:uppercase;}
+.brand .tag em{font-style:italic;font-family:var(--font-serif);font-size:13px;color:var(--magenta);letter-spacing:0.04em;}
+
+.top-stats{display:flex;gap:18px;margin-left:auto;font-family:var(--font-mono);font-size:11px;}
+.top-stat{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--border);}
+.top-stat:last-child{border-right:none;padding-right:0;}
+.top-stat .label{color:var(--text-2);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;}
+.top-stat .value{color:var(--text-0);font-weight:500;}
+.top-stat.live .value{color:var(--phos);}
+.top-stat .value .unit{color:var(--text-2);margin-left:4px;font-weight:300;}
+
+.btn{
+  background:var(--bg-2);color:var(--text-0);border:1px solid var(--border-strong);
+  padding:7px 14px;border-radius:var(--radius);font-family:var(--font-display);
+  font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{background:var(--bg-3);border-color:var(--text-2);}
+.btn.primary{
+  background:linear-gradient(180deg,#4a1a5e,#2d0f3a);
+  border-color:var(--magenta);color:var(--magenta);
+  box-shadow:0 0 0 1px rgba(232,121,249,0.2),inset 0 1px 0 rgba(232,121,249,0.12);
+}
+.btn.primary:hover{background:linear-gradient(180deg,#5e2272,#3a1548);}
+
+/* MAIN */
+main{
+  display:grid;grid-template-columns:330px 1fr 320px;
+  gap:1px;background:var(--border-soft);min-height:0;
+}
+.panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.35),rgba(30,40,56,0.1));
+  position:sticky;top:0;z-index:3;
+}
+.panel-header h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-0);}
+.panel-header .panel-sub{font-family:var(--font-mono);font-size:10px;color:var(--text-2);letter-spacing:0.06em;}
+.panel-body{
+  flex:1;min-height:0;overflow-y:auto;padding:14px;
+  scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar{width:6px;}
+.panel-body::-webkit-scrollbar-track{background:transparent;}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+
+/* SECTIONS */
+.section{border:1px solid var(--border);background:var(--bg-1);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.section-head{
+  display:flex;align-items:center;padding:9px 12px;cursor:pointer;
+  background:linear-gradient(180deg,#141a25,#0d121a);
+  border-bottom:1px solid transparent;transition:background .15s;user-select:none;
+}
+.section-head:hover{background:#151c28;}
+.section-head.open{border-bottom-color:var(--border);}
+.section-head h3{
+  margin:0 auto 0 0;font-family:var(--font-display);font-weight:500;
+  font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-1);display:flex;align-items:center;gap:8px;
+}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;}
+.dot.magenta{background:var(--magenta);box-shadow:0 0 6px var(--magenta);}
+.dot.green{background:var(--phos);box-shadow:0 0 6px var(--phos);}
+.dot.cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot.amber{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.dot.violet{background:var(--violet);box-shadow:0 0 6px var(--violet);}
+.dot.rose{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.dot.teal{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.chev{color:var(--text-2);font-family:var(--font-mono);font-size:11px;transition:transform .2s;}
+.section-head.open .chev{transform:rotate(90deg);}
+.section-body{padding:12px;display:none;}
+.section-body.open{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* FORM */
+.field{margin-bottom:10px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.field label,.field-row label,.field-row-3 label{
+  display:flex;align-items:center;gap:6px;font-size:10px;
+  font-family:var(--font-display);letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--text-2);margin-bottom:4px;
+}
+input[type="number"],input[type="text"],select,textarea{
+  width:100%;background:var(--bg-0);color:var(--text-0);
+  border:1px solid var(--border);padding:7px 10px;border-radius:var(--radius);
+  font-family:var(--font-mono);font-size:12px;transition:border-color .15s,background .15s;
+}
+input[type="number"]:focus,input[type="text"]:focus,select:focus,textarea:focus{
+  outline:none;border-color:var(--magenta);background:#090d13;
+  box-shadow:0 0 0 2px rgba(232,121,249,0.15);
+}
+select{
+  appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-2) 50%),
+                   linear-gradient(135deg,var(--text-2) 50%,transparent 50%);
+  background-position:right 10px top 50%,right 6px top 50%;
+  background-size:4px 4px;background-repeat:no-repeat;padding-right:24px;
+}
+.help{font-size:10px;color:var(--text-2);margin-top:3px;line-height:1.4;font-family:var(--font-mono);}
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border:1px solid var(--border-strong);
+  border-radius:50%;color:var(--text-2);font-family:var(--font-serif);
+  font-style:italic;font-size:10px;cursor:help;position:relative;
+}
+.tip:hover{color:var(--magenta);border-color:var(--magenta);}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);width:240px;background:var(--bg-3);
+  border:1px solid var(--border-strong);color:var(--text-1);
+  padding:8px 10px;border-radius:var(--radius);font-family:var(--font-body);
+  font-size:10.5px;font-style:normal;letter-spacing:0;text-transform:none;
+  line-height:1.5;opacity:0;pointer-events:none;transition:opacity .15s;
+  z-index:100;box-shadow:0 6px 20px rgba(0,0,0,0.5);text-align:left;white-space:normal;
+}
+.tip:hover::after{opacity:1;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{
+  padding:5px 10px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10.5px;
+  cursor:pointer;transition:all .15s;color:var(--text-1);
+}
+.chip:hover{border-color:var(--text-2);color:var(--text-0);}
+.chip.active{background:var(--magenta-soft);border-color:var(--magenta);color:var(--magenta);}
+
+/* VIZ AREA */
+.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;}
+.viz-top{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
+.viz-bottom{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
+.viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
+.viz-cell .card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(30,40,56,0.3),transparent);
+  flex-shrink:0;
+}
+.viz-cell .card-header h3{
+  margin:0;font-family:var(--font-display);font-weight:500;
+  font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-1);
+}
+.viz-cell .card-header .meta{font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+.viz-cell .card-body{flex:1;position:relative;min-height:0;}
+.viz-cell canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+
+/* tab controls in viz */
+.viz-tabs{display:flex;gap:1px;padding:0;margin:0;}
+.viz-tab{
+  background:var(--bg-2);color:var(--text-2);border:none;
+  padding:4px 10px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:0.06em;cursor:pointer;transition:all .15s;
+}
+.viz-tab:hover{color:var(--text-0);}
+.viz-tab.active{background:var(--magenta-soft);color:var(--magenta);}
+
+/* RESULTS PANEL */
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:5px 0;border-bottom:1px dashed var(--border);}
+.kv:last-child{border-bottom:none;}
+.kv .k{font-family:var(--font-display);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+.kv .v{font-family:var(--font-mono);font-size:12px;color:var(--text-0);text-align:right;white-space:nowrap;}
+.kv .v .unit{color:var(--text-2);margin-left:3px;font-weight:300;font-size:10px;}
+.kv .v.good{color:var(--phos);}
+.kv .v.warn{color:var(--amber);}
+.kv .v.bad{color:var(--rose);}
+.kv .v.acc{color:var(--cyan);}
+.kv .v.mag{color:var(--magenta);}
+.live-dot{display:inline-block;width:6px;height:6px;background:var(--phos);border-radius:50%;box-shadow:0 0 6px var(--phos);animation:blink 1.6s ease-in-out infinite;}
+@keyframes blink{50%{opacity:0.3;}}
+.live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
+.live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+
+.gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
+.gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
+.gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
+.gauge-fill.warn{background:linear-gradient(90deg,#78350f,var(--amber));box-shadow:0 0 8px var(--amber-glow);}
+.gauge-fill.bad{background:linear-gradient(90deg,#7f1d1d,var(--rose));}
+.gauge-label{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:8px;color:var(--text-0);
+  letter-spacing:0.08em;text-shadow:0 0 4px rgba(0,0,0,0.8);
+}
+
+.info-box{
+  margin:8px 0;padding:8px 10px;background:rgba(232,121,249,0.04);
+  border:1px solid var(--border);border-left:3px solid var(--magenta);
+  border-radius:var(--radius);font-family:var(--font-mono);font-size:10px;
+  line-height:1.55;color:var(--text-1);
+}
+.info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
+.info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
+.info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box strong{color:var(--text-0);}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+/* dimension diagram */
+.dim-diagram{
+  margin:8px 0;padding:12px;background:var(--bg-0);
+  border:1px solid var(--border);border-radius:var(--radius);
+  text-align:center;
+}
+.dim-diagram canvas{max-width:100%;height:auto;}
+
+footer{
+  padding:6px 18px;
+  background:linear-gradient(180deg,rgba(10,14,20,0.7),rgba(10,14,20,0.95));
+  border-top:1px solid var(--border);font-family:var(--font-mono);font-size:10px;
+  color:var(--text-2);display:flex;align-items:center;justify-content:space-between;
+}
+footer .author{display:flex;align-items:center;gap:8px;}
+footer .author a{color:var(--magenta);text-decoration:none;}
+footer .author a:hover{text-decoration:underline;}
+footer .ts{color:var(--text-3);}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+</style>
+<style>
+.wire-table{display:flex;flex-direction:column;gap:3px;font-family:var(--font-mono);}
+.wt-row{display:grid;grid-template-columns:18px repeat(7,1fr) 38px 22px;gap:3px;align-items:center;}
+.wt-head{color:var(--text-2);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:0 2px;}
+.wt-row input{padding:4px 4px;font-size:10.5px;border-radius:3px;}
+.wt-idx{color:var(--magenta);font-size:10px;text-align:center;}
+.wt-del{background:var(--bg-2);border:1px solid var(--border-strong);color:var(--rose);border-radius:3px;cursor:pointer;font-size:13px;line-height:1;padding:2px 0;}
+.wt-del:hover{background:var(--rose-soft);}
+</style>
+</head>
+<body>
+
+<div class="app">
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"><span class="wave1"></span><span class="wave2"></span></span>
+    <h1>ANTENNA LAB 2</h1>
+    <span class="tag"><em>NEC Core</em> &middot; Method of Moments</span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live"><span class="label">Status</span><span class="value" id="hdr-status">STANDBY</span></div>
+    <div class="top-stat"><span class="label">Frequencia</span><span class="value" id="hdr-freq">145.00<span class="unit">MHz</span></span></div>
+    <div class="top-stat"><span class="label">Zin</span><span class="value" id="hdr-zin">--</span></div>
+    <div class="top-stat"><span class="label">SWR</span><span class="value" id="hdr-swr">--</span></div>
+    <div class="top-stat"><span class="label">Ganho</span><span class="value" id="hdr-gain">--<span class="unit">dBi</span></span></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" onclick="runNEC()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg> Resolver</button>
+    <button class="btn" onclick="exportNEC()">Export .nec</button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<main>
+<!-- LEFT -->
+<div class="panel">
+  <div class="panel-header"><h2>Modelo</h2><span class="panel-sub">FIOS / FONTE / SOLO</span></div>
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot magenta"></span>Modelos Prontos</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="chips" id="tpl-chips">
+          <span class="chip active" data-tpl="dipole" onclick="loadTemplate('dipole')">Dipolo &lambda;/2</span>
+          <span class="chip" data-tpl="twoel" onclick="loadTemplate('twoel')">2 elementos</span>
+          <span class="chip" data-tpl="yagi3" onclick="loadTemplate('yagi3')">Yagi 3-el</span>
+          <span class="chip" data-tpl="invv" onclick="loadTemplate('invv')">Inverted-V</span>
+          <span class="chip" data-tpl="quad" onclick="loadTemplate('quad')">Quad Loop</span>
+          <span class="chip" data-tpl="dipoleGnd" onclick="loadTemplate('dipoleGnd')">Dipolo /solo</span>
+        </div>
+        <div class="info-box">Motor proprio de <strong>Metodo dos Momentos</strong> (EFIE de fio fino, base rooftop). Resolve a corrente em cada segmento e deriva Zin, SWR, ganho e diagrama. Complementa o Lab 1 (modelos analiticos).</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot cyan"></span>Frequencia &amp; Solo</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="field-row-3">
+          <div class="field"><label>Freq (MHz)</label><input type="number" id="freq" value="145" step="0.1" onchange="runNEC()"></div>
+          <div class="field"><label>Z0 (&ohm;)</label><input type="number" id="z0" value="50" step="1" onchange="runNEC()"></div>
+          <div class="field"><label>Unidade</label>
+            <select id="unit-sel" onchange="unit=this.value;renderWireTable();"><option value="lambda">&lambda;</option><option value="m">metros</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Solo <span class="tip" data-tip="Espaco livre, ou solo perfeito (PEC) por teoria das imagens — afeta o diagrama (lobos/angulo de partida) e a impedancia de antenas elevadas.">i</span></label>
+          <select id="ground" onchange="runNEC()"><option value="free">Espaco Livre</option><option value="pec">Solo Perfeito (PEC, imagens)</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot green"></span>Geometria dos Fios <span style="color:var(--text-2)">(<span id="unit-lbl">&lambda;</span>)</span></h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="wire-table" id="wire-table"></div>
+        <button class="btn" style="width:100%;margin-top:8px;" onclick="addWire()">+ Adicionar Fio</button>
+        <p class="help">Coordenadas dos extremos (X1,Y1,Z1)\u2192(X2,Y2,Z2), raio do condutor <em>r</em>, e n. de segmentos. Para acoplar (Yagi) use varios fios. Dica: ~10-20 seg por &lambda;/2.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot amber"></span>Fonte (Excitacao)</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <p class="help" style="margin-top:0;">Gap de tensao 1 V no no mais proximo deste ponto:</p>
+        <div class="field-row-3">
+          <div class="field"><label>X</label><input type="number" id="feed-x" value="0" step="0.001" onchange="runNEC()"></div>
+          <div class="field"><label>Y</label><input type="number" id="feed-y" value="0" step="0.001" onchange="runNEC()"></div>
+          <div class="field"><label>Z</label><input type="number" id="feed-z" value="0" step="0.001" onchange="runNEC()"></div>
+        </div>
+        <div class="chips" id="feed-chips"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CENTER -->
+<div class="panel viz">
+  <div class="viz-top">
+    <div class="viz-cell">
+      <div class="card-header"><h3>Geometria &amp; Corrente / Padrao 3D</h3>
+        <div class="viz-tabs" id="d3-tabs">
+          <button class="viz-tab active" onclick="set3DMode('geom',this)">Fios</button>
+          <button class="viz-tab" onclick="set3DMode('pattern',this)">Padrao</button>
+          <button class="viz-tab" onclick="set3DMode('both',this)">Ambos</button>
+        </div>
+      </div>
+      <div class="card-body" id="container3d" style="cursor:grab;"></div>
+    </div>
+    <div class="viz-cell">
+      <div class="card-header"><h3>Diagrama 2D</h3>
+        <div class="viz-tabs" id="pat-tabs">
+          <button class="viz-tab active" onclick="setAzEl('az',this)">Azimute</button>
+          <button class="viz-tab" onclick="setAzEl('el',this)">Elevacao</button>
+        </div>
+      </div>
+      <div class="card-body"><canvas id="pattern2d"></canvas></div>
+    </div>
+  </div>
+  <div class="viz-bottom" style="grid-template-columns:1fr;">
+    <div class="viz-cell">
+      <div class="card-header"><h3>Distribuicao de Corrente</h3><div class="meta">|I| por fio</div></div>
+      <div class="card-body"><canvas id="curchart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="panel">
+  <div class="panel-header"><h2>Resultados</h2><span class="panel-sub" id="res-status"><span class="live-dot standby"></span> AGUARDANDO</span></div>
+  <div class="panel-body">
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot amber"></span>Impedancia &amp; Casamento</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">R (resistencia)</span><span class="v mag" id="r-zr">--<span class="unit">&ohm;</span></span></div>
+        <div class="kv"><span class="k">X (reatancia)</span><span class="v" id="r-zx">--<span class="unit">&ohm;</span></span></div>
+        <div class="kv"><span class="k">|Z|</span><span class="v" id="r-zmag">--<span class="unit">&ohm;</span></span></div>
+        <div class="kv"><span class="k">SWR (Z0)</span><span class="v" id="r-swr">--</span></div>
+        <div class="gauge" id="swr-gauge"><div class="gauge-fill" id="swr-fill"></div><div class="gauge-label" id="swr-label"></div></div>
+        <div class="kv" style="margin-top:6px;"><span class="k">Return Loss</span><span class="v" id="r-rl">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">|&Gamma;|</span><span class="v" id="r-gamma">--</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot magenta"></span>Radiacao</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Ganho (dBi)</span><span class="v good" id="r-gain">--<span class="unit">dBi</span></span></div>
+        <div class="kv"><span class="k">Ganho (dBd)</span><span class="v" id="r-gaindbd">--<span class="unit">dBd</span></span></div>
+        <div class="kv"><span class="k">F/B</span><span class="v" id="r-fb">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">HPBW Azimute</span><span class="v" id="r-hpaz">--<span class="unit">\u00b0</span></span></div>
+        <div class="kv"><span class="k">HPBW Elevacao</span><span class="v" id="r-hpel">--<span class="unit">\u00b0</span></span></div>
+        <div class="kv"><span class="k">Angulo de partida</span><span class="v acc" id="r-takeoff">--</span></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)"><h3><span class="dot teal"></span>Solucao MoM</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">&lambda;</span><span class="v acc" id="r-lambda">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">Fios</span><span class="v" id="r-nwire">--</span></div>
+        <div class="kv"><span class="k">Segmentos</span><span class="v" id="r-nseg">--</span></div>
+        <div class="kv"><span class="k">Incognitas (N)</span><span class="v" id="r-nunk">--</span></div>
+        <div class="kv"><span class="k">Tempo de solve</span><span class="v" id="r-ms">--<span class="unit">ms</span></span></div>
+      </div>
+    </div>
+    <div class="info-box warn-box" style="font-size:9.5px;">Solo PEC reformula o diagrama/ganho por imagens (e a impedancia de antenas elevadas). Verticais alimentadas na base sobre solo sao melhor modeladas como seu dipolo equivalente de comprimento 2h.</div>
+  </div>
+</div>
+</main>
+
+<footer>
+  <div class="author">ANTENNA LAB 2 (NEC/MoM) v1.0 &mdash; Prof. Ramon Mayor Martins &mdash; <a href="https://github.com/rmayormartins" target="_blank">github.com/rmayormartins</a></div>
+  <div class="ts" id="footer-ts"></div>
+</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+
+// ===========================================================
+//  NEC CORE — Thin-wire EFIE Method of Moments
+//  Rooftop (triangular) basis, Galerkin testing, mixed potential,
+//  reduced kernel R_eff = sqrt(R^2 + a^2). Perfect-ground via images.
+// ===========================================================
+const C = 299792458, MU0 = 4*Math.PI*1e-7, EPS0 = 8.8541878128e-12;
+const PI = Math.PI, DEG = PI/180, RAD = 180/PI;
+
+const cadd=(a,b)=>[a[0]+b[0],a[1]+b[1]];
+const cmul=(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]];
+const csc=(a,s)=>[a[0]*s,a[1]*s];
+const cabs=a=>Math.hypot(a[0],a[1]);
+function cdiv(a,b){const d=b[0]*b[0]+b[1]*b[1];return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d];}
+
+const GL4=[[-0.3399810435848563,0.6521451548625461],[0.3399810435848563,0.6521451548625461],
+           [-0.8611363115940526,0.3478548451374538],[0.8611363115940526,0.3478548451374538]]
+          .map(([t,w])=>[(t+1)/2,w/2]);
+const GL10=[[-0.1488743389816312,0.2955242247147529],[0.1488743389816312,0.2955242247147529],
+            [-0.4333953941292472,0.2692667193099963],[0.4333953941292472,0.2692667193099963],
+            [-0.6794095682990244,0.2190863625159820],[0.6794095682990244,0.2190863625159820],
+            [-0.8650633666889845,0.1494513491505806],[0.8650633666889845,0.1494513491505806],
+            [-0.9739065285171717,0.0666713443086881],[0.9739065285171717,0.0666713443086881]]
+           .map(([t,w])=>[(t+1)/2,w/2]);
+
+function buildModel(wires){
+  const nodes=[], tol=1e-7;
+  function addNode(p){
+    for(let i=0;i<nodes.length;i++){const q=nodes[i];
+      if(Math.abs(q[0]-p[0])<tol&&Math.abs(q[1]-p[1])<tol&&Math.abs(q[2]-p[2])<tol)return i;}
+    nodes.push(p);return nodes.length-1;
+  }
+  const segs=[];
+  wires.forEach((w,wi)=>{
+    const M=Math.max(1,w.nseg|0);
+    let prev=addNode([w.x1,w.y1,w.z1]);
+    for(let s=1;s<=M;s++){const f=s/M;
+      const p=[w.x1+(w.x2-w.x1)*f,w.y1+(w.y2-w.y1)*f,w.z1+(w.z2-w.z1)*f];
+      const ni=addNode(p);
+      segs.push({i:prev,j:ni,a:w.radius,wire:wi});
+      prev=ni;}
+  });
+  const adj=nodes.map(()=>[]);
+  segs.forEach((s,si)=>{adj[s.i].push(si);adj[s.j].push(si);});
+  const basis=[];
+  for(let n=0;n<nodes.length;n++) if(adj[n].length===2) basis.push({node:n,segs:adj[n]});
+  return {nodes,segs,basis,adj};
+}
+function segGeom(model,si){
+  const s=model.segs[si], A=model.nodes[s.i], B=model.nodes[s.j];
+  const d=[B[0]-A[0],B[1]-A[1],B[2]-A[2]], L=Math.hypot(d[0],d[1],d[2]);
+  return {A,B,u:[d[0]/L,d[1]/L,d[2]/L],L,a:s.a,i:s.i,j:s.j};
+}
+function basisOnSeg(model,node,si){
+  const g=segGeom(model,si), isJ=(g.j===node);
+  return {g,isJ,sigma:isJ?1/g.L:-1/g.L};
+}
+function pairIntegrals(gt,mIsJ,gs,nIsJ,k,near,mirror){
+  const Q=near?GL10:GL4, a2=gs.a*gs.a, mz=mirror?-1:1;
+  let I1=[0,0],I2=[0,0];
+  for(const [tm,wm] of Q){
+    const lm=tm*gt.L;
+    const rmx=gt.A[0]+gt.u[0]*lm, rmy=gt.A[1]+gt.u[1]*lm, rmz=gt.A[2]+gt.u[2]*lm;
+    const taum=mIsJ?tm:(1-tm);
+    for(const [tn,wn] of Q){
+      const ln=tn*gs.L;
+      const rnx=gs.A[0]+gs.u[0]*ln, rny=gs.A[1]+gs.u[1]*ln, rnz=(gs.A[2]+gs.u[2]*ln)*mz;
+      const dx=rmx-rnx, dy=rmy-rny, dz=rmz-rnz;
+      const R=Math.sqrt(dx*dx+dy*dy+dz*dz+a2), kr=k*R;
+      const geRe=Math.cos(kr)/(4*PI*R), geIm=-Math.sin(kr)/(4*PI*R);
+      const taun=nIsJ?tn:(1-tn), wW=wm*wn*gt.L*gs.L, w1=wW*taum*taun;
+      I1[0]+=geRe*w1; I1[1]+=geIm*w1; I2[0]+=geRe*wW; I2[1]+=geIm*wW;
+    }
+  }
+  return {I1,I2};
+}
+function csolve(A,b){
+  const n=b.length;
+  const M=A.map((row,i)=>row.map(c=>[c[0],c[1]]).concat([[b[i][0],b[i][1]]]));
+  for(let col=0;col<n;col++){
+    let piv=col,best=-1;
+    for(let r=col;r<n;r++){const m=M[r][col][0]**2+M[r][col][1]**2;if(m>best){best=m;piv=r;}}
+    [M[col],M[piv]]=[M[piv],M[col]];
+    const d=M[col][col];
+    for(let c=col;c<=n;c++)M[col][c]=cdiv(M[col][c],d);
+    for(let r=0;r<n;r++){if(r===col)continue;const f=M[r][col];
+      for(let c=col;c<=n;c++)M[r][c]=[M[r][c][0]-(f[0]*M[col][c][0]-f[1]*M[col][c][1]),M[r][c][1]-(f[0]*M[col][c][1]+f[1]*M[col][c][0])];}
+  }
+  return M.map(row=>row[n]);
+}
+function solveMoM(wires,freqMHz,feedPoint,ground){
+  const lam=C/(freqMHz*1e6), k=2*PI/lam, w=2*PI*freqMHz*1e6;
+  const jwmu=[0,w*MU0], inv_jwe=[0,-1/(w*EPS0)];
+  const model=buildModel(wires);
+  const N=model.basis.length;
+  if(N===0) return {error:'Sem incognitas: cada fio precisa de ao menos 2 segmentos e um no interno.'};
+  const Z=Array.from({length:N},()=>Array.from({length:N},()=>[0,0]));
+  for(let m=0;m<N;m++){
+    const bm=model.basis[m];
+    for(let n=0;n<N;n++){
+      const bn=model.basis[n];
+      let acc=[0,0];
+      for(const smi of bm.segs){
+        const om=basisOnSeg(model,bm.node,smi);
+        for(const sni of bn.segs){
+          const on=basisOnSeg(model,bn.node,sni);
+          const near=(smi===sni)||(om.g.i===on.g.i)||(om.g.i===on.g.j)||(om.g.j===on.g.i)||(om.g.j===on.g.j);
+          const pd=pairIntegrals(om.g,om.isJ,on.g,on.isJ,k,near,false);
+          const udot=om.g.u[0]*on.g.u[0]+om.g.u[1]*on.g.u[1]+om.g.u[2]*on.g.u[2];
+          acc=cadd(acc,cadd(cmul(jwmu,csc(pd.I1,udot)),cmul(inv_jwe,csc(pd.I2,om.sigma*on.sigma))));
+          if(ground==='pec'){
+            const pi=pairIntegrals(om.g,om.isJ,on.g,on.isJ,k,false,true);
+            const udi=om.g.u[0]*(-on.g.u[0])+om.g.u[1]*(-on.g.u[1])+om.g.u[2]*on.g.u[2];
+            acc=cadd(acc,cadd(cmul(jwmu,csc(pi.I1,udi)),cmul(inv_jwe,csc(pi.I2,-(om.sigma*on.sigma)))));
+          }
+        }
+      }
+      Z[m][n]=acc;
+    }
+  }
+  // source basis = nearest to feedPoint
+  let sb=0,bd=1e18;
+  model.basis.forEach((b,idx)=>{const nd=model.nodes[b.node];
+    const dd=(nd[0]-feedPoint[0])**2+(nd[1]-feedPoint[1])**2+(nd[2]-feedPoint[2])**2;
+    if(dd<bd){bd=dd;sb=idx;}});
+  const V=Array.from({length:N},()=>[0,0]); V[sb]=[1,0];
+  const I=csolve(Z,V);
+  const Zin=cdiv([1,0],I[sb]);
+  return {model,I,Zin,lam,k,sb,N,nseg:model.segs.length};
+}
+function farfield(model,I,k,ground){
+  const Inode=model.nodes.map(()=>[0,0]);
+  model.basis.forEach((b,idx)=>{Inode[b.node]=I[idx];});
+  const S=model.segs.map((s,si)=>{const g=segGeom(model,si);
+    return {g,Im:csc(cadd(Inode[s.i],Inode[s.j]),0.5)};});
+  function Emag(th,ph){
+    const kx=Math.sin(th)*Math.cos(ph),ky=Math.sin(th)*Math.sin(ph),kz=Math.cos(th);
+    let Ex=[0,0],Ey=[0,0],Ez=[0,0];
+    for(const {g,Im} of S){
+      const mid=[g.A[0]+g.u[0]*g.L/2,g.A[1]+g.u[1]*g.L/2,g.A[2]+g.u[2]*g.L/2];
+      const udk=g.u[0]*kx+g.u[1]*ky+g.u[2]*kz;
+      const tx=g.u[0]-udk*kx,ty=g.u[1]-udk*ky,tz=g.u[2]-udk*kz;
+      const ph2=k*(mid[0]*kx+mid[1]*ky+mid[2]*kz), e=[Math.cos(ph2),Math.sin(ph2)];
+      const wl=csc(cmul(Im,e),g.L);
+      Ex=cadd(Ex,csc(wl,tx)); Ey=cadd(Ey,csc(wl,ty)); Ez=cadd(Ez,csc(wl,tz));
+      if(ground==='pec'){
+        const mid2=[mid[0],mid[1],-mid[2]];
+        const uim=[-g.u[0],-g.u[1],g.u[2]];
+        const udk2=uim[0]*kx+uim[1]*ky+uim[2]*kz;
+        const tx2=uim[0]-udk2*kx,ty2=uim[1]-udk2*ky,tz2=uim[2]-udk2*kz;
+        const ph3=k*(mid2[0]*kx+mid2[1]*ky+mid2[2]*kz), e2=[Math.cos(ph3),Math.sin(ph3)];
+        const wl2=csc(cmul(Im,e2),g.L);
+        Ex=cadd(Ex,csc(wl2,tx2)); Ey=cadd(Ey,csc(wl2,ty2)); Ez=cadd(Ez,csc(wl2,tz2));
+      }
+    }
+    return Ex[0]**2+Ex[1]**2+Ey[0]**2+Ey[1]**2+Ez[0]**2+Ez[1]**2;
+  }
+  const thMax=ground==='pec'?PI/2:PI;
+  let sum=0,umax=1e-30,thB=0,phB=0;
+  const Nt=72,Np=144,dth=thMax/Nt,dph=2*PI/Np;
+  for(let i=0;i<=Nt;i++){const th=thMax*i/Nt,st=Math.sin(th);
+    for(let j=0;j<Np;j++){const p=2*PI*j/Np;const U=Emag(th,p);
+      if(U>umax){umax=U;thB=th;phB=p;}
+      sum+=U*st*dth*dph;}}
+  const D=4*PI*umax/sum;
+  return {Emag,D,umax,thB,phB};
+}
+
+
+// =================== APP STATE ===================
+let unit='lambda';            // 'lambda' or 'm'
+let WIRES=[];                 // stored in *display units*
+let freqMHz=145, z0=50, ground='free';
+let feedDisp=[0,0,0];         // feed point in display units
+let sol=null, ff=null, derived=null;
+let plane3dMode='geom';       // geom | pattern | both
+let azEl='az';
+
+function $(id){return document.getElementById(id);}
+function toggleSection(el){el.classList.toggle('open');el.nextElementSibling.classList.toggle('open');}
+
+function lamMeters(){return C/(freqMHz*1e6);}
+function toM(v){return unit==='lambda'? v*lamMeters() : v;}
+function wiresMeters(){
+  return WIRES.map(w=>({x1:toM(w.x1),y1:toM(w.y1),z1:toM(w.z1),x2:toM(w.x2),y2:toM(w.y2),z2:toM(w.z2),
+    radius:toM(w.radius),nseg:w.nseg}));
+}
+function feedMeters(){return [toM(feedDisp[0]),toM(feedDisp[1]),toM(feedDisp[2])];}
+
+// =================== TEMPLATES (in wavelengths) ===================
+const TEMPLATES={
+  dipole:{f:145,unit:'lambda',ground:'free',z0:50,
+    wires:[{x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20}],feed:[0,0,0]},
+  twoel:{f:145,unit:'lambda',ground:'free',z0:50,
+    wires:[{x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20},
+           {x1:-0.2,y1:0,z1:-0.25,x2:-0.2,y2:0,z2:0.25,radius:0.0008,nseg:20}],feed:[0,0,0]},
+  yagi3:{f:145,unit:'lambda',ground:'free',z0:50,
+    wires:[{x1:-0.25,y1:0,z1:-0.255,x2:-0.25,y2:0,z2:0.255,radius:0.0008,nseg:20},
+           {x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20},
+           {x1:0.15,y1:0,z1:-0.22,x2:0.15,y2:0,z2:0.22,radius:0.0008,nseg:20}],feed:[0,0,0]},
+  invv:{f:145,unit:'lambda',ground:'free',z0:50,
+    wires:[{x1:0,y1:0,z1:0.25,x2:0.216,y2:0,z2:0.0,radius:0.0008,nseg:16},
+           {x1:0,y1:0,z1:0.25,x2:-0.216,y2:0,z2:0.0,radius:0.0008,nseg:16}],feed:[0,0,0.25]},
+  quad:{f:145,unit:'lambda',ground:'free',z0:50,
+    wires:[{x1:-0.125,y1:0,z1:-0.125,x2:0.125,y2:0,z2:-0.125,radius:0.0008,nseg:12},
+           {x1:0.125,y1:0,z1:-0.125,x2:0.125,y2:0,z2:0.125,radius:0.0008,nseg:12},
+           {x1:0.125,y1:0,z1:0.125,x2:-0.125,y2:0,z2:0.125,radius:0.0008,nseg:12},
+           {x1:-0.125,y1:0,z1:0.125,x2:-0.125,y2:0,z2:-0.125,radius:0.0008,nseg:12}],feed:[0,0,-0.125]},
+  dipoleGnd:{f:28.5,unit:'lambda',ground:'pec',z0:50,
+    wires:[{x1:-0.25,y1:0,z1:0.25,x2:0.25,y2:0,z2:0.25,radius:0.0006,nseg:24}],feed:[0,0,0.25]},
+};
+function loadTemplate(name){
+  const t=TEMPLATES[name]; if(!t)return;
+  unit=t.unit; freqMHz=t.f; ground=t.ground; z0=t.z0;
+  WIRES=t.wires.map(w=>({...w}));
+  feedDisp=t.feed.slice();
+  $('unit-sel').value=unit; $('freq').value=freqMHz; $('ground').value=ground; $('z0').value=z0;
+  document.querySelectorAll('#tpl-chips .chip').forEach(c=>c.classList.remove('active'));
+  const el=document.querySelector('[data-tpl="'+name+'"]'); if(el)el.classList.add('active');
+  renderWireTable(); updateFeedUI(); runNEC();
+}
+
+// =================== WIRE TABLE ===================
+function renderWireTable(){
+  const wrap=$('wire-table'); wrap.innerHTML='';
+  const head=document.createElement('div'); head.className='wt-row wt-head';
+  head.innerHTML='<span>#</span><span>X1</span><span>Y1</span><span>Z1</span><span>X2</span><span>Y2</span><span>Z2</span><span>r</span><span>seg</span><span></span>';
+  wrap.appendChild(head);
+  WIRES.forEach((w,i)=>{
+    const row=document.createElement('div'); row.className='wt-row';
+    const fields=['x1','y1','z1','x2','y2','z2','radius'];
+    let html='<span class="wt-idx">'+(i+1)+'</span>';
+    fields.forEach(f=>{html+='<input type="number" step="0.001" value="'+w[f]+'" data-i="'+i+'" data-f="'+f+'">';});
+    html+='<input type="number" step="1" min="1" max="60" value="'+w.nseg+'" data-i="'+i+'" data-f="nseg">';
+    html+='<button class="wt-del" data-del="'+i+'">×</button>';
+    row.innerHTML=html; wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('change',e=>{
+      const i=+e.target.dataset.i, f=e.target.dataset.f;
+      WIRES[i][f]= f==='nseg'? Math.max(1,parseInt(e.target.value)||1) : (parseFloat(e.target.value)||0);
+    });
+  });
+  wrap.querySelectorAll('.wt-del').forEach(b=>b.addEventListener('click',e=>{
+    WIRES.splice(+e.target.dataset.del,1); renderWireTable(); updateFeedUI();
+  }));
+  $('unit-lbl').textContent = unit==='lambda'?'\u03bb':'m';
+}
+function addWire(){
+  WIRES.push({x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20});
+  renderWireTable(); updateFeedUI();
+}
+function updateFeedUI(){
+  $('feed-x').value=feedDisp[0]; $('feed-y').value=feedDisp[1]; $('feed-z').value=feedDisp[2];
+}
+function feedToWireCenter(idx){
+  const w=WIRES[idx]; if(!w)return;
+  feedDisp=[(w.x1+w.x2)/2,(w.y1+w.y2)/2,(w.z1+w.z2)/2]; updateFeedUI();
+}
+
+// =================== RUN ===================
+function runNEC(){
+  freqMHz=parseFloat($('freq').value)||145;
+  z0=parseFloat($('z0').value)||50;
+  ground=$('ground').value; unit=$('unit-sel').value;
+  feedDisp=[parseFloat($('feed-x').value)||0,parseFloat($('feed-y').value)||0,parseFloat($('feed-z').value)||0];
+  if(!WIRES.length){return;}
+  $('hdr-status').textContent='CALCULANDO'; $('hdr-status').style.color='var(--amber)';
+  $('res-status').innerHTML='<span class="live-dot standby"></span> RESOLVENDO MoM';
+  setTimeout(()=>{
+    const t0=performance.now();
+    sol=solveMoM(wiresMeters(),freqMHz,feedMeters(),ground);
+    if(sol.error){ $('hdr-status').textContent='ERRO'; $('hdr-status').style.color='var(--rose)';
+      $('res-status').innerHTML='<span class="live-dot off"></span> '+sol.error; return; }
+    ff=farfield(sol.model,sol.I,sol.k,ground);
+    derived=computeDerived(t0);
+    updateResults(); draw3D(); drawPattern2D(); drawCurrent();
+    $('hdr-status').textContent='RESOLVIDO'; $('hdr-status').style.color='var(--phos)';
+    $('res-status').innerHTML='<span class="live-dot"></span> ATIVO';
+  },20);
+}
+
+function computeDerived(t0){
+  const Zin=sol.Zin;
+  const gR=(Zin[0]-z0), gI=Zin[1];
+  const dR=(Zin[0]+z0), dI=Zin[1];
+  const dm=dR*dR+dI*dI;
+  const gr=(gR*dR+gI*dI)/dm, gi=(gI*dR-gR*dI)/dm;
+  const gmag=Math.hypot(gr,gi);
+  const swr=gmag>=1?999:(1+gmag)/(1-gmag);
+  const rl=gmag>0?-20*Math.log10(gmag):99;
+  const Dd=10*Math.log10(ff.D);
+  // F/B at beam
+  const back=ff.Emag(ground==='pec'?ff.thB:PI-0+0, 0); // placeholder
+  const fbBack=ff.Emag(ff.thB, ff.phB+PI);
+  const fb=fbBack>1e-30?10*Math.log10(ff.umax/fbBack):99;
+  // HPBW az (scan phi at thB) and el (scan th at phB)
+  const hp=(scanFn,c)=>{ // returns width in deg around max where power>=half
+    let prev=null,cross=[];
+    for(let a=0;a<=360;a+=1){const v=scanFn(a*DEG)/ff.umax;
+      if(prev!==null){const half=0.5;
+        if((prev-half)*(v-half)<0)cross.push(a);}
+      prev=v;}
+    if(cross.length>=2)return cross[cross.length-1]-cross[0];
+    return 360;
+  };
+  const hpAz=hp(a=>ff.Emag(ff.thB,a));
+  const thMax=ground==='pec'?PI/2:PI;
+  let elPrev=null,elCross=[]; const half=0.5;
+  for(let a=0;a<=180;a+=1){const th=Math.min(thMax,a*DEG);const v=ff.Emag(th,ff.phB)/ff.umax;
+    if(elPrev!==null&&(elPrev-half)*(v-half)<0)elCross.push(a); elPrev=v;}
+  const hpEl=elCross.length>=2?elCross[elCross.length-1]-elCross[0]:360;
+  const takeoff=ground==='pec'?(90-ff.thB*RAD):null;
+  // max current
+  let imax=0; sol.I.forEach(c=>{const m=cabs(c);if(m>imax)imax=m;});
+  return {Zin,gmag,swr,rl,Dd,fb,hpAz,hpEl,takeoff,imax,ms:(performance.now()-t0)};
+}
+
+function updateResults(){
+  const d=derived, Zin=d.Zin;
+  $('r-zr').innerHTML=Zin[0].toFixed(2)+'<span class="unit">\u03a9</span>';
+  $('r-zx').innerHTML=(Zin[1]>=0?'+':'')+Zin[1].toFixed(2)+'<span class="unit">\u03a9</span>';
+  $('r-zmag').innerHTML=Math.hypot(Zin[0],Zin[1]).toFixed(2)+'<span class="unit">\u03a9</span>';
+  const swrClass=d.swr<=1.5?'good':d.swr<=3?'warn':'bad';
+  $('r-swr').innerHTML=d.swr>=999?'&infin;':d.swr.toFixed(2); $('r-swr').className='v '+swrClass;
+  $('swr-fill').style.width=Math.min(100,(1/Math.max(1,d.swr))*200)+'%';
+  $('swr-fill').className='gauge-fill '+swrClass;
+  $('swr-label').textContent='SWR '+(d.swr>=999?'\u221e':d.swr.toFixed(2));
+  $('r-rl').innerHTML=d.rl.toFixed(1)+'<span class="unit">dB</span>';
+  $('r-rl').className='v '+(d.rl>=20?'good':d.rl>=10?'warn':'bad');
+  $('r-gamma').textContent=d.gmag.toFixed(4);
+  $('r-gain').innerHTML=d.Dd.toFixed(2)+'<span class="unit">dBi</span>';
+  $('r-gain').className='v '+(d.Dd>=8?'good':d.Dd>=4?'acc':'');
+  $('r-gaindbd').innerHTML=(d.Dd-2.15).toFixed(2)+'<span class="unit">dBd</span>';
+  $('r-fb').innerHTML=(d.fb>=99?'\u2014':d.fb.toFixed(1))+'<span class="unit">dB</span>';
+  $('r-hpaz').innerHTML=d.hpAz.toFixed(1)+'<span class="unit">\u00b0</span>';
+  $('r-hpel').innerHTML=d.hpEl.toFixed(1)+'<span class="unit">\u00b0</span>';
+  $('r-takeoff').innerHTML=d.takeoff==null?'\u2014':(d.takeoff.toFixed(1)+'<span class="unit">\u00b0</span>');
+  $('r-nwire').textContent=WIRES.length;
+  $('r-nseg').textContent=sol.nseg;
+  $('r-nunk').textContent=sol.N;
+  $('r-ms').innerHTML=d.ms.toFixed(0)+'<span class="unit">ms</span>';
+  $('r-lambda').innerHTML=lamMeters().toFixed(4)+'<span class="unit">m</span>';
+  // header
+  $('hdr-zin').innerHTML=Zin[0].toFixed(0)+(Zin[1]>=0?'+':'')+'j'+Zin[1].toFixed(0);
+  $('hdr-swr').textContent=d.swr>=999?'\u221e':d.swr.toFixed(2);
+  $('hdr-gain').innerHTML=d.Dd.toFixed(1)+'<span class="unit">dBi</span>';
+  $('hdr-freq').innerHTML=freqMHz.toFixed(2)+'<span class="unit">MHz</span>';
+}
+
+// =================== 2D PATTERN ===================
+function setAzEl(m,btn){azEl=m;document.querySelectorAll('#pat-tabs .viz-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');drawPattern2D();}
+function drawPattern2D(){
+  const canvas=$('pattern2d'); if(!canvas||!ff)return;
+  const rect=canvas.parentElement.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const w=rect.width,h=rect.height,cx=w/2,cy=h/2,maxR=Math.min(cx,cy)-30;
+  ctx.fillStyle='#04070c'; ctx.fillRect(0,0,w,h);
+  [0,-3,-10,-20,-30].forEach(db=>{const r=maxR*Math.pow(10,db/20);
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*PI);ctx.strokeStyle='#1e283866';ctx.lineWidth=0.5;ctx.stroke();
+    ctx.fillStyle='#3f4a5b';ctx.font='9px JetBrains Mono';ctx.textAlign='left';ctx.fillText(db+' dB',cx+3,cy-r-2);});
+  for(let a=0;a<360;a+=30){const rad=a*DEG;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+maxR*Math.sin(rad),cy-maxR*Math.cos(rad));
+    ctx.strokeStyle='#1e283844';ctx.lineWidth=0.5;ctx.stroke();
+    ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(a+'\u00b0',cx+(maxR+16)*Math.sin(rad),cy-(maxR+16)*Math.cos(rad));}
+  const isAz=azEl==='az';
+  const sampler=(a)=>{ // a in radians, plotted from top clockwise
+    if(isAz) return ff.Emag(ff.thB,a);          // azimuth cut at beam elevation
+    // elevation cut in beam azimuth plane: a=0 -> +z(up). map to (th,phi)
+    let th, phi;
+    if(a<=PI){ th=a; phi=ff.phB; } else { th=2*PI-a; phi=ff.phB+PI; }
+    if(ground==='pec'&&th>PI/2) return 0;
+    return ff.Emag(th,phi);
+  };
+  let umax=1e-30; const vals=[];
+  for(let i=0;i<=360;i++){const v=sampler(i*DEG);vals.push(v);if(v>umax)umax=v;}
+  ctx.beginPath();
+  for(let i=0;i<=360;i++){const a=i*DEG;let val=Math.sqrt(vals[i]/umax);val=Math.max(0,Math.min(1,val));
+    const db=val>1e-4?20*Math.log10(val):-40;const r=maxR*Math.max(0,(db+40)/40);
+    const x=cx+r*Math.sin(a),y=cy-r*Math.cos(a); if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+  ctx.closePath();ctx.strokeStyle=isAz?'#38bdf8':'#4ade80';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=(isAz?'#38bdf8':'#4ade80')+'18';ctx.fill();
+  ctx.fillStyle='#b6c2d4';ctx.font='10px Chakra Petch';ctx.textAlign='left';
+  ctx.fillText(isAz?'Azimute (corte H)':'Elevacao (corte V)',10,16);
+  if(ground==='pec'&&!isAz){ctx.strokeStyle='#78350f';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx-maxR,cy);ctx.lineTo(cx+maxR,cy);ctx.stroke();
+    ctx.fillStyle='#fbbf24';ctx.fillText('solo',cx+maxR-30,cy-4);}
+}
+
+// =================== CURRENT DISTRIBUTION ===================
+function drawCurrent(){
+  const canvas=$('curchart'); if(!canvas||!sol)return;
+  const rect=canvas.parentElement.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const w=rect.width,h=rect.height,pad={l:44,r:14,t:16,b:26};
+  const pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  ctx.fillStyle='#04070c'; ctx.fillRect(0,0,w,h);
+  // nodal currents along each wire
+  const Inode=sol.model.nodes.map(()=>[0,0]);
+  sol.model.basis.forEach((b,idx)=>{Inode[b.node]=sol.I[idx];});
+  // group segments by wire, build polyline of |I| (mA per volt) vs arclength
+  const series=[];
+  let imax=1e-9;
+  WIRES.forEach((w0,wi)=>{
+    const segs=sol.model.segs.filter(s=>s.wire===wi);
+    if(!segs.length)return;
+    const pts=[]; let arc=0;
+    // start node
+    pts.push({s:0,I:cabs(Inode[segs[0].i])*1000});
+    segs.forEach(s=>{const g=segGeom(sol.model,sol.model.segs.indexOf(s));arc+=g.L;
+      pts.push({s:arc,I:cabs(Inode[s.j])*1000});});
+    pts.forEach(p=>{if(p.I>imax)imax=p.I;});
+    series.push(pts);
+  });
+  // grid
+  ctx.strokeStyle='#1e283844';ctx.lineWidth=0.5;ctx.fillStyle='#3f4a5b';ctx.font='9px JetBrains Mono';ctx.textAlign='right';
+  for(let g=0;g<=4;g++){const y=pad.t+ph*(1-g/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke();
+    ctx.fillText((imax*g/4).toFixed(2),pad.l-4,y+3);}
+  const cols=['#e879f9','#38bdf8','#4ade80','#fbbf24','#fb7185','#a78bfa'];
+  series.forEach((pts,si)=>{const smax=pts[pts.length-1].s||1;
+    ctx.beginPath();pts.forEach((p,i)=>{const x=pad.l+pw*(p.s/smax);const y=pad.t+ph*(1-p.I/imax);
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+    ctx.strokeStyle=cols[si%cols.length];ctx.lineWidth=2;ctx.stroke();});
+  ctx.fillStyle='#6b7889';ctx.font='10px Chakra Petch';ctx.textAlign='center';
+  ctx.fillText('|I| ao longo dos fios (mA/V) — pico '+imax.toFixed(2),pad.l+pw/2,h-8);
+}
+
+// =================== 3D ===================
+let scene3d,camera3d,renderer3d,geomGroup,patternMesh,isDragging=false,prev={x:0,y:0},rotX=0.35,rotY=0.6;
+function init3D(){
+  const c=$('container3d'); const rect=c.getBoundingClientRect();
+  scene3d=new THREE.Scene();
+  camera3d=new THREE.PerspectiveCamera(50,rect.width/Math.max(1,rect.height),0.01,1000);
+  camera3d.position.set(2.4,1.6,2.4);
+  renderer3d=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer3d.setSize(rect.width,rect.height);renderer3d.setPixelRatio(window.devicePixelRatio);
+  renderer3d.setClearColor(0x04070c,1); c.appendChild(renderer3d.domElement);
+  scene3d.add(new THREE.AmbientLight(0x8090b0,0.8));
+  const dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(3,5,3);scene3d.add(dl);
+  scene3d.add(new THREE.GridHelper(4,16,0x1e2838,0x0e131b));
+  // axes
+  [[1.6,0,0,0xff5555],[0,1.6,0,0x55ff55],[0,0,1.6,0x5577ff]].forEach(a=>{
+    const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(a[0],a[1],a[2])]);
+    scene3d.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:a[3],transparent:true,opacity:0.5})));});
+  c.addEventListener('mousedown',e=>{isDragging=true;prev={x:e.clientX,y:e.clientY};c.style.cursor='grabbing';});
+  c.addEventListener('mousemove',e=>{if(!isDragging)return;rotY+=(e.clientX-prev.x)*0.01;rotX+=(e.clientY-prev.y)*0.01;
+    rotX=Math.max(-PI/2,Math.min(PI/2,rotX));prev={x:e.clientX,y:e.clientY};});
+  window.addEventListener('mouseup',()=>{isDragging=false;c.style.cursor='grab';});
+  c.addEventListener('wheel',e=>{e.preventDefault();camera3d.position.multiplyScalar(e.deltaY>0?1.1:0.9);
+    camera3d.position.clampLength(0.8,12);},{passive:false});
+  animate3D();
+}
+function set3DMode(m,btn){plane3dMode=m;document.querySelectorAll('#d3-tabs .viz-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');draw3D();}
+function colormap(t){t=Math.max(0,Math.min(1,t));
+  // blue->cyan->green->yellow->red
+  const stops=[[0.05,0.3,0.9],[0.1,0.8,0.9],[0.3,0.9,0.4],[0.95,0.85,0.2],[0.95,0.25,0.25]];
+  const x=t*(stops.length-1),i=Math.floor(x),f=x-i;const a=stops[i],b=stops[Math.min(stops.length-1,i+1)];
+  return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];}
+function draw3D(){
+  if(!scene3d||!sol)return;
+  if(geomGroup){scene3d.remove(geomGroup);}
+  if(patternMesh){scene3d.remove(patternMesh);patternMesh.geometry.dispose();patternMesh=null;}
+  geomGroup=new THREE.Group();
+  const lam=lamMeters();
+  const Inode=sol.model.nodes.map(()=>[0,0]);
+  sol.model.basis.forEach((b,idx)=>{Inode[b.node]=sol.I[idx];});
+  let imax=1e-9; sol.model.segs.forEach(s=>{const m=0.5*(cabs(Inode[s.i])+cabs(Inode[s.j]));if(m>imax)imax=m;});
+  const showGeom=plane3dMode!=='pattern';
+  const showPat=plane3dMode!=='geom';
+  if(showGeom){
+    // map meters -> lambda units for display so scale is stable
+    sol.model.segs.forEach(s=>{
+      const A=sol.model.nodes[s.i],B=sol.model.nodes[s.j];
+      const Im=0.5*(cabs(Inode[s.i])+cabs(Inode[s.j]));
+      const col=colormap(Im/imax);
+      const g=new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(A[0]/lam,A[2]/lam,A[1]/lam), // map z(model)->y(up), y(model)->z
+        new THREE.Vector3(B[0]/lam,B[2]/lam,B[1]/lam)]);
+      geomGroup.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:new THREE.Color(col[0],col[1],col[2]),linewidth:2})));
+    });
+    // feed marker
+    const fp=feedMeters();
+    const sm=new THREE.Mesh(new THREE.SphereGeometry(0.03,12,12),new THREE.MeshBasicMaterial({color:0xff3344}));
+    sm.position.set(fp[0]/lam,fp[2]/lam,fp[1]/lam); geomGroup.add(sm);
+    scene3d.add(geomGroup);
+  }
+  if(showPat&&ff){
+    const res=46,verts=[],cols=[],idx=[];
+    const thMax=ground==='pec'?PI/2:PI;
+    for(let i=0;i<=res;i++){const th=thMax*i/res,st=Math.sin(th),ct=Math.cos(th);
+      for(let j=0;j<=res*2;j++){const ph=2*PI*j/(res*2);
+        const v=Math.sqrt(ff.Emag(th,ph)/ff.umax);const r=Math.max(0,Math.min(1,v))*1.5;
+        const x=r*st*Math.cos(ph),z=r*st*Math.sin(ph),y=r*ct;
+        verts.push(x,y,z);const c=colormap(v);cols.push(c[0],c[1],c[2]);
+        if(i<res&&j<res*2){const a=i*(res*2+1)+j,b=a+res*2+1;idx.push(a,b,a+1,b,b+1,a+1);}}}
+    const gp=new THREE.BufferGeometry();
+    gp.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+    gp.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));
+    gp.setIndex(idx);gp.computeVertexNormals();
+    patternMesh=new THREE.Mesh(gp,new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,transparent:true,opacity:showGeom?0.45:0.9,shininess:30}));
+    scene3d.add(patternMesh);
+  }
+}
+function animate3D(){requestAnimationFrame(animate3D);
+  if(!scene3d)return;
+  if(!isDragging)rotY+=0.003;
+  const d=camera3d.position.length();
+  camera3d.position.x=d*Math.cos(rotX)*Math.sin(rotY);
+  camera3d.position.y=d*Math.sin(rotX);
+  camera3d.position.z=d*Math.cos(rotX)*Math.cos(rotY);
+  camera3d.lookAt(0,0.1,0); renderer3d.render(scene3d,camera3d);
+}
+
+// =================== EXPORT (.nec deck) ===================
+function exportNEC(){
+  const lam=lamMeters();
+  let out='CM Antenna Lab 2 export\\nCM f='+freqMHz+' MHz, ground='+ground+'\\nCE\\n';
+  wiresMeters().forEach((w,i)=>{
+    out+=`GW ${i+1} ${w.nseg} ${w.x1.toFixed(4)} ${w.y1.toFixed(4)} ${w.z1.toFixed(4)} ${w.x2.toFixed(4)} ${w.y2.toFixed(4)} ${w.z2.toFixed(4)} ${w.radius.toExponential(3)}\\n`;
+  });
+  out+='GE '+(ground==='pec'?'1':'0')+'\\n';
+  if(ground==='pec')out+='GN 1\\n';
+  out+='EX 0 1 1 0 1 0\\n';
+  out+=`FR 0 1 0 0 ${freqMHz} 0\\n`;
+  out+='RP 0 37 73 1000 0 0 5 5\\nEN\\n';
+  const blob=new Blob([out],{type:'text/plain'});const u=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=u;a.download='antenna_lab2_'+freqMHz+'MHz.nec';a.click();URL.revokeObjectURL(u);
+}
+function resetAll(){loadTemplate('dipole');}
+
+// =================== INIT ===================
+function init(){
+  init3D();
+  loadTemplate('dipole');
+  window.addEventListener('resize',()=>{drawPattern2D();drawCurrent();
+    const c=$('container3d');const r=c.getBoundingClientRect();
+    if(renderer3d&&r.width>0){renderer3d.setSize(r.width,r.height);camera3d.aspect=r.width/r.height;camera3d.updateProjectionMatrix();}});
+  const now=new Date();$('footer-ts').textContent=now.toISOString().slice(0,19).replace('T',' ')+' UTC';
+}
+window.addEventListener('DOMContentLoaded',init);
+
+</script>
+</body>
+</html>
