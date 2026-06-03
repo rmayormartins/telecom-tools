@@ -130,7 +130,7 @@ header.top-bar{
 
 /* MAIN */
 main{
-  display:grid;grid-template-columns:330px 1fr 320px;
+  display:grid;grid-template-columns:372px 1fr 320px;
   gap:1px;background:var(--border-soft);min-height:0;
 }
 .panel{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
@@ -231,7 +231,7 @@ select{
 .chip.active{background:var(--magenta-soft);border-color:var(--magenta);color:var(--magenta);}
 
 /* VIZ AREA */
-.viz{display:grid;grid-template-rows:1fr 1fr;min-height:0;}
+.viz{display:grid;grid-template-rows:222px 1fr 0.85fr;min-height:0;}
 .viz-top{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
 .viz-bottom{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
 .viz-cell{background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;overflow:hidden;}
@@ -323,13 +323,25 @@ footer .ts{color:var(--text-3);}
 ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
 </style>
 <style>
-.wire-table{display:flex;flex-direction:column;gap:3px;font-family:var(--font-mono);}
-.wt-row{display:grid;grid-template-columns:18px repeat(7,1fr) 38px 22px;gap:3px;align-items:center;}
-.wt-head{color:var(--text-2);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:0 2px;}
-.wt-row input{padding:4px 4px;font-size:10.5px;border-radius:3px;}
-.wt-idx{color:var(--magenta);font-size:10px;text-align:center;}
-.wt-del{background:var(--bg-2);border:1px solid var(--border-strong);color:var(--rose);border-radius:3px;cursor:pointer;font-size:13px;line-height:1;padding:2px 0;}
+.wire-table{display:flex;flex-direction:column;gap:7px;font-family:var(--font-mono);}
+.wt-wire{border:1px solid var(--border);border-radius:7px;padding:7px 8px;background:var(--bg-2);}
+.wt-wire-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.wt-wn{color:var(--magenta);font-size:10.5px;font-weight:600;letter-spacing:0.04em;}
+.wt-feedbtn{background:var(--bg-1);border:1px solid var(--border-strong);color:var(--text-2);border-radius:4px;font-size:9px;padding:3px 7px;cursor:pointer;font-family:var(--font-mono);}
+.wt-feedbtn:hover{color:var(--amber);border-color:var(--amber);}
+.wt-del{background:var(--bg-1);border:1px solid var(--border-strong);color:var(--rose);border-radius:4px;cursor:pointer;font-size:14px;line-height:1;padding:2px 8px;margin-left:6px;}
 .wt-del:hover{background:var(--rose-soft);}
+.wt-line{display:grid;grid-template-columns:24px 1fr 1fr 1fr;gap:5px;align-items:end;margin-bottom:5px;}
+.wt-pl{font-size:9px;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;padding-bottom:6px;}
+.wt-field{display:flex;flex-direction:column;gap:2px;}
+.wt-field label{font-size:8px;color:var(--text-2);padding-left:2px;letter-spacing:0.03em;}
+.wt-field input{padding:6px;font-size:11.5px;border-radius:4px;width:100%;}
+.wt-foot{display:grid;grid-template-columns:1fr 1fr;gap:5px;align-items:end;margin-top:6px;}
+/* drawing canvas */
+.viz-draw{background:var(--border-soft);min-height:0;}
+.viz-draw .viz-cell{height:100%;}
+.geo-hint{position:absolute;left:8px;bottom:6px;right:8px;font-size:9px;color:var(--text-2);font-family:var(--font-mono);pointer-events:none;text-shadow:0 1px 3px #000,0 0 5px #000;line-height:1.35;}
+#geocanvas{cursor:crosshair;}
 </style>
 </head>
 <body>
@@ -419,6 +431,22 @@ footer .ts{color:var(--text-3);}
 
 <!-- CENTER -->
 <div class="panel viz">
+  <div class="viz-draw">
+    <div class="viz-cell">
+      <div class="card-header"><h3>Desenhar Geometria <span style="color:var(--text-2);font-weight:400;">(plano X-Z, Y=0)</span></h3>
+        <div class="viz-tabs" id="draw-tabs">
+          <button class="viz-tab active" id="draw-pen" onclick="drawSetMode('pen')">Desenhar</button>
+          <button class="viz-tab" id="draw-feed" onclick="drawSetMode('feed')">Fonte</button>
+          <button class="viz-tab" onclick="geoLiftPen()">Novo fio</button>
+          <button class="viz-tab" onclick="geoUndo()">Desfazer</button>
+          <button class="viz-tab" onclick="geoClear()">Limpar</button>
+        </div>
+      </div>
+      <div class="card-body"><canvas id="geocanvas"></canvas>
+        <div class="geo-hint" id="geo-hint">Clique para criar nos; cliques seguidos conectam fios. "Novo fio" (ou botao direito) levanta a caneta p/ elementos separados (Yagi). "Fonte" define a alimentacao.</div>
+      </div>
+    </div>
+  </div>
   <div class="viz-top">
     <div class="viz-cell">
       <div class="card-header"><h3>Geometria &amp; Corrente / Padrao 3D</h3>
@@ -426,6 +454,7 @@ footer .ts{color:var(--text-3);}
           <button class="viz-tab active" onclick="set3DMode('geom',this)">Fios</button>
           <button class="viz-tab" onclick="set3DMode('pattern',this)">Padrao</button>
           <button class="viz-tab" onclick="set3DMode('both',this)">Ambos</button>
+          <button class="viz-tab" id="rot-btn" onclick="toggleRotate(this)" title="Pausar rotacao" style="min-width:30px;font-size:11px;">⏸</button>
         </div>
       </div>
       <div class="card-body" id="container3d" style="cursor:grab;"></div>
@@ -717,34 +746,41 @@ function loadTemplate(name){
   $('unit-sel').value=unit; $('freq').value=freqMHz; $('ground').value=ground; $('z0').value=z0;
   document.querySelectorAll('#tpl-chips .chip').forEach(c=>c.classList.remove('active'));
   const el=document.querySelector('[data-tpl="'+name+'"]'); if(el)el.classList.add('active');
-  renderWireTable(); updateFeedUI(); runNEC();
+  drawChain=[]; renderWireTable(); updateFeedUI(); runNEC();
 }
 
 // =================== WIRE TABLE ===================
 function renderWireTable(){
-  const wrap=$('wire-table'); wrap.innerHTML='';
-  const head=document.createElement('div'); head.className='wt-row wt-head';
-  head.innerHTML='<span>#</span><span>X1</span><span>Y1</span><span>Z1</span><span>X2</span><span>Y2</span><span>Z2</span><span>r</span><span>seg</span><span></span>';
-  wrap.appendChild(head);
+  const wrap=$('wire-table'); if(!wrap)return; wrap.innerHTML='';
+  const U=unit==='lambda'?'\u03bb':'m';
+  const fld=(w,i,f,lbl,step)=>'<div class="wt-field"><label>'+lbl+'</label><input type="number" step="'+(step||0.001)+'" value="'+w[f]+'" data-i="'+i+'" data-f="'+f+'"></div>';
   WIRES.forEach((w,i)=>{
-    const row=document.createElement('div'); row.className='wt-row';
-    const fields=['x1','y1','z1','x2','y2','z2','radius'];
-    let html='<span class="wt-idx">'+(i+1)+'</span>';
-    fields.forEach(f=>{html+='<input type="number" step="0.001" value="'+w[f]+'" data-i="'+i+'" data-f="'+f+'">';});
-    html+='<input type="number" step="1" min="1" max="60" value="'+w.nseg+'" data-i="'+i+'" data-f="nseg">';
-    html+='<button class="wt-del" data-del="'+i+'">×</button>';
-    row.innerHTML=html; wrap.appendChild(row);
+    const card=document.createElement('div'); card.className='wt-wire';
+    card.innerHTML=
+      '<div class="wt-wire-head"><span class="wt-wn">Fio #'+(i+1)+'</span><span>'+
+      '<button class="wt-feedbtn" data-feed="'+i+'">Fonte aqui</button>'+
+      '<button class="wt-del" data-del="'+i+'">\u00d7</button></span></div>'+
+      '<div class="wt-line"><span class="wt-pl">P1</span>'+fld(w,i,'x1','X1 ('+U+')')+fld(w,i,'y1','Y1')+fld(w,i,'z1','Z1')+'</div>'+
+      '<div class="wt-line"><span class="wt-pl">P2</span>'+fld(w,i,'x2','X2 ('+U+')')+fld(w,i,'y2','Y2')+fld(w,i,'z2','Z2')+'</div>'+
+      '<div class="wt-foot">'+fld(w,i,'radius','Raio r ('+U+')',0.0001)+
+      '<div class="wt-field"><label>Segmentos</label><input type="number" step="1" min="1" max="60" value="'+w.nseg+'" data-i="'+i+'" data-f="nseg"></div></div>';
+    wrap.appendChild(card);
   });
   wrap.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('change',e=>{
       const i=+e.target.dataset.i, f=e.target.dataset.f;
       WIRES[i][f]= f==='nseg'? Math.max(1,parseInt(e.target.value)||1) : (parseFloat(e.target.value)||0);
+      runNEC();
     });
   });
   wrap.querySelectorAll('.wt-del').forEach(b=>b.addEventListener('click',e=>{
-    WIRES.splice(+e.target.dataset.del,1); renderWireTable(); updateFeedUI();
+    WIRES.splice(+e.currentTarget.dataset.del,1); renderWireTable(); runNEC();
   }));
-  $('unit-lbl').textContent = unit==='lambda'?'\u03bb':'m';
+  wrap.querySelectorAll('.wt-feedbtn').forEach(b=>b.addEventListener('click',e=>{
+    feedToWireCenter(+e.currentTarget.dataset.feed); runNEC();
+  }));
+  const ul=$('unit-lbl'); if(ul)ul.textContent=U;
+  drawGeoCanvas();
 }
 function addWire(){
   WIRES.push({x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20});
@@ -774,7 +810,7 @@ function runNEC(){
       $('res-status').innerHTML='<span class="live-dot off"></span> '+sol.error; return; }
     ff=farfield(sol.model,sol.I,sol.k,ground);
     derived=computeDerived(t0);
-    updateResults(); draw3D(); drawPattern2D(); drawCurrent();
+    updateResults(); draw3D(); drawPattern2D(); drawCurrent(); drawGeoCanvas();
     $('hdr-status').textContent='RESOLVIDO'; $('hdr-status').style.color='var(--phos)';
     $('res-status').innerHTML='<span class="live-dot"></span> ATIVO';
   },20);
@@ -930,6 +966,7 @@ function drawCurrent(){
 
 // =================== 3D ===================
 let scene3d,camera3d,renderer3d,geomGroup,patternMesh,isDragging=false,prev={x:0,y:0},rotX=0.35,rotY=0.6;
+let autoRotate=true;
 function init3D(){
   const c=$('container3d'); const rect=c.getBoundingClientRect();
   scene3d=new THREE.Scene();
@@ -1006,7 +1043,7 @@ function draw3D(){
 }
 function animate3D(){requestAnimationFrame(animate3D);
   if(!scene3d)return;
-  if(!isDragging)rotY+=0.003;
+  if(autoRotate&&!isDragging)rotY+=0.003;
   const d=camera3d.position.length();
   camera3d.position.x=d*Math.cos(rotX)*Math.sin(rotY);
   camera3d.position.y=d*Math.sin(rotX);
@@ -1031,11 +1068,116 @@ function exportNEC(){
 }
 function resetAll(){loadTemplate('dipole');}
 
+// =================== GEOMETRY DRAW CANVAS ===================
+let geoMode='pen', drawChain=[], geoInited=false, geoPreview=null;
+function toggleRotate(btn){autoRotate=!autoRotate;btn.textContent=autoRotate?'\u23f8':'\u25b6';btn.title=autoRotate?'Pausar rotacao':'Girar';}
+function drawSetMode(m){geoMode=m;
+  const p=$('draw-pen'),f=$('draw-feed'),cv=$('geocanvas');
+  if(p)p.classList.toggle('active',m==='pen');
+  if(f)f.classList.toggle('active',m==='feed');
+  if(cv)cv.style.cursor=m==='feed'?'cell':'crosshair';
+}
+function geoStep(){return unit==='lambda'?0.05:(0.05*lamMeters());}
+function geoSnap(v){const s=geoStep();return Math.round(v/s)*s;}
+function geoFit(W,H){
+  let xs=[],zs=[];
+  WIRES.forEach(w=>{xs.push(w.x1,w.x2);zs.push(w.z1,w.z2);});
+  drawChain.forEach(p=>{xs.push(p.x);zs.push(p.z);});
+  if(geoPreview){xs.push(geoPreview.x);zs.push(geoPreview.z);}
+  if(xs.length<2){xs=[-0.3,0.3];zs=[-0.3,0.3];}
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minZ=Math.min(...zs),maxZ=Math.max(...zs);
+  const cx0=(minX+maxX)/2,cz0=(minZ+maxZ)/2;
+  const ext=Math.max(maxX-minX,maxZ-minZ,geoStep()*8);
+  const half=Math.min(W,H)/2-18, scale=half/(ext*0.62);
+  return {cx0,cz0,scale,
+    toX:x=>W/2+(x-cx0)*scale, toY:z=>H/2-(z-cz0)*scale,
+    toXv:px=>cx0+(px-W/2)/scale, toZv:py=>cz0-(py-H/2)/scale};
+}
+function drawGeoCanvas(){
+  const cv=$('geocanvas'); if(!cv)return;
+  const rect=cv.parentElement.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  cv.width=rect.width*dpr; cv.height=rect.height*dpr;
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  const W=rect.width,H=rect.height,m=geoFit(W,H),s=geoStep();
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#04070c'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#111a26'; ctx.lineWidth=0.5;
+  const xL=m.toXv(0),xR=m.toXv(W),zT=m.toZv(0),zB=m.toZv(H);
+  for(let gx=Math.ceil(Math.min(xL,xR)/s)*s; gx<=Math.max(xL,xR); gx+=s){const X=m.toX(gx);ctx.beginPath();ctx.moveTo(X,0);ctx.lineTo(X,H);ctx.stroke();}
+  for(let gz=Math.ceil(Math.min(zB,zT)/s)*s; gz<=Math.max(zB,zT); gz+=s){const Y=m.toY(gz);ctx.beginPath();ctx.moveTo(0,Y);ctx.lineTo(W,Y);ctx.stroke();}
+  ctx.strokeStyle='#2a3a52'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,m.toY(0));ctx.lineTo(W,m.toY(0));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(m.toX(0),0);ctx.lineTo(m.toX(0),H);ctx.stroke();
+  ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText('X',W-12,m.toY(0)-5); ctx.fillText('Z',m.toX(0)+5,12);
+  ctx.fillText('grade = '+s.toFixed(3)+' '+(unit==='lambda'?'\u03bb':'m'),8,14);
+  const cols=['#e879f9','#38bdf8','#4ade80','#fbbf24','#fb7185','#a78bfa'];
+  WIRES.forEach((w,i)=>{
+    const c=cols[i%cols.length];
+    ctx.strokeStyle=c; ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(m.toX(w.x1),m.toY(w.z1));ctx.lineTo(m.toX(w.x2),m.toY(w.z2));ctx.stroke();
+    [[w.x1,w.z1],[w.x2,w.z2]].forEach(p=>{ctx.beginPath();ctx.arc(m.toX(p[0]),m.toY(p[1]),3,0,2*PI);ctx.fillStyle=c;ctx.fill();});
+    ctx.fillStyle='#94a3b8';ctx.font='9px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText('#'+(i+1),(m.toX(w.x1)+m.toX(w.x2))/2,(m.toY(w.z1)+m.toY(w.z2))/2-6);
+  });
+  if(drawChain.length){
+    ctx.strokeStyle='#f5d90a';ctx.setLineDash([4,3]);ctx.lineWidth=1.5;ctx.beginPath();
+    drawChain.forEach((p,i)=>{const X=m.toX(p.x),Y=m.toY(p.z);i===0?ctx.moveTo(X,Y):ctx.lineTo(X,Y);});
+    if(geoPreview)ctx.lineTo(m.toX(geoPreview.x),m.toY(geoPreview.z));
+    ctx.stroke();ctx.setLineDash([]);
+    drawChain.forEach(p=>{ctx.beginPath();ctx.arc(m.toX(p.x),m.toY(p.z),3.5,0,2*PI);ctx.fillStyle='#f5d90a';ctx.fill();});
+  }
+  ctx.beginPath();ctx.arc(m.toX(feedDisp[0]),m.toY(feedDisp[2]),5.5,0,2*PI);
+  ctx.fillStyle='#ff334455';ctx.fill();ctx.strokeStyle='#ff3344';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#ff8088';ctx.font='8px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText('fonte',m.toX(feedDisp[0])+8,m.toY(feedDisp[2])-6);
+}
+function geoCanvasInit(){
+  if(geoInited)return; const cv=$('geocanvas'); if(!cv)return; geoInited=true;
+  cv.addEventListener('click',e=>{
+    const r=cv.getBoundingClientRect(), m=geoFit(r.width,r.height);
+    const x=geoSnap(m.toXv(e.clientX-r.left)), z=geoSnap(m.toZv(e.clientY-r.top));
+    if(geoMode==='feed'){feedDisp=[x,0,z];updateFeedUI();drawGeoCanvas();runNEC();return;}
+    if(!drawChain.length){drawChain.push({x,z});drawGeoCanvas();return;}
+    const prev=drawChain[drawChain.length-1];
+    if(Math.abs(prev.x-x)<1e-9&&Math.abs(prev.z-z)<1e-9)return;
+    const dDisp=Math.hypot(x-prev.x,z-prev.z);
+    const dLam=unit==='lambda'?dDisp:dDisp/lamMeters();
+    const nseg=Math.max(4,Math.min(40,Math.round(dLam/0.05)));
+    const defR=unit==='lambda'?0.0008:0.001;
+    WIRES.push({x1:prev.x,y1:0,z1:prev.z,x2:x,y2:0,z2:z,radius:defR,nseg});
+    drawChain.push({x,z});
+    renderWireTable(); runNEC();
+  });
+  cv.addEventListener('mousemove',e=>{
+    if(geoMode!=='pen'||!drawChain.length){if(geoPreview){geoPreview=null;drawGeoCanvas();}return;}
+    const r=cv.getBoundingClientRect(), m=geoFit(r.width,r.height);
+    geoPreview={x:geoSnap(m.toXv(e.clientX-r.left)),z:geoSnap(m.toZv(e.clientY-r.top))};
+    drawGeoCanvas();
+  });
+  cv.addEventListener('mouseleave',()=>{if(geoPreview){geoPreview=null;drawGeoCanvas();}});
+  cv.addEventListener('contextmenu',e=>{e.preventDefault();geoLiftPen();});
+}
+function geoLiftPen(){drawChain=[];geoPreview=null;drawGeoCanvas();}
+function geoUndo(){
+  if(WIRES.length)WIRES.pop();
+  if(drawChain.length)drawChain.pop();
+  renderWireTable();
+  if(WIRES.length)runNEC(); else {sol=null;ff=null;
+    $('hdr-status').textContent='STANDBY';$('hdr-status').style.color='';
+    $('res-status').innerHTML='<span class="live-dot standby"></span> AGUARDANDO';drawGeoCanvas();}
+}
+function geoClear(){WIRES=[];drawChain=[];geoPreview=null;sol=null;ff=null;
+  renderWireTable();
+  $('hdr-status').textContent='STANDBY';$('hdr-status').style.color='';
+  $('res-status').innerHTML='<span class="live-dot standby"></span> AGUARDANDO';
+}
+
 // =================== INIT ===================
 function init(){
   init3D();
+  geoCanvasInit();
   loadTemplate('dipole');
-  window.addEventListener('resize',()=>{drawPattern2D();drawCurrent();
+  window.addEventListener('resize',()=>{drawPattern2D();drawCurrent();drawGeoCanvas();
     const c=$('container3d');const r=c.getBoundingClientRect();
     if(renderer3d&&r.width>0){renderer3d.setSize(r.width,r.height);camera3d.aspect=r.width/r.height;camera3d.updateProjectionMatrix();}});
   const now=new Date();$('footer-ts').textContent=now.toISOString().slice(0,19).replace('T',' ')+' UTC';
