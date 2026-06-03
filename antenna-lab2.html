@@ -337,6 +337,8 @@ footer .ts{color:var(--text-3);}
 .wt-field label{font-size:8px;color:var(--text-2);padding-left:2px;letter-spacing:0.03em;}
 .wt-field input{padding:6px;font-size:11.5px;border-radius:4px;width:100%;}
 .wt-foot{display:grid;grid-template-columns:1fr 1fr;gap:5px;align-items:end;margin-top:6px;}
+.wt-role{font-size:7.5px;font-weight:700;letter-spacing:0.06em;padding:1px 5px;border-radius:3px;border:1px solid transparent;font-family:var(--font-mono);vertical-align:middle;display:none;}
+.role-summary{font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);margin-top:9px;padding:7px 9px;background:var(--bg-2);border-radius:6px;border:1px solid var(--border);line-height:1.6;}
 /* drawing canvas */
 .viz-draw{background:var(--border-soft);min-height:0;}
 .viz-draw .viz-cell{height:100%;}
@@ -346,6 +348,9 @@ footer .ts{color:var(--text-3);}
 .viz-resizer:hover::before{background:var(--magenta);}
 .draw-extra{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--text-2);margin-left:auto;padding-right:4px;}
 .snap-sel{background:var(--bg-2);border:1px solid var(--border-strong);color:var(--text-0);border-radius:4px;font-size:9px;padding:3px 4px;font-family:var(--font-mono);cursor:pointer;}
+.gv-tabs{display:inline-flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden;}
+.gv-tab{background:var(--bg-2);border:none;color:var(--text-2);font-size:9px;font-weight:600;padding:3px 9px;cursor:pointer;font-family:var(--font-mono);}
+.gv-tab.active{background:var(--magenta-soft);color:var(--magenta);}
 #geocanvas{cursor:crosshair;}
 </style>
 </head>
@@ -446,7 +451,16 @@ footer .ts{color:var(--text-3);}
           <button class="viz-tab" onclick="geoUndo()">Desfazer</button>
           <button class="viz-tab" onclick="geoClear()">Limpar</button>
         </div>
-        <div class="draw-extra">Snap
+        <div class="draw-extra">
+          <span class="gv-tabs"><button class="gv-tab active" id="gv2d" onclick="setGeoView('2d')">2D</button><button class="gv-tab" id="gv3d" onclick="setGeoView('3d')">3D</button></span>
+          <span id="plane-wrap" style="display:none;">Plano
+            <select class="snap-sel" id="plane-sel" onchange="setGeoPlane(this.value)">
+              <option value="xz">X-Z</option>
+              <option value="xy">X-Y</option>
+              <option value="yz">Y-Z</option>
+            </select>
+          </span>
+          Snap
           <select class="snap-sel" id="snap-sel" onchange="setSnap(this.value)">
             <option value="0.1">0.1λ</option>
             <option value="0.05" selected>0.05λ</option>
@@ -455,8 +469,8 @@ footer .ts{color:var(--text-3);}
           </select>
         </div>
       </div>
-      <div class="card-body"><canvas id="geocanvas"></canvas>
-        <div class="geo-hint" id="geo-hint">Clique para criar nos; cliques seguidos conectam fios. Encaixa em nos existentes (azul). "Novo fio" (ou botao direito) levanta a caneta. "Snap" ajusta a precisao. Arraste a barra abaixo para aumentar o display.</div>
+      <div class="card-body"><canvas id="geocanvas"></canvas><div id="geocanvas3d" style="position:absolute;inset:0;display:none;"></div>
+        <div class="geo-hint" id="geo-hint">2D: clique p/ criar nos (encaixa em nos existentes - azul). 3D: arraste (botao esq.) p/ girar, scroll p/ zoom, clique p/ criar no no plano escolhido. "Novo fio" (ou botao direito) levanta a caneta. Arraste a barra abaixo p/ aumentar o display.</div>
       </div>
     </div>
   </div>
@@ -764,6 +778,78 @@ function loadTemplate(name){
 }
 
 // =================== WIRE TABLE ===================
+const ROLE_COL={driven:'#4ade80',reflector:'#fb923c',director:'#38bdf8',parasita:'#a78bfa'};
+const ROLE_LBL={driven:'ACIONADO',reflector:'REFLETOR',director:'DIRETOR',parasita:'PARASITA'};
+function wireSize(w){return Math.hypot(w.x2-w.x1,w.y2-w.y1,w.z2-w.z1);}
+function wireCenter(w){return [(w.x1+w.x2)/2,(w.y1+w.y2)/2,(w.z1+w.z2)/2];}
+function distPointSeg(p,a,b){
+  const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]], ap=[p[0]-a[0],p[1]-a[1],p[2]-a[2]];
+  const L2=ab[0]*ab[0]+ab[1]*ab[1]+ab[2]*ab[2];
+  let t=L2>0?(ap[0]*ab[0]+ap[1]*ab[1]+ap[2]*ab[2])/L2:0; t=Math.max(0,Math.min(1,t));
+  const c=[a[0]+ab[0]*t,a[1]+ab[1]*t,a[2]+ab[2]*t];
+  return Math.hypot(p[0]-c[0],p[1]-c[1],p[2]-c[2]);
+}
+// Auto-detect Yagi-style roles. Driven = element holding the feed.
+// Parasitics: front of beam = director, behind = reflector (falls back to length).
+function computeRoles(){
+  const n=WIRES.length, role=new Array(n).fill('parasita'), label=new Array(n).fill('');
+  if(!n) return {role,label,nDrv:0,nRef:0,nDir:0};
+  const tol=1e-6;
+  const eq=(a,b)=>Math.abs(a[0]-b[0])<tol&&Math.abs(a[1]-b[1])<tol&&Math.abs(a[2]-b[2])<tol;
+  const ends=WIRES.map(w=>[[w.x1,w.y1,w.z1],[w.x2,w.y2,w.z2]]);
+  const parent=WIRES.map((_,i)=>i);
+  const find=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x];}return x;};
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    if(ends[i].some(p=>ends[j].some(q=>eq(p,q)))) parent[find(i)]=find(j);
+  }
+  const comp={}; WIRES.forEach((_,i)=>{const r=find(i);(comp[r]=comp[r]||[]).push(i);});
+  // driven component = wire nearest (point-to-segment) to feed
+  const fp=feedDisp; let drivenRoot=find(0),bd=1e18;
+  WIRES.forEach((w,i)=>{const d=distPointSeg(fp,ends[i][0],ends[i][1]); if(d<bd){bd=d;drivenRoot=find(i);}});
+  const drivenWires=comp[drivenRoot]||[];
+  let dC=[0,0,0],dSize=0; drivenWires.forEach(i=>{const c=wireCenter(WIRES[i]);dC[0]+=c[0];dC[1]+=c[1];dC[2]+=c[2];dSize=Math.max(dSize,wireSize(WIRES[i]));});
+  if(drivenWires.length){dC=[dC[0]/drivenWires.length,dC[1]/drivenWires.length,dC[2]/drivenWires.length];}
+  let beam=null;
+  if(typeof ff!=='undefined'&&ff){const th=ff.thB,ph=ff.phB;beam=[Math.sin(th)*Math.cos(ph),Math.sin(th)*Math.sin(ph),Math.cos(th)];}
+  const paras=[];
+  Object.keys(comp).forEach(r=>{ if(+r===drivenRoot)return;
+    const ws=comp[r]; let c=[0,0,0],sz=0;
+    ws.forEach(i=>{const cc=wireCenter(WIRES[i]);c[0]+=cc[0];c[1]+=cc[1];c[2]+=cc[2];sz=Math.max(sz,wireSize(WIRES[i]));});
+    c=[c[0]/ws.length,c[1]/ws.length,c[2]/ws.length];
+    const dv=[c[0]-dC[0],c[1]-dC[1],c[2]-dC[2]];
+    const proj=beam?(dv[0]*beam[0]+dv[1]*beam[1]+dv[2]*beam[2]):0;
+    let kind;
+    if(beam&&Math.abs(proj)>1e-4) kind=proj>0?'director':'reflector';
+    else kind= sz>dSize? 'reflector':'director';
+    paras.push({ws,kind,dist:Math.hypot(dv[0],dv[1],dv[2])});
+  });
+  drivenWires.forEach(i=>{role[i]='driven';label[i]=ROLE_LBL.driven;});
+  const dirs=paras.filter(p=>p.kind==='director').sort((a,b)=>a.dist-b.dist);
+  const refs=paras.filter(p=>p.kind==='reflector').sort((a,b)=>a.dist-b.dist);
+  dirs.forEach((p,k)=>p.ws.forEach(i=>{role[i]='director';label[i]='DIRETOR'+(dirs.length>1?' '+(k+1):'');}));
+  refs.forEach((p,k)=>p.ws.forEach(i=>{role[i]='reflector';label[i]='REFLETOR'+(refs.length>1?' '+(k+1):'');}));
+  return {role,label,nDrv:drivenWires.length,nRef:refs.length,nDir:dirs.length};
+}
+function updateRoleBadges(){
+  const R=computeRoles();
+  WIRES.forEach((w,i)=>{
+    const el=document.querySelector('.wt-role[data-role-i="'+i+'"]');
+    if(el){const r=R.role[i];
+      if(R.label[i]){el.textContent=R.label[i];el.style.display='inline-block';
+        el.style.background=ROLE_COL[r]+'22';el.style.color=ROLE_COL[r];el.style.borderColor=ROLE_COL[r]+'66';}
+      else el.style.display='none';}
+  });
+  const sum=$('role-summary');
+  if(sum){
+    if(WIRES.length>1){ sum.style.display='block';
+      const part=[];
+      if(R.nDrv)part.push('<b style="color:'+ROLE_COL.driven+'">'+R.nDrv+' acionado'+(R.nDrv>1?'s':'')+'</b>');
+      if(R.nRef)part.push('<b style="color:'+ROLE_COL.reflector+'">'+R.nRef+' refletor'+(R.nRef>1?'es':'')+'</b>');
+      if(R.nDir)part.push('<b style="color:'+ROLE_COL.director+'">'+R.nDir+' diretor'+(R.nDir>1?'es':'')+'</b>');
+      sum.innerHTML='Papeis (auto): '+part.join(' &middot; ')+(typeof ff==='undefined'||!ff?' &mdash; resolva p/ refinar pelo feixe':'');
+    } else sum.style.display='none';
+  }
+}
 function renderWireTable(){
   const wrap=$('wire-table'); if(!wrap)return; wrap.innerHTML='';
   const U=unit==='lambda'?'\u03bb':'m';
@@ -771,7 +857,7 @@ function renderWireTable(){
   WIRES.forEach((w,i)=>{
     const card=document.createElement('div'); card.className='wt-wire';
     card.innerHTML=
-      '<div class="wt-wire-head"><span class="wt-wn">Fio #'+(i+1)+'</span><span>'+
+      '<div class="wt-wire-head"><span><span class="wt-wn">Fio #'+(i+1)+'</span> <span class="wt-role" data-role-i="'+i+'"></span></span><span>'+
       '<button class="wt-feedbtn" data-feed="'+i+'">Fonte aqui</button>'+
       '<button class="wt-del" data-del="'+i+'">\u00d7</button></span></div>'+
       '<div class="wt-line"><span class="wt-pl">P1</span>'+fld(w,i,'x1','X1 ('+U+')')+fld(w,i,'y1','Y1')+fld(w,i,'z1','Z1')+'</div>'+
@@ -780,6 +866,7 @@ function renderWireTable(){
       '<div class="wt-field"><label>Segmentos</label><input type="number" step="1" min="1" max="60" value="'+w.nseg+'" data-i="'+i+'" data-f="nseg"></div></div>';
     wrap.appendChild(card);
   });
+  const sum=document.createElement('div'); sum.id='role-summary'; sum.className='role-summary'; sum.style.display='none'; wrap.appendChild(sum);
   wrap.querySelectorAll('input').forEach(inp=>{
     inp.addEventListener('change',e=>{
       const i=+e.target.dataset.i, f=e.target.dataset.f;
@@ -794,7 +881,8 @@ function renderWireTable(){
     feedToWireCenter(+e.currentTarget.dataset.feed); runNEC();
   }));
   const ul=$('unit-lbl'); if(ul)ul.textContent=U;
-  drawGeoCanvas();
+  updateRoleBadges();
+  geoRefresh();
 }
 function addWire(){
   WIRES.push({x1:0,y1:0,z1:-0.235,x2:0,y2:0,z2:0.235,radius:0.0008,nseg:20});
@@ -824,7 +912,7 @@ function runNEC(){
       $('res-status').innerHTML='<span class="live-dot off"></span> '+sol.error; return; }
     ff=farfield(sol.model,sol.I,sol.k,ground);
     derived=computeDerived(t0);
-    updateResults(); draw3D(); drawPattern2D(); drawCurrent(); drawGeoCanvas();
+    updateResults(); draw3D(); drawPattern2D(); drawCurrent(); geoRefresh(); updateRoleBadges();
     $('hdr-status').textContent='RESOLVIDO'; $('hdr-status').style.color='var(--phos)';
     $('res-status').innerHTML='<span class="live-dot"></span> ATIVO';
   },20);
@@ -1090,9 +1178,10 @@ function drawSetMode(m){geoMode=m;
   if(p)p.classList.toggle('active',m==='pen');
   if(f)f.classList.toggle('active',m==='feed');
   if(cv)cv.style.cursor=m==='feed'?'cell':'crosshair';
+  if(geoRenderer)geoRenderer.domElement.style.cursor=m==='feed'?'cell':'crosshair';
 }
 let snapStep=0.05;
-function setSnap(v){snapStep=parseFloat(v)||0;drawGeoCanvas();}
+function setSnap(v){snapStep=parseFloat(v)||0;geoRefresh();}
 function geoStep(){const s=snapStep||0.05;return unit==='lambda'?s:(s*lamMeters());}
 function geoSnap(v){if(!snapStep)return v;const s=geoStep();return Math.round(v/s)*s;}
 function geoNearestNode(x,z,maxd){
@@ -1108,7 +1197,7 @@ function resolvePoint(clientX,clientY,cv){
   return {x:geoSnap(rx),z:geoSnap(rz),onNode:false};
 }
 function relayoutViz(){
-  drawGeoCanvas();drawPattern2D();drawCurrent();
+  geoRefresh();drawPattern2D();drawCurrent();geoResize();
   const c=$('container3d');
   if(c&&renderer3d){const r=c.getBoundingClientRect();
     if(r.width>0&&r.height>0){renderer3d.setSize(r.width,r.height);camera3d.aspect=r.width/r.height;camera3d.updateProjectionMatrix();}}
@@ -1158,13 +1247,17 @@ function drawGeoCanvas(){
   ctx.fillText('X',W-12,m.toY(0)-5); ctx.fillText('Z',m.toX(0)+5,12);
   ctx.fillText('grade '+(snapStep?s.toFixed(3):'(livre)')+' '+(unit==='lambda'?'\u03bb':'m'),8,14);
   const cols=['#e879f9','#38bdf8','#4ade80','#fbbf24','#fb7185','#a78bfa'];
+  const R=computeRoles();
   WIRES.forEach((w,i)=>{
-    const c=cols[i%cols.length];
+    const role=R.role[i]; const c=ROLE_COL[role]||cols[i%cols.length];
     ctx.strokeStyle=c; ctx.lineWidth=2.5;
     ctx.beginPath();ctx.moveTo(m.toX(w.x1),m.toY(w.z1));ctx.lineTo(m.toX(w.x2),m.toY(w.z2));ctx.stroke();
     [[w.x1,w.z1],[w.x2,w.z2]].forEach(p=>{ctx.beginPath();ctx.arc(m.toX(p[0]),m.toY(p[1]),3.5,0,2*PI);ctx.fillStyle=c;ctx.fill();});
-    ctx.fillStyle='#94a3b8';ctx.font='9px JetBrains Mono';ctx.textAlign='center';
-    ctx.fillText('#'+(i+1),(m.toX(w.x1)+m.toX(w.x2))/2,(m.toY(w.z1)+m.toY(w.z2))/2-6);
+    const short={driven:'ACION',reflector:'REFL',director:'DIR'}[role]||'';
+    const lbl='#'+(i+1)+(R.label[i]?' '+(R.label[i].replace('REFLETOR','REFL').replace('DIRETOR','DIR').replace('ACIONADO','ACION')):'');
+    const mx=(m.toX(w.x1)+m.toX(w.x2))/2, my=(m.toY(w.z1)+m.toY(w.z2))/2;
+    ctx.fillStyle=c;ctx.font='9px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(lbl,mx,my-6);
   });
   if(drawChain.length){
     ctx.strokeStyle='#f5d90a';ctx.setLineDash([4,3]);ctx.lineWidth=1.5;ctx.beginPath();
@@ -1177,6 +1270,13 @@ function drawGeoCanvas(){
   ctx.fillStyle='#ff334455';ctx.fill();ctx.strokeStyle='#ff3344';ctx.lineWidth=2;ctx.stroke();
   ctx.fillStyle='#ff8088';ctx.font='8px JetBrains Mono';ctx.textAlign='left';
   ctx.fillText('fonte',m.toX(feedDisp[0])+8,m.toY(feedDisp[2])-6);
+  // role legend (when there are parasitics)
+  if(R.nDir+R.nRef>0){
+    let lx=8, ly=27; ctx.font='8px JetBrains Mono'; ctx.textAlign='left';
+    [['Acionado',ROLE_COL.driven],['Refletor',ROLE_COL.reflector],['Diretor',ROLE_COL.director]].forEach(([t,c])=>{
+      ctx.fillStyle=c;ctx.fillRect(lx,ly-7,8,8);ctx.fillStyle='#9fb0c3';ctx.fillText(t,lx+11,ly);
+      lx+=11+ctx.measureText(t).width+12;});
+  }
   // hover marker + coord readout
   if(geoPreview){
     const hx=m.toX(geoPreview.x),hy=m.toY(geoPreview.z);
@@ -1216,19 +1316,171 @@ function geoCanvasInit(){
   cv.addEventListener('mouseleave',()=>{if(geoPreview){geoPreview=null;drawGeoCanvas();}});
   cv.addEventListener('contextmenu',e=>{e.preventDefault();geoLiftPen();});
 }
-function geoLiftPen(){drawChain=[];geoPreview=null;drawGeoCanvas();}
+function geoLiftPen(){drawChain=[];geoPreview=null;geoHover=null;geoRefresh();}
 function geoUndo(){
   if(WIRES.length)WIRES.pop();
   if(drawChain.length)drawChain.pop();
   renderWireTable();
   if(WIRES.length)runNEC(); else {sol=null;ff=null;
     $('hdr-status').textContent='STANDBY';$('hdr-status').style.color='';
-    $('res-status').innerHTML='<span class="live-dot standby"></span> AGUARDANDO';drawGeoCanvas();}
+    $('res-status').innerHTML='<span class="live-dot standby"></span> AGUARDANDO';geoRefresh();}
 }
-function geoClear(){WIRES=[];drawChain=[];geoPreview=null;sol=null;ff=null;
+function geoClear(){WIRES=[];drawChain=[];geoPreview=null;geoHover=null;sol=null;ff=null;
   renderWireTable();
   $('hdr-status').textContent='STANDBY';$('hdr-status').style.color='';
   $('res-status').innerHTML='<span class="live-dot standby"></span> AGUARDANDO';
+}
+
+// =================== GEOMETRY DRAW — 3D VIEW ===================
+let geoView='2d',geoPlane='xz';
+let geoScene=null,geoCamera,geoRenderer,geoRay,geoGroup;
+let geoRotX=0.34,geoRotY=0.0,geoDist=1.7,geoPtr=null,geoMoved=0,geoHover=null;
+function geoRefresh(){ if(geoView==='3d'){ if(geoScene) geoDraw3D(); } else { drawGeoCanvas(); } }
+function setGeoPlane(v){geoPlane=v; if(geoScene)geoDraw3D();}
+function setGeoView(v){
+  geoView=v;
+  const b2=$('gv2d'),b3=$('gv3d'),pw=$('plane-wrap'),c2=$('geocanvas'),c3=$('geocanvas3d');
+  if(b2)b2.classList.toggle('active',v==='2d');
+  if(b3)b3.classList.toggle('active',v==='3d');
+  if(pw)pw.style.display=v==='3d'?'inline':'none';
+  if(c2)c2.style.display=v==='3d'?'none':'block';
+  if(c3)c3.style.display=v==='3d'?'block':'none';
+  if(v==='3d'){ geoInit3D(); geoResize(); geoDraw3D(); } else { drawGeoCanvas(); }
+}
+function geoNearestNode3(x,y,z,maxd){
+  let best=null,bd=maxd;
+  WIRES.forEach(w=>{[[w.x1,w.y1,w.z1],[w.x2,w.y2,w.z2]].forEach(p=>{const d=Math.hypot(p[0]-x,p[1]-y,p[2]-z);if(d<bd){bd=d;best=[p[0],p[1],p[2]];}});});
+  return best;
+}
+function geoWorkPlane(){
+  if(geoPlane==='xz') return new THREE.Plane(new THREE.Vector3(0,0,1),0); // model y=0
+  if(geoPlane==='xy') return new THREE.Plane(new THREE.Vector3(0,1,0),0); // model z=0
+  return new THREE.Plane(new THREE.Vector3(1,0,0),0);                     // model x=0
+}
+function mapHitToModel(hx,hy,hz){
+  // three=(modelX, modelZ, modelY)
+  let mx=hx, mz=hy, my=hz;
+  if(geoPlane==='xz'){my=0;mx=geoSnap(mx);mz=geoSnap(mz);}
+  else if(geoPlane==='xy'){mz=0;mx=geoSnap(mx);my=geoSnap(my);}
+  else {mx=0;my=geoSnap(my);mz=geoSnap(mz);}
+  return [mx,my,mz];
+}
+function geoRayPoint(e){
+  if(!geoRenderer)return null;
+  const dom=geoRenderer.domElement, r=dom.getBoundingClientRect();
+  if(r.width<1||r.height<1)return null;
+  const ndc=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+  geoRay.setFromCamera(ndc, geoCamera);
+  const hit=new THREE.Vector3();
+  if(!geoRay.ray.intersectPlane(geoWorkPlane(),hit))return null;
+  let mm=mapHitToModel(hit.x,hit.y,hit.z);
+  const node=geoNearestNode3(mm[0],mm[1],mm[2],(snapStep||0.05)*0.7);
+  if(node)return {x:node[0],y:node[1],z:node[2],onNode:true};
+  return {x:mm[0],y:mm[1],z:mm[2],onNode:false};
+}
+function geoPlacePoint(e){
+  const pt=geoRayPoint(e); if(!pt)return;
+  if(geoMode==='feed'){feedDisp=[pt.x,pt.y,pt.z];updateFeedUI();geoDraw3D();runNEC();return;}
+  if(!drawChain.length){drawChain.push({x:pt.x,y:pt.y,z:pt.z});geoDraw3D();return;}
+  const prev=drawChain[drawChain.length-1], py=prev.y||0;
+  if(Math.abs(prev.x-pt.x)<1e-9&&Math.abs(py-pt.y)<1e-9&&Math.abs(prev.z-pt.z)<1e-9)return;
+  const dDisp=Math.hypot(pt.x-prev.x,pt.y-py,pt.z-prev.z);
+  const dLam=unit==='lambda'?dDisp:dDisp/lamMeters();
+  const nseg=Math.max(4,Math.min(40,Math.round(dLam/0.05)));
+  const defR=unit==='lambda'?0.0008:0.001;
+  WIRES.push({x1:prev.x,y1:py,z1:prev.z,x2:pt.x,y2:pt.y,z2:pt.z,radius:defR,nseg});
+  drawChain.push({x:pt.x,y:pt.y,z:pt.z});
+  renderWireTable(); runNEC();
+}
+function geoResize(){
+  if(!geoRenderer)return; const c=$('geocanvas3d'); if(!c)return;
+  const r=c.getBoundingClientRect();
+  if(r.width>0&&r.height>0){geoRenderer.setSize(r.width,r.height);geoCamera.aspect=r.width/r.height;geoCamera.updateProjectionMatrix();}
+}
+function geoDraw3D(){
+  if(!geoScene)return;
+  if(geoGroup)geoScene.remove(geoGroup);
+  geoGroup=new THREE.Group();
+  const V=(x,y,z)=>new THREE.Vector3(x,z,y); // model -> three (z up)
+  // work-plane grid
+  const rng=0.55, st=geoStep(), segPts=[];
+  const pm=(u,v)=>geoPlane==='xz'?[u,0,v]:(geoPlane==='xy'?[u,v,0]:[0,u,v]);
+  for(let a=-rng;a<=rng+1e-9;a+=st){
+    let p1=pm(a,-rng),p2=pm(a,rng); segPts.push(V(p1[0],p1[1],p1[2]),V(p2[0],p2[1],p2[2]));
+    let p3=pm(-rng,a),p4=pm(rng,a); segPts.push(V(p3[0],p3[1],p3[2]),V(p4[0],p4[1],p4[2]));
+  }
+  const pg=new THREE.BufferGeometry().setFromPoints(segPts);
+  geoGroup.add(new THREE.LineSegments(pg,new THREE.LineBasicMaterial({color:0x16202e})));
+  // wires by role
+  const R=computeRoles();
+  WIRES.forEach((w,i)=>{
+    const c=new THREE.Color(ROLE_COL[R.role[i]]||'#e879f9');
+    const g=new THREE.BufferGeometry().setFromPoints([V(w.x1,w.y1,w.z1),V(w.x2,w.y2,w.z2)]);
+    const line=new THREE.Line(g,new THREE.LineBasicMaterial({color:c}));
+    geoGroup.add(line);
+    [[w.x1,w.y1,w.z1],[w.x2,w.y2,w.z2]].forEach(p=>{
+      const sp=new THREE.Mesh(new THREE.SphereGeometry(0.012,8,8),new THREE.MeshBasicMaterial({color:c}));
+      sp.position.copy(V(p[0],p[1],p[2])); geoGroup.add(sp);});
+  });
+  // feed marker
+  const fm=new THREE.Mesh(new THREE.SphereGeometry(0.022,12,12),new THREE.MeshBasicMaterial({color:0xff3344}));
+  fm.position.copy(V(feedDisp[0],feedDisp[1]||0,feedDisp[2])); geoGroup.add(fm);
+  // active chain + hover
+  if(drawChain.length){
+    const pts=drawChain.map(p=>V(p.x,p.y||0,p.z));
+    if(geoHover)pts.push(V(geoHover.x,geoHover.y||0,geoHover.z));
+    const g=new THREE.BufferGeometry().setFromPoints(pts);
+    geoGroup.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:0xf5d90a})));
+    drawChain.forEach(p=>{const sp=new THREE.Mesh(new THREE.SphereGeometry(0.016,8,8),new THREE.MeshBasicMaterial({color:0xf5d90a}));sp.position.copy(V(p.x,p.y||0,p.z));geoGroup.add(sp);});
+  }
+  if(geoHover){
+    const hm=new THREE.Mesh(new THREE.SphereGeometry(0.02,10,10),new THREE.MeshBasicMaterial({color:geoHover.onNode?0x38bdf8:(geoMode==='feed'?0xff3344:0xf5d90a)}));
+    hm.position.copy(V(geoHover.x,geoHover.y||0,geoHover.z)); geoGroup.add(hm);
+  }
+  geoScene.add(geoGroup);
+}
+function geoInit3D(){
+  const c=$('geocanvas3d'); if(!c||geoScene)return;
+  const rect=c.getBoundingClientRect();
+  geoScene=new THREE.Scene();
+  geoCamera=new THREE.PerspectiveCamera(50, rect.width/Math.max(1,rect.height),0.01,1000);
+  geoRenderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  geoRenderer.setSize(rect.width||300,rect.height||220); geoRenderer.setPixelRatio(window.devicePixelRatio);
+  geoRenderer.setClearColor(0x04070c,1); c.appendChild(geoRenderer.domElement);
+  geoScene.add(new THREE.AmbientLight(0x8090b0,0.9));
+  const dl=new THREE.DirectionalLight(0xffffff,0.6);dl.position.set(3,5,3);geoScene.add(dl);
+  geoScene.add(new THREE.GridHelper(2,20,0x1e2838,0x0e131b)); // ground (model z=0)
+  [[[1,0,0],0xff5555],[[0,1,0],0x55ff55],[[0,0,1],0x5577ff]].forEach(([d,col])=>{
+    const v=new THREE.Vector3(d[0]*1.0,d[2]*1.0,d[1]*1.0);
+    const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),v]);
+    geoScene.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:col,transparent:true,opacity:0.5})));});
+  geoRay=new THREE.Raycaster();
+  const dom=geoRenderer.domElement; dom.style.cursor='crosshair';
+  dom.addEventListener('pointerdown',e=>{geoPtr={x:e.clientX,y:e.clientY,down:true};geoMoved=0;});
+  dom.addEventListener('pointermove',e=>{
+    if(geoPtr&&geoPtr.down){
+      const dx=e.clientX-geoPtr.x,dy=e.clientY-geoPtr.y; geoMoved+=Math.abs(dx)+Math.abs(dy);
+      if(geoMoved>4){geoRotY+=dx*0.01;geoRotX=Math.max(-PI/2+0.05,Math.min(PI/2-0.05,geoRotX+dy*0.01));}
+      geoPtr.x=e.clientX;geoPtr.y=e.clientY;
+    } else { const pt=geoRayPoint(e); if(pt){geoHover=pt;geoDraw3D();} }
+  });
+  window.addEventListener('pointerup',e=>{
+    if(geoPtr&&geoPtr.down){const click=geoMoved<5;geoPtr.down=false;
+      if(click&&geoView==='3d'){const r=dom.getBoundingClientRect();
+        if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom)geoPlacePoint(e);}}
+  });
+  dom.addEventListener('wheel',e=>{e.preventDefault();geoDist*=e.deltaY>0?1.1:0.9;geoDist=Math.max(0.4,Math.min(40,geoDist));},{passive:false});
+  dom.addEventListener('contextmenu',e=>{e.preventDefault();geoLiftPen();});
+  dom.addEventListener('mouseleave',()=>{if(geoHover){geoHover=null;geoDraw3D();}});
+  geoAnimate();
+}
+function geoAnimate(){
+  if(!geoScene)return; requestAnimationFrame(geoAnimate);
+  if(geoView!=='3d')return;
+  geoCamera.position.x=geoDist*Math.cos(geoRotX)*Math.sin(geoRotY);
+  geoCamera.position.y=geoDist*Math.sin(geoRotX);
+  geoCamera.position.z=geoDist*Math.cos(geoRotX)*Math.cos(geoRotY);
+  geoCamera.lookAt(0,0,0); geoRenderer.render(geoScene,geoCamera);
 }
 
 // =================== INIT ===================
@@ -1237,7 +1489,7 @@ function init(){
   geoCanvasInit();
   vizResizerInit();
   loadTemplate('dipole');
-  window.addEventListener('resize',()=>{drawPattern2D();drawCurrent();drawGeoCanvas();
+  window.addEventListener('resize',()=>{drawPattern2D();drawCurrent();geoRefresh();geoResize();
     const c=$('container3d');const r=c.getBoundingClientRect();
     if(renderer3d&&r.width>0){renderer3d.setSize(r.width,r.height);camera3d.aspect=r.width/r.height;camera3d.updateProjectionMatrix();}});
   const now=new Date();$('footer-ts').textContent=now.toISOString().slice(0,19).replace('T',' ')+' UTC';
