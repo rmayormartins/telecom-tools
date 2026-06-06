@@ -149,7 +149,18 @@ header.top-bar{
 }
 .btn.primary:hover{background:linear-gradient(180deg,#7a2222,#4d1515);}
 .btn.active{background:var(--cell-soft);border-color:var(--cell);color:var(--cell-bright);}
+.btn.cyan.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan);}
 .btn svg{width:12px;height:12px;}
+
+/* full-width add button inside sections */
+.add-btn{
+  width:100%;justify-content:center;margin-bottom:10px;
+  background:linear-gradient(180deg,#1a2230,#10151e);
+  border:1px dashed var(--border-strong);
+}
+.add-btn:hover{border-style:solid;}
+.add-btn.cell.active{background:var(--cell-soft);border-color:var(--cell);color:var(--cell-bright);border-style:solid;}
+.add-btn.ue.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan);border-style:solid;}
 
 /* ===== MAIN ===== */
 main{
@@ -254,7 +265,7 @@ select{
 .chip:hover{border-color:var(--text-2);color:var(--text-0);}
 .chip.active{background:var(--cell-soft);border-color:var(--cell);color:var(--cell-bright);}
 
-/* ===== ERB LIST ===== */
+/* ===== ERB / UE LIST ===== */
 .erb-list{display:flex;flex-direction:column;gap:4px;margin-top:8px;}
 .erb-item{
   display:flex;align-items:center;gap:8px;padding:6px 8px;
@@ -271,6 +282,12 @@ select{
 }
 .erb-item .erb-del:hover{color:var(--rose);}
 
+.ue-item.selected{border-color:var(--cyan);background:var(--cyan-soft);}
+.ue-item .erb-id{color:var(--cyan);}
+.ue-item .erb-rsrp{color:var(--text-1);font-size:10px;margin-left:auto;margin-right:6px;}
+
+.empty-row{color:var(--text-3);font-family:var(--font-mono);font-size:10px;text-align:center;padding:12px;}
+
 /* ===== VIZ ===== */
 .viz{display:grid;grid-template-rows:1fr 240px;min-height:0;}
 .map-wrap{position:relative;min-height:0;background:#000;}
@@ -279,12 +296,14 @@ select{
 .leaflet-control-zoom a{background:var(--bg-2)!important;color:var(--text-0)!important;border-color:var(--border)!important;}
 .leaflet-control-zoom a:hover{background:var(--bg-3)!important;}
 .leaflet-tooltip{background:var(--bg-3);color:var(--text-0);border:1px solid var(--border-strong);box-shadow:none;font-family:var(--font-mono);font-size:11px;}
+.leaflet-image-layer{image-rendering:auto;}
 
 .map-legend{
-  position:absolute;top:10px;left:10px;background:rgba(7,9,13,0.9);
-  border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(7,9,13,0.9);
+  border:1px solid var(--border);border-radius:var(--radius);padding:7px 14px;
   z-index:500;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
-  backdrop-filter:blur(8px);display:flex;gap:14px;flex-wrap:wrap;
+  backdrop-filter:blur(8px);display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
 }
 .map-legend .li{display:flex;align-items:center;gap:6px;}
 .map-legend .sw{display:inline-block;}
@@ -320,7 +339,7 @@ select{
   background:rgba(7,9,13,0.8);border:1px solid var(--border);
   border-radius:var(--radius);padding:5px 9px;z-index:500;
   font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);
-  backdrop-filter:blur(8px);pointer-events:none;letter-spacing:0.03em;
+  backdrop-filter:blur(8px);pointer-events:none;letter-spacing:0.03em;max-width:280px;text-align:right;
 }
 
 /* bottom strip */
@@ -355,6 +374,14 @@ select{
 .live-dot.off{background:var(--rose);box-shadow:0 0 6px var(--rose);}
 .live-dot.standby{background:var(--amber);box-shadow:0 0 6px var(--amber);}
 
+.ue-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
+.ue-tab{
+  padding:4px 9px;background:var(--bg-2);border:1px solid var(--border);
+  border-radius:3px;font-family:var(--font-mono);font-size:10px;color:var(--text-1);
+  cursor:pointer;transition:all .15s;
+}
+.ue-tab.active{background:var(--cyan-soft);border-color:var(--cyan);color:var(--cyan);}
+
 .gauge{margin-top:4px;height:10px;background:var(--bg-0);border:1px solid var(--border);border-radius:2px;overflow:hidden;position:relative;}
 .gauge-fill{height:100%;border-radius:1px;transition:width 0.4s ease,background 0.4s ease;}
 .gauge-fill.good{background:linear-gradient(90deg,#14532d,var(--phos));box-shadow:0 0 8px var(--phos-glow);}
@@ -376,6 +403,7 @@ select{
 .info-box.ok{border-left-color:var(--phos);background:rgba(74,222,128,0.03);}
 .info-box.warn-box{border-left-color:var(--amber);background:rgba(251,191,36,0.04);}
 .info-box.bad-box{border-left-color:var(--rose);background:rgba(251,113,133,0.04);}
+.info-box.cyan-box{border-left-color:var(--cyan);background:rgba(56,189,248,0.04);}
 .info-box strong{color:var(--text-0);}
 .divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
 
@@ -432,7 +460,6 @@ footer .ts{color:var(--text-3);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
       Simular
     </button>
-    <button class="btn" id="btn-add-erb" onclick="toggleAddMode()">+ ERB</button>
     <button class="btn" onclick="resetAll()">Reset</button>
   </div>
 </header>
@@ -455,9 +482,10 @@ footer .ts{color:var(--text-3);}
         <span class="chev">&#9654;</span>
       </div>
       <div class="section-body open">
-        <div class="help" style="margin-bottom:8px;">Clique em "+ ERB" e depois no mapa para posicionar. Selecione uma ERB na lista para editar.</div>
+        <button class="btn add-btn cell" id="btn-add-erb" onclick="event.stopPropagation();toggleAddMode()">+ Adicionar ERB</button>
+        <div class="help" style="margin:-2px 0 8px;">Clique no botao e depois no mapa para posicionar. Selecione uma ERB na lista para editar e arraste o pino para reposicionar.</div>
         <div class="erb-list" id="erb-list">
-          <div style="color:var(--text-3);font-family:var(--font-mono);font-size:10px;text-align:center;padding:12px;">Nenhuma ERB adicionada</div>
+          <div class="empty-row">Nenhuma ERB adicionada</div>
         </div>
       </div>
     </div>
@@ -596,6 +624,11 @@ footer .ts{color:var(--text-3);}
         <span class="chev">&#9654;</span>
       </div>
       <div class="section-body">
+        <button class="btn add-btn ue" id="btn-add-ue" onclick="event.stopPropagation();toggleAddUeMode()">+ Adicionar UE</button>
+        <div class="help" style="margin:-2px 0 8px;">Posicione receptores no mapa para medir RSRP, SINR, RSRQ e throughput no ponto. Arraste o pino para medir em tempo real.</div>
+        <div class="erb-list" id="ue-list" style="margin-bottom:10px;">
+          <div class="empty-row">Nenhum UE adicionado</div>
+        </div>
         <div class="field-row">
           <div class="field">
             <label>Ganho antena UE <span class="unit">(dBi)</span></label>
@@ -646,8 +679,8 @@ footer .ts{color:var(--text-3);}
           </select>
         </div>
         <div class="field">
-          <label>Morfologia / Ambiente <span class="tip" data-tip="Tipo de ambiente urbano afeta drasticamente a perda de propagacao. Centros urbanos densos sofrem 15-25 dB a mais de perda que areas rurais.">i</span></label>
-          <select id="morphology">
+          <label>Morfologia / Ambiente <span class="tip" data-tip="Tipo de ambiente urbano afeta drasticamente a perda de propagacao. Centros urbanos densos sofrem 15-25 dB a mais de perda que areas rurais. Tambem controla o sombreamento espacial do heatmap.">i</span></label>
+          <select id="morphology" onchange="onMorphChange()">
             <option value="dense-urban">Urbano Denso (centro comercial)</option>
             <option value="urban" selected>Urbano (residencial)</option>
             <option value="suburban">Suburbano</option>
@@ -667,9 +700,15 @@ footer .ts{color:var(--text-3);}
             <input type="number" id="indoor-loss" value="0" min="0" max="30" step="1"/>
           </div>
         </div>
-        <div class="field">
-          <label>Perda por vegetacao <span class="unit">(dB)</span></label>
-          <input type="number" id="foliage-loss" value="0" min="0" max="20" step="0.5"/>
+        <div class="field-row">
+          <div class="field">
+            <label>Perda por vegetacao <span class="unit">(dB)</span></label>
+            <input type="number" id="foliage-loss" value="0" min="0" max="20" step="0.5"/>
+          </div>
+          <div class="field">
+            <label>Sombreamento σ <span class="unit">(dB)</span> <span class="tip" data-tip="Desvio-padrao do sombreamento log-normal (shadow fading) usado para tornar o heatmap irregular, simulando clutter e relevo. 0 = sem variacao espacial.">i</span></label>
+            <input type="number" id="shadow-sigma" value="7" min="0" max="14" step="0.5"/>
+          </div>
         </div>
       </div>
     </div>
@@ -698,7 +737,7 @@ footer .ts{color:var(--text-3);}
         </div>
         <div class="field">
           <label>Metrica exibida</label>
-          <select id="hm-metric">
+          <select id="hm-metric" onchange="onMetricChange()">
             <option value="rsrp" selected>RSRP (dBm)</option>
             <option value="sinr">SINR (dB)</option>
             <option value="rsrq">RSRQ (dB)</option>
@@ -721,7 +760,7 @@ footer .ts{color:var(--text-3);}
         </div>
         <div class="field">
           <label>Opacidade heatmap</label>
-          <input type="number" id="hm-opacity" value="0.45" min="0.1" max="0.9" step="0.05"/>
+          <input type="number" id="hm-opacity" value="0.55" min="0.1" max="0.9" step="0.05"/>
         </div>
       </div>
     </div>
@@ -751,7 +790,7 @@ footer .ts{color:var(--text-3);}
       <button class="btn" id="btn-toggle-sectors" onclick="toggleSectors()">Setores</button>
       <button class="btn" onclick="clearHeatmap()">Limpar HM</button>
     </div>
-    <div class="map-instructions" id="map-instr">Clique "+ ERB" para posicionar torres no mapa</div>
+    <div class="map-instructions" id="map-instr">Use "+ Adicionar ERB" no painel esquerdo para posicionar torres</div>
   </div>
   <div class="bottom-strip">
     <div class="card">
@@ -811,10 +850,10 @@ footer .ts{color:var(--text-3);}
       <div class="section-body open" id="res-cov">
         <div class="kv"><span class="k">Raio celula est.</span><span class="v cell" id="r-cellrad">--<span class="unit">km</span></span></div>
         <div class="kv"><span class="k">Area celula</span><span class="v" id="r-cellarea">--<span class="unit">km²</span></span></div>
-        <div class="kv"><span class="k">Area total (todas ERBs)</span><span class="v" id="r-totalarea">--<span class="unit">km²</span></span></div>
+        <div class="kv"><span class="k">Area estudo (grid)</span><span class="v" id="r-totalarea">--<span class="unit">km²</span></span></div>
         <div class="kv"><span class="k">% Area coberta (bom)</span><span class="v good" id="r-covgood">--<span class="unit">%</span></span></div>
         <div class="kv"><span class="k">% Area coberta (medio)</span><span class="v warn" id="r-covmid">--<span class="unit">%</span></span></div>
-        <div class="kv"><span class="k">% Area coberta (fraco)</span><span class="v bad" id="r-covweak">--<span class="unit">%</span></span></div>
+        <div class="kv"><span class="k">% Area sem cobertura</span><span class="v bad" id="r-covweak">--<span class="unit">%</span></span></div>
         <div class="gauge" id="gauge-cov"><div class="gauge-fill good" id="gauge-cov-fill" style="width:0%"></div><div class="gauge-label" id="gauge-cov-label">--</div></div>
       </div>
     </div>
@@ -853,6 +892,38 @@ footer .ts{color:var(--text-3);}
       </div>
     </div>
 
+    <!-- RX / UE ANALYSIS -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Analise do Receptor (RX/UE)</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open" id="res-ue">
+        <div id="ue-tabs" class="ue-tabs" style="display:none;"></div>
+        <div id="ue-detail">
+          <div class="info-box cyan-box" id="ue-empty-box">
+            <strong>Nenhum UE posicionado.</strong> Use "+ Adicionar UE" no painel esquerdo e clique no mapa. Os calculos a seguir (RSRP recebido, SINR, RSRQ, throughput no ponto e modulacao viavel) sao medidos a partir da ERB servidora (best-server) no local exato do receptor.
+          </div>
+          <div id="ue-kvs" style="display:none;">
+            <div class="kv"><span class="k">ERB servidora</span><span class="v cell" id="u-serving">--</span></div>
+            <div class="kv"><span class="k">Distancia a servidora</span><span class="v" id="u-dist">--<span class="unit">km</span></span></div>
+            <div class="kv"><span class="k">RSRP (medido)</span><span class="v" id="u-rsrp">--<span class="unit">dBm</span></span></div>
+            <div class="kv"><span class="k">Nivel Rx no UE</span><span class="v acc" id="u-rxlvl">--<span class="unit">dBm</span></span></div>
+            <div class="kv"><span class="k">RSSI</span><span class="v" id="u-rssi">--<span class="unit">dBm</span></span></div>
+            <div class="kv"><span class="k">SINR</span><span class="v" id="u-sinr">--<span class="unit">dB</span></span></div>
+            <div class="kv"><span class="k">RSRQ</span><span class="v" id="u-rsrq">--<span class="unit">dB</span></span></div>
+            <div class="kv"><span class="k">Margem vs sensib.</span><span class="v" id="u-margin">--<span class="unit">dB</span></span></div>
+            <div class="kv"><span class="k">Throughput no ponto</span><span class="v acc" id="u-tput">--<span class="unit">Mbps</span></span></div>
+            <div class="kv"><span class="k">Efic. espectral</span><span class="v" id="u-se">--<span class="unit">bps/Hz</span></span></div>
+            <div class="kv"><span class="k">Modulacao viavel</span><span class="v" id="u-mod">--</span></div>
+            <div class="kv"><span class="k">ERBs no alcance</span><span class="v" id="u-servers">--</span></div>
+            <div class="gauge" id="gauge-ue"><div class="gauge-fill good" id="gauge-ue-fill" style="width:0%"></div><div class="gauge-label" id="gauge-ue-label">--</div></div>
+            <div class="info-box" id="ue-verdict" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- TECH INFO -->
     <div class="section">
       <div class="section-head" onclick="toggleSection(this)">
@@ -874,7 +945,7 @@ footer .ts{color:var(--text-3);}
 <!-- FOOTER -->
 <footer>
   <div class="author">
-    Cellular Lab v1.0 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
+    Cellular Lab v1.1 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
   </div>
   <div class="ts" id="footer-ts"></div>
 </footer>
@@ -887,7 +958,10 @@ footer .ts{color:var(--text-3);}
 
 <script>
 // ============================================================
-//  CELLULAR LAB — Full simulation engine
+//  CELLULAR LAB v1.1 — simulation engine
+//  Heatmap raster best-server com padrao de antena (H+V),
+//  downtilt, sombreamento log-normal correlacionado (clutter),
+//  selecao de servidora, SINR/RSRQ/throughput por celula.
 // ============================================================
 
 // ---- State ----
@@ -895,11 +969,20 @@ let erbs = [];
 let erbIdCounter = 0;
 let selectedErbIdx = -1;
 let addMode = false;
+
+let ues = [];
+let ueIdCounter = 0;
+let selectedUeIdx = -1;
+let addUeMode = false;
+
 let heatmapVisible = true;
 let sectorsVisible = true;
-let heatmapLayer = null;
+let heatmapLayer = null;     // L.imageOverlay
 let sectorLayers = [];
 let erbMarkers = [];
+let ueMarkers = [];
+
+let lastCellRadius = 1;      // km, from last sim
 
 // ---- Map init ----
 const map = L.map('map', {
@@ -908,26 +991,28 @@ const map = L.map('map', {
   zoomControl: true
 });
 
-// Dark tile layer
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
   subdomains: 'abcd',
   maxZoom: 19
 }).addTo(map);
 
-// ---- Toggle section ----
+// ---- UI helpers ----
 function toggleSection(el) {
   el.classList.toggle('open');
-  const body = el.nextElementSibling;
-  body.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
 }
-
-// ---- Utility ----
 function $(id) { return document.getElementById(id); }
 function val(id) { return parseFloat($(id).value) || 0; }
 function setVal(id, v) { $(id).value = v; }
-function setText(id, t) { $(id).textContent = t; }
-function setHTML(id, h) { $(id).innerHTML = h; }
+function setText(id, t) { const e=$(id); if(e) e.textContent = t; }
+function setHTML(id, h) { const e=$(id); if(e) e.innerHTML = h; }
+
+// ---- Morphology shadowing sigma defaults (dB) ----
+const SIGMA_DEFAULT = {
+  'dense-urban': 9, 'urban': 7, 'suburban': 6,
+  'rural': 4, 'open': 3, 'industrial': 8, 'indoor': 8
+};
 
 // ---- Technology presets ----
 const TECH_PRESETS = {
@@ -941,8 +1026,7 @@ const TECH_PRESETS = {
 
 function loadTechPreset(key) {
   const p = TECH_PRESETS[key];
-  $(  'technology').value = p.tech;
-  // find band option
+  $('technology').value = p.tech;
   const bandSel = $('band');
   for (let i=0; i<bandSel.options.length; i++) {
     if (bandSel.options[i].value === String(p.band)) { bandSel.selectedIndex = i; break; }
@@ -955,18 +1039,17 @@ function loadTechPreset(key) {
   $('sectors').value = String(p.sectors);
   setVal('ant-height', p.height);
   $('mimo').value = p.mimo;
-  // chips
   document.querySelectorAll('#tech-presets .chip').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
+  if (window.event && event.target) event.target.classList.add('active');
   onTechChange();
   onBandChange();
 }
 
 function onTechChange() {
   const t = $('technology').value;
-  $('hdr-tech').textContent = {
+  setText('hdr-tech', {
     '2g':'2G GSM','3g':'3G UMTS','4g':'4G LTE','5g-sub6':'5G NR Sub6','5g-mmwave':'5G mmWave'
-  }[t] || t;
+  }[t] || t);
   updateTechInfo();
 }
 
@@ -977,8 +1060,7 @@ function onBandChange() {
   const bw = opt.getAttribute('data-bw');
   if (bw) setVal('bandwidth', parseInt(bw));
   const label = opt.textContent.split('—')[0].trim();
-  $('hdr-band').innerHTML = label + '<span class="unit">' + freq + 'MHz</span>';
-  $('hdr-freq').innerHTML = (freq >= 1000 ? (freq/1000).toFixed(1) : freq) + '<span class="unit">' + (freq >= 1000 ? 'GHz' : 'MHz') + '</span>';
+  setHTML('hdr-band', label + '<span class="unit">' + freq + 'MHz</span>');
 }
 
 function onModelChange() {
@@ -988,12 +1070,21 @@ function onModelChange() {
     'cost231-wim':'COST-231 W-I','3gpp-uma':'3GPP UMa','3gpp-umi':'3GPP UMi',
     '3gpp-rma':'3GPP RMa','itu-r-p1411':'ITU-R P.1411','sui':'SUI','ecc33':'ECC-33'
   };
-  $('map-model-label').textContent = labels[m] || m;
-  $('chart-model-label').textContent = labels[m] || m;
-  $('hdr-model') && ($('hdr-model').textContent = labels[m] || m);
+  setText('map-model-label', labels[m] || m);
+  setText('chart-model-label', labels[m] || m);
 }
 
-// ---- Tech info ----
+function onMorphChange() {
+  const m = $('morphology').value;
+  setVal('shadow-sigma', SIGMA_DEFAULT[m] != null ? SIGMA_DEFAULT[m] : 7);
+  if (erbs.length) runSimulation();
+}
+
+function onMetricChange() {
+  setText('chart-rsrp-label', { rsrp:'dBm', sinr:'dB', rsrq:'dB', throughput:'Mbps' }[$('hm-metric').value] || 'dBm');
+  if (erbs.length) runSimulation();
+}
+
 function updateTechInfo() {
   const t = $('technology').value;
   const infos = {
@@ -1006,27 +1097,21 @@ function updateTechInfo() {
   setHTML('tech-info-box', infos[t] || '');
 }
 
-// ---- ERB Management ----
+// ============================================================
+//  ERB MANAGEMENT
+// ============================================================
 function toggleAddMode() {
   addMode = !addMode;
-  const btn = $('btn-add-erb');
-  btn.classList.toggle('active', addMode);
-  $('map-instr').textContent = addMode ? 'Clique no mapa para posicionar a ERB' : 'Clique "+ ERB" para posicionar torres no mapa';
+  if (addMode) { addUeMode = false; $('btn-add-ue').classList.remove('active'); }
+  $('btn-add-erb').classList.toggle('active', addMode);
+  $('map-instr').textContent = addMode ? 'Clique no mapa para posicionar a ERB' : 'Use "+ Adicionar ERB" no painel esquerdo para posicionar torres';
   map.getContainer().style.cursor = addMode ? 'crosshair' : '';
 }
 
-map.on('click', function(e) {
-  if (!addMode) return;
-  addErb(e.latlng.lat, e.latlng.lng);
-  toggleAddMode();
-});
-
 function addErb(lat, lng) {
   erbIdCounter++;
-  const tech = $('technology').value;
   const erb = {
-    id: erbIdCounter,
-    lat, lng,
+    id: erbIdCounter, lat, lng,
     tech: $('technology').value,
     band: $('band').value,
     bw: val('bandwidth'),
@@ -1044,24 +1129,15 @@ function addErb(lat, lng) {
   selectedErbIdx = erbs.length - 1;
   updateErbList();
   addErbMarker(erb);
-  $('hdr-erbs').textContent = erbs.length;
+  setText('hdr-erbs', erbs.length);
 }
 
 function addErbMarker(erb) {
   const icon = L.divIcon({
     className: '',
-    html: `<div style="
-      width:16px;height:16px;background:var(--cell);border:2px solid #fff;
-      border-radius:50%;box-shadow:0 0 12px rgba(239,68,68,0.6);
-      position:relative;
-    "><div style="
-      position:absolute;top:-18px;left:50%;transform:translateX(-50%);
-      font-family:'JetBrains Mono';font-size:9px;color:#ef4444;
-      white-space:nowrap;text-shadow:0 0 4px #000,0 0 8px #000;
-      font-weight:600;letter-spacing:0.05em;
-    ">${erb.label}</div></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
+    html: `<div style="width:16px;height:16px;background:var(--cell);border:2px solid #fff;border-radius:50%;box-shadow:0 0 12px rgba(239,68,68,0.6);position:relative;">
+      <div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono';font-size:9px;color:#ef4444;white-space:nowrap;text-shadow:0 0 4px #000,0 0 8px #000;font-weight:600;letter-spacing:0.05em;">${erb.label}</div></div>`,
+    iconSize: [16, 16], iconAnchor: [8, 8]
   });
   const marker = L.marker([erb.lat, erb.lng], { icon, draggable: true })
     .addTo(map)
@@ -1071,6 +1147,7 @@ function addErbMarker(erb) {
     const pos = e.target.getLatLng();
     const idx = erbs.findIndex(x => x.id === erb.id);
     if (idx >= 0) { erbs[idx].lat = pos.lat; erbs[idx].lng = pos.lng; }
+    if (lastCellRadius && erbs.length) runSimulation();
   });
   marker.on('click', function() {
     const idx = erbs.findIndex(x => x.id === erb.id);
@@ -1081,30 +1158,22 @@ function addErbMarker(erb) {
 
 function updateErbList() {
   const list = $('erb-list');
-  if (erbs.length === 0) {
-    list.innerHTML = '<div style="color:var(--text-3);font-family:var(--font-mono);font-size:10px;text-align:center;padding:12px;">Nenhuma ERB adicionada</div>';
-    return;
-  }
+  if (erbs.length === 0) { list.innerHTML = '<div class="empty-row">Nenhuma ERB adicionada</div>'; return; }
   list.innerHTML = erbs.map((e, i) => {
     const techLabel = {'2g':'GSM','3g':'UMTS','4g':'LTE','5g-sub6':'5G','5g-mmwave':'mmW'}[e.tech]||e.tech;
     return `<div class="erb-item ${i===selectedErbIdx?'selected':''}" onclick="selectErb(${i})">
       <span class="erb-id">${e.label}</span>
-      <span class="erb-tech">${techLabel} ${e.band}MHz ${e.txPower}dBm</span>
+      <span class="erb-tech">${techLabel} ${e.band}MHz ${e.txPower}dBm · ${e.sectors}set</span>
       <span class="erb-del" onclick="event.stopPropagation();removeErb(${i})">✕</span>
     </div>`;
   }).join('');
 }
 
-function selectErb(idx) {
-  selectedErbIdx = idx;
-  updateErbList();
-  loadErbConfig(idx);
-}
+function selectErb(idx) { selectedErbIdx = idx; updateErbList(); loadErbConfig(idx); }
 
 function loadErbConfig(idx) {
   const e = erbs[idx];
   $('technology').value = e.tech;
-  // find band
   const bandSel = $('band');
   for (let i=0; i<bandSel.options.length; i++) {
     if (bandSel.options[i].value === String(e.band)) { bandSel.selectedIndex = i; break; }
@@ -1129,7 +1198,8 @@ function removeErb(idx) {
   erbs.splice(idx, 1);
   if (selectedErbIdx >= erbs.length) selectedErbIdx = erbs.length - 1;
   updateErbList();
-  $('hdr-erbs').textContent = erbs.length;
+  setText('hdr-erbs', erbs.length);
+  if (erbs.length) runSimulation(); else resetResults();
 }
 
 function saveCurrentErbConfig() {
@@ -1149,7 +1219,83 @@ function saveCurrentErbConfig() {
   updateErbList();
 }
 
-// ---- Propagation Models ----
+// ============================================================
+//  UE (RECEPTOR) MANAGEMENT
+// ============================================================
+function toggleAddUeMode() {
+  addUeMode = !addUeMode;
+  if (addUeMode) { addMode = false; $('btn-add-erb').classList.remove('active'); }
+  $('btn-add-ue').classList.toggle('active', addUeMode);
+  $('map-instr').textContent = addUeMode ? 'Clique no mapa para posicionar o receptor (UE)' : 'Use "+ Adicionar UE" no painel esquerdo para medir no ponto';
+  map.getContainer().style.cursor = addUeMode ? 'crosshair' : '';
+}
+
+function addUe(lat, lng) {
+  ueIdCounter++;
+  const ue = { id: ueIdCounter, lat, lng, label: 'UE-' + String(ueIdCounter).padStart(3,'0') };
+  ues.push(ue);
+  selectedUeIdx = ues.length - 1;
+  addUeMarker(ue);
+  analyzeUEs();
+}
+
+function addUeMarker(ue) {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:12px;height:12px;background:var(--cyan);border:2px solid #04070c;border-radius:50%;box-shadow:0 0 10px rgba(56,189,248,0.8);position:relative;">
+      <div style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono';font-size:9px;color:#38bdf8;white-space:nowrap;text-shadow:0 0 4px #000,0 0 8px #000;font-weight:600;">${ue.label}</div></div>`,
+    iconSize: [12, 12], iconAnchor: [6, 6]
+  });
+  const marker = L.marker([ue.lat, ue.lng], { icon, draggable: true })
+    .addTo(map)
+    .bindTooltip(ue.label, { direction: 'right', offset: [10, 0] });
+  marker.on('dragend', function(e) {
+    const pos = e.target.getLatLng();
+    const idx = ues.findIndex(x => x.id === ue.id);
+    if (idx >= 0) { ues[idx].lat = pos.lat; ues[idx].lng = pos.lng; selectedUeIdx = idx; }
+    analyzeUEs();
+  });
+  marker.on('click', function() {
+    const idx = ues.findIndex(x => x.id === ue.id);
+    if (idx >= 0) { selectedUeIdx = idx; renderUeDetail(); updateUeList(); }
+  });
+  ueMarkers.push({ id: ue.id, marker });
+}
+
+function updateUeList() {
+  const list = $('ue-list');
+  if (ues.length === 0) { list.innerHTML = '<div class="empty-row">Nenhum UE adicionado</div>'; return; }
+  list.innerHTML = ues.map((u, i) => {
+    const rs = (u.metrics && isFinite(u.metrics.rsrp)) ? u.metrics.rsrp.toFixed(0)+' dBm' : '--';
+    return `<div class="erb-item ue-item ${i===selectedUeIdx?'selected':''}" onclick="selectUe(${i})">
+      <span class="erb-id">${u.label}</span>
+      <span class="erb-rsrp">${rs}</span>
+      <span class="erb-del" onclick="event.stopPropagation();removeUe(${i})">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function selectUe(idx) { selectedUeIdx = idx; updateUeList(); renderUeDetail(); }
+
+function removeUe(idx) {
+  const ue = ues[idx];
+  const mk = ueMarkers.find(m => m.id === ue.id);
+  if (mk) { map.removeLayer(mk.marker); ueMarkers = ueMarkers.filter(m => m.id !== ue.id); }
+  ues.splice(idx, 1);
+  if (selectedUeIdx >= ues.length) selectedUeIdx = ues.length - 1;
+  updateUeList();
+  renderUeDetail();
+}
+
+// ---- map click ----
+map.on('click', function(e) {
+  if (addMode) { addErb(e.latlng.lat, e.latlng.lng); toggleAddMode(); if (erbs.length) runSimulation(); }
+  else if (addUeMode) { addUe(e.latlng.lat, e.latlng.lng); toggleAddUeMode(); }
+});
+
+// ============================================================
+//  PROPAGATION MODELS (mantidos do original)
+// ============================================================
 function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
   if (distKm <= 0) distKm = 0.001;
   const f = freqMHz;
@@ -1160,7 +1306,6 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
       return 32.44 + 20*Math.log10(f) + 20*Math.log10(d);
 
     case 'okumura-hata': {
-      // valid 150-1500 MHz, 1-20 km
       const fc = Math.min(Math.max(f, 150), 1500);
       let aHm;
       if (morphology === 'dense-urban' || morphology === 'urban') {
@@ -1170,14 +1315,12 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
       }
       let L = 69.55 + 26.16*Math.log10(fc) - 13.82*Math.log10(hb) - aHm
               + (44.9 - 6.55*Math.log10(hb))*Math.log10(d);
-      // corrections
       if (morphology === 'suburban') L -= 2*Math.pow(Math.log10(fc/28),2) - 5.4;
       else if (morphology === 'rural' || morphology === 'open') L -= 4.78*Math.pow(Math.log10(fc),2) + 18.33*Math.log10(fc) - 40.94;
       return L;
     }
 
     case 'cost231-hata': {
-      // valid 1500-2000 MHz
       const fc = Math.min(Math.max(f, 1500), 2000);
       let aHm;
       if (morphology === 'dense-urban' || morphology === 'urban') {
@@ -1191,11 +1334,9 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
     }
 
     case '3gpp-uma': {
-      // TR 38.901 UMa LOS/NLOS simplified
       const fc_ghz = f / 1000;
-      const d3d = Math.sqrt(d*d*1e6 + (hb-hm)*(hb-hm)) / 1000; // in km
+      const d3d = Math.sqrt(d*d*1e6 + (hb-hm)*(hb-hm)) / 1000;
       const dkm = Math.max(d3d, 0.01);
-      // NLOS
       const PL = 13.54 + 39.08*Math.log10(dkm*1000) + 20*Math.log10(fc_ghz) - 0.6*(hm-1.5);
       return Math.max(PL, pathLoss('fspl', f, d, hb, hm, morphology));
     }
@@ -1215,7 +1356,6 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
     }
 
     case 'cost231-wim': {
-      // simplified Walfisch-Ikegami NLOS
       const Lfs = 32.44 + 20*Math.log10(f) + 20*Math.log10(d);
       const Lrts = -16.9 - 10*Math.log10(Math.max(val('bandwidth'),1)) + 10*Math.log10(f) + 20*Math.log10(Math.max(15-hm,1));
       const Lmsd = -18*Math.log10(1 + Math.max(hb-15,0)) + 54 + 18*Math.log10(d) + (morphology === 'dense-urban' ? 4 : -4);
@@ -1223,11 +1363,10 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
     }
 
     case 'sui': {
-      // Stanford University Interim
       const A = morphology === 'dense-urban' ? 4.6 : (morphology === 'suburban' ? 4.0 : 3.6);
       const B = morphology === 'dense-urban' ? 0.0075 : (morphology === 'suburban' ? 0.0065 : 0.005);
       const C = morphology === 'dense-urban' ? 12.6 : (morphology === 'suburban' ? 17.1 : 20.0);
-      const d0 = 0.1; // 100m ref
+      const d0 = 0.1;
       const gamma = A - B*hb + C/hb;
       const Xf = 6*Math.log10(f/2000);
       const Xh = -10.8*Math.log10(hm/2);
@@ -1243,15 +1382,11 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
     }
 
     case 'itu-r-p1411': {
-      // short range outdoor
       const dm = d * 1000;
       const Lbp = Math.abs(20*Math.log10(Math.pow(300/f, 2) / (8*Math.PI*hb*hm)));
       const dbp = 4*hb*hm*f*1e6 / 3e8;
-      if (dm < dbp) {
-        return 20*Math.log10(4*Math.PI*dm/(300/f));
-      } else {
-        return Lbp + 40*Math.log10(dm/dbp);
-      }
+      if (dm < dbp) return 20*Math.log10(4*Math.PI*dm/(300/f));
+      else return Lbp + 40*Math.log10(dm/dbp);
     }
 
     default:
@@ -1261,134 +1396,367 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
 
 // ---- Modulation specs ----
 const MOD_SPECS = {
-  'gmsk': { se: 0.27, snr: 6 },
-  '8psk': { se: 0.59, snr: 10 },
-  'qpsk': { se: 0.88, snr: 2 },
-  '16qam': { se: 1.76, snr: 10 },
-  '64qam': { se: 2.73, snr: 16 },
-  '256qam': { se: 3.61, snr: 22 },
-  '1024qam': { se: 4.41, snr: 28 }
+  'gmsk': { se: 0.27, snr: 6,  label:'GMSK' },
+  '8psk': { se: 0.59, snr: 10, label:'8PSK' },
+  'qpsk': { se: 0.88, snr: 2,  label:'QPSK' },
+  '16qam': { se: 1.76, snr: 10, label:'16-QAM' },
+  '64qam': { se: 2.73, snr: 16, label:'64-QAM' },
+  '256qam': { se: 3.61, snr: 22, label:'256-QAM' },
+  '1024qam': { se: 4.41, snr: 28, label:'1024-QAM' }
 };
+// ordered by robustness for "modulacao viavel"
+const MOD_LADDER = ['gmsk','qpsk','8psk','16qam','64qam','256qam','1024qam'];
 
-// ---- Simulation ----
-function runSimulation() {
-  saveCurrentErbConfig();
+// ============================================================
+//  ANTENNA PATTERN + SHADOW FADING (realism layer)
+// ============================================================
+// 3GPP-style horizontal/vertical sector pattern
+function dirGain(erb, bearingDeg, distM, hm) {
+  const peak = erb.txGain;
+  const phi = Math.atan2(Math.max(erb.antHeight - hm, 0.1), Math.max(distM, 1)) * 180/Math.PI; // depression angle
+  const attV = Math.min(12*Math.pow((phi - (erb.eTilt||0))/10, 2), 30);
+  if (!erb.sectors || erb.sectors <= 1) {
+    return peak - Math.min(attV, 30);
+  }
+  const secWidth = 360 / erb.sectors;
+  const theta3 = Math.min(65, secWidth); // HPBW ~ sector width, cap 65
+  let bestAttH = 99;
+  for (let s = 0; s < erb.sectors; s++) {
+    const boresight = (erb.azimuth || 0) + s * secWidth;
+    let off = ((bearingDeg - boresight) % 360 + 540) % 360 - 180; // -180..180
+    const attH = Math.min(12*Math.pow(off/theta3, 2), 30);
+    if (attH < bestAttH) bestAttH = attH;
+  }
+  return peak - Math.min(bestAttH + attV, 30);
+}
+
+function bearingFromErb(erb, pLat, pLng) {
+  const dN = (pLat - erb.lat);
+  const dE = (pLng - erb.lng) * Math.cos(erb.lat * Math.PI/180);
+  let b = Math.atan2(dE, dN) * 180/Math.PI; // 0=N, 90=E
+  return (b + 360) % 360;
+}
+function distMFromErb(erb, pLat, pLng) {
+  const dLat = (pLat - erb.lat) * 111320;
+  const dLng = (pLng - erb.lng) * 111320 * Math.cos(erb.lat * Math.PI/180);
+  return Math.sqrt(dLat*dLat + dLng*dLng);
+}
+
+// ---- value noise (smooth, deterministic) for spatial shadowing ----
+function hash2(ix, iy) {
+  let h = (ix|0)*374761393 + (iy|0)*668265263;
+  h = (h ^ (h >> 13)) * 1274126177;
+  h = h ^ (h >> 16);
+  return (h >>> 0) / 4294967295;
+}
+function smoothNoise(x, y) {
+  const x0 = Math.floor(x), y0 = Math.floor(y);
+  const fx = x - x0, fy = y - y0;
+  const u = fx*fx*(3-2*fx), v = fy*fy*(3-2*fy);
+  const n00 = hash2(x0, y0), n10 = hash2(x0+1, y0);
+  const n01 = hash2(x0, y0+1), n11 = hash2(x0+1, y0+1);
+  return (n00*(1-u)+n10*u)*(1-v) + (n01*(1-u)+n11*u)*v;
+}
+// geographic clutter/terrain shadow in dB (zero-mean), correlation ~150-300 m
+function clutterLoss(pLat, pLng, sigma) {
+  if (sigma <= 0) return 0;
+  const sx = pLat / 0.0016, sy = pLng / 0.0016; // ~180 m per unit
+  let n = smoothNoise(sx, sy) * 0.62
+        + smoothNoise(sx*2.6 + 11.3, sy*2.6 + 5.7) * 0.27
+        + smoothNoise(sx*5.3 + 31.1, sy*5.3 + 19.4) * 0.11;
+  return (n - 0.5) * 2 * sigma * 1.55;
+}
+
+function dbmToMw(dbm) { return Math.pow(10, dbm/10); }
+
+// ---- core: best-server analysis at a point ----
+function computeServing(pLat, pLng, P) {
+  const noiseFloor = -174 + 10*Math.log10(P.bw * 1e6) + P.nf; // dBm
+  const noiseMw = dbmToMw(noiseFloor);
+  const cl = clutterLoss(pLat, pLng, P.sigma);
+  let bestRsrp = -999, bestIdx = -1, minDist = 1e9;
+  const powers = [];
+  for (let i = 0; i < erbs.length; i++) {
+    const erb = erbs[i];
+    const distM = distMFromErb(erb, pLat, pLng);
+    const distKm = Math.max(distM/1000, 0.005);
+    const brg = bearingFromErb(erb, pLat, pLng);
+    const g = dirGain(erb, brg, distM, P.hm);
+    const eirpDir = erb.txPower - erb.cableLoss + g;
+    const pl = pathLoss(P.model, parseFloat(erb.band), distKm, erb.antHeight, P.hm, P.morph);
+    const rsrp = eirpDir - pl - cl - P.indoorLoss - P.foliageLoss;
+    powers.push({ idx: i, rsrp, distKm });
+    if (distKm < minDist) minDist = distKm;
+    if (rsrp > bestRsrp) { bestRsrp = rsrp; bestIdx = i; }
+  }
+  let interfMw = 0, serversInRange = 0;
+  for (const p of powers) {
+    if (p.idx !== bestIdx) interfMw += dbmToMw(p.rsrp);
+    if (p.rsrp >= P.thrWeak) serversInRange++;
+  }
+  const sMw = dbmToMw(bestRsrp);
+  const rssiMw = sMw + interfMw + noiseMw;
+  const sinr = 10*Math.log10(sMw / (interfMw + noiseMw));
+  const rsrq = 10*Math.log10(P.numPRBs * sMw / rssiMw); // approx RSRQ = N*RSRP/RSSI
+  return {
+    rsrp: bestRsrp, idx: bestIdx, dist: powers[bestIdx] ? powers[bestIdx].distKm : 0,
+    minDist, sinr, rsrq, rssi: 10*Math.log10(rssiMw),
+    noiseFloor, serversInRange
+  };
+}
+
+// ---- common params from form ----
+function getParams() {
   const freq = parseFloat($('band').value);
   const bw = val('bandwidth');
-  const txPow = val('tx-power');
-  const txGain = val('tx-gain');
-  const cableLoss = val('cable-loss');
-  const hb = val('ant-height');
-  const hm = val('ue-height');
-  const ueGain = val('ue-gain');
-  const bodyLoss = val('body-loss');
-  const nf = val('ue-nf');
-  const fadeMargin = val('fade-margin');
-  const indoorLoss = val('indoor-loss');
-  const foliageLoss = val('foliage-loss');
-  const model = $('prop-model').value;
+  const scs = freq >= 3000 ? 30 : 15;
+  const prbBw = 12 * scs / 1000;
+  const numPRBs = Math.max(1, Math.floor(bw / prbBw));
   const morph = $('morphology').value;
-  const mod = $('modulation').value;
-  const mimoStr = $('mimo').value;
+  return {
+    freq, bw, model: $('prop-model').value, morph,
+    hm: val('ue-height'), nf: val('ue-nf'),
+    bodyLoss: val('body-loss'), ueGain: val('ue-gain'),
+    indoorLoss: val('indoor-loss'), foliageLoss: val('foliage-loss'),
+    numPRBs, scs, sigma: val('shadow-sigma'),
+    mod: $('modulation').value, mimo: parseInt($('mimo').value.split('x')[0]) || 1,
+    thrGood: val('thr-good'), thrMid: val('thr-mid'), thrWeak: val('thr-weak'),
+    sensitivity: val('sensitivity')
+  };
+}
+
+function metricInfo(metric, P) {
+  if (metric === 'sinr')       return { lo:-6, hi:30 };
+  if (metric === 'rsrq')       return { lo:-19, hi:-3 };
+  if (metric === 'throughput') return { lo:0, hi:(MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se * P.mimo * P.bw };
+  return { lo:P.thrWeak, hi:P.thrGood };
+}
+function metricValue(serv, metric, P) {
+  if (metric === 'sinr') return serv.sinr;
+  if (metric === 'rsrq') return serv.rsrq;
+  if (metric === 'throughput') {
+    const se = Math.min(0.6*Math.log2(1+Math.pow(10, serv.sinr/10)), (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se);
+    return Math.max(0, se * P.mimo * P.bw);
+  }
+  return serv.rsrp;
+}
+
+// hue 0 (red) -> 130 (green); returns [r,g,b]
+function hslToRgb(h, s, l) {
+  h/=360;
+  const a = s*Math.min(l,1-l);
+  const f = n => { const k=(n+h*12)%12; return l - a*Math.max(-1,Math.min(k-3,9-k,1)); };
+  return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+}
+
+// ============================================================
+//  HEATMAP (raster best-server -> canvas -> image overlay)
+// ============================================================
+function drawHeatmap(P, cellRadius, metric) {
+  clearHeatmap();
+  if (!heatmapVisible || erbs.length === 0) return { pctGood:0, pctMid:0, studyArea:0 };
+
+  // bounding box over all ERBs +/- cellRadius (km -> deg)
+  let minLat=90, maxLat=-90, minLng=180, maxLng=-180;
+  erbs.forEach(e => { minLat=Math.min(minLat,e.lat); maxLat=Math.max(maxLat,e.lat); minLng=Math.min(minLng,e.lng); maxLng=Math.max(maxLng,e.lng); });
+  const padDeg = (cellRadius * 1.25) / 111.32;
+  const padLng = padDeg / Math.cos(((minLat+maxLat)/2) * Math.PI/180);
+  minLat -= padDeg; maxLat += padDeg; minLng -= padLng; maxLng += padLng;
+
+  // pixel grid from resolution, capped
+  const res = parseInt($('hm-resolution').value);
+  const heightM = (maxLat - minLat) * 111320;
+  const widthM  = (maxLng - minLng) * 111320 * Math.cos(((minLat+maxLat)/2)*Math.PI/180);
+  const PXMAX = 300, PXMIN = 24;
+  const H = Math.max(PXMIN, Math.min(PXMAX, Math.round(heightM / res)));
+  const W = Math.max(PXMIN, Math.min(PXMAX, Math.round(widthM  / res)));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  const data = img.data;
+
+  const opacity = parseFloat($('hm-opacity').value);
+  const mi = metricInfo(metric, P);
+  const studyR = cellRadius * 1.18;
+
+  let goodCells=0, midCells=0, studyCells=0;
+
+  for (let j = 0; j < H; j++) {
+    const lat = maxLat - (j/(H-1)) * (maxLat - minLat);
+    for (let i = 0; i < W; i++) {
+      const lng = minLng + (i/(W-1)) * (maxLng - minLng);
+      const serv = computeServing(lat, lng, P);
+      const o = (j*W + i) * 4;
+
+      if (serv.minDist > studyR) { data[o+3] = 0; continue; } // outside study area
+      studyCells++;
+      if (serv.rsrp >= P.thrGood) goodCells++;
+      if (serv.rsrp >= P.thrMid) midCells++;
+
+      // RSRP gate: below "fraco" -> no coverage (transparent), regardless of metric
+      if (serv.rsrp < P.thrWeak) { data[o+3] = 0; continue; }
+
+      const v = metricValue(serv, metric, P);
+      let t = (v - mi.lo) / (mi.hi - mi.lo);
+      t = Math.max(0, Math.min(1, t));
+      const [r, g, b] = hslToRgb(t*130, 0.72, 0.48);
+      const a = opacity * (0.5 + 0.5*t);
+      data[o] = r; data[o+1] = g; data[o+2] = b; data[o+3] = Math.round(a*255);
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  const bounds = [[minLat, minLng], [maxLat, maxLng]];
+  heatmapLayer = L.imageOverlay(canvas.toDataURL('image/png'), bounds, { opacity: 1, interactive: false }).addTo(map);
+
+  const studyArea = studyCells * (res/1000) * (res/1000) * (widthM/W*111320?1:1); // approx area in km^2 below
+  const cellAreaKm2 = (res/1000) * (res/1000);
+  return {
+    pctGood: studyCells>0 ? goodCells/studyCells*100 : 0,
+    pctMid:  studyCells>0 ? midCells/studyCells*100 : 0,
+    studyArea: studyCells * cellAreaKm2
+  };
+}
+
+function clearHeatmap() {
+  if (heatmapLayer) { map.removeLayer(heatmapLayer); heatmapLayer = null; }
+}
+function toggleHeatmap() {
+  heatmapVisible = !heatmapVisible;
+  $('btn-toggle-hm').classList.toggle('active', heatmapVisible);
+  if (!heatmapVisible) clearHeatmap();
+  else if (erbs.length) runSimulation();
+}
+
+// ---- Sectors (cleaned geometry) ----
+function drawSectors(cellRadius) {
+  sectorLayers.forEach(l => map.removeLayer(l));
+  sectorLayers = [];
+  if (!sectorsVisible) return;
+  erbs.forEach(erb => {
+    const numSec = erb.sectors || 1;
+    const r = Math.min(cellRadius, 4) * 0.9; // visual radius (km)
+    const cosLat = Math.cos(erb.lat * Math.PI/180);
+    if (numSec <= 1) {
+      const c = L.circle([erb.lat, erb.lng], { radius: r*1000, color:'rgba(239,68,68,0.45)', weight:1, fillColor:'rgba(239,68,68,0.06)', fillOpacity:1, dashArray:'4 4' }).addTo(map);
+      sectorLayers.push(c); return;
+    }
+    const secWidth = 360 / numSec;
+    const baseAz = erb.azimuth || 0;
+    for (let s = 0; s < numSec; s++) {
+      const center = baseAz + s*secWidth;
+      const start = center - secWidth/2, end = center + secWidth/2;
+      const pts = [[erb.lat, erb.lng]];
+      const steps = 18;
+      for (let k = 0; k <= steps; k++) {
+        const ang = (start + k*(end-start)/steps) * Math.PI/180; // 0=N
+        const lat = erb.lat + (r/111.32) * Math.cos(ang);
+        const lng = erb.lng + (r/(111.32*cosLat)) * Math.sin(ang);
+        pts.push([lat, lng]);
+      }
+      pts.push([erb.lat, erb.lng]);
+      const sector = L.polygon(pts, { color:'rgba(239,68,68,0.5)', weight:1, fillColor:'rgba(239,68,68,0.07)', fillOpacity:1, dashArray:'4 4' }).addTo(map);
+      sectorLayers.push(sector);
+    }
+  });
+}
+function toggleSectors() {
+  sectorsVisible = !sectorsVisible;
+  $('btn-toggle-sectors').classList.toggle('active', sectorsVisible);
+  if (!sectorsVisible) { sectorLayers.forEach(l => map.removeLayer(l)); sectorLayers = []; }
+  else drawSectors(lastCellRadius);
+}
+
+// ============================================================
+//  MAIN SIMULATION
+// ============================================================
+function runSimulation() {
+  saveCurrentErbConfig();
+  const P = getParams();
+  const freq = P.freq, bw = P.bw;
+  const txPow = val('tx-power'), txGain = val('tx-gain'), cableLoss = val('cable-loss');
+  const hb = val('ant-height'), hm = P.hm;
+  const ueGain = P.ueGain, bodyLoss = P.bodyLoss, nf = P.nf;
+  const fadeMargin = val('fade-margin'), indoorLoss = P.indoorLoss, foliageLoss = P.foliageLoss;
+  const model = P.model, morph = P.morph, mod = P.mod;
   const sectors = parseInt($('sectors').value);
 
-  // EIRP
+  // EIRP (boresight, selected/current ERB config)
   const eirp = txPow + txGain - cableLoss;
   const eirpW = Math.pow(10, eirp/10) / 1000;
 
-  // Noise floor
-  const thermalNoise = -174 + 10*Math.log10(bw * 1e6); // dBm
+  // Noise / sensitivity
+  const thermalNoise = -174 + 10*Math.log10(bw * 1e6);
   const noiseFloor = thermalNoise + nf;
-
-  // SNR required
   const modSpec = MOD_SPECS[mod] || MOD_SPECS['64qam'];
   const snrReq = modSpec.snr;
-
-  // Sensitivity
   const sensitivity = noiseFloor + snrReq;
   setVal('sensitivity', sensitivity.toFixed(1));
 
-  // MAPL (Maximum Allowable Path Loss)
+  // MAPL
   const mapl = eirp + ueGain - bodyLoss - fadeMargin - indoorLoss - foliageLoss - sensitivity;
 
-  // Path loss at reference distances
   const pl1km = pathLoss(model, freq, 1, hb, hm, morph);
 
-  // Estimate cell radius: find distance where PL = MAPL
+  // cell radius: distance where boresight PL exceeds MAPL
   let cellRadius = 0.1;
   for (let d = 0.1; d <= 50; d += 0.05) {
-    const pl = pathLoss(model, freq, d, hb, hm, morph);
-    if (pl > mapl) { cellRadius = d; break; }
+    if (pathLoss(model, freq, d, hb, hm, morph) > mapl) { cellRadius = d; break; }
     cellRadius = d;
   }
-
+  lastCellRadius = cellRadius;
   const plEdge = pathLoss(model, freq, cellRadius, hb, hm, morph);
   const cellArea = Math.PI * cellRadius * cellRadius;
-  const totalArea = cellArea * erbs.length;
 
-  // Wavelength
   const wavelength = 300 / freq;
-
-  // Fresnel zone r1 at 1km
   const fresnel1km = Math.sqrt(wavelength * 500);
-
-  // MIMO gain
-  const mimoGain = parseInt(mimoStr.split('x')[0]) || 1;
+  const mimoGain = P.mimo;
 
   // Capacity
   const se_peak = modSpec.se * mimoGain;
   const se_edge = modSpec.se * 0.3 * Math.min(mimoGain, 4);
   const tput_peak = se_peak * bw;
   const tput_edge = se_edge * bw;
-
-  // PRBs (LTE: 12 subcarriers × 180kHz per PRB, 15kHz SCS)
-  const scs = freq >= 3000 ? 30 : 15; // kHz
-  const prbBw = 12 * scs / 1000; // MHz per PRB
-  const numPRBs = Math.floor(bw / prbBw);
+  const numPRBs = P.numPRBs;
   const subcarriers = numPRBs * 12;
   const estUsers = Math.floor(numPRBs / 4) * sectors;
 
-  // Coverage quality percentages (simplified)
-  const thrGood = val('thr-good');
-  const thrMid = val('thr-mid');
-  const thrWeak = val('thr-weak');
+  // ---- Heatmap + grid-based coverage stats (realistic) ----
+  const metric = $('hm-metric').value;
+  const hmStats = drawHeatmap(P, cellRadius, metric);
+  drawSectors(cellRadius);
 
-  // Estimate coverage tiers by distance
-  let dGood = 0, dMid = 0, dWeak = cellRadius;
-  for (let d = 0.05; d <= cellRadius; d += 0.05) {
-    const rsrp = eirp - pathLoss(model, freq, d, hb, hm, morph) - bodyLoss;
-    if (rsrp >= thrGood) dGood = d;
-    if (rsrp >= thrMid) dMid = d;
-  }
-  const pctGood = cellRadius > 0 ? Math.min(100, (dGood*dGood)/(cellRadius*cellRadius)*100) : 0;
-  const pctMid = cellRadius > 0 ? Math.min(100, (dMid*dMid)/(cellRadius*cellRadius)*100) : 0;
-  const pctWeak = 100;
+  const pctGood = hmStats.pctGood;
+  const pctMid  = hmStats.pctMid;
+  const studyArea = hmStats.studyArea;
 
-  // ---- Update UI ----
+  // ---- Update Link Budget ----
   $('r-eirp').innerHTML = eirp.toFixed(1) + '<span class="unit">dBm</span>';
   $('r-eirp-w').innerHTML = (eirpW > 1 ? eirpW.toFixed(1) : (eirpW*1000).toFixed(0) + 'm') + '<span class="unit">W</span>';
   $('r-pl1').innerHTML = pl1km.toFixed(1) + '<span class="unit">dB</span>';
   $('r-plmax').innerHTML = plEdge.toFixed(1) + '<span class="unit">dB</span>';
   $('r-fade').innerHTML = fadeMargin.toFixed(1) + '<span class="unit">dB</span>';
   $('r-indoor').innerHTML = indoorLoss.toFixed(1) + '<span class="unit">dB</span>';
-
   const maplClass = mapl > 140 ? 'good' : (mapl > 120 ? 'acc' : (mapl > 100 ? 'warn' : 'bad'));
   $('r-mapl').className = 'v ' + maplClass;
   $('r-mapl').innerHTML = mapl.toFixed(1) + '<span class="unit">dB</span>';
 
+  // ---- Coverage ----
   $('r-cellrad').innerHTML = cellRadius.toFixed(2) + '<span class="unit">km</span>';
   $('r-cellarea').innerHTML = cellArea.toFixed(2) + '<span class="unit">km²</span>';
-  $('r-totalarea').innerHTML = totalArea.toFixed(2) + '<span class="unit">km²</span>';
+  $('r-totalarea').innerHTML = studyArea.toFixed(2) + '<span class="unit">km²</span>';
   $('r-covgood').innerHTML = pctGood.toFixed(1) + '<span class="unit">%</span>';
   $('r-covmid').innerHTML = pctMid.toFixed(1) + '<span class="unit">%</span>';
-  $('r-covweak').innerHTML = (pctWeak - pctMid).toFixed(1) + '<span class="unit">%</span>';
-
+  $('r-covweak').innerHTML = Math.max(0,(100 - pctMid)).toFixed(1) + '<span class="unit">%</span>';
   const covPct = pctMid;
   const gCls = covPct > 70 ? 'good' : (covPct > 40 ? 'warn' : 'bad');
   $('gauge-cov-fill').className = 'gauge-fill ' + gCls;
   $('gauge-cov-fill').style.width = covPct + '%';
-  $('gauge-cov-label').textContent = covPct.toFixed(0) + '% media+';
+  $('gauge-cov-label').textContent = covPct.toFixed(0) + '% medio+';
 
+  // ---- Capacity ----
   $('r-tput-peak').innerHTML = tput_peak.toFixed(1) + '<span class="unit">Mbps</span>';
   $('r-tput-edge').innerHTML = tput_edge.toFixed(1) + '<span class="unit">Mbps</span>';
   $('r-se-peak').innerHTML = se_peak.toFixed(2) + '<span class="unit">bps/Hz</span>';
@@ -1398,6 +1766,7 @@ function runSimulation() {
   $('r-mimo-gain').innerHTML = mimoGain + '<span class="unit">×</span>';
   $('r-users').textContent = estUsers;
 
+  // ---- RF ----
   $('r-wavelength').innerHTML = (wavelength > 0.01 ? wavelength.toFixed(4) : (wavelength*1000).toFixed(2) + 'm') + '<span class="unit">m</span>';
   $('r-thermal').innerHTML = thermalNoise.toFixed(1) + '<span class="unit">dBm</span>';
   $('r-noisefloor').innerHTML = noiseFloor.toFixed(1) + '<span class="unit">dBm</span>';
@@ -1405,371 +1774,243 @@ function runSimulation() {
   $('r-sens-calc').innerHTML = sensitivity.toFixed(1) + '<span class="unit">dBm</span>';
   $('r-fresnel').innerHTML = fresnel1km.toFixed(2) + '<span class="unit">m</span>';
 
-  // Header updates
-  $('hdr-status').textContent = 'ACTIVE';
-  $('hdr-status').style.color = 'var(--phos)';
-  $('hdr-range') && ($('hdr-range').textContent = cellRadius.toFixed(1));
+  // ---- Header ----
+  setText('hdr-status', erbs.length ? 'ACTIVE' : 'STANDBY');
+  $('hdr-status').style.color = erbs.length ? 'var(--phos)' : '';
   $('hdr-cov').innerHTML = pctMid.toFixed(0) + '<span class="unit">%</span>';
   $('map-cov-pct').textContent = pctMid.toFixed(0) + '%';
   $('map-cov-pct').className = 'big ' + gCls;
 
-  // Link status
   const linkOk = mapl > pl1km;
   $('r-link-dot').className = 'live-dot' + (linkOk ? '' : ' off');
   $('r-link-status').textContent = linkOk ? 'LINK OK' : 'MARGEM INSUF.';
   $('r-link-status').className = 'v ' + (linkOk ? 'good' : 'bad');
 
-  // Draw charts
+  // ---- Charts ----
   drawPropChart(model, freq, hb, hm, morph, cellRadius);
-  drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak);
+  drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, P.thrGood, P.thrMid, P.thrWeak);
 
-  // Draw heatmap on map
-  if (erbs.length > 0) {
-    drawHeatmap(model, freq, hb, hm, morph, eirp, bodyLoss, thrGood, thrMid, thrWeak, cellRadius);
-    drawSectors(cellRadius);
+  // ---- UE analysis ----
+  analyzeUEs();
+}
+
+// ============================================================
+//  UE ANALYSIS
+// ============================================================
+function bestModulationForSinr(sinr) {
+  let best = null;
+  for (const m of MOD_LADDER) {
+    if (MOD_SPECS[m].snr <= sinr) best = m;
   }
+  return best;
 }
 
-// ---- Heatmap ----
-function drawHeatmap(model, freq, hb, hm, morph, eirp, bodyLoss, thrGood, thrMid, thrWeak, cellRadius) {
-  clearHeatmap();
-  if (!heatmapVisible) return;
-
-  const resolution = parseInt($('hm-resolution').value);
-  const opacity = parseFloat($('hm-opacity').value);
-  const radiusM = cellRadius * 1000;
-
-  const rects = [];
-  const stepDeg = resolution / 111320; // approx meters to degrees
-
-  erbs.forEach(erb => {
-    const cLat = erb.lat;
-    const cLng = erb.lng;
-    const erbEirp = erb.txPower + erb.txGain - erb.cableLoss;
-    const stepsR = Math.ceil(radiusM / resolution);
-
-    for (let i = -stepsR; i <= stepsR; i++) {
-      for (let j = -stepsR; j <= stepsR; j++) {
-        const pLat = cLat + i * stepDeg;
-        const pLng = cLng + j * stepDeg / Math.cos(cLat * Math.PI / 180);
-
-        const dLat = (pLat - cLat) * 111320;
-        const dLng = (pLng - cLng) * 111320 * Math.cos(cLat * Math.PI / 180);
-        const distM = Math.sqrt(dLat*dLat + dLng*dLng);
-        const distKm = distM / 1000;
-
-        if (distKm > cellRadius * 1.2) continue;
-
-        const pl = pathLoss(model, parseFloat(erb.band), Math.max(distKm, 0.01), erb.antHeight, hm, morph);
-        const rsrp = erbEirp - pl - bodyLoss;
-
-        let color;
-        if (rsrp >= thrGood) color = 'rgba(74,222,128,' + opacity + ')';
-        else if (rsrp >= thrMid) color = 'rgba(251,191,36,' + (opacity*0.8) + ')';
-        else if (rsrp >= thrWeak) color = 'rgba(251,113,133,' + (opacity*0.6) + ')';
-        else continue;
-
-        const halfStep = stepDeg / 2;
-        const halfStepLng = halfStep / Math.cos(cLat * Math.PI / 180);
-        rects.push(L.rectangle(
-          [[pLat - halfStep, pLng - halfStepLng], [pLat + halfStep, pLng + halfStepLng]],
-          { color: 'transparent', fillColor: color.replace(/rgba?\([^)]+\)/, function(m) {
-            return m;
-          }), fillOpacity: 1, weight: 0, fillColor: color, className: 'hm-cell' }
-        ));
-      }
-    }
+function analyzeUEs() {
+  if (ues.length === 0) { renderUeDetail(); updateUeList(); return; }
+  const P = getParams();
+  ues.forEach(ue => {
+    if (erbs.length === 0) { ue.metrics = null; return; }
+    const serv = computeServing(ue.lat, ue.lng, P);
+    const rxLevel = serv.rsrp + P.ueGain - P.bodyLoss;
+    const se = Math.max(0, Math.min(0.6*Math.log2(1+Math.pow(10, serv.sinr/10)), (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se));
+    const tput = se * P.mimo * P.bw;
+    const margin = rxLevel - P.sensitivity;
+    const modOk = bestModulationForSinr(serv.sinr);
+    ue.metrics = {
+      serving: erbs[serv.idx] ? erbs[serv.idx].label : '--',
+      dist: serv.dist, rsrp: serv.rsrp, rxLevel, rssi: serv.rssi,
+      sinr: serv.sinr, rsrq: serv.rsrq, margin, tput, se,
+      mod: modOk ? MOD_SPECS[modOk].label : 'sem enlace',
+      servers: serv.serversInRange
+    };
+    // update tooltip
+    const mk = ueMarkers.find(m => m.id === ue.id);
+    if (mk) mk.marker.setTooltipContent(`${ue.label} | RSRP ${serv.rsrp.toFixed(0)} dBm | SINR ${serv.sinr.toFixed(1)} dB`);
   });
-
-  // Best server: for overlapping, we already just layer them
-  heatmapLayer = L.layerGroup(rects).addTo(map);
+  if (selectedUeIdx < 0 || selectedUeIdx >= ues.length) selectedUeIdx = ues.length - 1;
+  updateUeList();
+  renderUeDetail();
 }
 
-function clearHeatmap() {
-  if (heatmapLayer) { map.removeLayer(heatmapLayer); heatmapLayer = null; }
+function renderUeDetail() {
+  const tabs = $('ue-tabs');
+  if (ues.length === 0) {
+    $('ue-empty-box').style.display = '';
+    $('ue-kvs').style.display = 'none';
+    tabs.style.display = 'none';
+    return;
+  }
+  $('ue-empty-box').style.display = 'none';
+  $('ue-kvs').style.display = '';
+
+  // tabs (only if >1 UE)
+  if (ues.length > 1) {
+    tabs.style.display = 'flex';
+    tabs.innerHTML = ues.map((u,i)=>`<span class="ue-tab ${i===selectedUeIdx?'active':''}" onclick="selectUe(${i})">${u.label}</span>`).join('');
+  } else { tabs.style.display = 'none'; }
+
+  const ue = ues[selectedUeIdx];
+  const m = ue ? ue.metrics : null;
+  if (!m) {
+    setHTML('u-serving','sem ERB'); setHTML('u-dist','--'); setHTML('u-rsrp','--');
+    setHTML('u-rxlvl','--'); setHTML('u-rssi','--'); setHTML('u-sinr','--');
+    setHTML('u-rsrq','--'); setHTML('u-margin','--'); setHTML('u-tput','--');
+    setHTML('u-se','--'); setHTML('u-mod','--'); setHTML('u-servers','--');
+    $('gauge-ue-fill').style.width='0%'; $('gauge-ue-label').textContent='--';
+    setHTML('ue-verdict','<strong>Posicione ao menos uma ERB</strong> para medir este receptor.');
+    $('ue-verdict').className='info-box warn-box';
+    return;
+  }
+  const cls = v => v;
+  $('u-serving').innerHTML = m.serving;
+  $('u-dist').innerHTML = m.dist.toFixed(2) + '<span class="unit">km</span>';
+  const rsrpCls = m.rsrp >= val('thr-good') ? 'good' : (m.rsrp >= val('thr-mid') ? 'warn' : 'bad');
+  $('u-rsrp').className = 'v ' + rsrpCls;
+  $('u-rsrp').innerHTML = m.rsrp.toFixed(1) + '<span class="unit">dBm</span>';
+  $('u-rxlvl').innerHTML = m.rxLevel.toFixed(1) + '<span class="unit">dBm</span>';
+  $('u-rssi').innerHTML = m.rssi.toFixed(1) + '<span class="unit">dBm</span>';
+  const sinrCls = m.sinr >= 13 ? 'good' : (m.sinr >= 3 ? 'warn' : 'bad');
+  $('u-sinr').className = 'v ' + sinrCls;
+  $('u-sinr').innerHTML = m.sinr.toFixed(1) + '<span class="unit">dB</span>';
+  $('u-rsrq').innerHTML = m.rsrq.toFixed(1) + '<span class="unit">dB</span>';
+  const marginCls = m.margin > 10 ? 'good' : (m.margin > 0 ? 'warn' : 'bad');
+  $('u-margin').className = 'v ' + marginCls;
+  $('u-margin').innerHTML = m.margin.toFixed(1) + '<span class="unit">dB</span>';
+  $('u-tput').innerHTML = m.tput.toFixed(1) + '<span class="unit">Mbps</span>';
+  $('u-se').innerHTML = m.se.toFixed(2) + '<span class="unit">bps/Hz</span>';
+  $('u-mod').innerHTML = m.mod;
+  $('u-servers').innerHTML = m.servers;
+
+  // gauge by SINR (-6..30)
+  const t = Math.max(0, Math.min(1, (m.sinr + 6)/36));
+  const gc = m.sinr >= 13 ? 'good' : (m.sinr >= 3 ? 'warn' : 'bad');
+  $('gauge-ue-fill').className = 'gauge-fill ' + gc;
+  $('gauge-ue-fill').style.width = (t*100).toFixed(0) + '%';
+  $('gauge-ue-label').textContent = 'SINR ' + m.sinr.toFixed(1) + ' dB';
+
+  let verdict, vcls;
+  if (m.margin <= 0) { verdict = `<strong>Fora de cobertura.</strong> Nivel Rx ${m.rxLevel.toFixed(1)} dBm abaixo da sensibilidade (${val('sensitivity')} dBm). Sem enlace utilizavel neste ponto.`; vcls='bad-box'; }
+  else if (m.sinr < 3) { verdict = `<strong>Cobertura marginal.</strong> Sinal presente mas SINR baixo (${m.sinr.toFixed(1)} dB), provavel interferencia de celulas vizinhas. Throughput limitado a ${m.tput.toFixed(1)} Mbps.`; vcls='warn-box'; }
+  else if (m.sinr < 13) { verdict = `<strong>Cobertura razoavel.</strong> Servida por ${m.serving} a ${m.dist.toFixed(2)} km. Modulacao viavel: ${m.mod}. Throughput estimado ${m.tput.toFixed(1)} Mbps.`; vcls=''; }
+  else { verdict = `<strong>Cobertura excelente.</strong> Servida por ${m.serving}, SINR ${m.sinr.toFixed(1)} dB suporta ${m.mod} com ~${m.tput.toFixed(1)} Mbps no ponto.`; vcls='ok'; }
+  $('ue-verdict').className = 'info-box ' + vcls;
+  $('ue-verdict').innerHTML = verdict;
 }
 
-function toggleHeatmap() {
-  heatmapVisible = !heatmapVisible;
-  $('btn-toggle-hm').classList.toggle('active', heatmapVisible);
-  if (!heatmapVisible) clearHeatmap();
-}
-
-// ---- Sectors ----
-function drawSectors(cellRadius) {
-  sectorLayers.forEach(l => map.removeLayer(l));
-  sectorLayers = [];
-  if (!sectorsVisible) return;
-
-  erbs.forEach(erb => {
-    const numSec = erb.sectors;
-    const secWidth = 360 / numSec;
-    const baseAz = erb.azimuth || 0;
-
-    for (let s = 0; s < numSec; s++) {
-      const startAngle = baseAz + s * secWidth - secWidth/2;
-      const endAngle = startAngle + secWidth;
-      // Draw sector as a polygon
-      const pts = [[erb.lat, erb.lng]];
-      const steps = 20;
-      for (let i = 0; i <= steps; i++) {
-        const angle = (startAngle + i * (endAngle - startAngle) / steps) * Math.PI / 180;
-        const dLat = cellRadius / 111.32 * Math.cos(angle - Math.PI/2);
-        const dLng = cellRadius / (111.32 * Math.cos(erb.lat * Math.PI/180)) * Math.sin(angle - Math.PI/2);
-        // Convert: 0° = North, CW
-        const lat = erb.lat + cellRadius/111.32 * Math.cos((startAngle + i*(endAngle-startAngle)/steps) * Math.PI/180);
-        const lng = erb.lng + cellRadius/(111.32*Math.cos(erb.lat*Math.PI/180)) * Math.sin((startAngle + i*(endAngle-startAngle)/steps) * Math.PI/180);
-        pts.push([lat, lng]);
-      }
-      pts.push([erb.lat, erb.lng]);
-
-      const sector = L.polygon(pts, {
-        color: 'rgba(239,68,68,0.5)', weight: 1,
-        fillColor: 'rgba(239,68,68,0.08)', fillOpacity: 1,
-        dashArray: '4 4'
-      }).addTo(map);
-      sectorLayers.push(sector);
-    }
-  });
-}
-
-function toggleSectors() {
-  sectorsVisible = !sectorsVisible;
-  $('btn-toggle-sectors').classList.toggle('active', sectorsVisible);
-  if (!sectorsVisible) { sectorLayers.forEach(l => map.removeLayer(l)); sectorLayers = []; }
-}
-
-// ---- Charts (Canvas) ----
+// ============================================================
+//  CHARTS
+// ============================================================
 function drawPropChart(model, freq, hb, hm, morph, cellRadius) {
   const canvas = $('prop-chart');
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width - 16;
-  canvas.height = rect.height - 12;
+  canvas.width = rect.width - 16; canvas.height = rect.height - 12;
   const W = canvas.width, H = canvas.height;
-
   ctx.clearRect(0, 0, W, H);
 
   const maxDist = Math.max(cellRadius * 1.5, 2);
-  const dists = [];
-  const losses = [];
-  const fsplLosses = [];
+  const dists=[], losses=[], fsplLosses=[];
   for (let d = 0.05; d <= maxDist; d += maxDist/100) {
     dists.push(d);
     losses.push(pathLoss(model, freq, d, hb, hm, morph));
     fsplLosses.push(pathLoss('fspl', freq, d, hb, hm, morph));
   }
-
   const minL = Math.min(...losses, ...fsplLosses) - 5;
   const maxL = Math.max(...losses, ...fsplLosses) + 10;
+  const pad = { l:50, r:15, t:10, b:28 };
+  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
 
-  const pad = { l: 50, r: 15, t: 10, b: 28 };
-  const cW = W - pad.l - pad.r;
-  const cH = H - pad.t - pad.b;
+  ctx.strokeStyle = '#1e2838'; ctx.lineWidth = 0.5;
+  for (let i=0;i<=5;i++){ const y=pad.t+(i/5)*cH; ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText((maxL-i*(maxL-minL)/5).toFixed(0),pad.l-4,y+3);}
+  for (let i=0;i<=5;i++){ const x=pad.l+(i/5)*cW; ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,H-pad.b);ctx.stroke();
+    ctx.fillStyle='#6b7889';ctx.textAlign='center';ctx.fillText((i*maxDist/5).toFixed(1),x,H-pad.b+14);}
 
-  // Grid
-  ctx.strokeStyle = '#1e2838';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 5; i++) {
-    const y = pad.t + (i/5) * cH;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
-    ctx.fillStyle = '#6b7889';
-    ctx.font = '9px JetBrains Mono';
-    ctx.textAlign = 'right';
-    ctx.fillText((maxL - i*(maxL-minL)/5).toFixed(0), pad.l - 4, y + 3);
-  }
-  for (let i = 0; i <= 5; i++) {
-    const x = pad.l + (i/5) * cW;
-    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
-    ctx.fillStyle = '#6b7889';
-    ctx.textAlign = 'center';
-    ctx.fillText((i*maxDist/5).toFixed(1), x, H - pad.b + 14);
-  }
+  ctx.strokeStyle='#3f4a5b';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();
+  dists.forEach((d,i)=>{const x=pad.l+(d/maxDist)*cW;const y=pad.t+((maxL-fsplLosses[i])/(maxL-minL))*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();ctx.setLineDash([]);
 
-  // FSPL line
-  ctx.strokeStyle = '#3f4a5b';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4,4]);
-  ctx.beginPath();
-  dists.forEach((d, i) => {
-    const x = pad.l + (d/maxDist) * cW;
-    const y = pad.t + ((maxL - fsplLosses[i])/(maxL - minL)) * cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.strokeStyle='#ef4444';ctx.lineWidth=2;ctx.shadowColor='#ef444466';ctx.shadowBlur=6;ctx.beginPath();
+  dists.forEach((d,i)=>{const x=pad.l+(d/maxDist)*cW;const y=pad.t+((maxL-losses[i])/(maxL-minL))*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();ctx.shadowBlur=0;
 
-  // Model line
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 2;
-  ctx.shadowColor = '#ef444466';
-  ctx.shadowBlur = 6;
-  ctx.beginPath();
-  dists.forEach((d, i) => {
-    const x = pad.l + (d/maxDist) * cW;
-    const y = pad.t + ((maxL - losses[i])/(maxL - minL)) * cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // Axis labels
-  ctx.fillStyle = '#6b7889';
-  ctx.font = '9px JetBrains Mono';
-  ctx.textAlign = 'center';
-  ctx.fillText('Distância (km)', W/2, H - 2);
-  ctx.save();
-  ctx.translate(10, H/2);
-  ctx.rotate(-Math.PI/2);
-  ctx.fillText('Path Loss (dB)', 0, 0);
-  ctx.restore();
+  ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('Distância (km)',W/2,H-2);
+  ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Path Loss (dB)',0,0);ctx.restore();
 }
 
 function drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak) {
   const canvas = $('rsrp-chart');
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width - 16;
-  canvas.height = rect.height - 12;
+  canvas.width = rect.width - 16; canvas.height = rect.height - 12;
   const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
 
-  ctx.clearRect(0, 0, W, H);
+  const maxDist = Math.max(cellRadius*1.5, 2);
+  const dists=[], rsrps=[];
+  for (let d=0.05; d<=maxDist; d+=maxDist/100){ dists.push(d); rsrps.push(eirp - pathLoss(model,freq,d,hb,hm,morph) - bodyLoss); }
+  const minR = Math.min(...rsrps, thrWeak) - 5, maxR = Math.max(...rsrps) + 5;
+  const pad={l:50,r:15,t:10,b:28}, cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
 
-  const maxDist = Math.max(cellRadius * 1.5, 2);
-  const dists = [];
-  const rsrps = [];
-  for (let d = 0.05; d <= maxDist; d += maxDist/100) {
-    dists.push(d);
-    const pl = pathLoss(model, freq, d, hb, hm, morph);
-    rsrps.push(eirp - pl - bodyLoss);
-  }
+  ctx.strokeStyle='#1e2838';ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++){const y=pad.t+(i/5)*cH;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+    ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText((maxR-i*(maxR-minR)/5).toFixed(0),pad.l-4,y+3);}
+  for(let i=0;i<=5;i++){const x=pad.l+(i/5)*cW;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,H-pad.b);ctx.stroke();
+    ctx.fillStyle='#6b7889';ctx.textAlign='center';ctx.fillText((i*maxDist/5).toFixed(1),x,H-pad.b+14);}
 
-  const minR = Math.min(...rsrps, thrWeak) - 5;
-  const maxR = Math.max(...rsrps) + 5;
-
-  const pad = { l: 50, r: 15, t: 10, b: 28 };
-  const cW = W - pad.l - pad.r;
-  const cH = H - pad.t - pad.b;
-
-  // Grid
-  ctx.strokeStyle = '#1e2838'; ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 5; i++) {
-    const y = pad.t + (i/5)*cH;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
-    ctx.fillStyle = '#6b7889'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right';
-    ctx.fillText((maxR - i*(maxR-minR)/5).toFixed(0), pad.l-4, y+3);
-  }
-  for (let i = 0; i <= 5; i++) {
-    const x = pad.l + (i/5)*cW;
-    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H-pad.b); ctx.stroke();
-    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center';
-    ctx.fillText((i*maxDist/5).toFixed(1), x, H-pad.b+14);
-  }
-
-  // Threshold lines
-  const thresholds = [
-    { val: thrGood, color: '#4ade80', label: 'Bom' },
-    { val: thrMid, color: '#fbbf24', label: 'Medio' },
-    { val: thrWeak, color: '#fb7185', label: 'Fraco' }
-  ];
-  thresholds.forEach(t => {
-    if (t.val >= minR && t.val <= maxR) {
-      const y = pad.t + ((maxR - t.val)/(maxR - minR))*cH;
-      ctx.strokeStyle = t.color + '66';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4,4]);
-      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = t.color;
-      ctx.font = '8px JetBrains Mono';
-      ctx.textAlign = 'left';
-      ctx.fillText(t.label + ' ' + t.val, W-pad.r-55, y-3);
-    }
+  [{val:thrGood,color:'#4ade80',label:'Bom'},{val:thrMid,color:'#fbbf24',label:'Medio'},{val:thrWeak,color:'#fb7185',label:'Fraco'}].forEach(t=>{
+    if(t.val>=minR&&t.val<=maxR){const y=pad.t+((maxR-t.val)/(maxR-minR))*cH;
+      ctx.strokeStyle=t.color+'66';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=t.color;ctx.font='8px JetBrains Mono';ctx.textAlign='left';ctx.fillText(t.label+' '+t.val,W-pad.r-55,y-3);}
   });
 
-  // RSRP curve
-  ctx.strokeStyle = '#38bdf8';
-  ctx.lineWidth = 2;
-  ctx.shadowColor = '#38bdf866';
-  ctx.shadowBlur = 6;
-  ctx.beginPath();
-  dists.forEach((d, i) => {
-    const x = pad.l + (d/maxDist)*cW;
-    const y = pad.t + ((maxR - rsrps[i])/(maxR - minR))*cH;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+  ctx.strokeStyle='#38bdf8';ctx.lineWidth=2;ctx.shadowColor='#38bdf866';ctx.shadowBlur=6;ctx.beginPath();
+  dists.forEach((d,i)=>{const x=pad.l+(d/maxDist)*cW;const y=pad.t+((maxR-rsrps[i])/(maxR-minR))*cH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();ctx.shadowBlur=0;
 
-  // Fill zones
-  ctx.globalAlpha = 0.06;
-  // Good zone
-  const yGood = pad.t + ((maxR - thrGood)/(maxR - minR))*cH;
-  ctx.fillStyle = '#4ade80';
-  ctx.fillRect(pad.l, pad.t, cW, yGood - pad.t);
-  // Mid zone
-  const yMid = pad.t + ((maxR - thrMid)/(maxR - minR))*cH;
-  ctx.fillStyle = '#fbbf24';
-  ctx.fillRect(pad.l, yGood, cW, yMid - yGood);
-  // Weak zone
-  ctx.fillStyle = '#fb7185';
-  ctx.fillRect(pad.l, yMid, cW, cH + pad.t - yMid);
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha=0.06;
+  const yGood=pad.t+((maxR-thrGood)/(maxR-minR))*cH;ctx.fillStyle='#4ade80';ctx.fillRect(pad.l,pad.t,cW,yGood-pad.t);
+  const yMid=pad.t+((maxR-thrMid)/(maxR-minR))*cH;ctx.fillStyle='#fbbf24';ctx.fillRect(pad.l,yGood,cW,yMid-yGood);
+  ctx.fillStyle='#fb7185';ctx.fillRect(pad.l,yMid,cW,cH+pad.t-yMid);ctx.globalAlpha=1;
 
-  // Axis labels
-  ctx.fillStyle = '#6b7889'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
-  ctx.fillText('Distância (km)', W/2, H-2);
-  ctx.save(); ctx.translate(10, H/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText('RSRP (dBm)', 0, 0); ctx.restore();
+  ctx.fillStyle='#6b7889';ctx.font='9px JetBrains Mono';ctx.textAlign='center';ctx.fillText('Distância (km)',W/2,H-2);
+  ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('RSRP (dBm)',0,0);ctx.restore();
 }
 
-// ---- Reset ----
-function resetAll() {
-  // Remove all ERBs
-  erbMarkers.forEach(m => map.removeLayer(m.marker));
-  erbMarkers = [];
-  sectorLayers.forEach(l => map.removeLayer(l));
-  sectorLayers = [];
-  clearHeatmap();
-  erbs = [];
-  erbIdCounter = 0;
-  selectedErbIdx = -1;
-  updateErbList();
-
-  $('hdr-erbs').textContent = '0';
-  $('hdr-status').textContent = 'STANDBY';
-  $('hdr-status').style.color = '';
-  $('hdr-cov').innerHTML = '--<span class="unit">%</span>';
-  $('map-cov-pct').textContent = '--';
-  $('map-cov-pct').className = 'big good';
-
-  // Clear results
+// ============================================================
+//  RESET
+// ============================================================
+function resetResults() {
   ['r-eirp','r-eirp-w','r-pl1','r-plmax','r-fade','r-indoor','r-mapl',
    'r-cellrad','r-cellarea','r-totalarea','r-covgood','r-covmid','r-covweak',
    'r-tput-peak','r-tput-edge','r-se-peak','r-se-edge','r-prbs','r-subcarriers',
    'r-mimo-gain','r-users','r-wavelength','r-thermal','r-noisefloor','r-snr-req',
-   'r-sens-calc','r-fresnel'].forEach(id => {
-    const el = $(id);
-    if (el) el.innerHTML = '--';
-  });
-  $('r-link-status').textContent = 'STANDBY';
-  $('r-link-status').className = 'v';
-  $('r-link-dot').className = 'live-dot standby';
-  $('gauge-cov-fill').style.width = '0%';
-  $('gauge-cov-label').textContent = '--';
+   'r-sens-calc','r-fresnel'].forEach(id => { const el=$(id); if(el) el.innerHTML='--'; });
+  $('r-link-status').textContent='STANDBY'; $('r-link-status').className='v';
+  $('r-link-dot').className='live-dot standby';
+  $('gauge-cov-fill').style.width='0%'; $('gauge-cov-label').textContent='--';
+  setText('hdr-status','STANDBY'); $('hdr-status').style.color='';
+  $('hdr-cov').innerHTML='--<span class="unit">%</span>';
+  $('map-cov-pct').textContent='--'; $('map-cov-pct').className='big good';
+  clearHeatmap();
+  ['prop-chart','rsrp-chart'].forEach(id=>{const c=$(id);const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);});
+}
 
-  // Clear charts
-  ['prop-chart','rsrp-chart'].forEach(id => {
-    const c = $(id);
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, c.width, c.height);
-  });
+function resetAll() {
+  erbMarkers.forEach(m => map.removeLayer(m.marker)); erbMarkers=[];
+  ueMarkers.forEach(m => map.removeLayer(m.marker)); ueMarkers=[];
+  sectorLayers.forEach(l => map.removeLayer(l)); sectorLayers=[];
+  clearHeatmap();
+  erbs=[]; erbIdCounter=0; selectedErbIdx=-1;
+  ues=[]; ueIdCounter=0; selectedUeIdx=-1;
+  updateErbList(); updateUeList(); renderUeDetail();
+  setText('hdr-erbs','0');
+  resetResults();
 }
 
 // ---- Footer timestamp ----
 function updateTimestamp() {
-  const now = new Date();
-  $('footer-ts').textContent = now.toISOString().replace('T',' ').substring(0,19) + ' UTC';
+  setText('footer-ts', new Date().toISOString().replace('T',' ').substring(0,19) + ' UTC');
 }
 setInterval(updateTimestamp, 1000);
 updateTimestamp();
@@ -1778,20 +2019,11 @@ updateTimestamp();
 onTechChange();
 onBandChange();
 onModelChange();
+onMetricChange();
+updateUeList();
+renderUeDetail();
 
-// Auto-open first few sections, close others
-document.querySelectorAll('.section-head').forEach((el, i) => {
-  if (!el.classList.contains('open') && i < 4) {
-    // leave as is
-  }
-});
-
-// Resize handler for charts
-window.addEventListener('resize', () => {
-  if (erbs.length > 0 || $('hdr-status').textContent === 'ACTIVE') {
-    // re-run if active
-  }
-});
+window.addEventListener('resize', () => { if (erbs.length) { /* charts redraw on next sim */ } });
 </script>
 
 </body>
