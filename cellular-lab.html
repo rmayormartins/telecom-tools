@@ -945,7 +945,7 @@ footer .ts{color:var(--text-3);}
 <!-- FOOTER -->
 <footer>
   <div class="author">
-    Cellular Lab v1.2 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
+    Cellular Lab v1.3 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
   </div>
   <div class="ts" id="footer-ts"></div>
 </footer>
@@ -1537,7 +1537,7 @@ function metricInfo(metric, P) {
   if (metric === 'sinr')       return { lo:-6, hi:30 };
   if (metric === 'rsrq')       return { lo:-19, hi:-3 };
   if (metric === 'throughput') return { lo:0, hi:(MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se * P.mimo * P.bw };
-  return { lo:P.thrWeak, hi:P.thrGood };
+  return { lo:P.thrWeak, hi:P.thrGood + 25 }; // RSRP: verde so em sinal forte; gradiente ao longo da celula
 }
 function metricValue(serv, metric, P) {
   if (metric === 'sinr') return serv.sinr;
@@ -1562,7 +1562,8 @@ function hslToRgb(h, s, l) {
 // ============================================================
 // raio efetivo de cobertura (km): distancia onde o RSRP de boresight cai ate o limiar "fraco".
 // alem disso o mapa fica transparente, entao a caixa nao precisa ser maior que isso.
-function coverageRadiusKm(P) {
+function coverageRadiusKm(P, edgeDbm) {
+  const edge = (typeof edgeDbm === 'number') ? edgeDbm : P.thrMid;
   let maxR = 0.3;
   for (const erb of erbs) {
     const peak = isFinite(erb.txGain) ? erb.txGain : 15;
@@ -1572,20 +1573,20 @@ function coverageRadiusKm(P) {
     for (let d = 0.1; d <= 40; d += 0.1) {
       const pl = pathLoss(P.model, band, d, erb.antHeight, P.hm, P.morph);
       const rsrp = eirpBore - pl - P.indoorLoss - P.foliageLoss;
-      if (rsrp < P.thrWeak) break;
+      if (rsrp < edge) break;
       r = d;
     }
     if (r > maxR) maxR = r;
   }
-  return Math.min(maxR, 25); // teto visual de seguranca
+  return Math.min(maxR, 18); // teto visual de seguranca
 }
 
 function drawHeatmap(P, cellRadius, metric) {
   clearHeatmap();
   if (!heatmapVisible || erbs.length === 0) return { pctGood:0, pctMid:0, studyArea:0 };
 
-  // caixa baseada no raio REAL de cobertura (bem menor que cellRadius do MAPL)
-  const covR = coverageRadiusKm(P);
+  // caixa baseada no raio de cobertura UTIL (limiar medio), bem mais compacta
+  const covR = coverageRadiusKm(P, P.thrMid);
   let minLat=90, maxLat=-90, minLng=180, maxLng=-180;
   erbs.forEach(e => { minLat=Math.min(minLat,e.lat); maxLat=Math.max(maxLat,e.lat); minLng=Math.min(minLng,e.lng); maxLng=Math.max(maxLng,e.lng); });
   const midLat = (minLat+maxLat)/2;
@@ -1627,8 +1628,8 @@ function drawHeatmap(P, cellRadius, metric) {
         if (serv.rsrp >= P.thrMid)  midCells++;
       }
 
-      // DESENHA so onde ha cobertura real -> borda irregular moldada por clutter + lobos de antena
-      if (serv.rsrp < P.thrWeak) { data[o+3] = 0; continue; }
+      // DESENHA so cobertura UTIL (medio ou melhor) -> mapa compacto, borda irregular por clutter
+      if (serv.rsrp < P.thrMid) { data[o+3] = 0; continue; }
 
       const v = metricValue(serv, metric, P);
       let t = (v - mi.lo) / (mi.hi - mi.lo);
