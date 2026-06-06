@@ -351,6 +351,12 @@ footer .ts{color:var(--text-3);}
 .gv-tabs{display:inline-flex;border:1px solid var(--border-strong);border-radius:4px;overflow:hidden;}
 .gv-tab{background:var(--bg-2);border:none;color:var(--text-2);font-size:9px;font-weight:600;padding:3px 9px;cursor:pointer;font-family:var(--font-mono);}
 .gv-tab.active{background:var(--magenta-soft);color:var(--magenta);}
+.viz-draw .card-header{flex-wrap:wrap;justify-content:space-between;gap:6px 12px;}
+.dh-left{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-family:var(--font-mono);font-size:9px;color:var(--text-2);}
+.dh-left h3{margin:0;}
+.dh-snap{display:flex;align-items:center;gap:5px;}
+.gv-tab{padding:4px 13px;font-size:10px;}
+#geocanvas3d{cursor:crosshair;}
 #geocanvas{cursor:crosshair;}
 </style>
 </head>
@@ -443,30 +449,27 @@ footer .ts{color:var(--text-3);}
 <div class="panel viz">
   <div class="viz-draw">
     <div class="viz-cell">
-      <div class="card-header"><h3>Desenhar Geometria <span style="color:var(--text-2);font-weight:400;">(plano X-Z, Y=0)</span></h3>
+      <div class="card-header draw-head">
+        <div class="dh-left">
+          <h3>Desenhar Geometria</h3>
+          <span class="gv-tabs"><button class="gv-tab active" id="gv2d" onclick="setGeoView('2d')">2D</button><button class="gv-tab" id="gv3d" onclick="setGeoView('3d')">3D</button></span>
+          <span id="plane-wrap" style="display:none;align-items:center;gap:5px;">Plano
+            <select class="snap-sel" id="plane-sel" onchange="setGeoPlane(this.value)">
+              <option value="xz">X-Z</option><option value="xy">X-Y</option><option value="yz">Y-Z</option>
+            </select>
+          </span>
+          <span class="dh-snap">Snap
+            <select class="snap-sel" id="snap-sel" onchange="setSnap(this.value)">
+              <option value="0.1">0.1λ</option><option value="0.05" selected>0.05λ</option><option value="0.025">0.025λ</option><option value="0">livre</option>
+            </select>
+          </span>
+        </div>
         <div class="viz-tabs" id="draw-tabs">
           <button class="viz-tab active" id="draw-pen" onclick="drawSetMode('pen')">Desenhar</button>
           <button class="viz-tab" id="draw-feed" onclick="drawSetMode('feed')">Fonte</button>
           <button class="viz-tab" onclick="geoLiftPen()">Novo fio</button>
           <button class="viz-tab" onclick="geoUndo()">Desfazer</button>
           <button class="viz-tab" onclick="geoClear()">Limpar</button>
-        </div>
-        <div class="draw-extra">
-          <span class="gv-tabs"><button class="gv-tab active" id="gv2d" onclick="setGeoView('2d')">2D</button><button class="gv-tab" id="gv3d" onclick="setGeoView('3d')">3D</button></span>
-          <span id="plane-wrap" style="display:none;">Plano
-            <select class="snap-sel" id="plane-sel" onchange="setGeoPlane(this.value)">
-              <option value="xz">X-Z</option>
-              <option value="xy">X-Y</option>
-              <option value="yz">Y-Z</option>
-            </select>
-          </span>
-          Snap
-          <select class="snap-sel" id="snap-sel" onchange="setSnap(this.value)">
-            <option value="0.1">0.1λ</option>
-            <option value="0.05" selected>0.05λ</option>
-            <option value="0.025">0.025λ</option>
-            <option value="0">livre</option>
-          </select>
         </div>
       </div>
       <div class="card-body"><canvas id="geocanvas"></canvas><div id="geocanvas3d" style="position:absolute;inset:0;display:none;"></div>
@@ -1342,7 +1345,7 @@ function setGeoView(v){
   const b2=$('gv2d'),b3=$('gv3d'),pw=$('plane-wrap'),c2=$('geocanvas'),c3=$('geocanvas3d');
   if(b2)b2.classList.toggle('active',v==='2d');
   if(b3)b3.classList.toggle('active',v==='3d');
-  if(pw)pw.style.display=v==='3d'?'inline':'none';
+  if(pw)pw.style.display=v==='3d'?'inline-flex':'none';
   if(c2)c2.style.display=v==='3d'?'none':'block';
   if(c3)c3.style.display=v==='3d'?'block':'none';
   if(v==='3d'){ geoInit3D(); geoResize(); geoDraw3D(); } else { drawGeoCanvas(); }
