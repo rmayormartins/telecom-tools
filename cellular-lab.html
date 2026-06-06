@@ -945,7 +945,7 @@ footer .ts{color:var(--text-3);}
 <!-- FOOTER -->
 <footer>
   <div class="author">
-    Cellular Lab v1.1 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
+    Cellular Lab v1.2 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
   </div>
   <div class="ts" id="footer-ts"></div>
 </footer>
@@ -1249,6 +1249,14 @@ function addUeMarker(ue) {
   const marker = L.marker([ue.lat, ue.lng], { icon, draggable: true })
     .addTo(map)
     .bindTooltip(ue.label, { direction: 'right', offset: [10, 0] });
+  let ueDragRAF = null;
+  marker.on('drag', function(e) {
+    const pos = e.target.getLatLng();
+    const idx = ues.findIndex(x => x.id === ue.id);
+    if (idx >= 0) { ues[idx].lat = pos.lat; ues[idx].lng = pos.lng; selectedUeIdx = idx; }
+    if (ueDragRAF) return;                       // throttle: 1 recalculo por frame
+    ueDragRAF = requestAnimationFrame(() => { ueDragRAF = null; analyzeUEs(); });
+  });
   marker.on('dragend', function(e) {
     const pos = e.target.getLatLng();
     const idx = ues.findIndex(x => x.id === ue.id);
@@ -1412,7 +1420,7 @@ const MOD_LADDER = ['gmsk','qpsk','8psk','16qam','64qam','256qam','1024qam'];
 // ============================================================
 // 3GPP-style horizontal/vertical sector pattern
 function dirGain(erb, bearingDeg, distM, hm) {
-  const peak = erb.txGain;
+  const peak = isFinite(erb.txGain) ? erb.txGain : 15;
   const phi = Math.atan2(Math.max(erb.antHeight - hm, 0.1), Math.max(distM, 1)) * 180/Math.PI; // depression angle
   const attV = Math.min(12*Math.pow((phi - (erb.eTilt||0))/10, 2), 30);
   if (!erb.sectors || erb.sectors <= 1) {
@@ -1552,22 +1560,44 @@ function hslToRgb(h, s, l) {
 // ============================================================
 //  HEATMAP (raster best-server -> canvas -> image overlay)
 // ============================================================
+// raio efetivo de cobertura (km): distancia onde o RSRP de boresight cai ate o limiar "fraco".
+// alem disso o mapa fica transparente, entao a caixa nao precisa ser maior que isso.
+function coverageRadiusKm(P) {
+  let maxR = 0.3;
+  for (const erb of erbs) {
+    const peak = isFinite(erb.txGain) ? erb.txGain : 15;
+    const eirpBore = erb.txPower - erb.cableLoss + peak;
+    const band = parseFloat(erb.band) || P.freq;
+    let r = 0.3;
+    for (let d = 0.1; d <= 40; d += 0.1) {
+      const pl = pathLoss(P.model, band, d, erb.antHeight, P.hm, P.morph);
+      const rsrp = eirpBore - pl - P.indoorLoss - P.foliageLoss;
+      if (rsrp < P.thrWeak) break;
+      r = d;
+    }
+    if (r > maxR) maxR = r;
+  }
+  return Math.min(maxR, 25); // teto visual de seguranca
+}
+
 function drawHeatmap(P, cellRadius, metric) {
   clearHeatmap();
   if (!heatmapVisible || erbs.length === 0) return { pctGood:0, pctMid:0, studyArea:0 };
 
-  // bounding box over all ERBs +/- cellRadius (km -> deg)
+  // caixa baseada no raio REAL de cobertura (bem menor que cellRadius do MAPL)
+  const covR = coverageRadiusKm(P);
   let minLat=90, maxLat=-90, minLng=180, maxLng=-180;
   erbs.forEach(e => { minLat=Math.min(minLat,e.lat); maxLat=Math.max(maxLat,e.lat); minLng=Math.min(minLng,e.lng); maxLng=Math.max(maxLng,e.lng); });
-  const padDeg = (cellRadius * 1.25) / 111.32;
-  const padLng = padDeg / Math.cos(((minLat+maxLat)/2) * Math.PI/180);
+  const midLat = (minLat+maxLat)/2;
+  const padDeg = (covR * 1.12) / 111.32;
+  const padLng = padDeg / Math.cos(midLat * Math.PI/180);
   minLat -= padDeg; maxLat += padDeg; minLng -= padLng; maxLng += padLng;
 
-  // pixel grid from resolution, capped
-  const res = parseInt($('hm-resolution').value);
+  // grade de pixels a partir da resolucao, com teto
+  const res = parseInt($('hm-resolution').value) || 80;
   const heightM = (maxLat - minLat) * 111320;
-  const widthM  = (maxLng - minLng) * 111320 * Math.cos(((minLat+maxLat)/2)*Math.PI/180);
-  const PXMAX = 300, PXMIN = 24;
+  const widthM  = (maxLng - minLng) * 111320 * Math.cos(midLat*Math.PI/180);
+  const PXMAX = 320, PXMIN = 24;
   const H = Math.max(PXMIN, Math.min(PXMAX, Math.round(heightM / res)));
   const W = Math.max(PXMIN, Math.min(PXMAX, Math.round(widthM  / res)));
 
@@ -1577,11 +1607,11 @@ function drawHeatmap(P, cellRadius, metric) {
   const img = ctx.createImageData(W, H);
   const data = img.data;
 
-  const opacity = parseFloat($('hm-opacity').value);
+  const opacity = parseFloat($('hm-opacity').value) || 0.55;
   const mi = metricInfo(metric, P);
-  const studyR = cellRadius * 1.18;
+  const planR = covR * 1.05; // disco suave so para o denominador da % de cobertura (nao e desenhado)
 
-  let goodCells=0, midCells=0, studyCells=0;
+  let goodCells=0, midCells=0, planCells=0;
 
   for (let j = 0; j < H; j++) {
     const lat = maxLat - (j/(H-1)) * (maxLat - minLat);
@@ -1590,19 +1620,21 @@ function drawHeatmap(P, cellRadius, metric) {
       const serv = computeServing(lat, lng, P);
       const o = (j*W + i) * 4;
 
-      if (serv.minDist > studyR) { data[o+3] = 0; continue; } // outside study area
-      studyCells++;
-      if (serv.rsrp >= P.thrGood) goodCells++;
-      if (serv.rsrp >= P.thrMid) midCells++;
+      // denominador da %: footprint de planejamento (disco suave em torno da ERB mais proxima)
+      if (serv.minDist <= planR) {
+        planCells++;
+        if (serv.rsrp >= P.thrGood) goodCells++;
+        if (serv.rsrp >= P.thrMid)  midCells++;
+      }
 
-      // RSRP gate: below "fraco" -> no coverage (transparent), regardless of metric
+      // DESENHA so onde ha cobertura real -> borda irregular moldada por clutter + lobos de antena
       if (serv.rsrp < P.thrWeak) { data[o+3] = 0; continue; }
 
       const v = metricValue(serv, metric, P);
       let t = (v - mi.lo) / (mi.hi - mi.lo);
       t = Math.max(0, Math.min(1, t));
       const [r, g, b] = hslToRgb(t*130, 0.72, 0.48);
-      const a = opacity * (0.5 + 0.5*t);
+      const a = opacity * (0.45 + 0.55*t);
       data[o] = r; data[o+1] = g; data[o+2] = b; data[o+3] = Math.round(a*255);
     }
   }
@@ -1611,12 +1643,12 @@ function drawHeatmap(P, cellRadius, metric) {
   const bounds = [[minLat, minLng], [maxLat, maxLng]];
   heatmapLayer = L.imageOverlay(canvas.toDataURL('image/png'), bounds, { opacity: 1, interactive: false }).addTo(map);
 
-  const studyArea = studyCells * (res/1000) * (res/1000) * (widthM/W*111320?1:1); // approx area in km^2 below
-  const cellAreaKm2 = (res/1000) * (res/1000);
+  const cellW = widthM/Math.max(W-1,1)/1000, cellH = heightM/Math.max(H-1,1)/1000;
+  const cellAreaKm2 = cellW * cellH;
   return {
-    pctGood: studyCells>0 ? goodCells/studyCells*100 : 0,
-    pctMid:  studyCells>0 ? midCells/studyCells*100 : 0,
-    studyArea: studyCells * cellAreaKm2
+    pctGood: planCells>0 ? goodCells/planCells*100 : 0,
+    pctMid:  planCells>0 ? midCells/planCells*100 : 0,
+    studyArea: planCells * cellAreaKm2
   };
 }
 
