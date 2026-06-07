@@ -223,7 +223,7 @@ function calcLink(p){
   const {txLat,txLon,rxLat,rxLon,freqMHz,powerW,txGain,rxGain,sfi,kIndex,xrayFlux,modeSnr,modeBw}=p;
   const dist=gcDist(txLat,txLon,rxLat,rxLon);
   const mid=gcMidpoint(txLat,txLon,rxLat,rxLon);
-  const cosXmid=cosZenith(mid.lat,mid.lon,solarSubPoint());
+  const cosXmid=cosZenith(mid.lat,mid.lon,p.sun||solarSubPoint());
   const night=cosXmid<0.05;
   const muf=estimateMUF(sfi,kIndex,dist,cosXmid);
   const luf=estimateLUF(kIndex,dist,cosXmid);
@@ -443,6 +443,71 @@ function foF2Color(f){
   if(f<3)return "#3b6fd6";if(f<5)return "#2aa7c4";if(f<7)return "#3fb950";
   if(f<9)return "#c9c623";if(f<11)return "#f0883e";if(f<14)return "#f85149";return "#db61a2";
 }
+// probability heat scale (cold->hot)
+const HEAT_STOPS=[[0,[20,30,45]],[0.15,[31,78,121]],[0.35,[42,167,196]],[0.55,[63,185,80]],[0.75,[210,153,34]],[0.9,[248,81,73]],[1,[219,97,162]]];
+function heatColor(p){p=Math.max(0,Math.min(1,p));for(let i=1;i<HEAT_STOPS.length;i++){
+  if(p<=HEAT_STOPS[i][0]){const[p0,c0]=HEAT_STOPS[i-1],[p1,c1]=HEAT_STOPS[i],t=(p-p0)/(p1-p0||1);
+    return [Math.round(c0[0]+(c1[0]-c0[0])*t),Math.round(c0[1]+(c1[1]-c0[1])*t),Math.round(c0[2]+(c1[2]-c0[2])*t)];}}
+  return HEAT_STOPS[HEAT_STOPS.length-1][1];}
+function hexToRgb(h){const m=h.replace("#","");return [parseInt(m.slice(0,2),16),parseInt(m.slice(2,4),16),parseInt(m.slice(4,6),16)];}
+// reusable equirectangular base: fill, graticule, night shade, coastlines, terminator
+function drawWorldBase(ctx,W,H,sun){
+  const X=lon=>((lon+180)/360)*W,Y=lat=>((90-lat)/180)*H;
+  ctx.fillStyle="#060a10";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#0f1620";ctx.lineWidth=1;
+  for(let lo=-180;lo<=180;lo+=30){ctx.beginPath();ctx.moveTo(X(lo),0);ctx.lineTo(X(lo),H);ctx.stroke();}
+  for(let la=-60;la<=60;la+=30){ctx.beginPath();ctx.moveTo(0,Y(la));ctx.lineTo(W,Y(la));ctx.stroke();}
+}
+function drawCoast(ctx,W,H){const X=lon=>((lon+180)/360)*W,Y=lat=>((90-lat)/180)*H;
+  ctx.strokeStyle="#2d5a4a";ctx.lineWidth=1.1;
+  Object.values(CONTINENTS).forEach(poly=>{ctx.beginPath();poly.forEach((p,i)=>{const x=X(p[0]),y=Y(p[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();});}
+function drawTerminator(ctx,W,H,sun){const X=lon=>((lon+180)/360)*W,Y=lat=>((90-lat)/180)*H;
+  ctx.strokeStyle="#d29922aa";ctx.lineWidth=1.4;ctx.beginPath();let started=false;
+  for(let lon=-180;lon<=180;lon+=1){let best=null,bd=9;
+    for(let lat=-89;lat<=89;lat+=2){const cz=Math.abs(cosZenith(lat,lon,sun));if(cz<bd){bd=cz;best=lat;}}
+    if(best!=null){const x=X(lon),y=Y(best);started?ctx.lineTo(x,y):ctx.moveTo(x,y);started=true;}}
+  ctx.stroke();
+  ctx.fillStyle="#ffd33d";ctx.beginPath();ctx.arc(X(sun.lon),Y(sun.lat),4,0,7);ctx.fill();}
+
+// ─── COVERAGE HEATMAP (point-to-area prediction) ────────────
+const CoverageMap=memo(({tx,rx,cells,dims,heatMode})=>{
+  const ref=useRef(null),wrapRef=useRef(null);
+  useEffect(()=>{
+    const c=ref.current,wrap=wrapRef.current;if(!c||!wrap)return;
+    const W=Math.floor(wrap.clientWidth)||700,H=Math.round(W*0.5),dpr=window.devicePixelRatio||1;
+    c.width=W*dpr;c.height=H*dpr;c.style.width="100%";c.style.height=H+"px";
+    const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+    const X=lon=>((lon+180)/360)*W,Y=lat=>((90-lat)/180)*H;
+    const sun=solarSubPoint();
+    drawWorldBase(ctx,W,H,sun);
+    // heatmap cells
+    if(cells&&cells.length){const cw=W*dims.step/360+1,ch=H*dims.step/180+1;
+      for(const cell of cells){if(cell.prob<0.03)continue;
+        let rgb,a;
+        if(heatMode==="band"&&cell.color){rgb=hexToRgb(cell.color);a=Math.max(0.05,Math.min(0.8,cell.prob));}
+        else{rgb=heatColor(cell.prob);a=Math.max(0.05,Math.min(0.82,cell.prob*1.15));}
+        ctx.fillStyle=`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+        ctx.fillRect(X(cell.lon),Y(cell.lat+dims.step),cw,ch);}}
+    drawCoast(ctx,W,H);
+    drawTerminator(ctx,W,H,sun);
+    // tx -> rx link
+    if(tx&&rx){const la1=toRad(tx.lat),lo1=toRad(tx.lon),la2=toRad(rx.lat),lo2=toRad(rx.lon);
+      const dd=2*Math.asin(Math.sqrt(Math.sin((la1-la2)/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin((lo1-lo2)/2)**2));
+      ctx.beginPath();let px0=null;
+      for(let i=0;i<=64;i++){const f=i/64;const A=dd?Math.sin((1-f)*dd)/Math.sin(dd):1-f,B=dd?Math.sin(f*dd)/Math.sin(dd):f;
+        const x=A*Math.cos(la1)*Math.cos(lo1)+B*Math.cos(la2)*Math.cos(lo2),y=A*Math.cos(la1)*Math.sin(lo1)+B*Math.cos(la2)*Math.sin(lo2),z=A*Math.sin(la1)+B*Math.sin(la2);
+        const lat=toDeg(Math.atan2(z,Math.sqrt(x*x+y*y))),lon=toDeg(Math.atan2(y,x)),sx=X(lon),sy=Y(lat);
+        if(px0!=null&&Math.abs(sx-px0)>W*0.5){ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy);}else if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);px0=sx;}
+      ctx.strokeStyle="#ffffffcc";ctx.lineWidth=1.5;ctx.stroke();
+      ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(X(rx.lon),Y(rx.lat),3.5,0,7);ctx.fill();
+      ctx.fillStyle="#fff";ctx.font="700 9px ui-monospace";ctx.fillText(rx.label||"RX",X(rx.lon)+6,Y(rx.lat)+3);}
+    // tx marker
+    if(tx){const qx=X(tx.lon),qy=Y(tx.lat);ctx.strokeStyle="#58a6ff";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(qx,qy,6,0,7);ctx.stroke();
+      ctx.fillStyle="#58a6ff";ctx.beginPath();ctx.arc(qx,qy,2.5,0,7);ctx.fill();
+      ctx.font="700 9px ui-monospace";ctx.fillText("TX",qx+8,qy+3);}
+  });
+  return <div className="map-wrap" ref={wrapRef}><canvas ref={ref}/></div>;
+});
 
 // ─── BIG MAP (greyline + ionosondes + aurora + spots) ───────
 const PropMap=memo(({qth,iono,aurora,spots,spotDir,layers,link})=>{
@@ -545,6 +610,8 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
   const [power,setPower]=useState(100);
   const [txAntIdx,setTxAntIdx]=useState(0);
   const [rxAntIdx,setRxAntIdx]=useState(0);
+  const [showHeat,setShowHeat]=useState(true);
+  const [heatMode,setHeatMode]=useState("prob");
 
   const gll=gridToLatLon(grid.trim());
   const dest=gll?{lat:gll.lat,lon:gll.lon,label:grid.trim().toUpperCase()}
@@ -559,6 +626,22 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
   const perBand=useMemo(()=>BANDS.map(b=>({band:b,prob:calcLink({txLat:qth.lat,txLon:qth.lon,rxLat:dest.lat,rxLon:dest.lon,
     freqMHz:b.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}).probability})),
     [qth,dest.lat,dest.lon,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+
+  // point-to-area coverage heatmap grid (recomputed on param/data change)
+  const GSTEP=5,GLON0=-180,GLAT0=-85,GNLON=72,GNLAT=35;
+  const coverage=useMemo(()=>{
+    if(!showHeat)return null;
+    const sun=solarSubPoint();const cells=[];
+    for(let iy=0;iy<GNLAT;iy++)for(let ix=0;ix<GNLON;ix++){
+      const lat=GLAT0+iy*GSTEP,lon=GLON0+ix*GSTEP;
+      const base={txLat:qth.lat,txLon:qth.lon,rxLat:lat,rxLon:lon,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw,sun};
+      if(heatMode==="band"){let best=0,bb=null;
+        for(const b of BANDS){const pr=calcLink({...base,freqMHz:b.freq}).probability;if(pr>best){best=pr;bb=b;}}
+        cells.push({lon,lat,prob:best,color:bb?bb.color:null});
+      }else cells.push({lon,lat,prob:calcLink({...base,freqMHz:band.freq}).probability});
+    }
+    return cells;
+  },[showHeat,heatMode,qth,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
 
   useEffect(()=>{if(onLink)onLink({lat:dest.lat,lon:dest.lon,label:dest.label});},[dest.lat,dest.lon,dest.label]);
 
@@ -609,7 +692,28 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
             <span className="dlayer-val">{Math.round(prob*100)}%</span></div>;})}
       </div>
     </div>
-    <div style={{fontSize:9,color:"#6e7681",marginTop:10}}>Blends great-circle geometry, live SFI/Kp-driven MUF·LUF, D-layer absorption from GOES X-ray, and a link budget (EIRP − path loss + RX gain vs the mode's required SNR). The path is drawn in yellow on the map above. Estimate, not a guarantee.</div>
+    <div style={{marginTop:14,borderTop:"1px solid #21262d",paddingTop:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:8}}>
+        <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,textTransform:"uppercase"}}>Predicted coverage from TX · point-to-area</div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <div className="tab-bar">
+            <button className={"tab-btn"+(heatMode==="prob"?" active":"")} onClick={()=>setHeatMode("prob")}>{band.name} prob</button>
+            <button className={"tab-btn"+(heatMode==="band"?" active":"")} onClick={()=>setHeatMode("band")}>best band</button>
+          </div>
+          <button className="btn btn-sm" onClick={()=>setShowHeat(s=>!s)}>{showHeat?"hide":"show"}</button>
+        </div>
+      </div>
+      {showHeat && <CoverageMap tx={{lat:qth.lat,lon:qth.lon}} rx={dest} cells={coverage} dims={{step:GSTEP}} heatMode={heatMode}/>}
+      {showHeat && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginTop:6,fontSize:9,color:"#8b949e"}}>
+        {heatMode==="prob"
+          ? <span style={{display:"flex",alignItems:"center",gap:6}}>contact prob
+              <span style={{display:"inline-block",width:140,height:9,borderRadius:4,background:"linear-gradient(90deg,rgb(31,78,121),rgb(42,167,196),rgb(63,185,80),rgb(210,153,34),rgb(248,81,73),rgb(219,97,162))"}}></span>
+              low → high · {band.name} {mode.name} {pw}W</span>
+          : <span style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>best band: {BANDS.map(b=><span key={b.name} style={{color:b.color,fontWeight:700}}>{b.name}</span>)}</span>}
+        <span>TX ◉ {qth.name.split(" (")[0]} · grid {GNLON}×{GNLAT} @ {GSTEP}°</span>
+      </div>}
+    </div>
+    <div style={{fontSize:9,color:"#6e7681",marginTop:10}}>Blends great-circle geometry, live SFI/Kp-driven MUF·LUF, D-layer absorption from GOES X-ray, and a link budget (EIRP − path loss + RX gain vs the mode's required SNR). The heatmap reuses the same model for every grid point. Estimate, not a guarantee.</div>
   </Card>;
 });
 
