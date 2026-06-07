@@ -143,6 +143,17 @@ const QTH_PRESETS=[
   {name:"New York",lat:40.71,lon:-74.0},
   {name:"Tokyo",lat:35.68,lon:139.69},
 ];
+const ANTENNA_TYPES=[
+  {name:"Dipole",gain:2.15},{name:"Vertical 1/4λ",gain:1.0},{name:"EFHW",gain:2.2},
+  {name:"G5RV",gain:2.0},{name:"Wire Loop",gain:3.5},{name:"Hex Beam",gain:6.0},
+  {name:"Yagi 3el",gain:7.5},{name:"Yagi 5el",gain:10.5},{name:"Quad 2el",gain:8.0},
+  {name:"Log Periodic",gain:6.5},{name:"Isotropic",gain:0},
+];
+const MODES=[
+  {name:"FT8",bw:50,snr:-21},{name:"FT4",bw:90,snr:-17},{name:"JS8Call",bw:50,snr:-24},
+  {name:"CW",bw:500,snr:0},{name:"PSK31",bw:31,snr:-7},{name:"RTTY",bw:250,snr:3},
+  {name:"SSB",bw:2400,snr:9},{name:"SSTV",bw:2700,snr:13},{name:"AM",bw:6000,snr:15},{name:"FM",bw:12000,snr:12},
+];
 const CONTINENTS={
   namerica:[[-130,50],[-124,48],[-120,35],[-115,32],[-105,30],[-97,26],[-90,29],[-82,25],[-80,27],[-74,40],[-67,45],[-60,47],[-65,60],[-75,65],[-95,72],[-120,72],[-138,62],[-160,55],[-168,65],[-155,71],[-138,62],[-130,50]],
   samerica:[[-80,10],[-68,11],[-60,8],[-50,2],[-42,-8],[-35,-15],[-40,-22],[-48,-26],[-53,-33],[-65,-40],[-68,-53],[-72,-48],[-72,-35],[-70,-26],[-70,-18],[-77,-12],[-80,-5],[-80,2],[-75,8],[-80,10]],
@@ -196,6 +207,48 @@ function estimateMUF(sfi,kIndex,distKm,cosX){
 function dRapHAF(xrayFlux,cosX){const day=Math.max(0,cosX);const I=Math.max(1e-9,xrayFlux);
   return 6*Math.pow(I/1e-7,0.25)*Math.pow(day,0.75);}
 function dLayerAbsorption(freqMHz,haf){if(haf<=0.1)return 0;return Math.min(60,Math.pow(haf/freqMHz,2));}
+function gcMidpoint(la1,lo1,la2,lo2){
+  const p1=toRad(la1),l1=toRad(lo1),p2=toRad(la2),l2=toRad(lo2);
+  const Bx=Math.cos(p2)*Math.cos(l2-l1),By=Math.cos(p2)*Math.sin(l2-l1);
+  const lat=Math.atan2(Math.sin(p1)+Math.sin(p2),Math.sqrt((Math.cos(p1)+Bx)**2+By**2));
+  const lon=l1+Math.atan2(By,Math.cos(p1)+Bx);
+  return {lat:toDeg(lat),lon:((toDeg(lon)+540)%360)-180};
+}
+function estimateLUF(kIndex,distKm,cosX){
+  const base=cosX>0.1?5.0:2.6;
+  return Math.max(2,base*(1+kIndex*0.18)*(1+Math.min(distKm,12000)/22000));
+}
+// Point-to-point HF link prediction from live SFI/Kp + GOES X-ray
+function calcLink(p){
+  const {txLat,txLon,rxLat,rxLon,freqMHz,powerW,txGain,rxGain,sfi,kIndex,xrayFlux,modeSnr,modeBw}=p;
+  const dist=gcDist(txLat,txLon,rxLat,rxLon);
+  const mid=gcMidpoint(txLat,txLon,rxLat,rxLon);
+  const cosXmid=cosZenith(mid.lat,mid.lon,solarSubPoint());
+  const night=cosXmid<0.05;
+  const muf=estimateMUF(sfi,kIndex,dist,cosXmid);
+  const luf=estimateLUF(kIndex,dist,cosXmid);
+  const fot=0.85*muf;
+  const hops=Math.max(1,Math.ceil(dist/4000));
+  const haf=dRapHAF(xrayFlux!=null?xrayFlux:2e-7,cosXmid);
+  const dAbs=dLayerAbsorption(freqMHz,haf)*hops;
+  let wScore;
+  if(freqMHz>muf) wScore=Math.max(0,1-(freqMHz-muf)/(muf*0.25));
+  else if(freqMHz<luf) wScore=Math.max(0,1-(luf-freqMHz)/(luf*0.6));
+  else wScore=Math.max(0.5,1-0.4*Math.abs(freqMHz-fot)/Math.max(fot,1));
+  wScore=Math.max(0,Math.min(1,wScore));
+  const eirp=10*Math.log10(Math.max(powerW,0.1))+30+txGain;          // dBm
+  const fspl=32.45+20*Math.log10(Math.max(dist,1))+20*Math.log10(Math.max(freqMHz,0.1));
+  const hopLoss=hops*(night?2.5:5)+(freqMHz>muf?25:0);
+  const totalLoss=fspl+hopLoss+dAbs;
+  const rxLevel=eirp-totalLoss+rxGain;                              // dBm
+  const noiseFloor=-174+10*Math.log10(modeBw)+(night?22:16)+(freqMHz<7?6:0);
+  const snr=rxLevel-noiseFloor;
+  const margin=snr-modeSnr;
+  const snrScore=Math.max(0,Math.min(1,(margin+6)/26));
+  const absScore=Math.max(0.03,Math.min(1,1-dAbs/25));  // SWF: heavy D-layer absorption closes the band
+  const probability=Math.max(0,Math.min(0.98,wScore*snrScore*absScore));
+  return {dist,bearing:bearing(txLat,txLon,rxLat,rxLon),mid,night,muf,luf,fot,hops,dAbs,totalLoss,snr,margin,probability};
+}
 
 // ─── SWPC DATA LAYER ────────────────────────────────────────
 const SWPC="https://services.swpc.noaa.gov";
@@ -392,7 +445,7 @@ function foF2Color(f){
 }
 
 // ─── BIG MAP (greyline + ionosondes + aurora + spots) ───────
-const PropMap=memo(({qth,iono,aurora,spots,spotDir,layers})=>{
+const PropMap=memo(({qth,iono,aurora,spots,spotDir,layers,link})=>{
   const ref=useRef(null),wrapRef=useRef(null);
   useEffect(()=>{
     const c=ref.current,wrap=wrapRef.current;if(!c||!wrap)return;
@@ -446,6 +499,17 @@ const PropMap=memo(({qth,iono,aurora,spots,spotDir,layers})=>{
       ctx.beginPath();ctx.arc(x,y,7,0,7);ctx.fill();ctx.globalAlpha=1;
       ctx.fillStyle="#0d1117";ctx.font="700 8px ui-monospace";ctx.textAlign="center";ctx.textBaseline="middle";
       ctx.fillText(s.fof2.toFixed(1),x,y);});ctx.textAlign="left";ctx.textBaseline="alphabetic";}
+    // TX -> RX simulated link (great circle)
+    if(link&&qth){const la1=toRad(qth.lat),lo1=toRad(qth.lon),la2=toRad(link.lat),lo2=toRad(link.lon);
+      const dd=2*Math.asin(Math.sqrt(Math.sin((la1-la2)/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin((lo1-lo2)/2)**2));
+      ctx.beginPath();let px0=null;
+      for(let i=0;i<=64;i++){const f=i/64;const A=dd?Math.sin((1-f)*dd)/Math.sin(dd):1-f,B=dd?Math.sin(f*dd)/Math.sin(dd):f;
+        const x=A*Math.cos(la1)*Math.cos(lo1)+B*Math.cos(la2)*Math.cos(lo2),y=A*Math.cos(la1)*Math.sin(lo1)+B*Math.cos(la2)*Math.sin(lo2),z=A*Math.sin(la1)+B*Math.sin(la2);
+        const lat=toDeg(Math.atan2(z,Math.sqrt(x*x+y*y))),lon=toDeg(Math.atan2(y,x)),sx=X(lon),sy=Y(lat);
+        if(px0!=null&&Math.abs(sx-px0)>W*0.5){ctx.stroke();ctx.beginPath();ctx.moveTo(sx,sy);}else if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);px0=sx;}
+      ctx.strokeStyle="#ffd33d";ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle="#ffd33d";ctx.beginPath();ctx.arc(X(link.lon),Y(link.lat),4,0,7);ctx.fill();
+      ctx.font="700 9px ui-monospace";ctx.fillText(link.label||"RX",X(link.lon)+7,Y(link.lat)+3);}
     // sun + QTH
     ctx.fillStyle="#ffd33d";ctx.beginPath();ctx.arc(X(sun.lon),Y(sun.lat),4,0,7);ctx.fill();
     ctx.strokeStyle="#ffd33d66";ctx.beginPath();ctx.arc(X(sun.lon),Y(sun.lat),9,0,7);ctx.stroke();
@@ -472,6 +536,83 @@ function bandCondition(band,sfi,kp,cosX){const muf=estimateMUF(sfi,kp,2500,cosX)
   if(f>muf&&f>mufL)return{t:"CLOSED",c:"#6e7681"};if(f<luf)return{t:"ABS",c:"#f85149"};
   if(f>mufL)return{t:"POOR",c:"#f85149"};if(f>mufL*0.88||kp>=5)return{t:"FAIR",c:"#d29922"};return{t:"GOOD",c:"#3fb950"};}
 
+// ─── TX/RX LINK SIMULATOR ───────────────────────────────────
+const TxRxSimulator=memo(function({qth,sw,onLink}){
+  const [destIdx,setDestIdx]=useState(3);
+  const [grid,setGrid]=useState("");
+  const [bandIdx,setBandIdx]=useState(5);
+  const [modeIdx,setModeIdx]=useState(0);
+  const [power,setPower]=useState(100);
+  const [txAntIdx,setTxAntIdx]=useState(0);
+  const [rxAntIdx,setRxAntIdx]=useState(0);
+
+  const gll=gridToLatLon(grid.trim());
+  const dest=gll?{lat:gll.lat,lon:gll.lon,label:grid.trim().toUpperCase()}
+    :{lat:QTH_PRESETS[destIdx].lat,lon:QTH_PRESETS[destIdx].lon,label:QTH_PRESETS[destIdx].name.split(" (")[0]};
+  const sfi=sw?.sfi??120,kp=sw?.kIndex??2,xray=sw?.xrayFlux??2e-7;
+  const band=BANDS[bandIdx],mode=MODES[modeIdx],txAnt=ANTENNA_TYPES[txAntIdx],rxAnt=ANTENNA_TYPES[rxAntIdx];
+  const pw=Math.max(0.1,+power||1);
+
+  const res=useMemo(()=>calcLink({txLat:qth.lat,txLon:qth.lon,rxLat:dest.lat,rxLon:dest.lon,
+    freqMHz:band.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}),
+    [qth,dest.lat,dest.lon,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+  const perBand=useMemo(()=>BANDS.map(b=>({band:b,prob:calcLink({txLat:qth.lat,txLon:qth.lon,rxLat:dest.lat,rxLon:dest.lon,
+    freqMHz:b.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}).probability})),
+    [qth,dest.lat,dest.lon,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+
+  useEffect(()=>{if(onLink)onLink({lat:dest.lat,lon:dest.lon,label:dest.label});},[dest.lat,dest.lon,dest.label]);
+
+  const verdict=res.probability>0.6?{t:"GOOD COPY",c:"b-good"}:res.probability>0.3?{t:"MARGINAL",c:"b-fair"}:res.probability>0.05?{t:"DIFFICULT",c:"b-fair"}:{t:"CLOSED",c:"b-poor"};
+  const pColor=res.probability>0.6?"#3fb950":res.probability>0.3?"#d29922":"#f85149";
+  const fld={display:"flex",flexDirection:"column"};
+
+  return <Card title="◉ TX / RX Link Simulator — live prediction"
+    tag={sw?.anyOk?`SFI ${Math.round(sfi)} · Kp ${kp.toFixed(1)}`:"MODEL"} tagClass={sw?.anyOk?"b-good":"b-info"}>
+    <div style={{fontSize:12,marginBottom:10}}>
+      <b style={{color:"#58a6ff"}}>{qth.name.split(" (")[0]}</b> <span className="muted">→</span> <b style={{color:"#ffd33d"}}>{dest.label}</b>
+      <span className="muted" style={{marginLeft:8,fontSize:10}}>{Math.round(res.dist)} km · az {Math.round(res.bearing)}° · {res.night?"night path":"day path"}</span>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+      <div style={fld}><label className="fld">Destination</label>
+        <select className="input-field" value={destIdx} onChange={e=>{setDestIdx(+e.target.value);setGrid("");}}>
+          {QTH_PRESETS.map((q,i)=><option key={i} value={i}>{q.name.split(" (")[0]}</option>)}</select></div>
+      <div style={fld}><label className="fld">or grid locator</label><input className="input-field" placeholder="e.g. IO91wm" value={grid} onChange={e=>setGrid(e.target.value)}/></div>
+      <div style={fld}><label className="fld">Band</label><select className="input-field" value={bandIdx} onChange={e=>setBandIdx(+e.target.value)}>{BANDS.map((b,i)=><option key={i} value={i}>{b.name} · {b.freq}</option>)}</select></div>
+      <div style={fld}><label className="fld">Mode</label><select className="input-field" value={modeIdx} onChange={e=>setModeIdx(+e.target.value)}>{MODES.map((m,i)=><option key={i} value={i}>{m.name} ({m.snr}dB)</option>)}</select></div>
+      <div style={fld}><label className="fld">Power (W)</label><input className="input-field" type="number" min="1" value={power} onChange={e=>setPower(e.target.value)}/></div>
+      <div style={fld}><label className="fld">TX antenna</label><select className="input-field" value={txAntIdx} onChange={e=>setTxAntIdx(+e.target.value)}>{ANTENNA_TYPES.map((a,i)=><option key={i} value={i}>{a.name} ({a.gain}dBi)</option>)}</select></div>
+      <div style={fld}><label className="fld">RX antenna</label><select className="input-field" value={rxAntIdx} onChange={e=>setRxAntIdx(+e.target.value)}>{ANTENNA_TYPES.map((a,i)=><option key={i} value={i}>{a.name} ({a.gain}dBi)</option>)}</select></div>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(78px,1fr))",gap:8,marginTop:12}}>
+      <Stat label="Path MUF" value={res.muf.toFixed(1)} unit="MHz" color="#3fb950"/>
+      <Stat label="FOT" value={res.fot.toFixed(1)} unit="MHz" color="#d29922"/>
+      <Stat label="LUF" value={res.luf.toFixed(1)} unit="MHz" color="#f85149"/>
+      <Stat label="Hops" value={res.hops}/>
+      <Stat label="SNR" value={res.snr.toFixed(0)} unit="dB" color="#58a6ff"/>
+      <Stat label="Margin" value={(res.margin>0?"+":"")+res.margin.toFixed(0)} unit="dB" color={res.margin>0?"#3fb950":"#f85149"}/>
+    </div>
+    <div style={{marginTop:14,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+      <div style={{flex:1,minWidth:200}}>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#8b949e",marginBottom:4}}>
+          <span>CONTACT PROBABILITY · {band.name} {mode.name} {pw}W</span><span style={{color:pColor,fontWeight:700}}>{Math.round(res.probability*100)}%</span></div>
+        <div className="progress-track" style={{height:11}}><div className="progress-fill" style={{width:(res.probability*100)+"%",background:pColor}}></div></div>
+      </div>
+      <span className={"badge "+verdict.c} style={{fontSize:11,padding:"5px 12px"}}>{verdict.t}</span>
+    </div>
+    <div style={{fontSize:9,color:"#6e7681",marginTop:6}}>Path loss ≈ {Math.round(res.totalLoss)} dB · D-layer abs {res.dAbs.toFixed(1)} dB · midpoint {res.mid.lat.toFixed(0)}°,{res.mid.lon.toFixed(0)}° {res.night?"(dark)":"(sunlit)"}</div>
+    <div style={{marginTop:14}}>
+      <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,textTransform:"uppercase",marginBottom:7}}>Best band for this path right now · {mode.name} {pw}W</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:"0 16px"}}>
+        {perBand.map(({band,prob},i)=>{const col=prob>0.6?"#3fb950":prob>0.3?"#d29922":prob>0.05?"#f0883e":"#6e7681";
+          return <div className="dlayer-row" key={i}><span className="dlayer-name" style={{color:band.color}}>{band.name}</span>
+            <span className="dlayer-track"><span className="dlayer-fill" style={{width:(prob*100)+"%",background:col}}></span></span>
+            <span className="dlayer-val">{Math.round(prob*100)}%</span></div>;})}
+      </div>
+    </div>
+    <div style={{fontSize:9,color:"#6e7681",marginTop:10}}>Blends great-circle geometry, live SFI/Kp-driven MUF·LUF, D-layer absorption from GOES X-ray, and a link budget (EIRP − path loss + RX gain vs the mode's required SNR). The path is drawn in yellow on the map above. Estimate, not a guarantee.</div>
+  </Card>;
+});
+
 // ─── MAIN APP ───────────────────────────────────────────────
 function App(){
   const [sw,setSw]=useState(null);
@@ -489,6 +630,7 @@ function App(){
   const [spotDir,setSpotDir]=useState("sender");
   const [spotsLoading,setSpotsLoading]=useState(false);
   const [layers,setLayers]=useState({iono:true,aurora:true,spots:true});
+  const [linkRx,setLinkRx]=useState(null);
   const qth=QTH_PRESETS[qthIdx];
 
   const refresh=useCallback(async()=>{
@@ -693,7 +835,7 @@ function App(){
     <Card title="◉ Propagation Map — greyline · ionosondes · aurora · spots" tag="LIVE" tagClass="b-good"
       right={<div className="muted" style={{fontSize:9,marginRight:8}}>foF2 dots = measured · lines = spot paths</div>}>
       <div style={{position:"relative"}}>
-        <PropMap qth={qth} iono={iono} aurora={sw?.aurora} spots={spots} spotDir={spotDir} layers={layers}/>
+        <PropMap qth={qth} iono={iono} aurora={sw?.aurora} spots={spots} spotDir={spotDir} layers={layers} link={linkRx}/>
         <div className="map-toggles">
           <button className={"map-tg"+(layers.iono?" on":"")} onClick={()=>tg("iono")}>● ionosondes</button>
           <button className={"map-tg"+(layers.aurora?" on":"")} onClick={()=>tg("aurora")}>● aurora</button>
@@ -702,6 +844,8 @@ function App(){
         <div className="map-legend">◐ terminator · ◉ sun · ◉ QTH<br/>foF2: <span style={{color:"#3b6fd6"}}>low</span> → <span style={{color:"#3fb950"}}>mid</span> → <span style={{color:"#f85149"}}>high</span></div>
       </div>
     </Card>
+
+    <TxRxSimulator qth={qth} sw={sw} onLink={setLinkRx}/>
 
     <div className="footer">
       <div>DATA · NOAA SWPC · GIRO/KC2G ionosondes (prop.kc2g.com) · PSK Reporter · Kyoto Dst · GOES · DSCOVR</div>
