@@ -343,9 +343,12 @@ footer {
 }
 footer .sep { color: var(--border); }
 footer .right { margin-left: auto; }
+footer a { color: var(--text-2); text-decoration: none; }
+footer a:hover { color: var(--cyan); }
 
 @media (max-width: 1100px) {
   body { overflow: auto; }
+  footer { height: auto; flex-wrap: wrap; padding: 6px 16px; row-gap: 2px; }
   main {
     grid-template-columns: 1fr;
     height: auto;
@@ -752,7 +755,11 @@ footer .right { margin-left: auto; }
   <span class="sep">|</span>
   <span>Sklar, Digital Communications 2ed</span>
   <span class="sep">|</span>
-  <span>FEC real: Viterbi + sindrome</span>
+  <span>Autor: Ramon Mayor Martins, Ph.D.</span>
+  <span class="sep">|</span>
+  <a href="https://rmayormartins.github.io" target="_blank" rel="noopener">rmayormartins.github.io</a>
+  <span class="sep">|</span>
+  <span>IFSC - Sao Jose - Area de Telecomunicações</span>
   <span class="right" id="ft-ts">aguardando simulacao</span>
 </footer>
 
