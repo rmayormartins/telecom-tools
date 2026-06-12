@@ -650,7 +650,7 @@ footer .ts{color:var(--text-3);}
           </div>
         </div>
         <div class="field">
-          <label>Sensibilidade <span class="unit">(dBm)</span> <span class="tip" data-tip="Nivel minimo de sinal para decodificacao, depende da modulacao e largura de banda. Calculado automaticamente.">i</span></label>
+          <label>Sensibilidade <span class="unit">(dBm)</span> <span class="tip" data-tip="Nivel minimo para decodificacao, na mesma referencia do RSRP (por elemento de recurso em 4G/5G; por canal em 2G/3G). Calculado automaticamente a partir do ruido termico, figura de ruido e SNR da modulacao.">i</span></label>
           <input type="number" id="sensitivity" value="-100" min="-130" max="-50" step="1" />
         </div>
       </div>
@@ -678,6 +678,7 @@ footer .ts{color:var(--text-3);}
             <option value="ecc33">ECC-33</option>
           </select>
         </div>
+        <div class="info-box bad-box" id="model-warning" style="display:none;margin:0 0 10px;"></div>
         <div class="field">
           <label>Morfologia / Ambiente <span class="tip" data-tip="Tipo de ambiente urbano afeta drasticamente a perda de propagacao. Centros urbanos densos sofrem 15-25 dB a mais de perda que areas rurais. Tambem controla o sombreamento espacial do heatmap.">i</span></label>
           <select id="morphology" onchange="onMorphChange()">
@@ -831,6 +832,7 @@ footer .ts{color:var(--text-3);}
       <div class="section-body open" id="res-link">
         <div class="kv"><span class="k">EIRP</span><span class="v" id="r-eirp">--<span class="unit">dBm</span></span></div>
         <div class="kv"><span class="k">EIRP (W)</span><span class="v" id="r-eirp-w">--<span class="unit">W</span></span></div>
+        <div class="kv"><span class="k">EIRP por RE <span class="tip" data-tip="EIRP distribuida pelas subportadoras ativas (12 x PRBs). Em 4G/5G esta e a potencia de referencia do RSRP, por isso o RSRP medido e bem menor que a EIRP total.">i</span></span><span class="v" id="r-eirp-re">--<span class="unit">dBm</span></span></div>
         <div class="kv"><span class="k">Perda propagacao (1km)</span><span class="v" id="r-pl1">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k">Perda propagacao (borda)</span><span class="v" id="r-plmax">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k">Margem desvanecim.</span><span class="v" id="r-fade">--<span class="unit">dB</span></span></div>
@@ -871,7 +873,7 @@ footer .ts{color:var(--text-3);}
         <div class="kv"><span class="k">Efic. espectral borda</span><span class="v" id="r-se-edge">--<span class="unit">bps/Hz</span></span></div>
         <div class="kv"><span class="k">PRBs disponiveis</span><span class="v" id="r-prbs">--</span></div>
         <div class="kv"><span class="k">Subcarriers</span><span class="v" id="r-subcarriers">--</span></div>
-        <div class="kv"><span class="k">MIMO ganho</span><span class="v" id="r-mimo-gain">--<span class="unit">×</span></span></div>
+        <div class="kv"><span class="k">Camadas MIMO (pico) <span class="tip" data-tip="Numero maximo de camadas espaciais por UE (limitado a 8 mesmo em Massive MIMO; as antenas excedentes contribuem com beamforming, nao com multiplexacao por usuario).">i</span></span><span class="v" id="r-mimo-gain">--<span class="unit">×</span></span></div>
         <div class="kv"><span class="k">Usuarios simult. est.</span><span class="v" id="r-users">--</span></div>
       </div>
     </div>
@@ -884,7 +886,7 @@ footer .ts{color:var(--text-3);}
       </div>
       <div class="section-body" id="res-rf">
         <div class="kv"><span class="k">Comprimento onda</span><span class="v" id="r-wavelength">--<span class="unit">m</span></span></div>
-        <div class="kv"><span class="k">Ruido termico</span><span class="v" id="r-thermal">--<span class="unit">dBm</span></span></div>
+        <div class="kv"><span class="k">Ruido termico (ref)</span><span class="v" id="r-thermal">--<span class="unit">dBm</span></span></div>
         <div class="kv"><span class="k">Noise floor (UE)</span><span class="v" id="r-noisefloor">--<span class="unit">dBm</span></span></div>
         <div class="kv"><span class="k">SNR requerido</span><span class="v" id="r-snr-req">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k">Sensib. calculada</span><span class="v" id="r-sens-calc">--<span class="unit">dBm</span></span></div>
@@ -945,7 +947,7 @@ footer .ts{color:var(--text-3);}
 <!-- FOOTER -->
 <footer>
   <div class="author">
-    Cellular Lab v1.3 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
+    Cellular Lab v1.4 — <a href="https://rmayormartins.github.io" target="_blank">Prof. Ramon Mayor Martins</a> — IFSC
   </div>
   <div class="ts" id="footer-ts"></div>
 </footer>
@@ -958,10 +960,11 @@ footer .ts{color:var(--text-3);}
 
 <script>
 // ============================================================
-//  CELLULAR LAB v1.1 — simulation engine
-//  Heatmap raster best-server com padrao de antena (H+V),
-//  downtilt, sombreamento log-normal correlacionado (clutter),
-//  selecao de servidora, SINR/RSRQ/throughput por celula.
+//  CELLULAR LAB v1.4 / simulation engine
+//  RSRP por elemento de recurso (potencia/12xPRB) para alcance
+//  realista; heatmap desenhado ate o limiar FRACO com franja
+//  vermelha; correcoes Okumura-Hata suburbano/rural; aviso de
+//  validade do modelo; sombreamento por site; rank adaptation.
 // ============================================================
 
 // ---- State ----
@@ -983,6 +986,7 @@ let erbMarkers = [];
 let ueMarkers = [];
 
 let lastCellRadius = 1;      // km, from last sim
+let lastChartArgs = null;    // para redesenhar graficos no resize
 
 // ---- Map init ----
 const map = L.map('map', {
@@ -1014,14 +1018,53 @@ const SIGMA_DEFAULT = {
   'rural': 4, 'open': 3, 'industrial': 8, 'indoor': 8
 };
 
-// ---- Technology presets ----
+// ---- Faixas de validade dos modelos (MHz) ----
+const MODEL_RANGES = {
+  'okumura-hata': [150, 1500, 'Okumura-Hata'],
+  'cost231-hata': [1500, 2000, 'COST-231 Hata'],
+  'cost231-wim': [800, 2000, 'COST-231 Walfisch-Ikegami'],
+  '3gpp-uma': [500, 100000, '3GPP UMa'],
+  '3gpp-umi': [500, 100000, '3GPP UMi'],
+  '3gpp-rma': [500, 7000, '3GPP RMa'],
+  'itu-r-p1411': [300, 100000, 'ITU-R P.1411'],
+  'sui': [1900, 11000, 'SUI'],
+  'ecc33': [700, 3500, 'ECC-33']
+};
+
+function updateModelWarning() {
+  const box = $('model-warning');
+  if (!box) return;
+  const m = $('prop-model').value;
+  const f = parseFloat($('band').value);
+  const r = MODEL_RANGES[m];
+  let msg = '', cls = 'info-box warn-box';
+  if (r && (f < r[0] || f > r[1])) {
+    const sug = f >= 6000 ? '3GPP UMi (TR 38.901)'
+              : f > 2000 ? '3GPP UMa (TR 38.901)'
+              : f < 1500 ? 'Okumura-Hata'
+              : 'COST-231 Hata';
+    if (m === 'cost231-hata' && f > 2000 && f <= 3000) {
+      msg = '<strong>Extensao de modelo:</strong> COST-231 Hata e valido de 1500 a 2000 MHz. Em ' + f +
+            ' MHz a formula e extrapolada (pratica comum ate ~2600 MHz). Para conferencia, compare com ' + sug + '.';
+    } else {
+      cls = 'info-box bad-box';
+      msg = '<strong>Modelo fora da faixa:</strong> ' + r[2] + ' e valido de ' + r[0] + ' a ' + r[1] +
+            ' MHz. Em ' + f + ' MHz os resultados nao sao confiaveis. Sugestao: ' + sug + '.';
+    }
+  }
+  box.className = cls;
+  box.style.display = msg ? '' : 'none';
+  box.innerHTML = msg;
+}
+
+// ---- Technology presets (agora com modelo de propagacao coerente) ----
 const TECH_PRESETS = {
-  gsm900: { tech:'2g', band:'900', bw:0.2, duplex:'fdd', mod:'gmsk', txp:43, gain:15, sectors:3, height:30, mimo:'1x1' },
-  umts2100: { tech:'3g', band:'2100', bw:5, duplex:'fdd', mod:'16qam', txp:43, gain:18, sectors:3, height:30, mimo:'1x1' },
-  lte2600: { tech:'4g', band:'2600', bw:20, duplex:'fdd', mod:'64qam', txp:43, gain:18, sectors:3, height:30, mimo:'2x2' },
-  lte700: { tech:'4g', band:'700', bw:10, duplex:'fdd', mod:'64qam', txp:46, gain:15, sectors:3, height:35, mimo:'2x2' },
-  nr3500: { tech:'5g-sub6', band:'3500', bw:100, duplex:'tdd', mod:'256qam', txp:46, gain:24, sectors:3, height:25, mimo:'32x32' },
-  nrmmw: { tech:'5g-mmwave', band:'26000', bw:400, duplex:'tdd', mod:'256qam', txp:40, gain:30, sectors:4, height:10, mimo:'64x64' }
+  gsm900: { tech:'2g', band:'900', bw:0.2, duplex:'fdd', mod:'gmsk', txp:43, gain:15, sectors:3, height:30, mimo:'1x1', model:'okumura-hata' },
+  umts2100: { tech:'3g', band:'2100', bw:5, duplex:'fdd', mod:'16qam', txp:43, gain:18, sectors:3, height:30, mimo:'1x1', model:'cost231-hata' },
+  lte2600: { tech:'4g', band:'2600', bw:20, duplex:'fdd', mod:'64qam', txp:43, gain:18, sectors:3, height:30, mimo:'2x2', model:'cost231-hata' },
+  lte700: { tech:'4g', band:'700', bw:10, duplex:'fdd', mod:'64qam', txp:46, gain:15, sectors:3, height:35, mimo:'2x2', model:'okumura-hata' },
+  nr3500: { tech:'5g-sub6', band:'3500', bw:100, duplex:'tdd', mod:'256qam', txp:46, gain:24, sectors:3, height:25, mimo:'32x32', model:'3gpp-uma' },
+  nrmmw: { tech:'5g-mmwave', band:'26000', bw:400, duplex:'tdd', mod:'256qam', txp:40, gain:30, sectors:4, height:10, mimo:'64x64', model:'3gpp-umi' }
 };
 
 function loadTechPreset(key) {
@@ -1039,10 +1082,12 @@ function loadTechPreset(key) {
   $('sectors').value = String(p.sectors);
   setVal('ant-height', p.height);
   $('mimo').value = p.mimo;
+  if (p.model) $('prop-model').value = p.model;
   document.querySelectorAll('#tech-presets .chip').forEach(c => c.classList.remove('active'));
   if (window.event && event.target) event.target.classList.add('active');
   onTechChange();
   onBandChange();
+  onModelChange();
 }
 
 function onTechChange() {
@@ -1051,6 +1096,7 @@ function onTechChange() {
     '2g':'2G GSM','3g':'3G UMTS','4g':'4G LTE','5g-sub6':'5G NR Sub6','5g-mmwave':'5G mmWave'
   }[t] || t);
   updateTechInfo();
+  updateModelWarning();
 }
 
 function onBandChange() {
@@ -1061,6 +1107,7 @@ function onBandChange() {
   if (bw) setVal('bandwidth', parseInt(bw));
   const label = opt.textContent.split('—')[0].trim();
   setHTML('hdr-band', label + '<span class="unit">' + freq + 'MHz</span>');
+  updateModelWarning();
 }
 
 function onModelChange() {
@@ -1072,11 +1119,13 @@ function onModelChange() {
   };
   setText('map-model-label', labels[m] || m);
   setText('chart-model-label', labels[m] || m);
+  updateModelWarning();
 }
 
 function onMorphChange() {
   const m = $('morphology').value;
   setVal('shadow-sigma', SIGMA_DEFAULT[m] != null ? SIGMA_DEFAULT[m] : 7);
+  if (m === 'indoor' && val('indoor-loss') === 0) setVal('indoor-loss', 17);
   if (erbs.length) runSimulation();
 }
 
@@ -1302,7 +1351,12 @@ map.on('click', function(e) {
 });
 
 // ============================================================
-//  PROPAGATION MODELS (mantidos do original)
+//  PROPAGATION MODELS
+//  Correcoes v1.4: sinais dos fatores suburbano/rural do
+//  Okumura-Hata corrigidos (antes o rural perdia ~26 dB a
+//  menos do que deveria, inflando o alcance); COST-231 Hata
+//  usa a frequencia real ate 3000 MHz (extensao usual para
+//  2,5/2,6 GHz) em vez de travar em 2000 MHz.
 // ============================================================
 function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
   if (distKm <= 0) distKm = 0.001;
@@ -1323,13 +1377,13 @@ function pathLoss(model, freqMHz, distKm, hb, hm, morphology) {
       }
       let L = 69.55 + 26.16*Math.log10(fc) - 13.82*Math.log10(hb) - aHm
               + (44.9 - 6.55*Math.log10(hb))*Math.log10(d);
-      if (morphology === 'suburban') L -= 2*Math.pow(Math.log10(fc/28),2) - 5.4;
-      else if (morphology === 'rural' || morphology === 'open') L -= 4.78*Math.pow(Math.log10(fc),2) + 18.33*Math.log10(fc) - 40.94;
+      if (morphology === 'suburban') L -= 2*Math.pow(Math.log10(fc/28),2) + 5.4;
+      else if (morphology === 'rural' || morphology === 'open') L -= 4.78*Math.pow(Math.log10(fc),2) - 18.33*Math.log10(fc) + 40.94;
       return L;
     }
 
     case 'cost231-hata': {
-      const fc = Math.min(Math.max(f, 1500), 2000);
+      const fc = Math.min(Math.max(f, 1500), 3000);
       let aHm;
       if (morphology === 'dense-urban' || morphology === 'urban') {
         aHm = 3.2 * Math.pow(Math.log10(11.75*hm), 2) - 4.97;
@@ -1416,6 +1470,35 @@ const MOD_SPECS = {
 const MOD_LADDER = ['gmsk','qpsk','8psk','16qam','64qam','256qam','1024qam'];
 
 // ============================================================
+//  REFERENCIA DE POTENCIA (RSRP por elemento de recurso)
+//  Em 4G/5G o RSRP e a potencia de UMA subportadora de
+//  referencia, nao a potencia total do canal. A potencia da
+//  ERB se divide entre 12 x PRBs subportadoras, entao
+//  RSRP = EIRP - 10log10(12N). Isso encolhe o alcance do
+//  heatmap para valores realistas (os limiares -80/-100/-115
+//  dBm sao limiares praticos de RSRP de campo).
+// ============================================================
+function scsForFreq(freqMHz) { return freqMHz >= 10000 ? 120 : (freqMHz >= 3000 ? 30 : 15); }
+function isOfdmTech(tech) { return tech === '4g' || tech === '5g-sub6' || tech === '5g-mmwave'; }
+function numPrbsFor(bwMHz, freqMHz) {
+  const prbBw = 12 * scsForFreq(freqMHz) / 1000; // MHz por PRB
+  return Math.max(1, Math.floor(bwMHz / prbBw));
+}
+function rsrpRefOffset(tech, bwMHz, freqMHz) {
+  if (!isOfdmTech(tech)) return 0; // 2G/3G: potencia do canal (RxLev/RSCP)
+  return 10*Math.log10(12 * numPrbsFor(bwMHz, freqMHz));
+}
+
+// camadas espaciais efetivas por UE (rank adaptation por SINR)
+function effLayers(sinr, mimo) {
+  const cap = Math.min(mimo, 8);
+  if (sinr >= 22) return cap;
+  if (sinr >= 13) return Math.min(cap, 4);
+  if (sinr >= 6)  return Math.min(cap, 2);
+  return 1;
+}
+
+// ============================================================
 //  ANTENNA PATTERN + SHADOW FADING (realism layer)
 // ============================================================
 // 3GPP-style horizontal/vertical sector pattern
@@ -1474,14 +1557,23 @@ function clutterLoss(pLat, pLng, sigma) {
         + smoothNoise(sx*5.3 + 31.1, sy*5.3 + 19.4) * 0.11;
   return (n - 0.5) * 2 * sigma * 1.55;
 }
+// componente de sombreamento especifica de cada site (descorrelacionada
+// entre ERBs): deixa as bordas de celula e zonas de handover irregulares
+function siteShadow(pLat, pLng, sigma, seed) {
+  if (sigma <= 0) return 0;
+  const sx = pLat/0.0016 + (seed|0)*47.13, sy = pLng/0.0016 - (seed|0)*89.71;
+  const n = smoothNoise(sx*1.9, sy*1.9);
+  return (n - 0.5) * 2 * sigma;
+}
 
 function dbmToMw(dbm) { return Math.pow(10, dbm/10); }
 
 // ---- core: best-server analysis at a point ----
+// Todos os niveis na referencia do RSRP (por RE em 4G/5G).
 function computeServing(pLat, pLng, P) {
-  const noiseFloor = -174 + 10*Math.log10(P.bw * 1e6) + P.nf; // dBm
+  const noiseFloor = -174 + 10*Math.log10(P.refBwHz) + P.nf; // dBm na largura de referencia
   const noiseMw = dbmToMw(noiseFloor);
-  const cl = clutterLoss(pLat, pLng, P.sigma);
+  const clCommon = clutterLoss(pLat, pLng, P.sigma);
   let bestRsrp = -999, bestIdx = -1, minDist = 1e9;
   const powers = [];
   for (let i = 0; i < erbs.length; i++) {
@@ -1490,7 +1582,9 @@ function computeServing(pLat, pLng, P) {
     const distKm = Math.max(distM/1000, 0.005);
     const brg = bearingFromErb(erb, pLat, pLng);
     const g = dirGain(erb, brg, distM, P.hm);
-    const eirpDir = erb.txPower - erb.cableLoss + g;
+    const refOff = rsrpRefOffset(erb.tech, erb.bw, parseFloat(erb.band) || P.freq);
+    const cl = 0.78*clCommon + 0.62*siteShadow(pLat, pLng, P.sigma, erb.id);
+    const eirpDir = erb.txPower - erb.cableLoss + g - refOff;
     const pl = pathLoss(P.model, parseFloat(erb.band), distKm, erb.antHeight, P.hm, P.morph);
     const rsrp = eirpDir - pl - cl - P.indoorLoss - P.foliageLoss;
     powers.push({ idx: i, rsrp, distKm });
@@ -1503,9 +1597,11 @@ function computeServing(pLat, pLng, P) {
     if (p.rsrp >= P.thrWeak) serversInRange++;
   }
   const sMw = dbmToMw(bestRsrp);
-  const rssiMw = sMw + interfMw + noiseMw;
+  const totMwRe = sMw + interfMw + noiseMw;          // potencia por elemento de referencia
+  const wbFactor = P.isOfdm ? 12 * P.numPRBs : 1;    // RSSI e medido na banda toda
+  const rssiMw = wbFactor * totMwRe;
   const sinr = 10*Math.log10(sMw / (interfMw + noiseMw));
-  const rsrq = 10*Math.log10(P.numPRBs * sMw / rssiMw); // approx RSRQ = N*RSRP/RSSI
+  const rsrq = 10*Math.log10((P.numPRBs * sMw) / rssiMw); // RSRQ = N*RSRP/RSSI (max -10.8 dB)
   return {
     rsrp: bestRsrp, idx: bestIdx, dist: powers[bestIdx] ? powers[bestIdx].distKm : 0,
     minDist, sinr, rsrq, rssi: 10*Math.log10(rssiMw),
@@ -1517,12 +1613,16 @@ function computeServing(pLat, pLng, P) {
 function getParams() {
   const freq = parseFloat($('band').value);
   const bw = val('bandwidth');
-  const scs = freq >= 3000 ? 30 : 15;
-  const prbBw = 12 * scs / 1000;
-  const numPRBs = Math.max(1, Math.floor(bw / prbBw));
+  const tech = $('technology').value;
+  const scs = scsForFreq(freq);
+  const numPRBs = numPrbsFor(bw, freq);
+  const ofdm = isOfdmTech(tech);
+  const refBwHz = ofdm ? scs*1000 : Math.max(bw, 0.01)*1e6;
+  const refOff = ofdm ? 10*Math.log10(12*numPRBs) : 0;
   const morph = $('morphology').value;
   return {
-    freq, bw, model: $('prop-model').value, morph,
+    freq, bw, tech, isOfdm: ofdm, refBwHz, refOff,
+    model: $('prop-model').value, morph,
     hm: val('ue-height'), nf: val('ue-nf'),
     bodyLoss: val('body-loss'), ueGain: val('ue-gain'),
     indoorLoss: val('indoor-loss'), foliageLoss: val('foliage-loss'),
@@ -1533,18 +1633,34 @@ function getParams() {
   };
 }
 
-function metricInfo(metric, P) {
-  if (metric === 'sinr')       return { lo:-6, hi:30 };
-  if (metric === 'rsrq')       return { lo:-19, hi:-3 };
-  if (metric === 'throughput') return { lo:0, hi:(MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se * P.mimo * P.bw };
-  return { lo:P.thrWeak, hi:P.thrGood + 25 }; // RSRP: verde so em sinal forte; gradiente ao longo da celula
+// ---- escala de cor ancorada nos limiares (fraco=vermelho garantido) ----
+// ancoras [a0,a1,a2,a3] mapeiam para matiz [0, 38, 98, 130] (vermelho ->
+// laranja -> amarelo-verde -> verde). Assim a faixa entre os limiares
+// FRACO e MEDIO aparece sempre em tons de vermelho/laranja.
+function metricAnchors(metric, P) {
+  if (metric === 'sinr') return [-6, 3, 13, 25];
+  if (metric === 'rsrq') return [-19.5, -16, -13, -10.8];
+  if (metric === 'throughput') {
+    const mx = (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se * Math.min(P.mimo, 8) * P.bw;
+    return [0, 0.12*mx, 0.45*mx, mx];
+  }
+  return [P.thrWeak, P.thrMid, P.thrGood, P.thrGood + 15]; // RSRP
+}
+function hueFor(v, a) {
+  const H = [0, 38, 98, 130];
+  if (v <= a[0]) return H[0];
+  if (v >= a[3]) return H[3];
+  for (let k = 0; k < 3; k++) {
+    if (v <= a[k+1]) return H[k] + (H[k+1]-H[k]) * (v - a[k]) / Math.max(a[k+1]-a[k], 1e-9);
+  }
+  return H[3];
 }
 function metricValue(serv, metric, P) {
   if (metric === 'sinr') return serv.sinr;
   if (metric === 'rsrq') return serv.rsrq;
   if (metric === 'throughput') {
     const se = Math.min(0.6*Math.log2(1+Math.pow(10, serv.sinr/10)), (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se);
-    return Math.max(0, se * P.mimo * P.bw);
+    return Math.max(0, se * effLayers(serv.sinr, P.mimo) * P.bw);
   }
   return serv.rsrp;
 }
@@ -1560,17 +1676,17 @@ function hslToRgb(h, s, l) {
 // ============================================================
 //  HEATMAP (raster best-server -> canvas -> image overlay)
 // ============================================================
-// raio efetivo de cobertura (km): distancia onde o RSRP de boresight cai ate o limiar "fraco".
-// alem disso o mapa fica transparente, entao a caixa nao precisa ser maior que isso.
+// raio de boresight ate o limiar dado (km), com RSRP por RE
 function coverageRadiusKm(P, edgeDbm) {
   const edge = (typeof edgeDbm === 'number') ? edgeDbm : P.thrMid;
-  let maxR = 0.3;
+  let maxR = 0.25;
   for (const erb of erbs) {
     const peak = isFinite(erb.txGain) ? erb.txGain : 15;
-    const eirpBore = erb.txPower - erb.cableLoss + peak;
     const band = parseFloat(erb.band) || P.freq;
-    let r = 0.3;
-    for (let d = 0.1; d <= 40; d += 0.1) {
+    const refOff = rsrpRefOffset(erb.tech, erb.bw, band);
+    const eirpBore = erb.txPower - erb.cableLoss + peak - refOff;
+    let r = 0.1;
+    for (let d = 0.05; d <= 40; d += 0.05) {
       const pl = pathLoss(P.model, band, d, erb.antHeight, P.hm, P.morph);
       const rsrp = eirpBore - pl - P.indoorLoss - P.foliageLoss;
       if (rsrp < edge) break;
@@ -1585,20 +1701,24 @@ function drawHeatmap(P, cellRadius, metric) {
   clearHeatmap();
   if (!heatmapVisible || erbs.length === 0) return { pctGood:0, pctMid:0, studyArea:0 };
 
-  // caixa baseada no raio de cobertura UTIL (limiar medio), bem mais compacta
-  const covR = coverageRadiusKm(P, P.thrMid);
+  // desenho vai ate o contorno de sinal FRACO (a franja distante aparece
+  // em vermelho); a estatistica de cobertura usa a area de servico,
+  // delimitada pelo limiar MEDIO
+  const drawR = coverageRadiusKm(P, P.thrWeak);
+  const planR = coverageRadiusKm(P, P.thrMid) * 1.05;
+
   let minLat=90, maxLat=-90, minLng=180, maxLng=-180;
   erbs.forEach(e => { minLat=Math.min(minLat,e.lat); maxLat=Math.max(maxLat,e.lat); minLng=Math.min(minLng,e.lng); maxLng=Math.max(maxLng,e.lng); });
   const midLat = (minLat+maxLat)/2;
-  const padDeg = (covR * 1.12) / 111.32;
+  const padDeg = (drawR * 1.10) / 111.32;
   const padLng = padDeg / Math.cos(midLat * Math.PI/180);
   minLat -= padDeg; maxLat += padDeg; minLng -= padLng; maxLng += padLng;
 
-  // grade de pixels a partir da resolucao, com teto
-  const res = parseInt($('hm-resolution').value) || 80;
+  // grade de pixels: piso maior evita heatmap "blocado" em celulas pequenas
+  const res = parseInt($('hm-resolution').value) || 100;
   const heightM = (maxLat - minLat) * 111320;
   const widthM  = (maxLng - minLng) * 111320 * Math.cos(midLat*Math.PI/180);
-  const PXMAX = 320, PXMIN = 24;
+  const PXMAX = 340, PXMIN = 140;
   const H = Math.max(PXMIN, Math.min(PXMAX, Math.round(heightM / res)));
   const W = Math.max(PXMIN, Math.min(PXMAX, Math.round(widthM  / res)));
 
@@ -1609,8 +1729,7 @@ function drawHeatmap(P, cellRadius, metric) {
   const data = img.data;
 
   const opacity = parseFloat($('hm-opacity').value) || 0.55;
-  const mi = metricInfo(metric, P);
-  const planR = covR * 1.05; // disco suave so para o denominador da % de cobertura (nao e desenhado)
+  const anchors = metricAnchors(metric, P);
 
   let goodCells=0, midCells=0, planCells=0;
 
@@ -1621,21 +1740,22 @@ function drawHeatmap(P, cellRadius, metric) {
       const serv = computeServing(lat, lng, P);
       const o = (j*W + i) * 4;
 
-      // denominador da %: footprint de planejamento (disco suave em torno da ERB mais proxima)
+      // denominador da %: area de servico (disco do limiar medio em torno da ERB mais proxima)
       if (serv.minDist <= planR) {
         planCells++;
         if (serv.rsrp >= P.thrGood) goodCells++;
         if (serv.rsrp >= P.thrMid)  midCells++;
       }
 
-      // DESENHA so cobertura UTIL (medio ou melhor) -> mapa compacto, borda irregular por clutter
-      if (serv.rsrp < P.thrMid) { data[o+3] = 0; continue; }
+      // transparente somente abaixo do limiar FRACO; a faixa fraco..medio
+      // aparece em vermelho/laranja, com borda irregular pelo sombreamento
+      if (serv.rsrp < P.thrWeak) { data[o+3] = 0; continue; }
 
       const v = metricValue(serv, metric, P);
-      let t = (v - mi.lo) / (mi.hi - mi.lo);
-      t = Math.max(0, Math.min(1, t));
-      const [r, g, b] = hslToRgb(t*130, 0.72, 0.48);
-      const a = opacity * (0.45 + 0.55*t);
+      const hue = hueFor(v, anchors);
+      const t = hue / 130;
+      const [r, g, b] = hslToRgb(hue, 0.72, 0.47);
+      const a = opacity * (0.42 + 0.58*t);
       data[o] = r; data[o+1] = g; data[o+2] = b; data[o+3] = Math.round(a*255);
     }
   }
@@ -1707,6 +1827,7 @@ function toggleSectors() {
 // ============================================================
 function runSimulation() {
   saveCurrentErbConfig();
+  updateModelWarning();
   const P = getParams();
   const freq = P.freq, bw = P.bw;
   const txPow = val('tx-power'), txGain = val('tx-gain'), cableLoss = val('cable-loss');
@@ -1719,23 +1840,27 @@ function runSimulation() {
   // EIRP (boresight, selected/current ERB config)
   const eirp = txPow + txGain - cableLoss;
   const eirpW = Math.pow(10, eirp/10) / 1000;
+  // EIRP por elemento de recurso: referencia do RSRP em 4G/5G
+  const eirpRE = eirp - P.refOff;
 
-  // Noise / sensitivity
-  const thermalNoise = -174 + 10*Math.log10(bw * 1e6);
+  // Ruido e sensibilidade na largura de referencia do RSRP
+  // (subportadora em 4G/5G; canal inteiro em 2G/3G)
+  const thermalNoise = -174 + 10*Math.log10(P.refBwHz);
   const noiseFloor = thermalNoise + nf;
   const modSpec = MOD_SPECS[mod] || MOD_SPECS['64qam'];
   const snrReq = modSpec.snr;
   const sensitivity = noiseFloor + snrReq;
   setVal('sensitivity', sensitivity.toFixed(1));
 
-  // MAPL
-  const mapl = eirp + ueGain - bodyLoss - fadeMargin - indoorLoss - foliageLoss - sensitivity;
+  // MAPL na mesma referencia (numericamente igual ao MAPL classico em
+  // banda larga, pois o termo 10log10(12N) cancela dos dois lados)
+  const mapl = eirpRE + ueGain - bodyLoss - fadeMargin - indoorLoss - foliageLoss - sensitivity;
 
   const pl1km = pathLoss(model, freq, 1, hb, hm, morph);
 
   // cell radius: distance where boresight PL exceeds MAPL
-  let cellRadius = 0.1;
-  for (let d = 0.1; d <= 50; d += 0.05) {
+  let cellRadius = 0.05;
+  for (let d = 0.05; d <= 50; d += 0.05) {
     if (pathLoss(model, freq, d, hb, hm, morph) > mapl) { cellRadius = d; break; }
     cellRadius = d;
   }
@@ -1747,9 +1872,11 @@ function runSimulation() {
   const fresnel1km = Math.sqrt(wavelength * 500);
   const mimoGain = P.mimo;
 
-  // Capacity
-  const se_peak = modSpec.se * mimoGain;
-  const se_edge = modSpec.se * 0.3 * Math.min(mimoGain, 4);
+  // Capacity (rank por UE limitado a 8 camadas; em Massive MIMO o
+  // excedente de antenas vira beamforming, nao multiplexacao por usuario)
+  const layersPk = Math.min(mimoGain, 8);
+  const se_peak = modSpec.se * layersPk;
+  const se_edge = modSpec.se * 0.3 * Math.min(mimoGain, 2);
   const tput_peak = se_peak * bw;
   const tput_edge = se_edge * bw;
   const numPRBs = P.numPRBs;
@@ -1768,6 +1895,7 @@ function runSimulation() {
   // ---- Update Link Budget ----
   $('r-eirp').innerHTML = eirp.toFixed(1) + '<span class="unit">dBm</span>';
   $('r-eirp-w').innerHTML = (eirpW > 1 ? eirpW.toFixed(1) : (eirpW*1000).toFixed(0) + 'm') + '<span class="unit">W</span>';
+  $('r-eirp-re').innerHTML = eirpRE.toFixed(1) + '<span class="unit">dBm</span>';
   $('r-pl1').innerHTML = pl1km.toFixed(1) + '<span class="unit">dB</span>';
   $('r-plmax').innerHTML = plEdge.toFixed(1) + '<span class="unit">dB</span>';
   $('r-fade').innerHTML = fadeMargin.toFixed(1) + '<span class="unit">dB</span>';
@@ -1796,7 +1924,7 @@ function runSimulation() {
   $('r-se-edge').innerHTML = se_edge.toFixed(2) + '<span class="unit">bps/Hz</span>';
   $('r-prbs').textContent = numPRBs;
   $('r-subcarriers').textContent = subcarriers;
-  $('r-mimo-gain').innerHTML = mimoGain + '<span class="unit">×</span>';
+  $('r-mimo-gain').innerHTML = layersPk + '<span class="unit">×</span>';
   $('r-users').textContent = estUsers;
 
   // ---- RF ----
@@ -1814,14 +1942,16 @@ function runSimulation() {
   $('map-cov-pct').textContent = pctMid.toFixed(0) + '%';
   $('map-cov-pct').className = 'big ' + gCls;
 
-  const linkOk = mapl > pl1km;
+  // enlace viavel se o MAPL sustenta um raio minimo de celula
+  const linkOk = cellRadius >= 0.12;
   $('r-link-dot').className = 'live-dot' + (linkOk ? '' : ' off');
   $('r-link-status').textContent = linkOk ? 'LINK OK' : 'MARGEM INSUF.';
   $('r-link-status').className = 'v ' + (linkOk ? 'good' : 'bad');
 
   // ---- Charts ----
   drawPropChart(model, freq, hb, hm, morph, cellRadius);
-  drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, P.thrGood, P.thrMid, P.thrWeak);
+  drawRSRPChart(model, freq, eirpRE, bodyLoss, hb, hm, morph, cellRadius, P.thrGood, P.thrMid, P.thrWeak);
+  lastChartArgs = { model, freq, hb, hm, morph, cellRadius, eirpRE, bodyLoss, tg: P.thrGood, tm: P.thrMid, tw: P.thrWeak };
 
   // ---- UE analysis ----
   analyzeUEs();
@@ -1845,8 +1975,10 @@ function analyzeUEs() {
     if (erbs.length === 0) { ue.metrics = null; return; }
     const serv = computeServing(ue.lat, ue.lng, P);
     const rxLevel = serv.rsrp + P.ueGain - P.bodyLoss;
-    const se = Math.max(0, Math.min(0.6*Math.log2(1+Math.pow(10, serv.sinr/10)), (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se));
-    const tput = se * P.mimo * P.bw;
+    const layers = effLayers(serv.sinr, P.mimo);
+    const sePerLayer = Math.max(0, Math.min(0.6*Math.log2(1+Math.pow(10, serv.sinr/10)), (MOD_SPECS[P.mod]||MOD_SPECS['64qam']).se));
+    const se = sePerLayer * layers;
+    const tput = se * P.bw;
     const margin = rxLevel - P.sensitivity;
     const modOk = bestModulationForSinr(serv.sinr);
     ue.metrics = {
@@ -1894,7 +2026,6 @@ function renderUeDetail() {
     $('ue-verdict').className='info-box warn-box';
     return;
   }
-  const cls = v => v;
   $('u-serving').innerHTML = m.serving;
   $('u-dist').innerHTML = m.dist.toFixed(2) + '<span class="unit">km</span>';
   const rsrpCls = m.rsrp >= val('thr-good') ? 'good' : (m.rsrp >= val('thr-mid') ? 'warn' : 'bad');
@@ -1971,7 +2102,7 @@ function drawPropChart(model, freq, hb, hm, morph, cellRadius) {
   ctx.save();ctx.translate(10,H/2);ctx.rotate(-Math.PI/2);ctx.fillText('Path Loss (dB)',0,0);ctx.restore();
 }
 
-function drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak) {
+function drawRSRPChart(model, freq, eirpRE, bodyLoss, hb, hm, morph, cellRadius, thrGood, thrMid, thrWeak) {
   const canvas = $('rsrp-chart');
   const ctx = canvas.getContext('2d');
   const rect = canvas.parentElement.getBoundingClientRect();
@@ -1981,7 +2112,8 @@ function drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, t
 
   const maxDist = Math.max(cellRadius*1.5, 2);
   const dists=[], rsrps=[];
-  for (let d=0.05; d<=maxDist; d+=maxDist/100){ dists.push(d); rsrps.push(eirp - pathLoss(model,freq,d,hb,hm,morph) - bodyLoss); }
+  // curva de RSRP de boresight, ja na referencia por RE
+  for (let d=0.05; d<=maxDist; d+=maxDist/100){ dists.push(d); rsrps.push(eirpRE - pathLoss(model,freq,d,hb,hm,morph) - bodyLoss); }
   const minR = Math.min(...rsrps, thrWeak) - 5, maxR = Math.max(...rsrps) + 5;
   const pad={l:50,r:15,t:10,b:28}, cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
 
@@ -2014,7 +2146,7 @@ function drawRSRPChart(model, freq, eirp, bodyLoss, hb, hm, morph, cellRadius, t
 //  RESET
 // ============================================================
 function resetResults() {
-  ['r-eirp','r-eirp-w','r-pl1','r-plmax','r-fade','r-indoor','r-mapl',
+  ['r-eirp','r-eirp-w','r-eirp-re','r-pl1','r-plmax','r-fade','r-indoor','r-mapl',
    'r-cellrad','r-cellarea','r-totalarea','r-covgood','r-covmid','r-covweak',
    'r-tput-peak','r-tput-edge','r-se-peak','r-se-edge','r-prbs','r-subcarriers',
    'r-mimo-gain','r-users','r-wavelength','r-thermal','r-noisefloor','r-snr-req',
@@ -2036,6 +2168,7 @@ function resetAll() {
   clearHeatmap();
   erbs=[]; erbIdCounter=0; selectedErbIdx=-1;
   ues=[]; ueIdCounter=0; selectedUeIdx=-1;
+  lastChartArgs=null;
   updateErbList(); updateUeList(); renderUeDetail();
   setText('hdr-erbs','0');
   resetResults();
@@ -2053,10 +2186,21 @@ onTechChange();
 onBandChange();
 onModelChange();
 onMetricChange();
+updateModelWarning();
 updateUeList();
 renderUeDetail();
 
-window.addEventListener('resize', () => { if (erbs.length) { /* charts redraw on next sim */ } });
+// redesenha apenas os graficos no resize (o heatmap nao depende do viewport)
+let resizeT = null;
+window.addEventListener('resize', () => {
+  if (!lastChartArgs) return;
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => {
+    const a = lastChartArgs;
+    drawPropChart(a.model, a.freq, a.hb, a.hm, a.morph, a.cellRadius);
+    drawRSRPChart(a.model, a.freq, a.eirpRE, a.bodyLoss, a.hb, a.hm, a.morph, a.cellRadius, a.tg, a.tm, a.tw);
+  }, 150);
+});
 </script>
 
 </body>
