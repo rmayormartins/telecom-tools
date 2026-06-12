@@ -191,6 +191,13 @@ function gridToLatLon(g){
   else{lon+=1;lat+=0.5;}
   if(isNaN(lon)||isNaN(lat))return null;return {lat,lon};
 }
+function latLonToGrid(lat,lon){
+  lon=(((lon+180)%360)+360)%360;const la=Math.min(179.999,lat+90);
+  const A=Math.floor(lon/20),B=Math.floor(la/10);
+  const C=Math.floor((lon%20)/2),D=Math.floor(la%10);
+  const E=Math.floor((lon%2)*12),F=Math.floor((la%1)*24);
+  return String.fromCharCode(65+A)+String.fromCharCode(65+B)+C+D+String.fromCharCode(97+E)+String.fromCharCode(97+F);
+}
 
 // ─── PROPAGATION MODEL ──────────────────────────────────────
 function estimateFoF2(sfi,kIndex,cosX){
@@ -470,7 +477,7 @@ function drawTerminator(ctx,W,H,sun){const X=lon=>((lon+180)/360)*W,Y=lat=>((90-
   ctx.fillStyle="#ffd33d";ctx.beginPath();ctx.arc(X(sun.lon),Y(sun.lat),4,0,7);ctx.fill();}
 
 // ─── COVERAGE HEATMAP (point-to-area prediction) ────────────
-const CoverageMap=memo(({tx,rx,cells,dims,heatMode})=>{
+const CoverageMap=memo(({tx,rx,cells,dims,heatMode,onPick})=>{
   const ref=useRef(null),wrapRef=useRef(null);
   useEffect(()=>{
     const c=ref.current,wrap=wrapRef.current;if(!c||!wrap)return;
@@ -506,7 +513,10 @@ const CoverageMap=memo(({tx,rx,cells,dims,heatMode})=>{
       ctx.fillStyle="#58a6ff";ctx.beginPath();ctx.arc(qx,qy,2.5,0,7);ctx.fill();
       ctx.font="700 9px ui-monospace";ctx.fillText("TX",qx+8,qy+3);}
   });
-  return <div className="map-wrap" ref={wrapRef}><canvas ref={ref}/></div>;
+  const handleClick=e=>{if(!onPick)return;const c=ref.current;const r=c.getBoundingClientRect();
+    const lon=((e.clientX-r.left)/r.width)*360-180,lat=90-((e.clientY-r.top)/r.height)*180;
+    onPick(Math.max(-89,Math.min(89,lat)),((lon+540)%360)-180);};
+  return <div className="map-wrap" ref={wrapRef}><canvas ref={ref} onClick={handleClick} style={{cursor:onPick?"crosshair":"default"}}/></div>;
 });
 
 // ─── BIG MAP (greyline + ionosondes + aurora + spots) ───────
@@ -602,9 +612,14 @@ function bandCondition(band,sfi,kp,cosX){const muf=estimateMUF(sfi,kp,2500,cosX)
   if(f>mufL)return{t:"POOR",c:"#f85149"};if(f>mufL*0.88||kp>=5)return{t:"FAIR",c:"#d29922"};return{t:"GOOD",c:"#3fb950"};}
 
 // ─── TX/RX LINK SIMULATOR ───────────────────────────────────
-const TxRxSimulator=memo(function({qth,sw,onLink}){
-  const [destIdx,setDestIdx]=useState(3);
-  const [grid,setGrid]=useState("");
+const TxRxSimulator=memo(function({sw}){
+  // free TX / RX as the source of truth ({lat,lon,label}); default São José/SC
+  const SJ=QTH_PRESETS[1];
+  const [tx,setTx]=useState({lat:SJ.lat,lon:SJ.lon,label:"São José"});
+  const [rx,setRx]=useState({lat:QTH_PRESETS[3].lat,lon:QTH_PRESETS[3].lon,label:"London"});
+  const [txText,setTxText]=useState("");
+  const [rxText,setRxText]=useState("");
+  const [pickMode,setPickMode]=useState("rx");
   const [bandIdx,setBandIdx]=useState(5);
   const [modeIdx,setModeIdx]=useState(0);
   const [power,setPower]=useState(100);
@@ -613,53 +628,59 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
   const [showHeat,setShowHeat]=useState(true);
   const [heatMode,setHeatMode]=useState("prob");
 
-  const gll=gridToLatLon(grid.trim());
-  const dest=gll?{lat:gll.lat,lon:gll.lon,label:grid.trim().toUpperCase()}
-    :{lat:QTH_PRESETS[destIdx].lat,lon:QTH_PRESETS[destIdx].lon,label:QTH_PRESETS[destIdx].name.split(" (")[0]};
   const sfi=sw?.sfi??120,kp=sw?.kIndex??2,xray=sw?.xrayFlux??2e-7;
   const band=BANDS[bandIdx],mode=MODES[modeIdx],txAnt=ANTENNA_TYPES[txAntIdx],rxAnt=ANTENNA_TYPES[rxAntIdx];
   const pw=Math.max(0.1,+power||1);
 
-  const res=useMemo(()=>calcLink({txLat:qth.lat,txLon:qth.lon,rxLat:dest.lat,rxLon:dest.lon,
-    freqMHz:band.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}),
-    [qth,dest.lat,dest.lon,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
-  const perBand=useMemo(()=>BANDS.map(b=>({band:b,prob:calcLink({txLat:qth.lat,txLon:qth.lon,rxLat:dest.lat,rxLon:dest.lon,
-    freqMHz:b.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}).probability})),
-    [qth,dest.lat,dest.lon,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+  const setEnd=(which,ll)=>{if(which==="tx")setTx(ll);else setRx(ll);};
+  const onPreset=(which,i)=>{const q=QTH_PRESETS[i];setEnd(which,{lat:q.lat,lon:q.lon,label:q.name.split(" (")[0]});which==="tx"?setTxText(""):setRxText("");};
+  const onGrid=(which,v)=>{which==="tx"?setTxText(v):setRxText(v);const ll=gridToLatLon(v.trim());
+    if(ll)setEnd(which,{lat:ll.lat,lon:ll.lon,label:v.trim().toUpperCase()});};
+  const onPick=(lat,lon)=>{const g=latLonToGrid(lat,lon);
+    if(pickMode==="tx"){setTx({lat,lon,label:g});setTxText(g);}else{setRx({lat,lon,label:g});setRxText(g);}};
 
-  // point-to-area coverage heatmap grid (recomputed on param/data change)
+  const res=useMemo(()=>calcLink({txLat:tx.lat,txLon:tx.lon,rxLat:rx.lat,rxLon:rx.lon,
+    freqMHz:band.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}),
+    [tx.lat,tx.lon,rx.lat,rx.lon,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+  const perBand=useMemo(()=>BANDS.map(b=>({band:b,prob:calcLink({txLat:tx.lat,txLon:tx.lon,rxLat:rx.lat,rxLon:rx.lon,
+    freqMHz:b.freq,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw}).probability})),
+    [tx.lat,tx.lon,rx.lat,rx.lon,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
+
   const GSTEP=5,GLON0=-180,GLAT0=-85,GNLON=72,GNLAT=35;
   const coverage=useMemo(()=>{
     if(!showHeat)return null;
     const sun=solarSubPoint();const cells=[];
     for(let iy=0;iy<GNLAT;iy++)for(let ix=0;ix<GNLON;ix++){
       const lat=GLAT0+iy*GSTEP,lon=GLON0+ix*GSTEP;
-      const base={txLat:qth.lat,txLon:qth.lon,rxLat:lat,rxLon:lon,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw,sun};
+      const base={txLat:tx.lat,txLon:tx.lon,rxLat:lat,rxLon:lon,powerW:pw,txGain:txAnt.gain,rxGain:rxAnt.gain,sfi,kIndex:kp,xrayFlux:xray,modeSnr:mode.snr,modeBw:mode.bw,sun};
       if(heatMode==="band"){let best=0,bb=null;
         for(const b of BANDS){const pr=calcLink({...base,freqMHz:b.freq}).probability;if(pr>best){best=pr;bb=b;}}
         cells.push({lon,lat,prob:best,color:bb?bb.color:null});
       }else cells.push({lon,lat,prob:calcLink({...base,freqMHz:band.freq}).probability});
     }
     return cells;
-  },[showHeat,heatMode,qth,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
-
-  useEffect(()=>{if(onLink)onLink({lat:dest.lat,lon:dest.lon,label:dest.label});},[dest.lat,dest.lon,dest.label]);
+  },[showHeat,heatMode,tx.lat,tx.lon,band,pw,txAnt,rxAnt,sfi,kp,xray,mode]);
 
   const verdict=res.probability>0.6?{t:"GOOD COPY",c:"b-good"}:res.probability>0.3?{t:"MARGINAL",c:"b-fair"}:res.probability>0.05?{t:"DIFFICULT",c:"b-fair"}:{t:"CLOSED",c:"b-poor"};
   const pColor=res.probability>0.6?"#3fb950":res.probability>0.3?"#d29922":"#f85149";
   const fld={display:"flex",flexDirection:"column"};
+  const probTxt=p=>p>0.6?"#3fb950":p>0.3?"#d29922":p>0.05?"#f0883e":"#6e7681";
 
   return <Card title="◉ TX / RX Link Simulator — live prediction"
     tag={sw?.anyOk?`SFI ${Math.round(sfi)} · Kp ${kp.toFixed(1)}`:"MODEL"} tagClass={sw?.anyOk?"b-good":"b-info"}>
     <div style={{fontSize:12,marginBottom:10}}>
-      <b style={{color:"#58a6ff"}}>{qth.name.split(" (")[0]}</b> <span className="muted">→</span> <b style={{color:"#ffd33d"}}>{dest.label}</b>
+      <b style={{color:"#58a6ff"}}>TX {tx.label}</b> <span className="muted">→</span> <b style={{color:"#ffd33d"}}>RX {rx.label}</b>
       <span className="muted" style={{marginLeft:8,fontSize:10}}>{Math.round(res.dist)} km · az {Math.round(res.bearing)}° · {res.night?"night path":"day path"}</span>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
-      <div style={fld}><label className="fld">Destination</label>
-        <select className="input-field" value={destIdx} onChange={e=>{setDestIdx(+e.target.value);setGrid("");}}>
-          {QTH_PRESETS.map((q,i)=><option key={i} value={i}>{q.name.split(" (")[0]}</option>)}</select></div>
-      <div style={fld}><label className="fld">or grid locator</label><input className="input-field" placeholder="e.g. IO91wm" value={grid} onChange={e=>setGrid(e.target.value)}/></div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:8}}>
+      <div style={fld}><label className="fld" style={{color:"#58a6ff"}}>TX location</label>
+        <select className="input-field" value="" onChange={e=>{if(e.target.value!=="")onPreset("tx",+e.target.value);}}>
+          <option value="">— preset —</option>{QTH_PRESETS.map((q,i)=><option key={i} value={i}>{q.name.split(" (")[0]}</option>)}</select></div>
+      <div style={fld}><label className="fld">TX grid</label><input className="input-field" placeholder="GG52 / click map" value={txText} onChange={e=>onGrid("tx",e.target.value)}/></div>
+      <div style={fld}><label className="fld" style={{color:"#ffd33d"}}>RX location</label>
+        <select className="input-field" value="" onChange={e=>{if(e.target.value!=="")onPreset("rx",+e.target.value);}}>
+          <option value="">— preset —</option>{QTH_PRESETS.map((q,i)=><option key={i} value={i}>{q.name.split(" (")[0]}</option>)}</select></div>
+      <div style={fld}><label className="fld">RX grid</label><input className="input-field" placeholder="IO91 / click map" value={rxText} onChange={e=>onGrid("rx",e.target.value)}/></div>
       <div style={fld}><label className="fld">Band</label><select className="input-field" value={bandIdx} onChange={e=>setBandIdx(+e.target.value)}>{BANDS.map((b,i)=><option key={i} value={i}>{b.name} · {b.freq}</option>)}</select></div>
       <div style={fld}><label className="fld">Mode</label><select className="input-field" value={modeIdx} onChange={e=>setModeIdx(+e.target.value)}>{MODES.map((m,i)=><option key={i} value={i}>{m.name} ({m.snr}dB)</option>)}</select></div>
       <div style={fld}><label className="fld">Power (W)</label><input className="input-field" type="number" min="1" value={power} onChange={e=>setPower(e.target.value)}/></div>
@@ -686,15 +707,21 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
     <div style={{marginTop:14}}>
       <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,textTransform:"uppercase",marginBottom:7}}>Best band for this path right now · {mode.name} {pw}W</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:"0 16px"}}>
-        {perBand.map(({band,prob},i)=>{const col=prob>0.6?"#3fb950":prob>0.3?"#d29922":prob>0.05?"#f0883e":"#6e7681";
+        {perBand.map(({band,prob},i)=>{const a=Math.max(0.18,Math.min(1,0.25+prob));
           return <div className="dlayer-row" key={i}><span className="dlayer-name" style={{color:band.color}}>{band.name}</span>
-            <span className="dlayer-track"><span className="dlayer-fill" style={{width:(prob*100)+"%",background:col}}></span></span>
-            <span className="dlayer-val">{Math.round(prob*100)}%</span></div>;})}
+            <span className="dlayer-track" style={{background:band.color+"1f"}}><span className="dlayer-fill" style={{width:Math.max(prob*100,prob>0.01?4:0)+"%",background:band.color,opacity:a}}></span></span>
+            <span className="dlayer-val" style={{color:probTxt(prob),fontWeight:700}}>{Math.round(prob*100)}%</span></div>;})}
       </div>
     </div>
     <div style={{marginTop:14,borderTop:"1px solid #21262d",paddingTop:12}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:8}}>
-        <div style={{fontSize:9,color:"#8b949e",letterSpacing:1,textTransform:"uppercase"}}>Predicted coverage from TX · point-to-area</div>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <span style={{fontSize:9,color:"#8b949e",letterSpacing:1,textTransform:"uppercase"}}>Coverage from TX · click map to set</span>
+          <div className="tab-bar">
+            <button className={"tab-btn"+(pickMode==="tx"?" active":"")} onClick={()=>setPickMode("tx")} style={pickMode==="tx"?{color:"#58a6ff"}:null}>◉ set TX</button>
+            <button className={"tab-btn"+(pickMode==="rx"?" active":"")} onClick={()=>setPickMode("rx")} style={pickMode==="rx"?{color:"#ffd33d"}:null}>◉ set RX</button>
+          </div>
+        </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <div className="tab-bar">
             <button className={"tab-btn"+(heatMode==="prob"?" active":"")} onClick={()=>setHeatMode("prob")}>{band.name} prob</button>
@@ -703,17 +730,17 @@ const TxRxSimulator=memo(function({qth,sw,onLink}){
           <button className="btn btn-sm" onClick={()=>setShowHeat(s=>!s)}>{showHeat?"hide":"show"}</button>
         </div>
       </div>
-      {showHeat && <CoverageMap tx={{lat:qth.lat,lon:qth.lon}} rx={dest} cells={coverage} dims={{step:GSTEP}} heatMode={heatMode}/>}
+      {showHeat && <CoverageMap tx={tx} rx={rx} cells={coverage} dims={{step:GSTEP}} heatMode={heatMode} onPick={onPick}/>}
       {showHeat && <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginTop:6,fontSize:9,color:"#8b949e"}}>
         {heatMode==="prob"
           ? <span style={{display:"flex",alignItems:"center",gap:6}}>contact prob
               <span style={{display:"inline-block",width:140,height:9,borderRadius:4,background:"linear-gradient(90deg,rgb(31,78,121),rgb(42,167,196),rgb(63,185,80),rgb(210,153,34),rgb(248,81,73),rgb(219,97,162))"}}></span>
               low → high · {band.name} {mode.name} {pw}W</span>
           : <span style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>best band: {BANDS.map(b=><span key={b.name} style={{color:b.color,fontWeight:700}}>{b.name}</span>)}</span>}
-        <span>TX ◉ {qth.name.split(" (")[0]} · grid {GNLON}×{GNLAT} @ {GSTEP}°</span>
+        <span>clicking sets <b style={{color:pickMode==="tx"?"#58a6ff":"#ffd33d"}}>{pickMode.toUpperCase()}</b> · grid {GNLON}×{GNLAT} @ {GSTEP}°</span>
       </div>}
     </div>
-    <div style={{fontSize:9,color:"#6e7681",marginTop:10}}>Blends great-circle geometry, live SFI/Kp-driven MUF·LUF, D-layer absorption from GOES X-ray, and a link budget (EIRP − path loss + RX gain vs the mode's required SNR). The heatmap reuses the same model for every grid point. Estimate, not a guarantee.</div>
+    <div style={{fontSize:9,color:"#6e7681",marginTop:10}}>Set TX and RX by preset, grid locator, or clicking the map (toggle set TX / set RX). Blends great-circle geometry, live SFI/Kp-driven MUF·LUF, D-layer absorption from GOES X-ray and a link budget vs the mode's required SNR. Estimate, not a guarantee.</div>
   </Card>;
 });
 
@@ -728,13 +755,12 @@ function App(){
   const [lastFetch,setLastFetch]=useState(null);
   const [now,setNow]=useState(new Date());
   const [win,setWin]=useState("1D");
-  const [qthIdx,setQthIdx]=useState(0);
+  const [qthIdx,setQthIdx]=useState(1);
   const [callsign,setCallsign]=useState("PU4MAY");
   const [proxy,setProxy]=useState("");
   const [spotDir,setSpotDir]=useState("sender");
   const [spotsLoading,setSpotsLoading]=useState(false);
   const [layers,setLayers]=useState({iono:true,aurora:true,spots:true});
-  const [linkRx,setLinkRx]=useState(null);
   const qth=QTH_PRESETS[qthIdx];
 
   const refresh=useCallback(async()=>{
@@ -939,7 +965,7 @@ function App(){
     <Card title="◉ Propagation Map — greyline · ionosondes · aurora · spots" tag="LIVE" tagClass="b-good"
       right={<div className="muted" style={{fontSize:9,marginRight:8}}>foF2 dots = measured · lines = spot paths</div>}>
       <div style={{position:"relative"}}>
-        <PropMap qth={qth} iono={iono} aurora={sw?.aurora} spots={spots} spotDir={spotDir} layers={layers} link={linkRx}/>
+        <PropMap qth={qth} iono={iono} aurora={sw?.aurora} spots={spots} spotDir={spotDir} layers={layers}/>
         <div className="map-toggles">
           <button className={"map-tg"+(layers.iono?" on":"")} onClick={()=>tg("iono")}>● ionosondes</button>
           <button className={"map-tg"+(layers.aurora?" on":"")} onClick={()=>tg("aurora")}>● aurora</button>
@@ -949,7 +975,7 @@ function App(){
       </div>
     </Card>
 
-    <TxRxSimulator qth={qth} sw={sw} onLink={setLinkRx}/>
+    <TxRxSimulator sw={sw}/>
 
     <div className="footer">
       <div>DATA · NOAA SWPC · GIRO/KC2G ionosondes (prop.kc2g.com) · PSK Reporter · Kyoto Dst · GOES · DSCOVR</div>
