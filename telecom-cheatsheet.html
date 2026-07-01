@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telecom — Cheat Sheet Completo v1</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f; --card-bg: #12121a; --border: #1e1e2e;
+  --rf-primary: #e67e22; --rf-secondary: #f39c12; --rf-bg: #1a1208;
+  --sys-primary: #00cec9; --sys-secondary: #55efc4; --sys-bg: #08191a;
+  --net-primary: #9b59b6; --net-secondary: #bb6bd9; --net-bg: #15081a;
+  --yellow: #f1c40f; --orange: #e67e22; --red: #e74c3c; --green: #2ecc71; --blue: #3498db;
+  --text: #e0e0e0; --text-dim: #8a8a9a; --text-bright: #fff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Space Grotesk',sans-serif; font-size:11px; line-height:1.4; }
+.page-header { text-align:center; padding:30px 20px 20px; background:linear-gradient(135deg,#1a0f05 0%,#051a1a 50%,#15051a 100%); border-bottom:2px solid #222; position:relative; overflow:hidden; }
+.page-header::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.01) 2px,rgba(255,255,255,.01) 4px); pointer-events:none; }
+.page-header h1 { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:700; letter-spacing:4px; text-transform:uppercase; color:var(--red); text-shadow:0 0 20px rgba(231,76,60,.4); }
+.page-header .subtitle { font-family:'JetBrains Mono',monospace; color:var(--text-dim); font-size:10px; margin-top:6px; letter-spacing:3px; text-transform:uppercase; }
+.nav-tabs { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; padding:12px 20px; background:#08080d; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.nav-tab { padding:8px 24px; border:1px solid var(--border); border-radius:4px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; transition:all .2s; background:var(--card-bg); color:var(--text-dim); }
+.nav-tab:hover { transform:translateY(-1px); }
+.nav-tab.active-rf  { background:var(--rf-bg);  color:var(--rf-primary);  border-color:var(--rf-primary);  box-shadow:0 0 12px rgba(230,126,34,.2); }
+.nav-tab.active-sys { background:var(--sys-bg); color:var(--sys-primary); border-color:var(--sys-primary); box-shadow:0 0 12px rgba(0,206,201,.2); }
+.nav-tab.active-net { background:var(--net-bg); color:var(--net-primary); border-color:var(--net-primary); box-shadow:0 0 12px rgba(155,89,182,.2); }
+.section { display:none; padding:16px; } .section.active { display:block; }
+.section-title { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; letter-spacing:3px; text-transform:uppercase; margin:10px 0 6px; padding-bottom:8px; border-bottom:2px solid; }
+.section-title.rf  { color:var(--rf-primary);  border-color:var(--rf-primary); }
+.section-title.sys { color:var(--sys-primary); border-color:var(--sys-primary); }
+.section-title.net { color:var(--net-primary); border-color:var(--net-primary); }
+.category-label { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin:18px 0 8px; padding:6px 12px; border-radius:3px; display:inline-block; }
+.cat-rf  { background:var(--rf-bg);  color:var(--rf-secondary);  border-left:3px solid var(--rf-primary); }
+.cat-sys { background:var(--sys-bg); color:var(--sys-secondary); border-left:3px solid var(--sys-primary); }
+.cat-net { background:var(--net-bg); color:var(--net-secondary); border-left:3px solid var(--net-primary); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:8px; margin-bottom:12px; }
+.card { background:var(--card-bg); border:1px solid var(--border); border-radius:6px; padding:10px 12px; transition:all .15s; overflow:hidden; }
+.card:hover { transform:translateY(-1px); }
+.card.rf-card  { border-left:3px solid var(--rf-primary); }  .card.rf-card:hover  { box-shadow:0 4px 16px rgba(230,126,34,.1); }
+.card.sys-card { border-left:3px solid var(--sys-primary); } .card.sys-card:hover { box-shadow:0 4px 16px rgba(0,206,201,.1); }
+.card.net-card { border-left:3px solid var(--net-primary); } .card.net-card:hover { box-shadow:0 4px 16px rgba(155,89,182,.1); }
+.card-name { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; margin-bottom:4px; }
+.card.rf-card  .card-name { color:var(--rf-secondary); }
+.card.sys-card .card-name { color:var(--sys-secondary); }
+.card.net-card .card-name { color:var(--net-secondary); }
+.card-desc { color:var(--text); font-size:10.5px; margin-bottom:6px; line-height:1.45; }
+.tag-row { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:5px; }
+.tag { font-family:'JetBrains Mono',monospace; font-size:8.5px; padding:2px 6px; border-radius:3px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
+.tag-domain { background:rgba(155,89,182,.15); color:#bb6bd9; border:1px solid rgba(155,89,182,.25); }
+.tag-task { background:rgba(241,196,15,.12); color:#f0d060; border:1px solid rgba(241,196,15,.2); }
+.tag-type { background:rgba(0,206,201,.12); color:#55efc4; border:1px solid rgba(0,206,201,.2); }
+.tag-complex { background:rgba(232,67,147,.12); color:#fd79a8; border:1px solid rgba(232,67,147,.2); }
+.formula-box { background:#0d0d14; border:1px solid #1a1a2e; border-radius:4px; padding:5px 8px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--yellow); margin:4px 0; overflow-x:auto; white-space:nowrap; }
+.props { display:grid; grid-template-columns:auto 1fr; gap:1px 8px; font-size:10px; margin-top:4px; }
+.prop-label { font-family:'JetBrains Mono',monospace; font-weight:600; font-size:9px; text-transform:uppercase; letter-spacing:.5px; }
+.card.rf-card  .prop-label { color:var(--rf-primary); }
+.card.sys-card .prop-label { color:var(--sys-primary); }
+.card.net-card .prop-label { color:var(--net-primary); }
+.prop-label.spec   { color:#e67e22 !important; }
+.prop-label.band   { color:#e74c3c !important; }
+.prop-label.rate   { color:#2ecc71 !important; }
+.prop-label.range  { color:#3498db !important; }
+.prop-label.std    { color:#9b59b6 !important; }
+.prop-label.tool   { color:#00cec9 !important; }
+.prop-value { color:var(--text-dim); }
+.process-steps { display:flex; flex-wrap:wrap; gap:2px; align-items:center; margin-top:4px; }
+.step { font-family:'JetBrains Mono',monospace; font-size:8.5px; padding:2px 5px; border-radius:2px; background:rgba(255,255,255,.04); color:var(--text-dim); border:1px solid rgba(255,255,255,.06); }
+.step-arrow { color:var(--text-dim); font-size:9px; }
+.legend { display:flex; flex-wrap:wrap; gap:10px; padding:10px 16px; background:var(--card-bg); border:1px solid var(--border); border-radius:6px; margin-bottom:14px; }
+.legend-item { display:flex; align-items:center; gap:4px; font-size:9px; color:var(--text-dim); }
+.footer-info { text-align:center; padding:20px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:1px; border-top:1px solid var(--border); margin-top:20px; }
+@media (max-width:768px) { .grid { grid-template-columns:1fr; } .nav-tab { padding:6px 14px; font-size:10px; } }
+
+html { scroll-behavior:smooth; }
+.header-link { display:inline-block; margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; color:#55efc4; text-decoration:none; padding:6px 16px; border:1px solid rgba(0,206,201,.45); border-radius:4px; background:rgba(0,206,201,.08); transition:all .15s; }
+.header-link:hover { background:rgba(0,206,201,.2); transform:translateY(-1px); box-shadow:0 0 14px rgba(0,206,201,.25); }
+.category-label { scroll-margin-top:64px; }
+.subnav { display:flex; flex-wrap:wrap; gap:5px; margin:4px 0 16px; padding:9px 11px; background:#0c0c12; border:1px solid var(--border); border-radius:6px; align-items:center; }
+.subnav a { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; padding:3px 9px; border-radius:3px; text-decoration:none; border:1px solid; transition:all .15s; white-space:nowrap; }
+.subnav a:hover { transform:translateY(-1px); }
+.subnav.sn-rf a { color:var(--rf-secondary); border-color:rgba(230,126,34,.3); background:var(--rf-bg); }
+.subnav.sn-rf a:hover { background:rgba(230,126,34,.2); }
+.subnav.sn-sys a { color:var(--sys-secondary); border-color:rgba(0,206,201,.3); background:var(--sys-bg); }
+.subnav.sn-sys a:hover { background:rgba(0,206,201,.2); }
+.subnav.sn-net a { color:var(--net-secondary); border-color:rgba(155,89,182,.3); background:var(--net-bg); }
+.subnav.sn-net a:hover { background:rgba(155,89,182,.2); }
+.subnav-label { font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); padding:0 6px 0 2px; }
+</style>
+</head>
+<body>
+<div class="page-header">
+  <h1>Telecomunicações</h1>
+  <div class="subtitle">Cheat Sheet Completo v1 &mdash; Métricas / RF / Antenas / Propagação / Radar / Óptica / Digital / Rádio / TV Digital / Satélite / Móvel / VoIP / Redes / Segurança / QoS / IoT</div>
+  <a class="header-link" href="https://rmayormartins.github.io/telecom-tools/" target="_blank" rel="noopener">🔧 rmayormartins.github.io/telecom-tools</a>
+</div>
+<div class="nav-tabs">
+  <div class="nav-tab active-rf"  onclick="showSection('rf',this)">🔬 Física &amp; Fundamentos</div>
+  <div class="nav-tab"              onclick="showSection('sys',this)">📡 Sistemas de Comunicação</div>
+  <div class="nav-tab"              onclick="showSection('net',this)">🌐 Redes &amp; Protocolos</div>
+</div>
+
+<!-- ===== TAB 1: FÍSICA & FUNDAMENTOS ===== -->
+<div id="sec-rf" class="section active">
+  <div class="section-title rf">🔬 Física &amp; Fundamentos &mdash; Hardware, Ondas e Meio</div>
+  <div class="legend">
+    <div class="legend-item"><span class="tag tag-type">TIPO</span> Categoria</div>
+    <div class="legend-item"><span class="tag tag-task">TAREFA</span> Função</div>
+    <div class="legend-item"><span class="tag tag-domain">DOMÍNIO</span> Aplicação</div>
+    <div class="legend-item"><span class="tag tag-complex">FAIXA</span> Banda/Ordem</div>
+    <div class="legend-item"><span class="prop-label spec"  style="font-size:9px">SPEC</span> Parâmetros</div>
+    <div class="legend-item"><span class="prop-label band"  style="font-size:9px">FAIXA</span> Frequência</div>
+    <div class="legend-item"><span class="prop-label std"   style="font-size:9px">PADRÃO</span> Norma</div>
+    <div class="legend-item"><span class="prop-label tool"  style="font-size:9px">FERR.</span> Software/HW</div>
+  </div>
+
+  <div class="subnav sn-rf"><span class="subnav-label">Ir para:</span><a href="#metrics-rf">📐 Métricas &amp; Unidades</a><a href="#rfmicro">🔌 RF &amp; Microeletrônica</a><a href="#antenas">📡 Antenas</a><a href="#propagacao">🌊 Propagação Eletromagnética</a><a href="#radar">🎯 Radar</a></div>
+
+  <div class="category-label cat-rf" id="metrics-rf">📐 Métricas &amp; Unidades</div>
+  <div class="grid">
+    <div class="card rf-card">
+      <div class="card-name">dB / dBm / dBW / dBμV</div>
+      <div class="card-desc">Escalas logarítmicas. dB é razão (relativo); dBm/dBW/dBμV são absolutos (referência fixa). Base de todo cálculo de enlace.</div>
+      <div class="tag-row"><span class="tag tag-type">Unidade Log</span><span class="tag tag-task">Cálculo de Link</span></div>
+      <div class="formula-box">dB = 10·log₁₀(P₁/P₂) = 20·log₁₀(V₁/V₂) | dBm = 10·log₁₀(P/1mW)</div>
+      <div class="props">
+        <span class="prop-label spec">Absolutos:</span><span class="prop-value">dBm (ref 1 mW), dBW (ref 1 W; dBW = dBm − 30), dBμV (ref 1 μV), dBmV (cabo/TV)</span>
+        <span class="prop-label spec">Relativos:</span><span class="prop-value">dB (razão genérica), dBc (relativo à portadora), dBFS (fundo de escala ADC)</span>
+        <span class="prop-label spec">Atalhos:</span><span class="prop-value">+3 dB ≈ ×2, +10 dB = ×10, −3 dB ≈ ½, 0 dBm = 1 mW, 30 dBm = 1 W, 60 dBm = 1 kW</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Ganhos &amp; Referências &mdash; dBi / dBd / dBc / dB-Hz</div>
+      <div class="card-desc">Referências específicas por contexto: antena (dBi/dBd), espúrios (dBc), conversor (dBFS), densidades (dB-Hz).</div>
+      <div class="tag-row"><span class="tag tag-type">Referência</span><span class="tag tag-task">Normalização</span></div>
+      <div class="props">
+        <span class="prop-label spec">dBi:</span><span class="prop-value">ganho relativo ao isotrópico (referência teórica)</span>
+        <span class="prop-label spec">dBd:</span><span class="prop-value">relativo ao dipolo λ/2; dBi = dBd + 2.15</span>
+        <span class="prop-label spec">dBc:</span><span class="prop-value">relativo à portadora (espúrios, harmônicos, phase noise em dBc/Hz)</span>
+        <span class="prop-label spec">dBFS / dB-Hz:</span><span class="prop-value">dBFS fundo de escala (ADC/áudio digital, 0 = máximo); dB-Hz densidade por Hz (C/N₀, G/T)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">RSSI / RSRP / RSRQ / SINR</div>
+      <div class="card-desc">Indicadores de sinal recebido. RSSI genérico (Wi-Fi); RSRP/RSRQ por elemento de recurso (LTE/5G); SINR inclui interferência.</div>
+      <div class="tag-row"><span class="tag tag-type">Recepção</span><span class="tag tag-task">Qualidade do Sinal</span><span class="tag tag-domain">Wi-Fi / Celular</span></div>
+      <div class="props">
+        <span class="prop-label spec">RSSI:</span><span class="prop-value">potência total recebida (dBm); Wi-Fi bom &gt; −67, fraco &lt; −80</span>
+        <span class="prop-label spec">RSRP:</span><span class="prop-value">Reference Signal Received Power (LTE/5G, dBm); bom &gt; −90, ruim &lt; −110</span>
+        <span class="prop-label spec">RSRQ:</span><span class="prop-value">Reference Signal Received Quality (dB) = N·RSRP/RSSI</span>
+        <span class="prop-label spec">SINR:</span><span class="prop-value">sinal/(ruído+interferência); bom &gt; 20 dB, ruim &lt; 0 dB</span>
+        <span class="prop-label tool">Apps:</span><span class="prop-value">WiFi Analyzer, CellMapper, G-NetTrack, Network Cell Info, srsRAN</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">SNR / CNR / NF / SINAD / MER</div>
+      <div class="card-desc">Qualidade do sinal. SNR/CNR base; NF degrada em cascata; SINAD (rádio analógico); MER (constelação digital).</div>
+      <div class="tag-row"><span class="tag tag-type">Qualidade</span><span class="tag tag-task">Avaliação</span></div>
+      <div class="formula-box">SNR[dB] = P_sinal − P_ruído | NF = SNR_in/SNR_out | MER ≈ −20·log(EVM)</div>
+      <div class="props">
+        <span class="prop-label spec">CNR:</span><span class="prop-value">Carrier-to-Noise (antes da demodulação, em RF)</span>
+        <span class="prop-label spec">NF:</span><span class="prop-value">Noise Figure (degradação do SNR, dB); F = 10^(NF/10)</span>
+        <span class="prop-label spec">SINAD:</span><span class="prop-value">Signal+Noise+Distortion / (N+D); sensibilidade RX (ref 12 dB SINAD)</span>
+        <span class="prop-label spec">MER:</span><span class="prop-value">Modulation Error Ratio (digital, dB; análogo ao SNR da constelação)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">SWR / ROE / Return Loss</div>
+      <div class="card-desc">Casamento de impedância na linha. ROE (Relação de Onda Estacionária, PT) = SWR/VSWR (EN). 1:1 ideal. Mede a reflexão.</div>
+      <div class="tag-row"><span class="tag tag-type">Casamento</span><span class="tag tag-task">Linha TX / Antena</span></div>
+      <div class="formula-box">ROE = SWR = (1+|Γ|)/(1−|Γ|) | RL[dB] = −20·log|Γ| | Γ = (Z_L−Z₀)/(Z_L+Z₀)</div>
+      <div class="props">
+        <span class="prop-label spec">Valores:</span><span class="prop-value">1:1 perfeito, 1.5:1 ótimo (4% refletido), 2:1 aceitável (11%), 3:1 limite TX</span>
+        <span class="prop-label spec">Return Loss:</span><span class="prop-value">1:1 → ∞ dB, 1.5:1 → 14 dB, 2:1 → 9.5 dB, 3:1 → 6 dB; mismatch loss 2:1 ≈ 0.5 dB</span>
+        <span class="prop-label tool">Medida:</span><span class="prop-value">VNA, analisador de antena (NanoVNA, RigExpert, MFJ), wattímetro direcional (Bird), ROSímetro</span>
+        <span class="prop-label std">Nota:</span><span class="prop-value">ROE, SWR e VSWR são sinônimos (Português / Inglês)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Intensidade de Campo &amp; Exposição</div>
+      <div class="card-desc">Campos E (V/m) e H (A/m), densidade de potência (W/m²). Limites de exposição (SAR) por Anatel / ICNIRP.</div>
+      <div class="tag-row"><span class="tag tag-type">EMF / EMC</span><span class="tag tag-task">Exposição / Segurança</span></div>
+      <div class="formula-box">S = E²/η₀ = E²/377 [W/m²] | E[V/m] = √(30·EIRP)/d</div>
+      <div class="props">
+        <span class="prop-label spec">Unidades:</span><span class="prop-value">E (V/m, dBμV/m), H (A/m), S (W/m², mW/cm²)</span>
+        <span class="prop-label spec">SAR:</span><span class="prop-value">Specific Absorption Rate (W/kg); limite celular 2 W/kg (cabeça, ICNIRP/Anatel)</span>
+        <span class="prop-label std">Normas:</span><span class="prop-value">ICNIRP, Anatel Res. 700, FCC OET-65, ITU-T K-series, IEEE C95.1</span>
+        <span class="prop-label tool">Medida:</span><span class="prop-value">field strength meter, sonda EMF, analisador de espectro + antena calibrada</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-rf" id="rfmicro">🔌 RF &amp; Microeletrônica (Razavi / Pozar)</div>
+  <div class="grid">
+    <div class="card rf-card">
+      <div class="card-name">LNA &mdash; Low Noise Amplifier</div>
+      <div class="card-desc">Primeiro estágio do receptor. NF baixa domina a sensibilidade do sistema (Friis em cascata).</div>
+      <div class="tag-row"><span class="tag tag-type">Amplificador</span><span class="tag tag-task">Amplificação RX</span><span class="tag tag-domain">Front-end RF</span></div>
+      <div class="formula-box">NF_total = F1 + (F2-1)/G1 + (F3-1)/(G1·G2) + ... | NF[dB] = 10·log(F)</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">NF (0.5-3 dB), Gain (10-25 dB), IIP3, S11/S22, P1dB</span>
+        <span class="prop-label band">Topologias:</span><span class="prop-value">Common-source c/ degenerescência indutiva, cascode, common-gate</span>
+        <span class="prop-label std">Tecnologias:</span><span class="prop-value">CMOS, SiGe BiCMOS, GaAs pHEMT, GaN HEMT (potência)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Cadence Virtuoso, ADS (Keysight), Microwave Office (AWR), Sonnet, MATLAB RF Toolbox</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Mixer (Misturador)</div>
+      <div class="card-desc">Translação de frequência: f_RF ± f_LO = f_IF. Gilbert cell (double balanced) cancela vazamento de LO.</div>
+      <div class="tag-row"><span class="tag tag-type">Não-Linear Ativo</span><span class="tag tag-task">Conversão de Freq.</span><span class="tag tag-domain">TX/RX Superheterodino</span></div>
+      <div class="formula-box">f_IF = |f_RF - f_LO| | Imagem: f_img = f_LO - f_IF (rejeitar!)</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">Conversion Gain (5-15 dB), NF (8-15 dB), IIP3, LO-RF isolation, P1dB</span>
+        <span class="prop-label band">Topologias:</span><span class="prop-value">Diodo passivo, Gilbert ativo, sub-harmônico, I/Q (quadratura), Weaver, Hartley</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">ADS Harmonic Balance, Spectre RF (PSS+PAC), AWR Microwave Office</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">VCO / Oscilador</div>
+      <div class="card-desc">Gera portadora. Phase noise (Leeson) define qualidade espectral. Cristal (XO/TCXO/OCXO) p/ referência estável.</div>
+      <div class="tag-row"><span class="tag tag-type">Gerador</span><span class="tag tag-task">Síntese de Portadora</span><span class="tag tag-domain">LO / Clock</span></div>
+      <div class="formula-box">Leeson: L(Δf) = 10·log[(2FkT/Ps)·(1+(f0/2QΔf)²)·(1+fc/|Δf|)]</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">Phase noise (dBc/Hz @ offset), tuning range, KVCO (MHz/V), pushing/pulling</span>
+        <span class="prop-label band">Topologias:</span><span class="prop-value">LC-tank (alta Q), ring (CMOS digital), Colpitts, Hartley, Pierce (XTAL)</span>
+        <span class="prop-label std">Refs:</span><span class="prop-value">XO (50 ppm), TCXO (1-5 ppm), OCXO (0.01 ppm), Rb/Cs (10⁻¹²)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">PLL &mdash; Phase-Locked Loop / Sintetizador</div>
+      <div class="card-desc">Loop de fase: PFD + Charge Pump + LPF + VCO + Divisor (÷N). Sintetiza frequências múltiplas da referência.</div>
+      <div class="tag-row"><span class="tag tag-type">Controle Realimentado</span><span class="tag tag-task">Síntese / Recup. Clock</span></div>
+      <div class="formula-box">f_out = N · f_ref (Integer-N) | Δϕ = arg(V_out/V_ref)</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">Loop BW, lock time, jitter, spurs, fractional spur</span>
+        <span class="prop-label band">Tipos:</span><span class="prop-value">Integer-N, Fractional-N (ΔΣ), DDS, ADPLL (all-digital)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">ADIsimPLL, ADI tools, MATLAB Mixed-Signal Blockset</span>
+      </div>
+      <div class="process-steps"><span class="step">Ref</span><span class="step-arrow">→</span><span class="step">PFD</span><span class="step-arrow">→</span><span class="step">CP</span><span class="step-arrow">→</span><span class="step">LPF</span><span class="step-arrow">→</span><span class="step">VCO</span><span class="step-arrow">→</span><span class="step">÷N</span><span class="step-arrow">↻</span></div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">PA &mdash; Power Amplifier</div>
+      <div class="card-desc">Último estágio do TX. Classes A→F trocam linearidade por eficiência. Back-off p/ sinais c/ alto PAPR (OFDM).</div>
+      <div class="tag-row"><span class="tag tag-type">Amplificador Potência</span><span class="tag tag-task">Transmissão</span><span class="tag tag-domain">TX RF / Mobile / BS</span></div>
+      <div class="formula-box">PAE = (P_out - P_in) / P_DC | OBO = P_sat - P_avg</div>
+      <div class="props">
+        <span class="prop-label spec">Classes:</span><span class="prop-value">A (linear, η≤50%), AB (~60%), B (~78%), C (não-linear, ~85%), D/E/F (switching, >90%)</span>
+        <span class="prop-label spec">Specs:</span><span class="prop-value">P_sat, P1dB, PAE, ACPR, EVM, gain, ruggedness</span>
+        <span class="prop-label std">Tecnologias:</span><span class="prop-value">LDMOS (BS), GaAs, GaN HEMT, Doherty (back-off eficiente)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">ADS Load-Pull, AWR, Cadence Spectre RF, modelos Cripps/Angelov</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Filtros RF (LC / SAW / BAW / Cavidade)</div>
+      <div class="card-desc">Seletividade de canal. SAW (sub-3GHz, baixo custo), BAW/FBAR (mmWave, alta Q), cavidade (TX de BS).</div>
+      <div class="tag-row"><span class="tag tag-type">Passivo Seletivo</span><span class="tag tag-task">Filtragem</span></div>
+      <div class="formula-box">Q = f₀/BW | IL[dB] = 10·log(P_in/P_out)</div>
+      <div class="props">
+        <span class="prop-label spec">Aproximações:</span><span class="prop-value">Butterworth (plano), Chebyshev (ripple), Elliptic (zeros), Bessel (linear-phase)</span>
+        <span class="prop-label band">Tecnologias:</span><span class="prop-value">LC discreto, microstrip, SAW (700M-3G), BAW/FBAR (1-6G), cavidade (BS), waveguide (mmWave)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">QucsStudio, Sonnet, AWR, openEMS, scikit-rf (Python), MATLAB RF Toolbox</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">ADC / DAC</div>
+      <div class="card-desc">Interface analógico-digital. Nyquist: fs ≥ 2·BW. SDR moderno: ADC direto na RF (GSPS).</div>
+      <div class="tag-row"><span class="tag tag-type">Conversor</span><span class="tag tag-task">Digitalização</span><span class="tag tag-domain">SDR / Banda Base</span></div>
+      <div class="formula-box">SNR[dB] = 6.02·N + 1.76 | ENOB = (SNDR - 1.76)/6.02</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">Bits (8-16), fs (1 MSPS-10 GSPS), SFDR, SNDR, ENOB, INL/DNL</span>
+        <span class="prop-label band">Topologias ADC:</span><span class="prop-value">Flash (rápido), SAR (energia/precisão), Sigma-Delta (alta resol.), Pipeline (BW alta)</span>
+        <span class="prop-label std">Interfaces:</span><span class="prop-value">JESD204B/C (giga-serial), LVDS, CMOS parallel</span>
+        <span class="prop-label tool">Chips:</span><span class="prop-value">AD9361/9371 (USRP), TI AFE, Xilinx RFSoC (ADC+DAC+FPGA integrado)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Matching Networks / Smith Chart</div>
+      <div class="card-desc">Casamento de impedância p/ máxima transferência de potência (Z_L = Z_S*). Smith Chart: ferramenta gráfica.</div>
+      <div class="tag-row"><span class="tag tag-type">Passivo</span><span class="tag tag-task">Casamento</span></div>
+      <div class="formula-box">Γ = (Z_L - Z₀)/(Z_L + Z₀) | VSWR = (1+|Γ|)/(1-|Γ|)</div>
+      <div class="props">
+        <span class="prop-label spec">Topologias:</span><span class="prop-value">L-network, Pi, T, stub (open/short), transformador λ/4, Tchebychev multi-seção</span>
+        <span class="prop-label band">Refs:</span><span class="prop-value">Z₀ = 50Ω (telecom), 75Ω (vídeo/cabo), 600Ω (áudio/telefonia)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">QucsStudio, scikit-rf (Network, plot_smith), ADS, AWR, MATLAB rfckt</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Linearidade &mdash; IP3 / P1dB / EVM</div>
+      <div class="card-desc">Métricas de não-linearidade. IP3 caracteriza intermodulação 3ª ordem (perigosa, cai dentro da banda).</div>
+      <div class="tag-row"><span class="tag tag-type">Métrica</span><span class="tag tag-task">Caracterização</span></div>
+      <div class="formula-box">y = a₁x + a₂x² + a₃x³ + ... | IIP3 ≈ P1dB + 9.6 dB (regra prática)</div>
+      <div class="props">
+        <span class="prop-label spec">P1dB:</span><span class="prop-value">Ponto onde ganho cai 1 dB do linear</span>
+        <span class="prop-label spec">IP3:</span><span class="prop-value">Extrapolação onde produto IM3 = fundamental</span>
+        <span class="prop-label spec">EVM:</span><span class="prop-value">Error Vector Magnitude, % do raio da constelação</span>
+        <span class="prop-label tool">Medida:</span><span class="prop-value">Two-tone test (analisador espectro), VNA, VSA, Keysight 89600 VSA</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Modulador I/Q &mdash; Quadratura</div>
+      <div class="card-desc">Base de todo TX/RX digital moderno. Gera/recupera qualquer modulação (PSK, QAM) via componentes I e Q.</div>
+      <div class="tag-row"><span class="tag tag-type">Modulação Vetorial</span><span class="tag tag-task">TX/RX Digital</span></div>
+      <div class="formula-box">s(t) = I(t)·cos(ω₀t) - Q(t)·sin(ω₀t) | baseband complexo: x(t) = I + jQ</div>
+      <div class="props">
+        <span class="prop-label spec">Impairments:</span><span class="prop-value">I/Q imbalance (gain/phase), DC offset, image leakage</span>
+        <span class="prop-label std">Arquit. RX:</span><span class="prop-value">Heterodino (IF), Zero-IF (direct conv.), Low-IF, Sliding-IF</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">GNU Radio (blocks complex), MATLAB Comm Toolbox, Python (NumPy complex)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Parâmetros S / Linhas de Transmissão</div>
+      <div class="card-desc">S-parameters caracterizam redes RF em ondas incidente/refletida. Linhas TX: coax, microstrip, stripline, waveguide.</div>
+      <div class="tag-row"><span class="tag tag-type">Análise Linear</span><span class="tag tag-task">Modelagem RF</span></div>
+      <div class="formula-box">S11 = b1/a1 |a2=0 (reflexão entrada) | S21 = b2/a1 |a2=0 (transmissão)</div>
+      <div class="props">
+        <span class="prop-label spec">Linhas:</span><span class="prop-value">Coaxial, microstrip, stripline, CPW, waveguide retangular (mmWave), SIW</span>
+        <span class="prop-label spec">Conversões:</span><span class="prop-value">S↔Z, S↔Y, S↔ABCD, ports 2/4 (mixed-mode SE/diff)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">scikit-rf (Python, Touchstone), VNA (Keysight/R&amp;S/Anritsu), AWR, ADS, openEMS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-rf" id="antenas">📡 Antenas (Balanis / Stutzman)</div>
+  <div class="grid">
+    <div class="card rf-card">
+      <div class="card-name">Dipolo λ/2</div>
+      <div class="card-desc">Antena fundamental. Padrão tipo donut (omnidirecional no plano H). Base teórica de quase tudo.</div>
+      <div class="tag-row"><span class="tag tag-type">Linear / Ressonante</span><span class="tag tag-task">TX/RX HF-UHF</span></div>
+      <div class="formula-box">G = 2.15 dBi | Z_in ≈ 73 + j42.5 Ω (ideal) | L = λ/2 · 0.95</div>
+      <div class="props">
+        <span class="prop-label spec">Parâmetros:</span><span class="prop-value">BW ~10%, polarização linear, eficiência alta, fácil construção</span>
+        <span class="prop-label band">Variantes:</span><span class="prop-value">Folded dipole (Z=300Ω), bow-tie (banda larga), short dipole, sleeve dipole</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">4nec2, MMANA-GAL, EZNEC, openEMS, CST, HFSS, FEKO</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Monopolo λ/4 c/ Plano Terra</div>
+      <div class="card-desc">Metade do dipolo + plano-terra (imagem). Comum em VHF/UHF móvel e estações base.</div>
+      <div class="tag-row"><span class="tag tag-type">Linear Vertical</span><span class="tag tag-task">Móvel / BS</span></div>
+      <div class="formula-box">G ≈ 5.19 dBi (ideal) | Z_in ≈ 36 Ω | L = λ/4</div>
+      <div class="props">
+        <span class="prop-label spec">Variantes:</span><span class="prop-value">Whip, ground-plane, J-pole, 5/8λ (maior ganho), colinear (array vertical)</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Estações base celular, táxis, walkie-talkies, AM broadcast (torre = monopolo gigante)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Yagi-Uda</div>
+      <div class="card-desc">Array end-fire: refletor + ativo + diretores. Alta diretividade para VHF/UHF.</div>
+      <div class="tag-row"><span class="tag tag-type">Array End-Fire</span><span class="tag tag-task">Direcional</span><span class="tag tag-domain">TV / Amador / P2P</span></div>
+      <div class="formula-box">G ≈ 7-20 dBi | F/B alto | BW estreita (1-5%)</div>
+      <div class="props">
+        <span class="prop-label spec">Elementos:</span><span class="prop-value">Refletor (~0.49λ), Driven (~0.47λ), Diretores (0.4-0.45λ, decrescentes)</span>
+        <span class="prop-label spec">Specs:</span><span class="prop-value">Boom 0.5-3λ, F/B 15-30 dB, polarização = orientação dos elementos</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">MMANA-GAL, YagiCAD, 4nec2, designs DL6WU</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Patch / Microstrip</div>
+      <div class="card-desc">Planar sobre substrato dielétrico. Compacta, integrável em PCB. Base de arrays modernos (5G, satélite).</div>
+      <div class="tag-row"><span class="tag tag-type">Planar Ressonante</span><span class="tag tag-task">SatNav / 5G / WiFi</span><span class="tag tag-domain">PCB / Array</span></div>
+      <div class="formula-box">L ≈ c/(2·f₀·√εr_eff) | G ≈ 6-9 dBi (single patch)</div>
+      <div class="props">
+        <span class="prop-label spec">Feed:</span><span class="prop-value">Probe coaxial, microstrip line, aperture-coupled, proximity-coupled</span>
+        <span class="prop-label band">Formas:</span><span class="prop-value">Retangular, circular, anelar, fractal, U-slot (banda larga), patch suspenso</span>
+        <span class="prop-label std">Polariz.:</span><span class="prop-value">Linear (simples), Circular (chanfros ou 2 feeds c/ 90°)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">HFSS, CST, FEKO, Sonnet, openEMS, ADS Momentum</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Helicoidal / Hélice</div>
+      <div class="card-desc">Modo axial: polarização circular natural. Ideal para satélite LEO/MEO e enlaces espaciais.</div>
+      <div class="tag-row"><span class="tag tag-type">Helicoidal</span><span class="tag tag-task">Polariz. Circular</span><span class="tag tag-domain">Satélite / Espacial</span></div>
+      <div class="formula-box">G[dBi] ≈ 10·log(15·N·C²·S/λ³) | C ≈ λ, S ≈ λ/4</div>
+      <div class="props">
+        <span class="prop-label spec">Modos:</span><span class="prop-value">Normal (broadside, C&lt;&lt;λ), Axial (end-fire, C≈λ)</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Estação terrena LEO, CubeSat, receptores GPS, telemetria espacial</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Loop / Quadra / Cubical Quad</div>
+      <div class="card-desc">Loop pequeno: magnético (HF RX). Loop grande (λ perímetro): ganho similar dipolo, menos ruído.</div>
+      <div class="tag-row"><span class="tag tag-type">Loop</span><span class="tag tag-task">RX HF / TX DX</span></div>
+      <div class="props">
+        <span class="prop-label spec">Loop pequeno:</span><span class="prop-value">Perímetro &lt; λ/10, Z baixo, alta seletividade c/ capacitor</span>
+        <span class="prop-label spec">Loop grande:</span><span class="prop-value">Perímetro = λ, G ≈ 3 dBd, Z ≈ 100Ω</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">RX HF baixo ruído (Beverage, K9AY), magnetic loop TX, ferrite (AM RX)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Horn / Corneta</div>
+      <div class="card-desc">Transição de guia de onda para espaço livre. Banda larga, ganho médio-alto, baixa perda. Ilumina parabólicas.</div>
+      <div class="tag-row"><span class="tag tag-type">Apertura</span><span class="tag tag-task">Feed Parabólica</span><span class="tag tag-domain">SHF / Satélite</span></div>
+      <div class="formula-box">G ≈ 4π·A_eff/λ² | A_eff = η·A_phys</div>
+      <div class="props">
+        <span class="prop-label spec">Tipos:</span><span class="prop-value">Setorial (E/H-plane), piramidal, cônico, corrugado (low cross-pol)</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Iluminador de refletoras, padrões de calibração, câmaras anecoicas, mmWave</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Parabólica / Refletora</div>
+      <div class="card-desc">Alta diretividade. Eficiência η ~50-70% (spillover, taper, blockage). GHz: satélite, radar, radioastronomia.</div>
+      <div class="tag-row"><span class="tag tag-type">Aperture / Refletor</span><span class="tag tag-task">Alto Ganho</span><span class="tag tag-domain">Sat / Radar</span></div>
+      <div class="formula-box">G[dBi] = 10·log(η·(πD/λ)²) | HPBW ≈ 70·λ/D</div>
+      <div class="props">
+        <span class="prop-label spec">Feeds:</span><span class="prop-value">Prime focus, Cassegrain (subrefletor), Gregorian, Offset (sem blockage)</span>
+        <span class="prop-label band">Specs:</span><span class="prop-value">Ku 60-90cm doméstico, Ka 60-120cm, C-band 1.8-3m, radioastronomia até 100m+</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">GRASP (TICRA), HFSS, FEKO, CST, MATLAB Antenna Toolbox</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Log-Periódica / LPDA</div>
+      <div class="card-desc">Elementos escalonados geometricamente (razão τ). Banda muito larga (10:1) com ganho moderado constante.</div>
+      <div class="tag-row"><span class="tag tag-type">Banda Larga</span><span class="tag tag-task">EMC / TV / Medidas</span></div>
+      <div class="formula-box">τ = L(n+1)/L(n) = R(n+1)/R(n) | σ = (1-τ)/4·cot(α)</div>
+      <div class="props">
+        <span class="prop-label spec">Specs:</span><span class="prop-value">G ~6-10 dBi, BW 10:1+, τ ≈ 0.8-0.95</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Câmaras EMC, broadcast TV, medidas RF, comunicações militares</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Arrays &mdash; Linear / Planar / MIMO</div>
+      <div class="card-desc">N elementos com pesos w_n. Beamforming digital ou analógico. Base de 5G mmWave, radar AESA, SatCom.</div>
+      <div class="tag-row"><span class="tag tag-type">Array Configurável</span><span class="tag tag-task">Beamforming / MIMO</span><span class="tag tag-domain">5G / Radar / Sat</span></div>
+      <div class="formula-box">AF(θ) = Σ w_n · exp(jkn·d·cos θ) | G ≈ G_elem · N</div>
+      <div class="props">
+        <span class="prop-label spec">Tipos:</span><span class="prop-value">Phased array (fase analógica), Hybrid (sub-arrays), Digital (per-elem), Massive MIMO (64-1024)</span>
+        <span class="prop-label spec">Apps:</span><span class="prop-value">5G NR (gNB array de patches), RIS (reconfigurable intelligent surface), radar AESA</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">MATLAB Phased Array Toolbox, HFSS+arrays, Antenna Magus, CST</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Parâmetros Fundamentais</div>
+      <div class="card-desc">Ganho, diretividade, BW, VSWR, eficiência, polarização (AR), EIRP, padrão de radiação, F/B, HPBW.</div>
+      <div class="tag-row"><span class="tag tag-type">Conceitos</span><span class="tag tag-task">Caracterização</span></div>
+      <div class="formula-box">G = η · D | EIRP = P_TX - L_cable + G_ant | AR = E_max/E_min</div>
+      <div class="props">
+        <span class="prop-label spec">Polarização:</span><span class="prop-value">Linear (V/H), Circular (RHCP/LHCP), Elíptica (AR > 1)</span>
+        <span class="prop-label spec">Refs:</span><span class="prop-value">dBi (isotrópico), dBd (dipolo), dBd = dBi - 2.15</span>
+        <span class="prop-label tool">Medidas:</span><span class="prop-value">Câmara anecoica (far-field), near-field scanning, CATR (compact range)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-rf" id="propagacao">🌊 Propagação Eletromagnética</div>
+  <div class="grid">
+    <div class="card rf-card">
+      <div class="card-name">Friis &mdash; Espaço Livre</div>
+      <div class="card-desc">Modelo idealizado: só espalhamento esférico, sem obstáculos. Base de qualquer link budget.</div>
+      <div class="tag-row"><span class="tag tag-type">Determinístico</span><span class="tag tag-task">Link Budget</span><span class="tag tag-domain">Satélite / LoS</span></div>
+      <div class="formula-box">P_RX[dBm] = P_TX + G_TX + G_RX - L_FS | L_FS[dB] = 20·log(d) + 20·log(f) + 32.45 (km,MHz)</div>
+      <div class="props">
+        <span class="prop-label spec">Hipóteses:</span><span class="prop-value">Antenas em LoS, sem multipath, sem absorção atmosférica</span>
+        <span class="prop-label band">Uso:</span><span class="prop-value">Sat-Terra, ponto-a-ponto LoS, milimétricas, indoor curtos</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Two-Ray Ground Reflection</div>
+      <div class="card-desc">Determinístico c/ raio direto + raio refletido no solo. Acima da distância crítica: P ∝ 1/d⁴.</div>
+      <div class="tag-row"><span class="tag tag-type">Determinístico</span><span class="tag tag-task">Outdoor LoS Baixo</span></div>
+      <div class="formula-box">P_RX = P_TX · G_TX·G_RX · (h_TX·h_RX)² / d⁴ (acima de d_c)</div>
+      <div class="props">
+        <span class="prop-label spec">d_crítica:</span><span class="prop-value">d_c = 4π·h_TX·h_RX/λ</span>
+        <span class="prop-label band">Uso:</span><span class="prop-value">Ambientes abertos planos, V2X, aeroportos, predição inicial macrocélula</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Okumura-Hata / COST-231</div>
+      <div class="card-desc">Empírico urbano. Okumura: medições Tóquio. Hata: equações fechadas. COST-231: estende até 2 GHz (PCS).</div>
+      <div class="tag-row"><span class="tag tag-type">Empírico</span><span class="tag tag-task">Macrocélula</span><span class="tag tag-domain">Celular 2G/3G</span><span class="tag tag-complex">150 MHz-2 GHz</span></div>
+      <div class="formula-box">L_Hata = 69.55 + 26.16·log(f) - 13.82·log(h_b) - a(h_m) + (44.9-6.55·log(h_b))·log(d)</div>
+      <div class="props">
+        <span class="prop-label spec">Validade:</span><span class="prop-value">f: 150-1500 MHz (Hata)/1500-2000 (COST-231); h_b: 30-200m; d: 1-20km</span>
+        <span class="prop-label spec">Ambientes:</span><span class="prop-value">Urbano grande/pequeno, suburbano, rural (correções específicas)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Radio Mobile, SPLAT!, ATDI ICS Telecom, Pathloss, Atoll (planejamento celular)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Walfisch-Ikegami / COST-WI</div>
+      <div class="card-desc">Semi-empírico urbano denso. Difração no topo dos edifícios (multi-knife) + perda rua-receptor.</div>
+      <div class="tag-row"><span class="tag tag-type">Semi-Empírico</span><span class="tag tag-task">Urbano Denso</span><span class="tag tag-complex">800 MHz-2 GHz</span></div>
+      <div class="formula-box">L = L_FS + L_rts (rooftop-street) + L_msd (multi-screen diffraction)</div>
+      <div class="props">
+        <span class="prop-label spec">Validade:</span><span class="prop-value">Microcélulas urbanas, h_b ≈ h_roof, ruas tipo canyon</span>
+        <span class="prop-label spec">Parâmetros:</span><span class="prop-value">h_roof, w_street, b_building, orientação rua φ</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Longley-Rice / ITM</div>
+      <div class="card-desc">Irregular Terrain Model. Perfil real do terreno (raster DEM), difração, multipath troposférico.</div>
+      <div class="tag-row"><span class="tag tag-type">Determ.+Estat.</span><span class="tag tag-task">Terreno Real</span><span class="tag tag-complex">20 MHz-20 GHz</span></div>
+      <div class="props">
+        <span class="prop-label spec">Modos:</span><span class="prop-value">Point-to-point, area prediction; cálculo de p%, time%, location%</span>
+        <span class="prop-label spec">Input:</span><span class="prop-value">DEM (SRTM, ASTER), refractividade, condutividade solo, climate zone</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">SPLAT!, Radio Mobile, CloudRF, ITWOM</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Modelos 5G &mdash; 3GPP TR 38.901 / mmWave</div>
+      <div class="card-desc">Estocásticos espaciais (SCM/QuaDRiGa). UMa, UMi, RMa, InH. Suportam MIMO, dual-mobility, blockage.</div>
+      <div class="tag-row"><span class="tag tag-type">Estocástico Espacial</span><span class="tag tag-task">5G/6G Planning</span><span class="tag tag-complex">0.5-100 GHz</span></div>
+      <div class="props">
+        <span class="prop-label std">Cenários 3GPP:</span><span class="prop-value">UMa (urban macro), UMi (micro), RMa (rural), InH (indoor office), InF (factory)</span>
+        <span class="prop-label spec">Componentes:</span><span class="prop-value">LoS prob., LSP (delay/AoA spread), SSP (small scale), O2I penetration, foliage</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">QuaDRiGa (Fraunhofer), Sionna (NVIDIA), MATLAB 5G Toolbox, NS-3 mmWave</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Propagação Ionosférica (HF)</div>
+      <div class="card-desc">Reflexão pelas camadas D,E,F1,F2. MUF/LUF/FOT variam com hora, estação, ciclo solar (~11 anos).</div>
+      <div class="tag-row"><span class="tag tag-type">Skywave / Skip</span><span class="tag tag-task">DX HF</span><span class="tag tag-domain">Amador / Broadcast</span><span class="tag tag-complex">3-30 MHz</span></div>
+      <div class="formula-box">MUF = f_crit · sec(θ) | LUF: absorção D-layer | FOT = 0.85·MUF</div>
+      <div class="props">
+        <span class="prop-label spec">Camadas:</span><span class="prop-value">D (60-90km, absorve dia), E (90-150km, sporadic-Es), F1 (150-200km), F2 (200-500km, principal DX)</span>
+        <span class="prop-label spec">Índices:</span><span class="prop-value">SSN (sunspot), SFI (10.7cm flux), K/Ap (geomag.), R12 smoothed</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">VOACAP, PropQuest, ITS HF, hamcap, ITU-R P.533, NOAA SWPC, PSKReporter</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Propagação Troposférica</div>
+      <div class="card-desc">Refração na troposfera (0-20km). Inclui ducting (super-refração), tropo-scatter, atmosfera padrão (k=4/3).</div>
+      <div class="tag-row"><span class="tag tag-type">Tropo</span><span class="tag tag-task">VHF-SHF Extensão</span><span class="tag tag-complex">30 MHz-30 GHz</span></div>
+      <div class="formula-box">k = 4/3 (padrão) | R_eff = k·R_Terra | Horizonte = √(2·k·R·h)</div>
+      <div class="props">
+        <span class="prop-label spec">Fenômenos:</span><span class="prop-value">Ducting (tropo-ducts até milhares de km), inversão, fading multipath atmosférico</span>
+        <span class="prop-label std">ITU-R:</span><span class="prop-value">P.530 (LoS terrestre), P.452 (interferência), P.676 (gases), P.838 (chuva)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Fading &mdash; Rayleigh / Rician / Nakagami</div>
+      <div class="card-desc">Modelos estatísticos do envelope multipath. Rayleigh (NLoS), Rician (LoS+multipath, K), Nakagami-m (geral).</div>
+      <div class="tag-row"><span class="tag tag-type">Estat. Small-Scale</span><span class="tag tag-task">Modelagem Multipath</span></div>
+      <div class="formula-box">Rayleigh: p(r) = (r/σ²)·exp(-r²/2σ²) | Rician: K = P_LoS/P_scatter</div>
+      <div class="props">
+        <span class="prop-label spec">Métricas:</span><span class="prop-value">Coherence time (T_c ≈ 1/f_D), coherence BW (B_c ≈ 1/τ_rms), Doppler spread</span>
+        <span class="prop-label spec">Doppler:</span><span class="prop-value">f_D = (v/c)·f_c·cos(θ); Jakes spectrum classical</span>
+        <span class="prop-label band">Large-scale:</span><span class="prop-value">Log-normal shadowing (σ 4-12 dB típico)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Difração / Zonas de Fresnel</div>
+      <div class="card-desc">Onda contorna obstáculos. 1ª zona de Fresnel deve estar > 60% livre p/ LoS quase ideal. Knife-edge: padrão.</div>
+      <div class="tag-row"><span class="tag tag-type">Difração</span><span class="tag tag-task">Obstáculos</span></div>
+      <div class="formula-box">F_n = √(n·λ·d₁·d₂/(d₁+d₂)) | v = h·√(2(d₁+d₂)/(λ·d₁·d₂))</div>
+      <div class="props">
+        <span class="prop-label spec">Modelos:</span><span class="prop-value">Knife-edge (Lee), Bullington (múltiplos), Epstein-Peterson, Deygout, ITU-R P.526</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Atenuação Atmosférica / Chuva</div>
+      <div class="card-desc">Acima de ~10 GHz: absorção O₂ (pico 60 GHz), H₂O (22, 183 GHz). Chuva: forte em Ku/Ka/V (mmWave).</div>
+      <div class="tag-row"><span class="tag tag-type">Absorção</span><span class="tag tag-task">Link mmWave</span><span class="tag tag-domain">SatCom / 5G mmWave</span><span class="tag tag-complex">10 GHz+</span></div>
+      <div class="formula-box">γ_rain = k·R^α (R em mm/h, ITU-R P.838) | Total = γ·d_eff</div>
+      <div class="props">
+        <span class="prop-label std">ITU-R:</span><span class="prop-value">P.676 (gases), P.838 (rain specific), P.618 (sat-earth), P.840 (clouds), P.530 (terr.)</span>
+        <span class="prop-label spec">Picos:</span><span class="prop-value">O₂: ~60 GHz (15 dB/km), H₂O: ~22, 183 GHz; janelas: 35, 94 GHz; chuva crítica Ka/V</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-rf" id="radar">🎯 Radar</div>
+  <div class="grid">
+    <div class="card rf-card">
+      <div class="card-name">Equação do Radar / Alcance</div>
+      <div class="card-desc">Relaciona potência recebida com alcance (∝ 1/R⁴, ida e volta). Define o alcance máximo de detecção.</div>
+      <div class="tag-row"><span class="tag tag-type">Fundamento</span><span class="tag tag-task">Alcance Máximo</span></div>
+      <div class="formula-box">P_r = (P_t·G²·λ²·σ)/((4π)³·R⁴) | R_max = [P_t·G²·λ²·σ/((4π)³·S_min)]^(1/4)</div>
+      <div class="props">
+        <span class="prop-label spec">Variáveis:</span><span class="prop-value">P_t (pico TX), G (ganho antena), σ (RCS), S_min (sensibilidade RX)</span>
+        <span class="prop-label band">Bandas:</span><span class="prop-value">L (vigilância), S (ATC/meteo), C, X (8-12, tracking/marítimo), Ku/Ka (automotivo 77 GHz, imageamento), W</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">MATLAB Radar/Phased Array Toolbox, Python (PySDR), GNU Radio</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Formas de Onda &mdash; Pulsado / CW / FMCW / Chirp</div>
+      <div class="card-desc">Pulsado mede tempo (range). CW puro só mede Doppler (velocidade). FMCW barato (automotivo). Chirp permite pulse compression.</div>
+      <div class="tag-row"><span class="tag tag-type">Waveform</span><span class="tag tag-task">Range / Velocidade</span></div>
+      <div class="formula-box">R = c·τ/2 | FMCW: R = c·Δf/(2·(df/dt)) | Resolução ∝ c/(2·BW)</div>
+      <div class="props">
+        <span class="prop-label spec">Pulsado:</span><span class="prop-value">PRF, duty cycle, range via tempo de voo</span>
+        <span class="prop-label spec">CW / FMCW:</span><span class="prop-value">Doppler (vel.); FMCW com rampa mede range + velocidade; altímetro, automotivo</span>
+        <span class="prop-label spec">Pulse compression:</span><span class="prop-value">chirp (LFM) + matched filter; alta energia + boa resolução</span>
+        <span class="prop-label tool">HW:</span><span class="prop-value">USRP, módulos mmWave TI AWR1642/IWR6843 (77 GHz), RadarIQ</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Doppler / MTI / CFAR</div>
+      <div class="card-desc">Doppler extrai velocidade. MTI/Pulse-Doppler separam alvos móveis do clutter. CFAR aplica limiar adaptativo de detecção.</div>
+      <div class="tag-row"><span class="tag tag-type">Processamento</span><span class="tag tag-task">Detecção / Velocidade</span></div>
+      <div class="formula-box">f_D = 2·v_r/λ | v_r = f_D·λ/2 | Doppler ambíguo se |f_D| &gt; PRF/2</div>
+      <div class="props">
+        <span class="prop-label spec">MTI:</span><span class="prop-value">Moving Target Indication (cancela clutter estático via filtro)</span>
+        <span class="prop-label spec">Pulse-Doppler:</span><span class="prop-value">FFT sobre os pulsos → mapa range-Doppler</span>
+        <span class="prop-label spec">CFAR:</span><span class="prop-value">Constant False Alarm Rate (CA-CFAR, OS-CFAR); limiar adaptativo ao ruído local</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Resolução &amp; Ambiguidade / PRF</div>
+      <div class="card-desc">Resolução em range (∝ BW), azimute (∝ largura de feixe), Doppler (∝ tempo de integração). PRF gera ambiguidades.</div>
+      <div class="tag-row"><span class="tag tag-type">Trade-off</span><span class="tag tag-task">Resolução</span></div>
+      <div class="formula-box">ΔR = c/(2·BW) | R_unamb = c/(2·PRF) | v_unamb = λ·PRF/4</div>
+      <div class="props">
+        <span class="prop-label spec">Range:</span><span class="prop-value">ΔR = c/(2·B); maior BW → melhor resolução</span>
+        <span class="prop-label spec">Azimute:</span><span class="prop-value">ΔΘ ≈ λ/D (largura de feixe da antena)</span>
+        <span class="prop-label spec">PRF:</span><span class="prop-value">baixa → range sem ambiguidade mas Doppler ambíguo (e vice-versa); LPRF/MPRF/HPRF, staggered PRF</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">RCS &mdash; Radar Cross Section</div>
+      <div class="card-desc">Área efetiva de espalhamento do alvo (m² ou dBsm). Depende de geometria, material, frequência e ângulo. Base do stealth.</div>
+      <div class="tag-row"><span class="tag tag-type">Alvo</span><span class="tag tag-task">Detectabilidade</span></div>
+      <div class="formula-box">σ = lim 4π·R²·(S_refl/S_inc) [m²] | dBsm = 10·log(σ)</div>
+      <div class="props">
+        <span class="prop-label spec">Valores típicos:</span><span class="prop-value">inseto −30 dBsm, drone/pássaro −10, humano 0, carro 10-20, navio 40+ dBsm</span>
+        <span class="prop-label spec">Regiões:</span><span class="prop-value">Rayleigh (alvo &lt;&lt; λ), ressonante (~λ), óptica (alvo &gt;&gt; λ)</span>
+        <span class="prop-label spec">Stealth:</span><span class="prop-value">formas facetadas, RAM (radar absorbing material), redução de σ</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">FEKO, CST, HFSS (PO/MoM/MLFMM), POFACETS (MATLAB)</span>
+      </div>
+    </div>
+    <div class="card rf-card">
+      <div class="card-name">Tipos &amp; Aplicações &mdash; SSR / SAR / Automotivo / Meteo</div>
+      <div class="card-desc">Primário (eco passivo) vs secundário (transponder, ATC). SAR para imageamento. Automotivo 77 GHz (ADAS). Meteorológico (chuva).</div>
+      <div class="tag-row"><span class="tag tag-type">Sistemas</span><span class="tag tag-task">Aplicação</span><span class="tag tag-domain">ATC / ADAS / Sensoriamento</span></div>
+      <div class="props">
+        <span class="prop-label spec">Vigilância/ATC:</span><span class="prop-value">primário (PSR), secundário (SSR, Mode S, ADS-B), tracking</span>
+        <span class="prop-label spec">Imageamento:</span><span class="prop-value">SAR (synthetic aperture, satélite/aéreo), ISAR, GMTI</span>
+        <span class="prop-label spec">Automotivo:</span><span class="prop-value">24/77/79 GHz FMCW, ADAS, ACC, blind-spot, AEB; phased array</span>
+        <span class="prop-label spec">Meteorológico:</span><span class="prop-value">dual-pol, Doppler weather (NEXRAD), reflectividade em dBZ</span>
+        <span class="prop-label std">Norma:</span><span class="prop-value">IEEE 521 (bandas L/S/C/X/K...), ITU-R, automotivo SRR/LRR</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: SISTEMAS DE COMUNICAÇÃO ===== -->
+<div id="sec-sys" class="section">
+  <div class="section-title sys">📡 Sistemas de Comunicação &mdash; Modulação, Codificação e Padrões</div>
+  <div class="legend">
+    <div class="legend-item"><span class="tag tag-type">TIPO</span> Categoria</div>
+    <div class="legend-item"><span class="tag tag-task">TAREFA</span> Função</div>
+    <div class="legend-item"><span class="tag tag-domain">DOMÍNIO</span> Aplicação</div>
+    <div class="legend-item"><span class="tag tag-complex">ORDEM</span> Bits / Complex.</div>
+    <div class="legend-item"><span class="prop-label spec"  style="font-size:9px">SPEC</span> Parâmetros</div>
+    <div class="legend-item"><span class="prop-label band"  style="font-size:9px">FAIXA</span> Frequência</div>
+    <div class="legend-item"><span class="prop-label rate"  style="font-size:9px">TAXA</span> Capacidade</div>
+    <div class="legend-item"><span class="prop-label std"   style="font-size:9px">PADRÃO</span> Norma</div>
+    <div class="legend-item"><span class="prop-label tool"  style="font-size:9px">FERR.</span> Software/HW</div>
+  </div>
+
+  <div class="subnav sn-sys"><span class="subnav-label">Ir para:</span><a href="#digitais">📶 Comunicações Digitais</a><a href="#codificacao">🔐 Codificação</a><a href="#opticas">💡 Comunicações Ópticas</a><a href="#radio">📻 Radiocomunicação &amp; SDR</a><a href="#tvdigital">📺 TV Digital</a><a href="#satelite">🛰️ Comunicações via Satélite</a><a href="#moveis">📱 Comunicações Móveis</a><a href="#voip">☎️ Telefonia &amp; VoIP</a></div>
+
+  <div class="category-label cat-sys" id="digitais">📶 Comunicações Digitais (Sklar / Proakis / Haykin)</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">ASK / OOK</div>
+      <div class="card-desc">Amplitude Shift Keying. OOK (on-off): base de IR remoto, primeiros sistemas ópticos, sub-GHz IoT.</div>
+      <div class="tag-row"><span class="tag tag-type">Modulação Digital</span><span class="tag tag-task">Binária</span><span class="tag tag-complex">M=2 a 8</span></div>
+      <div class="formula-box">s(t) = A_m·cos(ω₀t) | BER ≈ Q(√(Eb/N0)) (coerente OOK)</div>
+      <div class="props">
+        <span class="prop-label spec">Eficiência:</span><span class="prop-value">~1 bit/símbolo (OOK), pobre em SNR vs PSK, sensível a fading de amplitude</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Controle remoto IR, RFID 433/915 MHz, primeiros sistemas ópticos (NRZ-OOK datacenter)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">FSK / GFSK / MSK / GMSK</div>
+      <div class="card-desc">Frequency Shift Keying. MSK: índice 0.5, fase contínua. GMSK: pré-filtro Gauss (GSM). GFSK: BLE/Zigbee.</div>
+      <div class="tag-row"><span class="tag tag-type">Modulação Digital</span><span class="tag tag-task">FM Digital</span><span class="tag tag-domain">GSM / BLE / Zigbee</span></div>
+      <div class="formula-box">MSK: h = 0.5 (mod. index) | GMSK: BT = 0.3 (GSM), 0.5 (DECT)</div>
+      <div class="props">
+        <span class="prop-label spec">Vantagens:</span><span class="prop-value">Envelope constante (PA classe C/E), imune a não-linearidades, espectro compacto (CPM)</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">GSM (GMSK), Bluetooth BR (GFSK), BLE (GFSK), DECT, paging POCSAG/FLEX</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">BPSK / QPSK / 8PSK / π/4-DQPSK</div>
+      <div class="card-desc">Phase Shift Keying. BPSK: máx robustez. QPSK: 2 bits/símbolo, gold standard. π/4-DQPSK: TETRA, NADC.</div>
+      <div class="tag-row"><span class="tag tag-type">Modulação de Fase</span><span class="tag tag-task">Padrão</span><span class="tag tag-complex">M=2,4,8</span></div>
+      <div class="formula-box">BPSK BER = Q(√(2Eb/N0)) | QPSK BER = Q(√(2Eb/N0)) (mesma de BPSK!)</div>
+      <div class="props">
+        <span class="prop-label spec">Eficiência:</span><span class="prop-value">BPSK 1, QPSK 2, 8PSK 3 bit/símbolo. Penalidade 8PSK ~3.6 dB vs QPSK</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">QPSK: DVB-S, satélite, LTE control, CDMA. 8PSK: EDGE, DVB-S2. OQPSK: Zigbee, CDMA2000</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">QAM &mdash; 16/64/256/1024-QAM</div>
+      <div class="card-desc">Quadrature Amplitude Modulation. Combina amplitude e fase. Exige alto SNR. 4096-QAM: Wi-Fi 7.</div>
+      <div class="tag-row"><span class="tag tag-type">Híbrida Amp+Fase</span><span class="tag tag-task">Alta Eficiência</span><span class="tag tag-complex">M=16→4096</span></div>
+      <div class="formula-box">M-QAM: log₂(M) bit/símbolo | BER ≈ (4/log₂M)·(1-1/√M)·Q(...)</div>
+      <div class="props">
+        <span class="prop-label spec">Eficiência:</span><span class="prop-value">16: 4 b/s, 64: 6, 256: 8, 1024: 10, 4096: 12 bit/símbolo</span>
+        <span class="prop-label spec">SNR (BER 10⁻⁶):</span><span class="prop-value">16-QAM ~13 dB, 64 ~19, 256 ~25, 1024 ~30, 4096 ~36 dB</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">DVB-C/T2, LTE (256), 5G NR (256/1024), Wi-Fi 6 (1024), Wi-Fi 7 (4096), DOCSIS 3.1 (4096)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">APSK &mdash; Amplitude/Phase Shift Keying</div>
+      <div class="card-desc">Constelação em anéis concêntricos. Melhor PAPR que QAM, popular em satélite (DVB-S2X, DVB-RCS2).</div>
+      <div class="tag-row"><span class="tag tag-type">Anel</span><span class="tag tag-task">SatCom Eficiente</span><span class="tag tag-domain">DVB-S2X</span><span class="tag tag-complex">16/32/64-APSK</span></div>
+      <div class="props">
+        <span class="prop-label std">DVB-S2X:</span><span class="prop-value">QPSK, 8PSK, 16/32/64/128/256-APSK; modcods até ~6 bit/símbolo c/ FEC LDPC+BCH</span>
+        <span class="prop-label spec">Vantagem:</span><span class="prop-value">PAPR menor que QAM ⇒ PA opera mais próximo da saturação (TWTA de satélite)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">OFDM &mdash; Orthogonal Frequency Division Multiplexing</div>
+      <div class="card-desc">Multi-portadora ortogonal. Cyclic Prefix combate ISI. Base de WiFi, LTE, 5G, DVB-T, DSL.</div>
+      <div class="tag-row"><span class="tag tag-type">Multi-portadora</span><span class="tag tag-task">Alta Capacidade</span><span class="tag tag-domain">WiFi/LTE/5G/DVB</span></div>
+      <div class="formula-box">s[n] = Σ_k X_k · exp(j2π·k·n/N) (IFFT) | ortogonalidade: Δf = 1/T_sym</div>
+      <div class="props">
+        <span class="prop-label spec">Componentes:</span><span class="prop-value">IFFT/FFT, CP (1/4,1/8,1/16), subportadoras (piloto, dados, nulas, DC), windowing</span>
+        <span class="prop-label spec">Desafios:</span><span class="prop-value">PAPR alto (clipping, tone reservation, PTS), sensível a CFO, sincronização (Schmidl-Cox)</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">802.11a/g/n/ac/ax, LTE (DL), 5G NR, DVB-T/T2, DAB, ADSL/VDSL, PLC</span>
+      </div>
+      <div class="process-steps"><span class="step">Bits</span><span class="step-arrow">→</span><span class="step">Map</span><span class="step-arrow">→</span><span class="step">S/P</span><span class="step-arrow">→</span><span class="step">IFFT</span><span class="step-arrow">→</span><span class="step">+CP</span><span class="step-arrow">→</span><span class="step">P/S</span><span class="step-arrow">→</span><span class="step">DAC/RF</span></div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Pulse Shaping &mdash; NRZ/RZ/Manchester/RC</div>
+      <div class="card-desc">Formato do pulso afeta BW, ISI, DC, sincronização. Raised Cosine (RC) e Root-RC (RRC): padrão telecom.</div>
+      <div class="tag-row"><span class="tag tag-type">Banda Base</span><span class="tag tag-task">Conformação Pulso</span></div>
+      <div class="formula-box">RC: BW = (1+α)/(2T) | Roll-off α: 0 (Nyquist ideal) - 1 (BW 1/T)</div>
+      <div class="props">
+        <span class="prop-label spec">Formatos:</span><span class="prop-value">NRZ, RZ, Manchester (clock embed), Bipolar AMI, 4B/5B, 8B/10B, 64B/66B</span>
+        <span class="prop-label spec">RC/RRC:</span><span class="prop-value">α típico 0.2-0.35 (DVB-S2: 0.05-0.35); RRC TX+RX cascata = RC (Nyquist matched filter)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">ISI / Eye Diagram / Equalização</div>
+      <div class="card-desc">ISI: símbolos vizinhos se sobrepõem. Eye diagram: abertura indica margem. EQs: ZF, MMSE, DFE, LMS, RLS, MLSE.</div>
+      <div class="tag-row"><span class="tag tag-type">Distorção / Recup.</span><span class="tag tag-task">Compensar Canal</span></div>
+      <div class="formula-box">ZF: H_eq = 1/H_canal | MMSE: H_eq = H*/(|H|² + N₀/E_s)</div>
+      <div class="props">
+        <span class="prop-label spec">EQs Lineares:</span><span class="prop-value">ZF (zera ISI, amplifica ruído), MMSE (balanceia), FFE</span>
+        <span class="prop-label spec">EQs Não-Lin:</span><span class="prop-value">DFE (decision feedback), MLSE (Viterbi sobre canal), Adaptativos LMS/RLS/CMA blind</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">MATLAB Comm Toolbox (eyediagram, comm.LinearEqualizer), GNU Radio</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Sincronização &mdash; Símbolo / Portadora / Frame</div>
+      <div class="card-desc">Símbolo (Gardner, M&amp;M, ELG), portadora (PLL, Costas), frame (preamble corr., Schmidl-Cox p/ OFDM).</div>
+      <div class="tag-row"><span class="tag tag-type">Sincronismo</span><span class="tag tag-task">Recepção Coerente</span></div>
+      <div class="props">
+        <span class="prop-label spec">Símbolo:</span><span class="prop-value">Gardner (timing error detector), Mueller&amp;Müller, Early-Late Gate</span>
+        <span class="prop-label spec">Portadora:</span><span class="prop-value">PLL (linear), Costas loop (M-PSK), DD (decision-directed), polifásica</span>
+        <span class="prop-label spec">Frame OFDM:</span><span class="prop-value">Schmidl&amp;Cox (2 metades iguais), Park, Minn, autocorrelação do CP</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">SNR / Eb/N0 / Es/N0 / BER / C/N0</div>
+      <div class="card-desc">Métricas fundamentais. Eb/N0 universal (independe BW). C/N0 (dB-Hz) comum em satélite. BER alvo: 10⁻³ a 10⁻⁹.</div>
+      <div class="tag-row"><span class="tag tag-type">Métrica</span><span class="tag tag-task">Avaliação</span></div>
+      <div class="formula-box">Eb/N0 = (S/N)·(BW/Rb) | Es/N0 = log₂(M)·Eb/N0 | C = BW·log₂(1+SNR)</div>
+      <div class="props">
+        <span class="prop-label spec">BER alvo:</span><span class="prop-value">Voz: 10⁻³, Dados: 10⁻⁶ a 10⁻⁹, Óptico: 10⁻¹² (pre-FEC ~10⁻³ pós-FEC ~10⁻¹⁵)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">MATLAB berawgn/bercoding, comm.ErrorRate, GNU Radio BER block</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="codificacao">🔐 Codificação &mdash; Fonte, Canal, MIMO, Spread</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">Source Coding &mdash; Huffman / Arithmetic / Lempel-Ziv</div>
+      <div class="card-desc">Compressão sem perda. Huffman: ótimo por símbolo. Arithmetic: ótimo. LZ77/78/W: dicionário adaptativo.</div>
+      <div class="tag-row"><span class="tag tag-type">Compressão Lossless</span><span class="tag tag-task">Reduz Redundância</span></div>
+      <div class="formula-box">H(X) = -Σ p_i·log₂(p_i) | L_avg ≥ H(X) (Shannon)</div>
+      <div class="props">
+        <span class="prop-label spec">Aplicações:</span><span class="prop-value">Huffman (gzip, JPEG), LZ77 (zip, png), LZW (gif), arithmetic (JPEG2000, H.264 CABAC)</span>
+        <span class="prop-label std">Padrões:</span><span class="prop-value">DEFLATE (RFC 1951), Brotli, Zstandard, LZMA</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Compressão com Perda &mdash; JPEG / H.265 / AV1 / Opus</div>
+      <div class="card-desc">Modelos perceptuais. JPEG/HEIC (imagem), H.264/265/AV1/VVC (vídeo), MP3/AAC/Opus (áudio).</div>
+      <div class="tag-row"><span class="tag tag-type">Compressão Lossy</span><span class="tag tag-task">Multimedia</span><span class="tag tag-domain">Broadcast / Streaming</span></div>
+      <div class="props">
+        <span class="prop-label std">Vídeo:</span><span class="prop-value">MPEG-2 (DVD/DVB-T), H.264/AVC (streaming), H.265/HEVC (4K, DVB-T2), AV1 (YouTube), VVC/H.266 (8K)</span>
+        <span class="prop-label std">Áudio:</span><span class="prop-value">MP3 (MPEG-1 L3), AAC (DVB), Opus (WebRTC, VoIP), AC-3/E-AC-3 (Dolby)</span>
+        <span class="prop-label std">Imagem:</span><span class="prop-value">JPEG, JPEG2000, WebP, AVIF, HEIC, JPEG XL</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Channel Coding &mdash; Hamming / BCH / Reed-Solomon</div>
+      <div class="card-desc">Block codes: corrige erros adicionando paridade. Hamming (1 erro), BCH (múltiplos), RS (rajadas de bytes).</div>
+      <div class="tag-row"><span class="tag tag-type">Bloco / FEC</span><span class="tag tag-task">Correção Erros</span></div>
+      <div class="formula-box">Hamming (7,4): d=3, t=1 | RS(255,223): t=16 bytes</div>
+      <div class="props">
+        <span class="prop-label std">RS Apps:</span><span class="prop-value">CD/DVD/Blu-ray, DVB-T (RS 204,188), QR codes, satélite, fibra (RS(255,239) ITU-T G.709)</span>
+        <span class="prop-label std">BCH:</span><span class="prop-value">DVB-S2/T2 (outer), Flash NAND ECC, DSL</span>
+        <span class="prop-label spec">Decodif.:</span><span class="prop-value">Sistemático, polinomial (Berlekamp-Massey), syndrome decoding</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Convolucional + Viterbi</div>
+      <div class="card-desc">Codificação por estado, decodificação por máxima verossimilhança (Viterbi, trellis). GSM, 802.11.</div>
+      <div class="tag-row"><span class="tag tag-type">Convolucional</span><span class="tag tag-task">FEC Inner</span></div>
+      <div class="formula-box">Taxa R = k/n | K = constraint length (5-9) | Estados = 2^(K-1)</div>
+      <div class="props">
+        <span class="prop-label spec">Configs:</span><span class="prop-value">R=1/2 K=7 (NASA, GSM, 802.11), R=1/3, puncturing (taxas intermediárias)</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">GSM, IS-95 CDMA, 802.11a/g, DVB-S (concat c/ RS), Voyager (R=1/2 K=7)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Turbo / LDPC / Polar</div>
+      <div class="card-desc">Códigos modernos perto do limite de Shannon. Turbo: 3G/4G. LDPC: WiFi/5G/DVB-S2. Polar: 5G control.</div>
+      <div class="tag-row"><span class="tag tag-type">Capacity-Achieving</span><span class="tag tag-task">FEC Moderno</span><span class="tag tag-domain">4G/5G/DVB</span></div>
+      <div class="props">
+        <span class="prop-label std">Turbo:</span><span class="prop-value">Berrou 1993, paralelos+interleaver, decodif. iterativa BCJR. 3G/4G data, Mars rover, DVB-RCS2</span>
+        <span class="prop-label std">LDPC:</span><span class="prop-value">Gallager 1962/MacKay 1996, parity-check sparsa, belief propagation. 802.11n/ac/ax, 5G data, DVB-S2/T2, 10GbE</span>
+        <span class="prop-label std">Polar:</span><span class="prop-value">Arikan 2008, 1º código provadamente capacity. SC/SCL+CRC. 5G control (PBCH, PDCCH)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">CRC / Interleaving / Concatenação</div>
+      <div class="card-desc">CRC: detecção. Interleaver: rajadas → ruído aleatório. Concatenação: outer (RS) + inner (convol/LDPC).</div>
+      <div class="tag-row"><span class="tag tag-type">FEC Helpers</span><span class="tag tag-task">Robustez</span></div>
+      <div class="props">
+        <span class="prop-label spec">CRCs:</span><span class="prop-value">CRC-8, CRC-16-CCITT, CRC-24 (Bluetooth), CRC-32 (Ethernet, 802.11), polinômio gerador g(x)</span>
+        <span class="prop-label spec">Interleaver:</span><span class="prop-value">Bloco (matriz), convolucional, pseudo-random (turbo), espacial (OFDM subcarriers)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Spread Spectrum &mdash; DSSS / FHSS</div>
+      <div class="card-desc">DSSS: chip rate >> bit rate (PN). FHSS: salta freq. pseudo-aleatório. BT=FHSS, 802.11b=DSSS, GPS=DSSS.</div>
+      <div class="tag-row"><span class="tag tag-type">Espalhamento</span><span class="tag tag-task">Anti-Jam / Multi-User</span><span class="tag tag-domain">GPS / BT / CDMA</span></div>
+      <div class="formula-box">G_p = R_chip/R_bit (processing gain) | G_p[dB] reduz Eb/N0 requerido</div>
+      <div class="props">
+        <span class="prop-label std">DSSS:</span><span class="prop-value">GPS L1 (1.023 Mcps Gold codes), CDMA IS-95 (1.2288 Mcps), 802.11b (Barker), Iridium</span>
+        <span class="prop-label std">FHSS:</span><span class="prop-value">Bluetooth (1600 hops/s), military jam-resistant, antigo 802.11 FHSS</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">CDMA &mdash; Code Division Multiple Access</div>
+      <div class="card-desc">DSSS multi-usuário. Cada usuário tem código ortogonal (Walsh) + scrambling. Base de IS-95 e WCDMA/UMTS.</div>
+      <div class="tag-row"><span class="tag tag-type">Múltiplo Acesso</span><span class="tag tag-task">Multi-Usuário</span><span class="tag tag-domain">2G/3G</span></div>
+      <div class="props">
+        <span class="prop-label std">Códigos:</span><span class="prop-value">Walsh-Hadamard (ortogonal), Gold (CDMA, GPS), Kasami, OVSF (UMTS variable spreading)</span>
+        <span class="prop-label spec">Recepção:</span><span class="prop-value">Rake receiver (multipath fingers), power control essencial (near-far problem)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">MIMO &mdash; Spatial Multiplexing / Diversity / STBC</div>
+      <div class="card-desc">Múltiplas antenas TX/RX. SM: paralelos (cap.). Diversity (Alamouti): robustez. Beamforming: ganho.</div>
+      <div class="tag-row"><span class="tag tag-type">Multi-Antena</span><span class="tag tag-task">Capacidade / Robustez</span><span class="tag tag-domain">WiFi / LTE / 5G</span></div>
+      <div class="formula-box">C_MIMO = min(N_T,N_R)·log₂(1+SNR/N_T) | Alamouti: full diversity, R=1</div>
+      <div class="props">
+        <span class="prop-label spec">Modos:</span><span class="prop-value">SU-MIMO, MU-MIMO, Massive MIMO (32-256 antenas BS), Cell-Free MIMO</span>
+        <span class="prop-label spec">Pré-codif.:</span><span class="prop-value">SVD-based, MRT (max ratio TX), ZF, MMSE, Tomlinson-Harashima</span>
+        <span class="prop-label std">Apps:</span><span class="prop-value">802.11n (2×2), ac (8×8), ax (8×8), LTE (4×4), 5G NR (32×32 a 256 elem.)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Múltiplo Acesso &mdash; FDMA / TDMA / OFDMA / NOMA</div>
+      <div class="card-desc">Como compartilhar canal. FDMA (1G). TDMA (GSM). CDMA (3G). OFDMA (4G/5G). NOMA (6G research).</div>
+      <div class="tag-row"><span class="tag tag-type">Compartilhamento</span><span class="tag tag-task">Multi-Usuário</span></div>
+      <div class="props">
+        <span class="prop-label std">Variantes:</span><span class="prop-value">FDMA (1G), TDMA (GSM, IS-136), CDMA (IS-95, UMTS), OFDMA (WiMAX, LTE DL, 5G), SC-FDMA (LTE UL), NOMA (power-domain)</span>
+        <span class="prop-label spec">Duplex:</span><span class="prop-value">FDD (paired, GSM/UMTS/LTE), TDD (single freq, time slots, TD-LTE, 5G n78), full-duplex (research)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="opticas">💡 Comunicações Ópticas (Agrawal / Senior)</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">Fibras Ópticas &mdash; SMF / MMF</div>
+      <div class="card-desc">SMF (8-10μm core): longa distância, baixa dispersão. MMF (50/62.5μm): curta distância, datacenter.</div>
+      <div class="tag-row"><span class="tag tag-type">Guia Óptico</span><span class="tag tag-task">Meio TX</span></div>
+      <div class="formula-box">NA = √(n₁²-n₂²) | V = (2π·a/λ)·NA (V&lt;2.405 ⇒ single-mode)</div>
+      <div class="props">
+        <span class="prop-label band">Janelas:</span><span class="prop-value">850 nm (MMF, datacenter), 1310 nm (O-band, baixa disp.), 1550 nm (C-band, mín. atenuação 0.2 dB/km, EDFA)</span>
+        <span class="prop-label spec">Tipos SMF:</span><span class="prop-value">G.652 (standard), G.653 (DSF), G.655 (NZ-DSF), G.657 (bend-insensitive), G.654 (submarino)</span>
+        <span class="prop-label spec">Tipos MMF:</span><span class="prop-value">OM1/2 (50/62.5, 1Gb), OM3/4 (10-40Gb), OM5 (SWDM, 100Gb+)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Dispersão &mdash; CD / PMD / Modal</div>
+      <div class="card-desc">Cromática (CD): velocidades diferentes por λ. PMD: polariz. ortogonais. Modal: só MMF, modos diferentes.</div>
+      <div class="tag-row"><span class="tag tag-type">Distorção</span><span class="tag tag-task">Limita BW·L</span></div>
+      <div class="formula-box">CD: D ≈ 17 ps/(nm·km) @1550nm SMF | PMD: Δτ ∝ √L</div>
+      <div class="props">
+        <span class="prop-label spec">Compensação:</span><span class="prop-value">DCF (dispersion comp. fiber), CFBG (chirped FBG), DSP (coerente: equalização adaptativa)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">VPIphotonics, OptSim, Lumerical Interconnect, OptiSystem</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Atenuação &amp; Janelas</div>
+      <div class="card-desc">Perdas: Rayleigh (∝1/λ⁴), absorção OH⁻, splice, conectores. Mínimo absoluto em ~1550 nm.</div>
+      <div class="tag-row"><span class="tag tag-type">Perdas</span><span class="tag tag-task">Budget Óptico</span></div>
+      <div class="formula-box">P_out = P_in · 10^(-αL/10) | Splice ~0.1 dB, conector ~0.3-0.5 dB</div>
+      <div class="props">
+        <span class="prop-label spec">Atenuação típica:</span><span class="prop-value">850nm: ~2.5 dB/km, 1310nm: ~0.35 dB/km, 1550nm: ~0.20 dB/km, 1625nm L-band</span>
+        <span class="prop-label band">Bandas:</span><span class="prop-value">O (1260-1360), E (1360-1460), S (1460-1530), C (1530-1565), L (1565-1625), U (1625-1675)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">WDM &mdash; CWDM / DWDM</div>
+      <div class="card-desc">Multiplexação por comprimento de onda. CWDM: 20nm spacing. DWDM: 50/100 GHz (até 96+ canais).</div>
+      <div class="tag-row"><span class="tag tag-type">Multiplexação</span><span class="tag tag-task">Aumentar Capacidade</span><span class="tag tag-domain">Backbone / Metro</span></div>
+      <div class="formula-box">Δf · Δλ = c/λ² | 100 GHz @1550 ⇔ 0.8 nm</div>
+      <div class="props">
+        <span class="prop-label std">CWDM:</span><span class="prop-value">ITU-T G.694.2, 20nm spacing, 1270-1610 nm, cooler-free, metro/acesso</span>
+        <span class="prop-label std">DWDM:</span><span class="prop-value">ITU-T G.694.1, grid 50/100/200 GHz ou Flexigrid (12.5 GHz), C/L-band, backbone</span>
+        <span class="prop-label spec">Componentes:</span><span class="prop-value">Mux/Demux (AWG), OADM, ROADM, transponders, tunable lasers</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Fontes Ópticas &mdash; Lasers / LEDs</div>
+      <div class="card-desc">DFB: monomodo C/L-band. VCSEL: emissão superfície, 850nm, baixo custo. EML: DFB+EAM (alta velocidade).</div>
+      <div class="tag-row"><span class="tag tag-type">Emissor</span><span class="tag tag-task">Geração Óptica</span></div>
+      <div class="formula-box">P_out = η·(I - I_th)·hν/q | SMSR > 35 dB (single-mode)</div>
+      <div class="props">
+        <span class="prop-label spec">Tipos:</span><span class="prop-value">LED (low BW), Fabry-Perot, DFB, DBR, VCSEL, External Cavity Laser, Tunable</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">DFB 1550 (DWDM, coerente), VCSEL 850 (datacenter), EML (10/25/50G), tunable (ROADM)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Moduladores Externos &mdash; MZM / EAM</div>
+      <div class="card-desc">MZM (Mach-Zehnder, LiNbO₃ ou Si): IQ moderno. EAM: integrável InP. Coerente: IQ-MZM dual-pol.</div>
+      <div class="tag-row"><span class="tag tag-type">Modulador Óptico</span><span class="tag tag-task">Codificação Dados</span></div>
+      <div class="props">
+        <span class="prop-label spec">MZM:</span><span class="prop-value">Vπ baixo, extinction ratio > 20 dB, BW > 40 GHz, formatos OOK/PSK/QAM</span>
+        <span class="prop-label spec">Plataformas:</span><span class="prop-value">LiNbO₃ thin-film (TFLN), InP, Silicon Photonics (SiP), polímeros</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Detectores &mdash; PIN / APD / Coerente</div>
+      <div class="card-desc">PIN: linear, BW alta. APD: ganho interno (M), maior sensibilidade. Coerente: bate sinal c/ LO p/ amplitude+fase.</div>
+      <div class="tag-row"><span class="tag tag-type">Receptor Óptico</span><span class="tag tag-task">Detecção</span></div>
+      <div class="formula-box">R = η·q/(h·ν) [A/W] | SNR_shot = R·P/(2qB)</div>
+      <div class="props">
+        <span class="prop-label spec">PIN:</span><span class="prop-value">InGaAs (1310/1550), Si (850), BW > 40 GHz, R ~0.8-1 A/W</span>
+        <span class="prop-label spec">APD:</span><span class="prop-value">Ganho M ~10-50, ~5-10 dB mais sensível, requer alta tensão</span>
+        <span class="prop-label spec">Coerente:</span><span class="prop-value">Recupera I/Q + 2 polarizações + amplitude+fase ⇒ 64-QAM, DSP intensivo</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Amplificadores Ópticos &mdash; EDFA / Raman</div>
+      <div class="card-desc">EDFA: bombeio 980/1480nm, ganho C/L-band sem O-E-O. Raman: ganho distribuído, baixo ruído.</div>
+      <div class="tag-row"><span class="tag tag-type">Amplificação Óptica</span><span class="tag tag-task">Long-Haul</span></div>
+      <div class="formula-box">G_EDFA: 20-30 dB típico | NF ~4-6 dB | Raman: ganho Δλ ~13 THz</div>
+      <div class="props">
+        <span class="prop-label spec">Tipos:</span><span class="prop-value">EDFA (C/L), SOA (datacenter, switching), Raman (distribuído), Hybrid EDFA+Raman</span>
+        <span class="prop-label band">Apps:</span><span class="prop-value">Cabos submarinos (cada 50-100 km), DWDM long-haul, repeaters, pre-amp/booster</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Link Budget Óptico</div>
+      <div class="card-desc">P_TX - atenuações - margem = P_RX_min. Considera fibra, splices, conectores, dispersion penalty, aging.</div>
+      <div class="tag-row"><span class="tag tag-type">Eng. Link</span><span class="tag tag-task">Projeto</span></div>
+      <div class="formula-box">P_RX = P_TX - α·L - N_splice·L_s - N_conn·L_c - M_sys</div>
+      <div class="props">
+        <span class="prop-label spec">Margens:</span><span class="prop-value">Dispersion penalty (1-2 dB), aging (3 dB), repair margin, temperatura</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">OptiSystem, VPIphotonics, OptSim, planilhas Excel padrão indústria</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">PON &mdash; GPON / XGS-PON / 25G-50G PON</div>
+      <div class="card-desc">Passive Optical Network: fibra única + splitters passivos. OLT (central) ↔ ONU/ONT (cliente). FTTH dominante.</div>
+      <div class="tag-row"><span class="tag tag-type">Acesso Óptico</span><span class="tag tag-task">FTTH / FTTB</span><span class="tag tag-domain">Acesso</span></div>
+      <div class="props">
+        <span class="prop-label std">Padrões:</span><span class="prop-value">GPON G.984 (2.5/1.25G), XG-PON G.987 (10/2.5G), XGS-PON G.9807 (10G simétrico), 25/50G-PON, NG-PON2</span>
+        <span class="prop-label spec">Splits:</span><span class="prop-value">1:32, 1:64, 1:128; alcance 20 km, λ down 1490, up 1310</span>
+        <span class="prop-label std">Protocolos:</span><span class="prop-value">OMCI (OLT-ONU mgmt), GEM (encap), TDMA upstream, broadcast downstream</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Sistemas Coerentes &mdash; PDM-QPSK / 16QAM</div>
+      <div class="card-desc">Estado-da-arte long-haul: detecção coerente + DSP + dual-pol + modulação avançada. 100G/400G/800G/1.6T.</div>
+      <div class="tag-row"><span class="tag tag-type">Coerente</span><span class="tag tag-task">Backbone Alta Cap.</span><span class="tag tag-complex">100G+</span></div>
+      <div class="formula-box">Capacidade = 2·(símbolo·log₂(M))·N_pol | 100G = 32 Gbaud·QPSK·2pol</div>
+      <div class="props">
+        <span class="prop-label spec">Formatos:</span><span class="prop-value">PDM-QPSK (100G), PDM-16QAM (200/400G), PDM-64QAM (800G), Probabilistic Shaping (PCS)</span>
+        <span class="prop-label std">DSP:</span><span class="prop-value">CD compensation, PMD/pol tracking, CFO estim., MIMO 2x2 butterfly, FEC LDPC</span>
+        <span class="prop-label spec">FEC:</span><span class="prop-value">Hard-decision (HD), Soft-decision (SD), oFEC, ganho ~9-12 dB</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Medidas Ópticas &mdash; OTDR / OSA / Power Meter</div>
+      <div class="card-desc">OTDR: refletometria temporal, mapeia perdas. OSA: espectro óptico (WDM). Power Meter + Source: budget.</div>
+      <div class="tag-row"><span class="tag tag-type">Instrumentação</span><span class="tag tag-task">Caracterização</span></div>
+      <div class="props">
+        <span class="prop-label tool">OTDR:</span><span class="prop-value">EXFO, Viavi, AFL, Yokogawa AQ; mostra perdas, splices, conectores, fim de fibra</span>
+        <span class="prop-label tool">OSA:</span><span class="prop-value">Yokogawa AQ6370, Anritsu MS9740; resolução até 20 pm, dynamic range 80+ dB</span>
+        <span class="prop-label tool">Conectores:</span><span class="prop-value">SC, LC, FC, ST; polish PC/UPC/APC (8° p/ -60 dB return loss)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="radio">📻 Radiocomunicação &amp; SDR</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">Espectro RF &amp; Bandas ITU</div>
+      <div class="card-desc">ELF→EHF. Cada banda tem propagação distinta. ITU-R aloca uso global em conferências WRC.</div>
+      <div class="tag-row"><span class="tag tag-type">Regulação</span><span class="tag tag-task">Alocação</span></div>
+      <div class="props">
+        <span class="prop-label band">Bandas ITU:</span><span class="prop-value">ELF, SLF, ULF, VLF (3-30 kHz), LF, MF (AM), HF (3-30 MHz), VHF (30-300 MHz), UHF, SHF, EHF (30-300 GHz)</span>
+        <span class="prop-label band">Bandas Radar:</span><span class="prop-value">L (1-2), S (2-4), C (4-8), X (8-12), Ku (12-18), K (18-27), Ka (27-40), V (40-75), W (75-110)</span>
+        <span class="prop-label std">Brasil/Anatel:</span><span class="prop-value">Atribuição PDFTR, fiscalização Anatel, ISM (433, 915 MHz; 2.4, 5.8 GHz), licenciado vs livre</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Modulações Analógicas &mdash; AM / FM / SSB / PM</div>
+      <div class="card-desc">AM (DSB-LC): broadcast MF. SSB: HF voz, eficiência BW. FM: broadcast 88-108, alta fidelidade.</div>
+      <div class="tag-row"><span class="tag tag-type">Analógica</span><span class="tag tag-task">Voz / Broadcast</span></div>
+      <div class="formula-box">AM: s(t) = A_c·(1+m·x(t))·cos(ω_c·t) | FM: s(t) = A_c·cos(ω_c·t + β·sin(ω_m·t))</div>
+      <div class="props">
+        <span class="prop-label spec">AM:</span><span class="prop-value">DSB-LC (broadcast MW), DSB-SC, SSB-USB/LSB (HF voz amador), VSB (TV analógica NTSC/PAL)</span>
+        <span class="prop-label spec">FM:</span><span class="prop-value">Wideband (broadcast Δf=75 kHz), Narrowband (amador Δf=5 kHz), índice β = Δf/f_m</span>
+        <span class="prop-label band">BW Carson:</span><span class="prop-value">BW_FM ≈ 2(Δf + f_m)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Receptor Superheterodino</div>
+      <div class="card-desc">Mistura RF → IF fixa p/ filtragem/amplificação. Arquitetura dominante ~100 anos. IF: 455 kHz (AM), 10.7 MHz (FM).</div>
+      <div class="tag-row"><span class="tag tag-type">Arquit. Receptor</span><span class="tag tag-task">Detecção</span></div>
+      <div class="props">
+        <span class="prop-label spec">Variantes:</span><span class="prop-value">Single-conversion, dual-conversion (rejeita imagem), direct-conversion (Zero-IF, SDR), low-IF</span>
+        <span class="prop-label spec">Imagem:</span><span class="prop-value">f_imagem = f_LO + f_IF (ou f_LO - f_IF). RF preselector + filtro IF rejeita</span>
+      </div>
+      <div class="process-steps"><span class="step">Antena</span><span class="step-arrow">→</span><span class="step">LNA</span><span class="step-arrow">→</span><span class="step">Filtro RF</span><span class="step-arrow">→</span><span class="step">Mixer</span><span class="step-arrow">→</span><span class="step">Filtro IF</span><span class="step-arrow">→</span><span class="step">Amp IF</span><span class="step-arrow">→</span><span class="step">Demod</span></div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Amateur Radio &mdash; Faixas &amp; Modos</div>
+      <div class="card-desc">Hobby + serviço público licenciado. Brasil: classes A/B/C. PU/PY/PT prefixos. Modos: CW, SSB, FM, digital.</div>
+      <div class="tag-row"><span class="tag tag-type">Amador</span><span class="tag tag-task">DX / Pública / Sat</span><span class="tag tag-domain">Hobby / Emergência</span></div>
+      <div class="props">
+        <span class="prop-label band">HF:</span><span class="prop-value">160m (1.8), 80m (3.5), 40m (7.0), 30m (10.1), 20m (14.0), 17m, 15m (21), 12m, 10m (28)</span>
+        <span class="prop-label band">VHF/UHF:</span><span class="prop-value">6m (50), 2m (144), 70cm (430), 23cm (1240), 13cm (2300+)</span>
+        <span class="prop-label std">Modos:</span><span class="prop-value">CW (Morse), SSB (USB >10MHz, LSB &lt;10MHz), FM (repetidora), Digital: FT8, FT4, JT65, PSK31, RTTY, JS8Call, VARA, Olivia</span>
+        <span class="prop-label tool">Software:</span><span class="prop-value">WSJT-X (FT8/FT4/JT65), Fldigi, JS8Call, N1MM Logger, Ham Radio Deluxe, CQRLOG, GridTracker, PSKReporter</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Repetidoras &amp; Voz Digital (DMR / D-STAR / Fusion / P25)</div>
+      <div class="card-desc">Repetidora VHF/UHF estende alcance. CTCSS/DCS seletivo. Modos digitais oferecem texto+GPS+rede.</div>
+      <div class="tag-row"><span class="tag tag-type">Repeater / Voz Digital</span><span class="tag tag-task">Cobertura</span></div>
+      <div class="props">
+        <span class="prop-label spec">Offsets:</span><span class="prop-value">2m: ±600 kHz, 70cm: ±5 MHz (Brasil), CTCSS 67-254.1 Hz, DCS códigos octais</span>
+        <span class="prop-label std">Voz Digital:</span><span class="prop-value">DMR (TDMA 2-slot, BrandMeister), D-STAR (Icom, GMSK), C4FM/Fusion (Yaesu Wires-X), P25 (público), NXDN, TETRA</span>
+        <span class="prop-label std">Hotspots:</span><span class="prop-value">MMDVM (multi-mode), Pi-Star, OpenSpot, conexão BrandMeister, TGIF, XLX, REF</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">SDR &mdash; Software-Defined Radio</div>
+      <div class="card-desc">DSP em vez de circuitos analógicos dedicados. Banda I/Q + processamento digital. Do RTL-SDR ao Zynq RFSoC.</div>
+      <div class="tag-row"><span class="tag tag-type">Plataforma Digital</span><span class="tag tag-task">Rádio Flexível</span><span class="tag tag-domain">P&amp;D / Amador / Mil</span></div>
+      <div class="props">
+        <span class="prop-label tool">HW:</span><span class="prop-value">RTL-SDR (~USD 25, RX 24-1700 MHz), HackRF One (TX/RX 1-6 GHz), Airspy, SDRplay, BladeRF, LimeSDR, USRP B2xx/X3xx/X4xx (Ettus), ADALM-PLUTO, RFSoC</span>
+        <span class="prop-label tool">Software:</span><span class="prop-value">GNU Radio (Companion), SDR# (SDRSharp), GQRX, CubicSDR, SDRangel, SDRuno, HDSDR, OpenWebRX</span>
+        <span class="prop-label tool">Bibliotecas:</span><span class="prop-value">UHD (Ettus C++/Python), SoapySDR (vendor-agnostic), libhackrf, librtlsdr, pyrtlsdr, GNU Radio OOT</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">APRS / Packet Radio / AX.25</div>
+      <div class="card-desc">APRS: posição + msgs curtas. Packet AX.25: padrão amador (1.2/9.6 kbps). VARA: modem moderno (HF/VHF).</div>
+      <div class="tag-row"><span class="tag tag-type">Dados Amador</span><span class="tag tag-task">Posição / Texto</span></div>
+      <div class="props">
+        <span class="prop-label std">APRS:</span><span class="prop-value">144.39 MHz (Américas), 144.80 (Europa), gateways IGate p/ APRS-IS, símbolos, mensagens, mic-E, telemetria</span>
+        <span class="prop-label std">Packet:</span><span class="prop-value">AX.25 (variante HDLC), KISS, BBS, Winlink (email via HF/VHF), VARA HF/FM, ARDOP, FBB</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">EIRP / Potência / Unidades</div>
+      <div class="card-desc">dBm absoluto, dB relativo. EIRP inclui antena. ERP usa dipolo. Cuidado: dBW = dBm - 30.</div>
+      <div class="tag-row"><span class="tag tag-type">Métricas</span><span class="tag tag-task">Cálculo de Link</span></div>
+      <div class="formula-box">P[dBm] = 10·log(P[mW]) | EIRP[dBm] = P_TX - L_feed + G_ant[dBi]</div>
+      <div class="props">
+        <span class="prop-label spec">Conversões:</span><span class="prop-value">0 dBm = 1 mW, 30 dBm = 1 W, 60 dBm = 1 kW; ERP = EIRP - 2.15 dB</span>
+        <span class="prop-label spec">Limites Brasil:</span><span class="prop-value">ISM 2.4 GHz: 1 W EIRP indoor, 4W EIRP outdoor; 5 GHz varia (UNII-1/2/2e/3)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="tvdigital">📺 TV Digital (ISDB-Tb / TV 3.0)</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">ISDB-Tb / SBTVD &mdash; Sistema Brasileiro</div>
+      <div class="card-desc">Padrão brasileiro (ISDB-T japonês + H.264 + Ginga). Transmissão terrestre digital, canal de 6 MHz em VHF/UHF.</div>
+      <div class="tag-row"><span class="tag tag-type">Padrão Broadcast</span><span class="tag tag-task">TV Terrestre</span><span class="tag tag-domain">Brasil / LatAm</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">VHF (canais 7-13) / UHF (14-51), canal de 6 MHz, BST-OFDM</span>
+        <span class="prop-label std">Norma:</span><span class="prop-value">ABNT NBR 15601-15610, ISDB-T Internacional (Brasil 2007, vários países LatAm)</span>
+        <span class="prop-label spec">Vídeo/Áudio:</span><span class="prop-value">MPEG-4 AVC (H.264) HD + AAC; one-seg para móvel</span>
+        <span class="prop-label spec">Resoluções:</span><span class="prop-value">SDTV, HDTV 1080i; multiprogramação possível</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">BST-OFDM &amp; Segmentação / One-Seg</div>
+      <div class="card-desc">13 segmentos OFDM (Band Segmented Transmission). 1 segmento central = One-Seg (móvel/portátil). Hierarquia de robustez.</div>
+      <div class="tag-row"><span class="tag tag-type">Camada Física</span><span class="tag tag-task">Modulação</span></div>
+      <div class="formula-box">13 segmentos × ~429 kHz | One-Seg = 1 segmento (≈ 312 kbps)</div>
+      <div class="props">
+        <span class="prop-label spec">Modos:</span><span class="prop-value">Mode 1 (2k FFT), 2 (4k), 3 (8k); guard interval 1/4 a 1/32</span>
+        <span class="prop-label spec">Camadas:</span><span class="prop-value">A (one-seg, QPSK robusta), B/C (HD, 64-QAM); modulação hierárquica</span>
+        <span class="prop-label spec">One-Seg:</span><span class="prop-value">recepção móvel/portátil, QPSK, FEC forte, baixa taxa</span>
+        <span class="prop-label spec">Full-Seg:</span><span class="prop-value">12 segmentos, HD para receptores fixos</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Codecs &amp; Compressão</div>
+      <div class="card-desc">ISDB-Tb usa H.264/AAC. A TV 3.0 migra para H.265/VVC e áudio next-gen. Compressão é chave para 4K/8K em 6 MHz.</div>
+      <div class="tag-row"><span class="tag tag-type">Compressão</span><span class="tag tag-task">Vídeo / Áudio</span></div>
+      <div class="props">
+        <span class="prop-label std">Atual:</span><span class="prop-value">vídeo H.264/AVC, áudio AAC/HE-AAC (SBTVD)</span>
+        <span class="prop-label std">TV 3.0:</span><span class="prop-value">vídeo VVC (H.266); áudio MPEG-H 3D Audio</span>
+        <span class="prop-label spec">Taxas:</span><span class="prop-value">HD ~8-15 Mbps (H.264), 4K ~15-25 Mbps (HEVC/VVC); HDR (HLG/PQ)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Ginga &mdash; Middleware Interativo</div>
+      <div class="card-desc">Middleware brasileiro de interatividade. NCL (declarativo, XML) + Lua (script). Apps, t-gov, t-commerce, segunda tela.</div>
+      <div class="tag-row"><span class="tag tag-type">Middleware</span><span class="tag tag-task">Interatividade</span><span class="tag tag-domain">Brasil</span></div>
+      <div class="props">
+        <span class="prop-label spec">Linguagens:</span><span class="prop-value">NCL (Nested Context Language, declarativa) + Lua (imperativa); Ginga-NCL</span>
+        <span class="prop-label spec">Ginga-J:</span><span class="prop-value">parte procedural em Java (menos usada)</span>
+        <span class="prop-label std">Norma:</span><span class="prop-value">ABNT NBR 15606, ITU-T H.761 (recomendação internacional)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Ginga Virtual Set-top Box, emuladores, Telemídia PUC-Rio</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">TV 3.0 Brasil &mdash; Próxima Geração</div>
+      <div class="card-desc">Próximo padrão brasileiro (SBTVD Fórum / Anatel). Físico DVB-T2, transporte IP, 4K/8K, HDR, convergência broadcast + broadband.</div>
+      <div class="tag-row"><span class="tag tag-type">Next-Gen</span><span class="tag tag-task">Convergência IP</span><span class="tag tag-domain">Brasil</span></div>
+      <div class="props">
+        <span class="prop-label spec">Camada física:</span><span class="prop-value">DVB-T2 (selecionada para a transmissão)</span>
+        <span class="prop-label spec">Transporte:</span><span class="prop-value">ROUTE/DASH e MMT (baseado em IP); convergência broadcast-broadband</span>
+        <span class="prop-label spec">Recursos:</span><span class="prop-value">4K/8K, HDR, alto frame rate, áudio imersivo, multitelas, publicidade endereçável</span>
+        <span class="prop-label std">Processo:</span><span class="prop-value">chamadas públicas do SBTVD Fórum, fases de testes, implantação gradual</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Padrões Mundiais &mdash; DVB-T2 / ATSC 3.0 / DTMB</div>
+      <div class="card-desc">Comparação global. DVB (Europa/maioria), ATSC (EUA), ISDB (Japão/Brasil), DTMB (China). 2ª geração: DVB-T2, ATSC 3.0.</div>
+      <div class="tag-row"><span class="tag tag-type">Comparação</span><span class="tag tag-task">Padrões</span></div>
+      <div class="props">
+        <span class="prop-label std">DVB-T/T2:</span><span class="prop-value">Europa e maioria global; T2 usa LDPC + 256-QAM + constelações rotacionadas</span>
+        <span class="prop-label std">ATSC 1.0/3.0:</span><span class="prop-value">EUA/Coreia; 3.0 (NextGen TV) baseado em IP, OFDM, LDPC, HEVC</span>
+        <span class="prop-label std">ISDB-T:</span><span class="prop-value">Japão, Brasil (ISDB-Tb), LatAm; BST-OFDM</span>
+        <span class="prop-label std">DTMB:</span><span class="prop-value">China; TDS-OFDM; DTMB-A como evolução</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="satelite">🛰️ Comunicações via Satélite</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">Órbitas &mdash; LEO / MEO / GEO / HEO / SSO</div>
+      <div class="card-desc">Período Kepler. LEO 90min, GEO 24h síncrona. SSO: passa mesmo horário local. Molniya: alta latitude.</div>
+      <div class="tag-row"><span class="tag tag-type">Mecânica Orbital</span><span class="tag tag-task">Posicionamento</span></div>
+      <div class="formula-box">T = 2π·√(a³/μ) | v_orbital = √(μ/r) | μ_Terra = 398600.4 km³/s²</div>
+      <div class="props">
+        <span class="prop-label spec">LEO:</span><span class="prop-value">160-2000 km, T~90-120 min, ~7.8 km/s, Doppler alto, baixa latência (~5 ms); ISS 400km</span>
+        <span class="prop-label spec">MEO:</span><span class="prop-value">2000-35786 km, GPS/Galileo/GLONASS ~20000 km, T~12h, semi-sync</span>
+        <span class="prop-label spec">GEO:</span><span class="prop-value">35786 km equador, T=23h56m, geo-estacionário, broadcast, latência ~250 ms</span>
+        <span class="prop-label spec">Outras:</span><span class="prop-value">HEO/Molniya (e alta, i=63.4°), SSO (i=98°, sensoriamento), GTO (transfer ellipse)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Link Budget Satélite &mdash; EIRP / G/T / C/N</div>
+      <div class="card-desc">Conta toda perda do TX ao RX. G/T mede qualidade RX (figure of merit). C/N₀ em dB-Hz independe de BW.</div>
+      <div class="tag-row"><span class="tag tag-type">Eng. Sistemas</span><span class="tag tag-task">Projeto Enlace</span></div>
+      <div class="formula-box">C/N₀ = EIRP - L_FS - L_atm + G/T - k | k = -228.6 dBW/Hz/K</div>
+      <div class="props">
+        <span class="prop-label spec">Componentes:</span><span class="prop-value">EIRP TX, L_path (4πd/λ), L_atm (gases+chuva ITU-R), L_pol, L_aponta, G_RX/T_sys</span>
+        <span class="prop-label spec">Margens:</span><span class="prop-value">Rain margin (Ku 5dB, Ka 10-15dB), pointing, aging, polarização (0.2 dB)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">STK (AGI/Ansys), Eutelsat link tools, planilhas, GNSS Calc</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">DVB-S / S2 / S2X / RCS2</div>
+      <div class="card-desc">Padrão satélite digital. S2 (2003): LDPC+BCH+APSK. S2X (2014): granularidade fina, beam-hop. RCS2: retorno.</div>
+      <div class="tag-row"><span class="tag tag-type">Padrão Satélite</span><span class="tag tag-task">Broadcast / VSAT</span><span class="tag tag-domain">TV / Internet Sat</span></div>
+      <div class="props">
+        <span class="prop-label std">Modulações:</span><span class="prop-value">DVB-S: QPSK+Viterbi+RS. S2: QPSK,8PSK,16/32-APSK+LDPC+BCH (28 modcods). S2X: +64/128/256-APSK, β=0.05-0.20, VL-SNR</span>
+        <span class="prop-label std">DVB-RCS2:</span><span class="prop-value">Retorno usuário (uplink), MF-TDMA + Turbo+CRC, suporta VoIP</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">OpenSAND (simulador), GNU Radio (gr-dvbs2), receivers TBS/PRO Sat USB</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Bandas Satélite &mdash; L / S / C / X / Ku / Ka / V</div>
+      <div class="card-desc">Trade-off freq vs antena vs chuva. Ku doméstico TV. Ka HTS/banda larga. L navegação/IoT. C tropical.</div>
+      <div class="tag-row"><span class="tag tag-type">Espectro</span><span class="tag tag-task">Banda Operacional</span></div>
+      <div class="props">
+        <span class="prop-label band">L (1-2 GHz):</span><span class="prop-value">GPS/Galileo, Inmarsat, Iridium, MSS, AIS</span>
+        <span class="prop-label band">S (2-4 GHz):</span><span class="prop-value">Globalstar, TT&amp;C, NASA Deep Space (S-band uplink)</span>
+        <span class="prop-label band">C (4-8 GHz):</span><span class="prop-value">Down 3.7-4.2, up 5.9-6.4; resistente à chuva; pratos grandes; tropical</span>
+        <span class="prop-label band">Ku (12-18):</span><span class="prop-value">Down 10.7-12.75, up 14-14.5; DTH TV; pratos pequenos</span>
+        <span class="prop-label band">Ka (27-40):</span><span class="prop-value">Down 17.7-21.2, up 27.5-31; HTS banda larga (HughesNet, ViaSat), Starlink user</span>
+        <span class="prop-label band">V (40-75):</span><span class="prop-value">Starlink/OneWeb gateway, futuro 6G NTN, chuva crítica</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">CubeSats / SmallSats</div>
+      <div class="card-desc">1U=10cm cubo. Padroniza interfaces e lançamentos rideshare. P&amp;D acessível: amador, universidades, NewSpace.</div>
+      <div class="tag-row"><span class="tag tag-type">Plataforma</span><span class="tag tag-task">P&amp;D / Sensoriamento</span><span class="tag tag-domain">Academia / NewSpace</span></div>
+      <div class="props">
+        <span class="prop-label spec">Formatos:</span><span class="prop-value">1U (1 kg), 1.5U, 2U, 3U (4 kg), 6U, 12U, 16U; PocketQube (5cm); Dispensers P-POD, ISIPOD</span>
+        <span class="prop-label band">Comms:</span><span class="prop-value">UHF/VHF amador (telemetria), S-band (downlink), X-band (imagens), laser-comm experim.</span>
+        <span class="prop-label tool">SW/HW:</span><span class="prop-value">cFS (NASA core), KubOS, F' (JPL F-Prime), libre.space, satnogs-client, GNU Radio decoders</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Constelações &mdash; Starlink / OneWeb / Iridium / GNSS</div>
+      <div class="card-desc">Múltiplos satélites p/ cobertura global. Mega-constelações LEO (Starlink, OneWeb, Kuiper) revolucionam banda larga.</div>
+      <div class="tag-row"><span class="tag tag-type">Constelação</span><span class="tag tag-task">Cobertura Global</span></div>
+      <div class="props">
+        <span class="prop-label std">Banda Larga LEO:</span><span class="prop-value">Starlink (6000+ sats, Ku/Ka user, V gateway, ISL laser), OneWeb (~650), Kuiper (Amazon), Telesat Lightspeed</span>
+        <span class="prop-label std">Voz/IoT:</span><span class="prop-value">Iridium (66 sats, ISL, L-band), Globalstar (S-band), Inmarsat (GEO, L-band, BGAN), Thuraya</span>
+        <span class="prop-label std">GNSS:</span><span class="prop-value">GPS (USA, 31), GLONASS (RU), Galileo (EU, 24+), BeiDou (CN), QZSS (JP), NavIC (IN)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">TT&amp;C / Telemetria / Doppler</div>
+      <div class="card-desc">Comunicação satélite-controle. TT&amp;C: Telemetry+Tracking+Command. Doppler ajuda a determinar órbita.</div>
+      <div class="tag-row"><span class="tag tag-type">Operação</span><span class="tag tag-task">Controle / Estado</span></div>
+      <div class="formula-box">Δf = (v_rel/c)·f₀ | LEO 437 MHz: ±10 kHz; 2.4 GHz: ±55 kHz</div>
+      <div class="props">
+        <span class="prop-label std">Padrões:</span><span class="prop-value">CCSDS (Consultative Committee Space Data Systems): TM Space Data Link, AOS, USLP, TC, COP-1, CFDP</span>
+        <span class="prop-label spec">Formatos:</span><span class="prop-value">CCSDS frame, packet (APID), CADU, imagens em pacotes, RS(255,223) FEC padrão</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Rastreio &mdash; TLE / SGP4 / AOS-LOS</div>
+      <div class="card-desc">Two-Line Elements: representação compacta da órbita. SGP4: propagador padrão. AOS/LOS: aquisição/perda.</div>
+      <div class="tag-row"><span class="tag tag-type">Predição</span><span class="tag tag-task">Aponta Antena</span></div>
+      <div class="props">
+        <span class="prop-label std">Fontes TLE:</span><span class="prop-value">CelesTrak (Kelso), Space-Track (NORAD/USSF), N2YO, AMSAT keps</span>
+        <span class="prop-label tool">Software:</span><span class="prop-value">Gpredict, Orbitron, SatPC32, Heavens-Above, N2YO, GMAT (NASA), STK</span>
+        <span class="prop-label tool">Bibliotecas:</span><span class="prop-value">sgp4 (Python), pyephem, skyfield, predict (Linux), libpredict, satellite.js (browser)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">SatNOGS / Estações Terrenas</div>
+      <div class="card-desc">Rede colaborativa global open-source de estações terrenas. Doa observações, decodifica, agrega. Libre.space.</div>
+      <div class="tag-row"><span class="tag tag-type">Estação Terrena</span><span class="tag tag-task">Recepção Satélite</span><span class="tag tag-domain">Amador / Educ.</span></div>
+      <div class="props">
+        <span class="prop-label spec">Componentes:</span><span class="prop-value">Antenas (Yagi/Helical/Turnstile/Eggbeater VHF/UHF), rotor Az/El, LNA, SDR (RTL/Airspy), Raspberry Pi + satnogs-client</span>
+        <span class="prop-label tool">Software:</span><span class="prop-value">satnogs-client (Python), satnogs-network (Django), gr-satnogs, gr-satellites (CSC), decoders por satélite</span>
+        <span class="prop-label std">Comunidade:</span><span class="prop-value">Libre.space Foundation, centenas de estações globais, DB.satnogs.org (sat info), Network.satnogs.org (agenda)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Satélites Amador &mdash; AMSAT / FUNcube / QO-100</div>
+      <div class="card-desc">Operados por amadores. Transponder linear / FM voice / digital. QO-100: 1º GEO amador, cobre 1/3 da Terra.</div>
+      <div class="tag-row"><span class="tag tag-type">Amador Espacial</span><span class="tag tag-task">Comunicação Hobby</span></div>
+      <div class="props">
+        <span class="prop-label spec">Modos:</span><span class="prop-value">Mode V/U (up 2m, down 70cm), Mode U/V, Mode L/S, lineares (SSB/CW) ou FM repeater</span>
+        <span class="prop-label std">Famosos:</span><span class="prop-value">AO-7 (1974, vivo), AO-91 FOX-1B, SO-50 FM, ISS APRS+SSTV, FUNcube-1 AO-73 (BPSK telemetria), QO-100 (Es'hail-2 GEO)</span>
+        <span class="prop-label tool">Software:</span><span class="prop-value">FoxTelem (AMSAT), Dashboard FUNcube, MultiPSK, decoders SatNOGS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-sys" id="moveis">📱 Comunicações Móveis (1G → 6G)</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">Conceitos Celulares &mdash; Reuso / Setor / Handoff</div>
+      <div class="card-desc">Reuso de frequências em clusters N (3,4,7,12). Sectorização aumenta capacidade. Handoff soft/hard entre células.</div>
+      <div class="tag-row"><span class="tag tag-type">Arquitetura Celular</span><span class="tag tag-task">Capacidade / Mobilidade</span></div>
+      <div class="formula-box">D/R = √(3N) | macrocell (km), microcell (~300m), pico, femto (indoor)</div>
+      <div class="props">
+        <span class="prop-label spec">Handoff:</span><span class="prop-value">Hard (break-before-make, GSM), Soft (make-before-break, CDMA), Softer (mesma BS setores)</span>
+        <span class="prop-label spec">Tipos célula:</span><span class="prop-value">Macro (torre), Micro (rua), Pico (indoor), Femto (residencial), HetNet (mix)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">2G &mdash; GSM / GPRS / EDGE</div>
+      <div class="card-desc">TDMA 200 kHz, 8 slots. GMSK voz. GPRS (2.5G) ~50 kbps. EDGE (2.75G) 8PSK ~200 kbps.</div>
+      <div class="tag-row"><span class="tag tag-type">Segunda Geração</span><span class="tag tag-task">Voz + Dados Lentos</span><span class="tag tag-domain">Legacy / IoT 2G</span></div>
+      <div class="props">
+        <span class="prop-label band">Bandas:</span><span class="prop-value">GSM 900/1800 (Europa, Brasil), 850/1900 (Américas)</span>
+        <span class="prop-label std">Arquit.:</span><span class="prop-value">MS, BTS, BSC, MSC, HLR/VLR, AUC, SMSC, GGSN/SGSN (GPRS core)</span>
+        <span class="prop-label rate">Taxas:</span><span class="prop-value">GSM: 9.6 kbps/slot; GPRS: 21-53 kbps; EDGE: até 236 kbps</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">3G &mdash; UMTS / WCDMA / HSPA+</div>
+      <div class="card-desc">WCDMA 5 MHz, chip 3.84 Mcps, SF variável (OVSF). HSPA+ chega ~42 Mbps DL c/ MIMO+64-QAM.</div>
+      <div class="tag-row"><span class="tag tag-type">Terceira Geração</span><span class="tag tag-task">Voz + Dados</span></div>
+      <div class="props">
+        <span class="prop-label band">Bandas:</span><span class="prop-value">2100 (Banda I), 900, 1900, 850, 2600</span>
+        <span class="prop-label std">Variantes:</span><span class="prop-value">UMTS/WCDMA, HSDPA (14.4 DL), HSUPA, HSPA+ (~168 Mbps); CDMA2000 1xRTT, EV-DO</span>
+        <span class="prop-label rate">Codecs Voz:</span><span class="prop-value">AMR (4.75-12.2 kbps), AMR-WB (HD Voice)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">4G &mdash; LTE / LTE-Advanced / LTE-Pro</div>
+      <div class="card-desc">OFDMA DL, SC-FDMA UL, BW 1.4-20 MHz, MIMO 4x4. LTE-A: agregação até 5 portadoras (100 MHz). 256-QAM.</div>
+      <div class="tag-row"><span class="tag tag-type">Quarta Geração</span><span class="tag tag-task">Banda Larga Móvel</span><span class="tag tag-domain">Dominante atual</span></div>
+      <div class="formula-box">Resource Block = 12 subcarriers × 7 OFDM symb = 180 kHz × 0.5 ms</div>
+      <div class="props">
+        <span class="prop-label std">Arquit.:</span><span class="prop-value">UE, eNodeB (E-UTRAN), EPC: MME, S-GW, P-GW, HSS, PCRF; X2 entre eNBs, S1 p/ core</span>
+        <span class="prop-label std">Canais:</span><span class="prop-value">PDSCH/PUSCH (data), PDCCH/PUCCH (control), PBCH (broadcast), PRACH (random access), SRS/DM-RS</span>
+        <span class="prop-label rate">Cats UE:</span><span class="prop-value">Cat 4 (150/50), Cat 6 (300/50), Cat 12 (600/150), Cat 16 (1 Gbps DL), Cat 18 (1.2G/200)</span>
+        <span class="prop-label std">Voz:</span><span class="prop-value">VoLTE (IMS), CSFB (fallback 2/3G), ViLTE vídeo, RCS msg</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">5G NR &mdash; New Radio</div>
+      <div class="card-desc">Sub-6 (FR1) + mmWave (FR2 24-71 GHz). Numerology escalável (15-240 kHz). Massive MIMO. Beamforming. 3 use-cases.</div>
+      <div class="tag-row"><span class="tag tag-type">Quinta Geração</span><span class="tag tag-task">eMBB / URLLC / mMTC</span><span class="tag tag-domain">Indústria 4.0 / Mobile</span></div>
+      <div class="props">
+        <span class="prop-label band">FR1:</span><span class="prop-value">410 MHz - 7.125 GHz (n1, n3, n7, n28, n41, n77, n78 3.3-3.8 GHz principal, n79)</span>
+        <span class="prop-label band">FR2:</span><span class="prop-value">24.25-71 GHz mmWave (n257 28GHz, n258 26, n260 39, n261 28); FR3 7-24 GHz futuro</span>
+        <span class="prop-label std">Arquit.:</span><span class="prop-value">gNB, ng-eNB, 5GC: AMF, SMF, UPF, AUSF, UDM, PCF, NRF, NSSF; SBA (service-based)</span>
+        <span class="prop-label std">Modos:</span><span class="prop-value">NSA (Non-standalone c/ EPC 4G), SA (Standalone c/ 5GC nativo); Option 2/3x/4/7</span>
+        <span class="prop-label rate">Numerology:</span><span class="prop-value">μ=0 (15kHz SCS), μ=1 (30), μ=2 (60), μ=3 (120 mmWave), μ=4 (240); slot=1ms/2^μ</span>
+        <span class="prop-label std">Features:</span><span class="prop-value">Massive MIMO 64T64R, beamforming, network slicing, URLLC mini-slot, sidelink V2X, RedCap (IoT)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">6G &mdash; Visão Futura</div>
+      <div class="card-desc">Padronização ~2028-2030, deploy ~2030. THz, AI-native, ISAC (sensing+comm), NTN nativo, sustentabilidade.</div>
+      <div class="tag-row"><span class="tag tag-type">Sexta Geração</span><span class="tag tag-task">Visão / Research</span></div>
+      <div class="props">
+        <span class="prop-label band">Bandas:</span><span class="prop-value">FR3 7-24 GHz, sub-THz 100-300 GHz (D-band), THz 0.3-3 THz pesquisa</span>
+        <span class="prop-label std">Pilares:</span><span class="prop-value">AI-native, ISAC (sensing integrado), NTN (sat nativo), holographic MIMO, RIS, semantic communication, digital twin</span>
+        <span class="prop-label std">Orgs:</span><span class="prop-value">3GPP Release 19/20/21, Hexa-X (EU), Next G Alliance (US), ITU-R IMT-2030</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Capacidade &amp; Limite de Shannon</div>
+      <div class="card-desc">Limite teórico de bits/s dado BW e SNR. Toda evolução celular é luta para chegar perto.</div>
+      <div class="tag-row"><span class="tag tag-type">Teoria</span><span class="tag tag-task">Limite</span></div>
+      <div class="formula-box">C = B·log₂(1 + S/N) | bps/Hz = log₂(1+SNR) | canal AWGN</div>
+      <div class="props">
+        <span class="prop-label spec">Efic. espectral:</span><span class="prop-value">GSM ~0.2 bps/Hz, UMTS ~0.5, LTE ~3 (4×4 MIMO ~15), 5G ~30 (massive MIMO + 256-QAM)</span>
+      </div>
+    </div>
+  </div>
+  <div class="category-label cat-sys" id="voip">☎️ Telefonia &amp; VoIP</div>
+  <div class="grid">
+    <div class="card sys-card">
+      <div class="card-name">PSTN / Comutação de Circuitos / E1-T1</div>
+      <div class="card-desc">Rede telefônica tradicional. Comutação de circuitos, 64 kbps por canal (PCM). E1 (Brasil/Europa 2.048 Mbps), T1 (EUA 1.544).</div>
+      <div class="tag-row"><span class="tag tag-type">Legado</span><span class="tag tag-task">Voz Comutada</span></div>
+      <div class="formula-box">PCM: 8 kHz × 8 bits = 64 kbps/canal | E1 = 30 canais de voz + 2 de sinalização</div>
+      <div class="props">
+        <span class="prop-label spec">Digitalização:</span><span class="prop-value">PCM (G.711 lei A no Brasil/Europa, lei μ nos EUA), amostragem 8 kHz</span>
+        <span class="prop-label spec">Multiplex:</span><span class="prop-value">E1 (32 timeslots, 2.048 Mbps), T1 (24 ts, 1.544); PDH, E3/T3</span>
+        <span class="prop-label spec">Hierarquia:</span><span class="prop-value">SDH (STM-1 155 Mbps+), SONET, DS0/DS1/DS3</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Sinalização &mdash; SS7 / ISDN</div>
+      <div class="card-desc">SS7: rede de sinalização fora de banda da PSTN (setup de chamadas, SMS, roaming). ISDN: acesso digital (BRI/PRI).</div>
+      <div class="tag-row"><span class="tag tag-type">Sinalização</span><span class="tag tag-task">Controle de Chamada</span></div>
+      <div class="props">
+        <span class="prop-label std">SS7:</span><span class="prop-value">MTP, SCCP, ISUP (setup), TCAP, MAP (mobile, roaming/SMS); vulnerabilidades SS7 conhecidas</span>
+        <span class="prop-label std">ISDN:</span><span class="prop-value">BRI (2B+D, 144 kbps), PRI (30B+D no E1); Q.931 de sinalização</span>
+        <span class="prop-label spec">Migração:</span><span class="prop-value">SIGTRAN (SS7 sobre IP), Diameter (substitui MAP em 4G/5G)</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">VoIP &mdash; SIP / SDP / H.323</div>
+      <div class="card-desc">Voz sobre IP. SIP (sinalização padrão) negocia a sessão; SDP descreve a mídia. H.323 é legado. Base de softphones e IP-PBX.</div>
+      <div class="tag-row"><span class="tag tag-type">VoIP</span><span class="tag tag-task">Sinalização IP</span><span class="tag tag-domain">IP-PBX</span></div>
+      <div class="props">
+        <span class="prop-label std">SIP:</span><span class="prop-value">RFC 3261, métodos INVITE/ACK/BYE/REGISTER, proxy/registrar, URI sip:</span>
+        <span class="prop-label std">SDP:</span><span class="prop-value">descrição de mídia (codecs, portas, IPs) dentro do SIP</span>
+        <span class="prop-label std">Outros:</span><span class="prop-value">H.323 (legado ITU), MGCP/Megaco, IAX (Asterisk), WebRTC (browser)</span>
+        <span class="prop-label tool">Plataformas:</span><span class="prop-value">Asterisk, FreeSWITCH, Kamailio, 3CX, FreePBX</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">RTP / RTCP / Codecs de Voz</div>
+      <div class="card-desc">RTP carrega a mídia (sobre UDP); RTCP reporta qualidade. Codecs: G.711 (sem compressão), G.729 (comprimido), Opus (moderno).</div>
+      <div class="tag-row"><span class="tag tag-type">Mídia</span><span class="tag tag-task">Transporte de Voz</span></div>
+      <div class="formula-box">RTP/UDP/IP, timestamp + sequence | banda = codec + overhead (~40 bytes/pacote)</div>
+      <div class="props">
+        <span class="prop-label std">RTP/RTCP:</span><span class="prop-value">RFC 3550, payload type, jitter buffer, SRTP (cifrado)</span>
+        <span class="prop-label spec">Codecs:</span><span class="prop-value">G.711 (64k, alta qualidade), G.729 (8k), G.722 (HD wideband), Opus (6-510k, WebRTC), AMR-WB</span>
+        <span class="prop-label spec">Overhead:</span><span class="prop-value">pacotização típica de 20 ms; banda real &gt; taxa do codec</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">Qualidade &mdash; MOS / Jitter / Latência / Eco</div>
+      <div class="card-desc">Métricas de qualidade de voz. MOS (1-5, percepção). Latência &lt; 150 ms (ITU-T G.114). Jitter, perda e eco degradam.</div>
+      <div class="tag-row"><span class="tag tag-type">Métrica</span><span class="tag tag-task">QoS de Voz</span></div>
+      <div class="formula-box">MOS 1 (ruim) a 5 (excelente) | E-model (R-factor) → MOS | latência one-way ideal &lt; 150 ms</div>
+      <div class="props">
+        <span class="prop-label spec">MOS:</span><span class="prop-value">4.0-4.5 ótimo (G.711), 3.5-4.0 bom, &lt; 3.5 ruim</span>
+        <span class="prop-label spec">Latência:</span><span class="prop-value">&lt; 150 ms ótimo, 150-400 aceitável, &gt; 400 ruim (ITU-T G.114)</span>
+        <span class="prop-label spec">Jitter:</span><span class="prop-value">variação do atraso; jitter buffer compensa (custo: + latência)</span>
+        <span class="prop-label spec">Eco/Outros:</span><span class="prop-value">cancelamento de eco (G.168), PLC (packet loss concealment), VAD/CNG</span>
+      </div>
+    </div>
+    <div class="card sys-card">
+      <div class="card-name">IMS / VoLTE / VoWiFi / WebRTC</div>
+      <div class="card-desc">Convergência IP. IMS: core de serviços multimídia (3GPP). VoLTE/VoNR: voz em 4G/5G via IMS. WebRTC: voz/vídeo no browser.</div>
+      <div class="tag-row"><span class="tag tag-type">NGN</span><span class="tag tag-task">Voz Convergente</span><span class="tag tag-domain">4G/5G / Web</span></div>
+      <div class="props">
+        <span class="prop-label std">IMS:</span><span class="prop-value">core SIP-based, CSCF (P/I/S), HSS; voz, vídeo, RCS, mensageria</span>
+        <span class="prop-label std">VoLTE/VoNR:</span><span class="prop-value">voz nativa 4G/5G (via IMS), HD Voice (AMR-WB/EVS), substitui CSFB</span>
+        <span class="prop-label std">WebRTC:</span><span class="prop-value">RFC 8825, P2P no browser, ICE/STUN/TURN (NAT traversal), DTLS-SRTP, codecs Opus/VP8/VP9</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Janus, mediasoup, Jitsi, coturn (TURN), Asterisk WebRTC</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 3: REDES & PROTOCOLOS ===== -->
+<div id="sec-net" class="section">
+  <div class="section-title net">🌐 Redes &amp; Protocolos &mdash; Camadas, Roteamento, IoT</div>
+  <div class="legend">
+    <div class="legend-item"><span class="tag tag-type">TIPO</span> Categoria</div>
+    <div class="legend-item"><span class="tag tag-task">TAREFA</span> Função</div>
+    <div class="legend-item"><span class="tag tag-domain">DOMÍNIO</span> Aplicação</div>
+    <div class="legend-item"><span class="prop-label spec"  style="font-size:9px">SPEC</span> Parâmetros</div>
+    <div class="legend-item"><span class="prop-label band"  style="font-size:9px">FAIXA</span> Frequência</div>
+    <div class="legend-item"><span class="prop-label rate"  style="font-size:9px">TAXA</span> Capacidade</div>
+    <div class="legend-item"><span class="prop-label range" style="font-size:9px">ALCANCE</span> Distância</div>
+    <div class="legend-item"><span class="prop-label std"   style="font-size:9px">PADRÃO</span> Norma</div>
+    <div class="legend-item"><span class="prop-label tool"  style="font-size:9px">FERR.</span> Software/HW</div>
+  </div>
+
+  <div class="subnav sn-net"><span class="subnav-label">Ir para:</span><a href="#modelos">🗂️ Modelos &amp; Camadas</a><a href="#roteamento">🌍 Transporte, IP &amp; Roteamento</a><a href="#seguranca">🔒 Segurança &amp; Criptografia</a><a href="#qos">📊 QoS / QoE</a><a href="#iot">📲 IoT</a></div>
+
+  <div class="category-label cat-net" id="modelos">🗂️ Modelos &amp; Camadas (Tanenbaum / Kurose)</div>
+  <div class="grid">
+    <div class="card net-card">
+      <div class="card-name">Modelo OSI &mdash; 7 Camadas</div>
+      <div class="card-desc">Modelo referência ISO/IEC 7498. Cada camada serve a de cima e usa a de baixo. Pedagógico; real é TCP/IP.</div>
+      <div class="tag-row"><span class="tag tag-type">Modelo Referência</span><span class="tag tag-task">Estrutura Conceitual</span></div>
+      <div class="props">
+        <span class="prop-label spec">Camadas:</span><span class="prop-value">1 Física, 2 Enlace (LLC+MAC), 3 Rede, 4 Transporte, 5 Sessão, 6 Apresentação, 7 Aplicação</span>
+        <span class="prop-label spec">PDUs:</span><span class="prop-value">L1: bit, L2: frame, L3: packet, L4: segment/datagram, L5-7: data/message</span>
+      </div>
+      <div class="process-steps"><span class="step">Phys</span><span class="step-arrow">→</span><span class="step">DataLink</span><span class="step-arrow">→</span><span class="step">Net</span><span class="step-arrow">→</span><span class="step">Transp</span><span class="step-arrow">→</span><span class="step">Sess</span><span class="step-arrow">→</span><span class="step">Pres</span><span class="step-arrow">→</span><span class="step">App</span></div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">TCP/IP &mdash; 4/5 Camadas</div>
+      <div class="card-desc">Pilha real da Internet. Concebido pré-OSI. Modelo Forouzan: Phys+DataLink+Net+Transp+App.</div>
+      <div class="tag-row"><span class="tag tag-type">Modelo Prático</span><span class="tag tag-task">Pilha Internet</span></div>
+      <div class="props">
+        <span class="prop-label spec">Camadas:</span><span class="prop-value">Link (Ethernet, WiFi, PPP), Internet (IP, ICMP, ARP), Transport (TCP, UDP, QUIC), Application (HTTP, DNS, SMTP, SSH)</span>
+        <span class="prop-label std">IETF:</span><span class="prop-value">RFC 1122 (Host Requirements), RFC 791/793 (IP/TCP), RFC 768 (UDP)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Ethernet / 802.3</div>
+      <div class="card-desc">Padrão LAN dominante. CSMA/CD legado (hubs), atual full-duplex switched. Velocidades: 10M → 1.6T.</div>
+      <div class="tag-row"><span class="tag tag-type">LAN Cabeada</span><span class="tag tag-task">L2</span><span class="tag tag-domain">Datacenter / Office</span></div>
+      <div class="props">
+        <span class="prop-label rate">Velocidades:</span><span class="prop-value">10BASE-T, 100BASE-TX, 1000BASE-T, 10GBASE-T/SR/LR, 25/40/100GbE, 200/400/800/1.6TbE</span>
+        <span class="prop-label std">Cabos:</span><span class="prop-value">Cat5e (1G/100m), Cat6/6A (10G), Cat7/8 (40G short), fibra MMF/SMF, DAC twinax</span>
+        <span class="prop-label std">Frame:</span><span class="prop-value">Preamble, SFD, Dst/Src MAC, EtherType, Payload (46-1500), CRC32; Jumbo &lt;9000 bytes</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Wi-Fi &mdash; 802.11 (1-7)</div>
+      <div class="card-desc">LAN wireless. CSMA/CA. Evolução BW + modulação + MIMO + OFDMA. Wi-Fi 7 (be) traz multi-link operation.</div>
+      <div class="tag-row"><span class="tag tag-type">WLAN</span><span class="tag tag-task">Internet Sem-Fio</span><span class="tag tag-domain">Indoor / Hotspot</span></div>
+      <div class="props">
+        <span class="prop-label std">Gerações:</span><span class="prop-value">b (2.4G), a (5G), g, n (Wi-Fi 4 MIMO), ac (Wi-Fi 5), ax (Wi-Fi 6/6E, OFDMA, 2.4/5/6G), be (Wi-Fi 7, 320 MHz, 4K-QAM, MLO)</span>
+        <span class="prop-label band">Bandas:</span><span class="prop-value">2.4 GHz, 5 GHz (UNII 1/2A/2C/3), 6 GHz Wi-Fi 6E/7 (5.925-7.125 GHz)</span>
+        <span class="prop-label rate">Taxas:</span><span class="prop-value">b 11 Mbps, n 600M, ac 6.9G, ax 9.6G, be 46G (teórico)</span>
+        <span class="prop-label std">Segurança:</span><span class="prop-value">WEP (quebrado), WPA, WPA2 (CCMP-AES), WPA3 (SAE, OWE open), 802.1X EAP enterprise</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">VLAN / STP / Link Aggregation</div>
+      <div class="card-desc">VLAN 802.1Q segmenta L2 (12 bits VID). STP/RSTP/MSTP previne loops. LAG/LACP (802.3ad) agrega links.</div>
+      <div class="tag-row"><span class="tag tag-type">Switching</span><span class="tag tag-task">Segmentação / HA</span></div>
+      <div class="props">
+        <span class="prop-label std">Padrões:</span><span class="prop-value">802.1Q (VLAN), 802.1ad (Q-in-Q), 802.1D STP, 802.1w RSTP, 802.1s MSTP, 802.3ad LACP, 802.1X auth</span>
+        <span class="prop-label spec">Tipos VLAN:</span><span class="prop-value">Default (1), Native (untagged trunk), Voice, Management, Guest; Trunk vs Access port</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">ARP / DHCP / DNS</div>
+      <div class="card-desc">Protocolos auxiliares fundamentais. ARP: IP→MAC. DHCP: aluga IPs. DNS: nome→IP, distribuído hierárquico.</div>
+      <div class="tag-row"><span class="tag tag-type">Suporte</span><span class="tag tag-task">Configuração Auto</span></div>
+      <div class="props">
+        <span class="prop-label std">ARP:</span><span class="prop-value">RFC 826, broadcast L2, cache; RARP (legado), Gratuitous ARP, Proxy ARP</span>
+        <span class="prop-label std">DHCP:</span><span class="prop-value">RFC 2131 (v4), v6 RFC 8415; DORA: Discover, Offer, Request, Ack; lease time, options</span>
+        <span class="prop-label std">DNS:</span><span class="prop-value">RFC 1035, UDP/TCP 53; records A, AAAA, CNAME, MX, NS, PTR, TXT, SRV; DoH, DoT, DNSSEC</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-net" id="roteamento">🌍 Transporte, IP &amp; Roteamento</div>
+  <div class="grid">
+    <div class="card net-card">
+      <div class="card-name">IPv4 / IPv6 / ICMP</div>
+      <div class="card-desc">IPv4 (32 bits, NAT) esgotado. IPv6 (128 bits) deploy gradual. ICMP: diagnóstico (ping, traceroute).</div>
+      <div class="tag-row"><span class="tag tag-type">Camada Rede</span><span class="tag tag-task">Endereçamento</span></div>
+      <div class="props">
+        <span class="prop-label std">IPv4:</span><span class="prop-value">RFC 791, 4.3B endereços, CIDR /n, NAT/PAT, RFC 1918 privados (10/8, 172.16/12, 192.168/16)</span>
+        <span class="prop-label std">IPv6:</span><span class="prop-value">RFC 8200, 128 bits, SLAAC, ULA (fc00::/7), link-local (fe80::/10), NDP (substitui ARP)</span>
+        <span class="prop-label std">ICMP:</span><span class="prop-value">ICMPv4 (RFC 792), ICMPv6 (RFC 4443); echo (ping), TTL exceeded (traceroute), dest unreach</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">TCP &mdash; Transmission Control Protocol</div>
+      <div class="card-desc">Confiável, orientado conexão, controle congestion+flow, retransmissão. Three-way handshake. Universal.</div>
+      <div class="tag-row"><span class="tag tag-type">Transporte Confiável</span><span class="tag tag-task">Stream Garantido</span></div>
+      <div class="formula-box">RTT, cwnd, ssthresh; Slow Start cwnd·=2, Congestion Avoidance +1 MSS/RTT</div>
+      <div class="props">
+        <span class="prop-label std">RFCs:</span><span class="prop-value">793 (original), 7323 (timestamps, win scaling), 5681 (congest), 9293 (revisão moderna)</span>
+        <span class="prop-label spec">Congestion:</span><span class="prop-value">Tahoe, Reno, NewReno, CUBIC (Linux padrão), BBR (Google), DCTCP (datacenter)</span>
+        <span class="prop-label spec">Features:</span><span class="prop-value">SACK, ECN, window scaling, Nagle, delayed ACK, Multipath TCP (MPTCP)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">UDP / QUIC</div>
+      <div class="card-desc">UDP: sem conexão, sem retransm, mínimo overhead. QUIC: UDP-based mas TLS+stream multiplex, base do HTTP/3.</div>
+      <div class="tag-row"><span class="tag tag-type">Transporte Leve</span><span class="tag tag-task">Tempo Real / HTTP/3</span></div>
+      <div class="props">
+        <span class="prop-label std">UDP:</span><span class="prop-value">RFC 768, 8 bytes header, sem garantias; DNS, DHCP, NTP, VoIP RTP, streaming, jogos</span>
+        <span class="prop-label std">QUIC:</span><span class="prop-value">RFC 9000-9002, sobre UDP, TLS 1.3 integrado, 0-RTT, sem HoL blocking, connection migration; HTTP/3</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Roteamento &mdash; RIP / OSPF / IS-IS / EIGRP</div>
+      <div class="card-desc">IGPs roteiam dentro de AS. RIP: distance vector (legado). OSPF: link state padrão. IS-IS: ISP. EIGRP: Cisco.</div>
+      <div class="tag-row"><span class="tag tag-type">IGP</span><span class="tag tag-task">Roteamento Interno</span></div>
+      <div class="props">
+        <span class="prop-label std">RIP:</span><span class="prop-value">RFC 2453 (v2)/2080 (RIPng); 15 hops max, UDP 520, distance vector, Bellman-Ford, legado</span>
+        <span class="prop-label std">OSPF:</span><span class="prop-value">RFC 2328 (v2)/5340 (v3); link state, Dijkstra, areas (backbone 0), LSAs, multicast 224.0.0.5/6</span>
+        <span class="prop-label std">IS-IS:</span><span class="prop-value">ISO 10589, RFC 1142; CLNS, levels L1/L2, backbones ISP (mais escalável que OSPF)</span>
+        <span class="prop-label std">EIGRP:</span><span class="prop-value">RFC 7868, Cisco (aberto 2013), DUAL algorithm, hybrid distance+state</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">BGP &mdash; Border Gateway Protocol</div>
+      <div class="card-desc">EGP da Internet. Roteia entre Autonomous Systems. Path vector. TCP 179. Policy-driven. Estabilidade global crítica.</div>
+      <div class="tag-row"><span class="tag tag-type">EGP</span><span class="tag tag-task">Roteamento Inter-AS</span><span class="tag tag-domain">Internet Backbone</span></div>
+      <div class="props">
+        <span class="prop-label std">RFCs:</span><span class="prop-value">4271 (BGP-4), 7911 (add-path), 7752 (BGP-LS); MP-BGP p/ IPv6, VPNv4, EVPN</span>
+        <span class="prop-label spec">Atributos:</span><span class="prop-value">AS_PATH, NEXT_HOP, LOCAL_PREF, MED, COMMUNITY, ORIGIN; eBGP vs iBGP, route reflectors</span>
+        <span class="prop-label std">Segurança:</span><span class="prop-value">RPKI (origin validation), BGPsec (assina paths), MANRS (best practices)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">MPLS &mdash; Multiprotocol Label Switching</div>
+      <div class="card-desc">Encaminhamento por labels (L2.5). Traffic engineering, VPN, pseudo-wire. Backbone provedor. Sucessor: SR-MPLS, SRv6.</div>
+      <div class="tag-row"><span class="tag tag-type">Switching Avançado</span><span class="tag tag-task">TE / VPN</span><span class="tag tag-domain">Provedor / Carrier</span></div>
+      <div class="props">
+        <span class="prop-label std">Componentes:</span><span class="prop-value">LSR (Label Switch Router), LER (Edge), LSP (path), FEC (forwarding equiv class), Label Stack</span>
+        <span class="prop-label std">Sinalização:</span><span class="prop-value">LDP (Label Distrib.), RSVP-TE (traffic eng.), BGP-LS, Segment Routing (SR)</span>
+        <span class="prop-label std">Serviços:</span><span class="prop-value">L3VPN (RFC 4364), L2VPN (VPWS, VPLS), EVPN (RFC 7432), TE tunnels, FRR (fast reroute)</span>
+        <span class="prop-label std">SR:</span><span class="prop-value">SR-MPLS (labels), SRv6 (IPv6 SID 128b), substitui LDP, simplifica controle</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">SDN / NFV / Network Programmability</div>
+      <div class="card-desc">Separa controle (controller centralizado) do data plane. NFV: virtualiza funções de rede. P4: programa data plane.</div>
+      <div class="tag-row"><span class="tag tag-type">Programmable</span><span class="tag tag-task">Automação / Flexibil.</span><span class="tag tag-domain">DC / Telco Cloud</span></div>
+      <div class="props">
+        <span class="prop-label std">SDN:</span><span class="prop-value">OpenFlow (ONF), P4 (programmable data plane), NETCONF/YANG, gNMI, OpenConfig</span>
+        <span class="prop-label std">Controllers:</span><span class="prop-value">OpenDaylight, ONOS, Ryu (Python), Floodlight, Cisco APIC, VMware NSX</span>
+        <span class="prop-label std">NFV:</span><span class="prop-value">ETSI NFV, VNF/CNF, MANO (orquestração), OSM, ONAP, DPDK, SR-IOV; telco cloud 5G core</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Camada de Aplicação &mdash; HTTP / TLS / SSH / SMTP</div>
+      <div class="card-desc">Protocolos finais. HTTP/1.1→2→3. TLS cifra tudo. SSH acesso remoto. SMTP/IMAP email. WebRTC tempo real.</div>
+      <div class="tag-row"><span class="tag tag-type">Aplicação</span><span class="tag tag-task">Serviços Finais</span></div>
+      <div class="props">
+        <span class="prop-label std">HTTP:</span><span class="prop-value">1.1 (RFC 9112), 2 (binário, multiplex), 3 (sobre QUIC); REST, gRPC, WebSocket</span>
+        <span class="prop-label std">Segurança:</span><span class="prop-value">TLS 1.2/1.3 (RFC 8446), mTLS, certificados X.509, Let's Encrypt/ACME, SSH (RFC 4251)</span>
+        <span class="prop-label std">Outros:</span><span class="prop-value">SMTP/IMAP/POP3 (email), FTP/SFTP, NTP (tempo), SNMP (mgmt), SIP/RTP (VoIP), WebRTC</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-net" id="seguranca">🔒 Segurança &amp; Criptografia</div>
+  <div class="grid">
+    <div class="card net-card">
+      <div class="card-name">Criptografia Simétrica &mdash; AES / ChaCha20</div>
+      <div class="card-desc">Mesma chave cifra e decifra. Rápida, para volume de dados. AES é o padrão; ChaCha20 (stream) é ótimo em software/mobile.</div>
+      <div class="tag-row"><span class="tag tag-type">Simétrica</span><span class="tag tag-task">Confidencialidade</span></div>
+      <div class="formula-box">C = E_k(P), P = D_k(C) | AES: blocos de 128 bits, chaves 128/192/256</div>
+      <div class="props">
+        <span class="prop-label spec">AES:</span><span class="prop-value">block cipher; modos GCM (AEAD, autenticado), CBC, CTR; AES-NI em hardware</span>
+        <span class="prop-label spec">ChaCha20:</span><span class="prop-value">stream cipher; ChaCha20-Poly1305 (AEAD); TLS, WireGuard, mobile</span>
+        <span class="prop-label spec">Cuidados:</span><span class="prop-value">usar modos autenticados (GCM/CCM), evitar ECB; IV/nonce únicos</span>
+        <span class="prop-label spec">Legado:</span><span class="prop-value">DES/3DES (obsoletos), RC4 (quebrado)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Criptografia Assimétrica &mdash; RSA / ECC / DH</div>
+      <div class="card-desc">Par de chaves (pública/privada). Troca de chaves e assinatura. RSA clássico; ECC menor e eficiente; DH troca segredo.</div>
+      <div class="tag-row"><span class="tag tag-type">Assimétrica</span><span class="tag tag-task">Chave / Assinatura</span></div>
+      <div class="formula-box">RSA: c = m^e mod n | ECC: kP sobre curva elíptica | DH: g^(ab) mod p</div>
+      <div class="props">
+        <span class="prop-label spec">RSA:</span><span class="prop-value">2048/3072/4096 bits; assinatura e cifragem; lento para dados (usa híbrido)</span>
+        <span class="prop-label spec">ECC:</span><span class="prop-value">P-256, Curve25519/Ed25519; ~256 bits ≈ RSA 3072; X25519 (ECDH)</span>
+        <span class="prop-label spec">Troca de chave:</span><span class="prop-value">Diffie-Hellman, ECDH; forward secrecy (efêmero DHE/ECDHE)</span>
+        <span class="prop-label spec">Pós-quântico:</span><span class="prop-value">ML-KEM (Kyber), ML-DSA (Dilithium); NIST PQC, migração futura</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Hash &amp; MAC &mdash; SHA / HMAC</div>
+      <div class="card-desc">Hash: resumo unidirecional (integridade). MAC/HMAC: autenticação com chave. KDF deriva chaves a partir de senhas.</div>
+      <div class="tag-row"><span class="tag tag-type">Integridade</span><span class="tag tag-task">Autenticação</span></div>
+      <div class="formula-box">h = H(m) (fixo, irreversível) | HMAC = H((k⊕opad)‖H((k⊕ipad)‖m))</div>
+      <div class="props">
+        <span class="prop-label spec">Hash:</span><span class="prop-value">SHA-256/512 (SHA-2), SHA-3 (Keccak), BLAKE2/3; MD5 e SHA-1 quebrados</span>
+        <span class="prop-label spec">MAC:</span><span class="prop-value">HMAC-SHA256, Poly1305, CMAC; integridade + autenticidade</span>
+        <span class="prop-label spec">KDF:</span><span class="prop-value">PBKDF2, bcrypt, scrypt, Argon2 (senhas); HKDF (deriva de chave)</span>
+        <span class="prop-label spec">Apps:</span><span class="prop-value">assinaturas, blockchain, integridade de arquivos, certificados</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">PKI / Certificados / TLS Handshake</div>
+      <div class="card-desc">Infraestrutura de chave pública. A CA assina certificados X.509 que ligam identidade ↔ chave pública. TLS usa para autenticar.</div>
+      <div class="tag-row"><span class="tag tag-type">Confiança</span><span class="tag tag-task">Autenticação / TLS</span></div>
+      <div class="props">
+        <span class="prop-label spec">X.509:</span><span class="prop-value">certificado (sujeito, chave pública, validade, assinatura da CA), cadeia de confiança</span>
+        <span class="prop-label spec">CA:</span><span class="prop-value">raiz e intermediária; Let's Encrypt/ACME (gratuito); revogação CRL/OCSP</span>
+        <span class="prop-label spec">TLS 1.3:</span><span class="prop-value">handshake 1-RTT, ECDHE forward secrecy, AEAD; RFC 8446</span>
+        <span class="prop-label spec">Conceitos:</span><span class="prop-value">mTLS (mútuo), certificate pinning, CT logs, HSTS</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">VPN &mdash; IPsec / WireGuard / TLS</div>
+      <div class="card-desc">Túnel cifrado sobre rede pública. IPsec (site-to-site clássico), WireGuard (moderno, simples, rápido), OpenVPN (sobre TLS).</div>
+      <div class="tag-row"><span class="tag tag-type">Túnel</span><span class="tag tag-task">Conexão Segura</span></div>
+      <div class="props">
+        <span class="prop-label spec">IPsec:</span><span class="prop-value">AH (integridade), ESP (cifragem), IKE/IKEv2 (troca de chaves), modo túnel/transporte</span>
+        <span class="prop-label spec">WireGuard:</span><span class="prop-value">Curve25519 + ChaCha20, código mínimo, alta performance, sobre UDP</span>
+        <span class="prop-label spec">OpenVPN:</span><span class="prop-value">sobre TLS/SSL, flexível, TCP/UDP; SSL-VPN</span>
+        <span class="prop-label spec">Apps:</span><span class="prop-value">site-to-site, road-warrior, zero-trust (ZTNA), SASE</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Ameaças &amp; Defesa &mdash; Firewall / IDS / DDoS</div>
+      <div class="card-desc">Segurança de rede. Firewall filtra; IDS/IPS detecta/bloqueia; WAF protege apps. DDoS satura. Defesa em profundidade.</div>
+      <div class="tag-row"><span class="tag tag-type">Defesa</span><span class="tag tag-task">SecOps</span><span class="tag tag-domain">Rede / Apps</span></div>
+      <div class="props">
+        <span class="prop-label spec">Perímetro:</span><span class="prop-value">firewall (stateful, NGFW), WAF, proxy, segmentação/VLAN, DMZ</span>
+        <span class="prop-label spec">Detecção:</span><span class="prop-value">IDS/IPS (Snort, Suricata), SIEM, NDR, honeypot</span>
+        <span class="prop-label spec">Ataques:</span><span class="prop-value">DDoS (volumétrico/aplicação), MITM, spoofing, ARP poisoning, port scan</span>
+        <span class="prop-label spec">Wireless:</span><span class="prop-value">WPA3 (SAE), 802.1X/RADIUS, evil twin, deauth, rogue AP</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Wireshark, nmap, Snort/Suricata, Metasploit, Kali, pfSense/OPNsense</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-net" id="qos">📊 QoS / QoE</div>
+  <div class="grid">
+    <div class="card net-card">
+      <div class="card-name">Parâmetros QoS &mdash; Latência / Jitter / Perda / Vazão</div>
+      <div class="card-desc">As 4 métricas fundamentais de qualidade de rede. Cada aplicação tolera diferente: voz odeia jitter/latência, dados odeiam perda.</div>
+      <div class="tag-row"><span class="tag tag-type">Métrica Base</span><span class="tag tag-task">Avaliação</span></div>
+      <div class="formula-box">throughput efetivo | latência (RTT/2) | jitter (variação do delay) | packet loss %</div>
+      <div class="props">
+        <span class="prop-label spec">Latência:</span><span class="prop-value">one-way/RTT; voz &lt; 150 ms, jogos &lt; 50 ms, web tolera mais</span>
+        <span class="prop-label spec">Jitter:</span><span class="prop-value">variação do atraso; crítico para tempo real (buffer compensa)</span>
+        <span class="prop-label spec">Perda:</span><span class="prop-value">% de pacotes perdidos; voz &lt; 1%, vídeo &lt; 0.1%, TCP retransmite</span>
+        <span class="prop-label spec">Vazão:</span><span class="prop-value">throughput (real) vs bandwidth (capacidade); goodput (útil)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Modelos QoS &mdash; DiffServ / IntServ / DSCP</div>
+      <div class="card-desc">Como a rede prioriza o tráfego. IntServ (reserva por fluxo, RSVP) não escala; DiffServ (classes, DSCP) é o padrão prático.</div>
+      <div class="tag-row"><span class="tag tag-type">Arquitetura</span><span class="tag tag-task">Priorização</span></div>
+      <div class="props">
+        <span class="prop-label std">DiffServ:</span><span class="prop-value">RFC 2474/2475, DSCP (6 bits no IP), PHB (EF, AF, BE), por classe</span>
+        <span class="prop-label std">IntServ:</span><span class="prop-value">RSVP reserva fim-a-fim por fluxo; não escala (estado por fluxo)</span>
+        <span class="prop-label spec">DSCP/CoS:</span><span class="prop-value">EF (voz), AF1-4 (vídeo/dados), BE (best effort); 802.1p CoS em L2</span>
+        <span class="prop-label spec">MPLS:</span><span class="prop-value">QoS via bits EXP, TE tunnels</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Filas &amp; Escalonamento &mdash; WFQ / PQ / Shaping</div>
+      <div class="card-desc">Gerência de buffers e ordem de envio. Escalonadores (FIFO, PQ, WFQ, CBWFQ) + policing/shaping + AQM controlam congestão.</div>
+      <div class="tag-row"><span class="tag tag-type">Controle</span><span class="tag tag-task">Congestionamento</span></div>
+      <div class="props">
+        <span class="prop-label spec">Escalonamento:</span><span class="prop-value">FIFO, Priority Queue, WFQ, CBWFQ, LLQ (voz), DRR</span>
+        <span class="prop-label spec">Policing/Shaping:</span><span class="prop-value">policing (descarta excesso), shaping (atrasa/suaviza); token bucket</span>
+        <span class="prop-label spec">AQM:</span><span class="prop-value">RED/WRED, CoDel, FQ-CoDel, PIE (combate bufferbloat)</span>
+        <span class="prop-label spec">Admissão:</span><span class="prop-value">CAC (call admission control), traffic conditioning</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">QoE &amp; MOS &mdash; Percepção do Usuário</div>
+      <div class="card-desc">QoE foca na experiência percebida (subjetiva), não só na rede. MOS quantifica. Em vídeo, rebuffering e startup pesam mais que bitrate puro.</div>
+      <div class="tag-row"><span class="tag tag-type">Experiência</span><span class="tag tag-task">Percepção</span></div>
+      <div class="props">
+        <span class="prop-label spec">MOS:</span><span class="prop-value">1-5; subjetivo (ITU-T P.800) ou estimado (P.1203 vídeo, E-model voz)</span>
+        <span class="prop-label spec">Vídeo QoE:</span><span class="prop-value">startup time, rebuffering ratio, resolução, switches (ABR); VMAF, SSIM, PSNR</span>
+        <span class="prop-label spec">Mapeamento:</span><span class="prop-value">QoS → QoE é não-linear; KPIs de rede vs KQIs de experiência</span>
+        <span class="prop-label std">Normas:</span><span class="prop-value">ITU-T P.800/P.1203/P.1204, G.1011</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">SLA &amp; Disponibilidade</div>
+      <div class="card-desc">Acordo de nível de serviço. Define metas (uptime, latência, perda) e penalidades. Os noves de disponibilidade. MTBF/MTTR.</div>
+      <div class="tag-row"><span class="tag tag-type">Contrato</span><span class="tag tag-task">Confiabilidade</span></div>
+      <div class="formula-box">Disponibilidade = MTBF/(MTBF+MTTR) | 99.999% (5 noves) = 5.26 min/ano de downtime</div>
+      <div class="props">
+        <span class="prop-label spec">Noves:</span><span class="prop-value">99% (3.65 d/ano), 99.9% (8.76 h), 99.99% (52.6 min), 99.999% (5.26 min)</span>
+        <span class="prop-label spec">Métricas SLA:</span><span class="prop-value">uptime, latência garantida, perda, MTTR, jitter, throughput mínimo</span>
+        <span class="prop-label spec">Confiabilidade:</span><span class="prop-value">MTBF, MTTR, redundância (N+1), failover, FRR (&lt; 50 ms)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Medição &amp; Ferramentas</div>
+      <div class="card-desc">Como medir QoS/QoE. Ativos geram tráfego (iperf, ping); passivos observam (SNMP, NetFlow, sondas). Telemetria moderna.</div>
+      <div class="tag-row"><span class="tag tag-type">Monitoramento</span><span class="tag tag-task">Medição</span></div>
+      <div class="props">
+        <span class="prop-label tool">Ativos:</span><span class="prop-value">iperf3 (throughput), ping/hping (latência/perda), mtr, owamp/twamp, speedtest</span>
+        <span class="prop-label tool">Passivos:</span><span class="prop-value">SNMP, NetFlow/IPFIX/sFlow, Wireshark, sondas RMON</span>
+        <span class="prop-label tool">Telemetria:</span><span class="prop-value">gNMI/streaming telemetry, Prometheus + Grafana, ELK, Zabbix/LibreNMS</span>
+        <span class="prop-label std">Padrões:</span><span class="prop-value">ITU-T Y.1540/Y.1541 (perf. IP), RFC 2544 (benchmarking), Y.1564</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="category-label cat-net" id="iot">📲 IoT &mdash; LPWAN, WPAN &amp; Protocolos</div>
+  <div class="grid">
+    <div class="card net-card">
+      <div class="card-name">LoRa / LoRaWAN</div>
+      <div class="card-desc">CSS (Chirp Spread Spectrum) sub-GHz. Longo alcance, baixíssimo consumo. LoRaWAN: MAC sobre LoRa (classes A/B/C).</div>
+      <div class="tag-row"><span class="tag tag-type">LPWAN</span><span class="tag tag-task">IoT Longo Alcance</span><span class="tag tag-domain">Smart City / Agro</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">ISM sub-GHz: 868 MHz (EU), 915 MHz (Américas/AU915 Brasil), 433 MHz; LoRa 2.4 GHz global</span>
+        <span class="prop-label range">Alcance:</span><span class="prop-value">2-5 km urbano, 10-15+ km rural/LoS; SF7-SF12 (spreading factor) troca taxa vs alcance</span>
+        <span class="prop-label rate">Taxa:</span><span class="prop-value">0.3-50 kbps; ADR (adaptive data rate); payload pequeno (até 242 bytes)</span>
+        <span class="prop-label std">Stack:</span><span class="prop-value">Classes A (uplink+2 RX windows), B (beacon agendado), C (sempre RX); ChirpStack, TTN (The Things Network), Helium</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">NB-IoT / LTE-M (Cat-M1)</div>
+      <div class="card-desc">LPWAN celular licenciado (3GPP). NB-IoT: ultra-low power, 200 kHz. LTE-M: maior taxa, mobilidade, voz (VoLTE).</div>
+      <div class="tag-row"><span class="tag tag-type">Celular IoT</span><span class="tag tag-task">IoT Licenciado</span><span class="tag tag-domain">Medidores / Logística</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">Bandas LTE licenciadas (operadoras); in-band, guard-band ou standalone (NB-IoT)</span>
+        <span class="prop-label rate">Taxa:</span><span class="prop-value">NB-IoT ~250 kbps (Cat-NB1/NB2), LTE-M ~1 Mbps (Cat-M1)</span>
+        <span class="prop-label spec">Features:</span><span class="prop-value">PSM (Power Saving Mode), eDRX (extended DRX), coverage enhancement +20 dB; bateria 10 anos</span>
+        <span class="prop-label std">Evolução:</span><span class="prop-value">3GPP Rel-13+; em 5G: mMTC, RedCap (Reduced Capability, mid-tier IoT)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Sigfox / Outras LPWAN</div>
+      <div class="card-desc">Sigfox: UNB (Ultra Narrow Band), proprietário, mensagens minúsculas. Mioty, Weightless: alternativas LPWAN.</div>
+      <div class="tag-row"><span class="tag tag-type">LPWAN</span><span class="tag tag-task">IoT Minimalista</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">Sigfox ISM 868/902 MHz, UNB 100 Hz canais</span>
+        <span class="prop-label rate">Taxa:</span><span class="prop-value">Sigfox: 100-600 bps, max 140 msgs/dia uplink (12 bytes), 4 downlink</span>
+        <span class="prop-label std">Outras:</span><span class="prop-value">Mioty (TS-UNB), Weightless, DASH7, NB-Fi; cobertura via operadora dedicada</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Zigbee / Thread / Matter (802.15.4)</div>
+      <div class="card-desc">WPAN mesh sobre IEEE 802.15.4. Zigbee: clássico mesh. Thread: IPv6 (6LoWPAN). Matter: camada de app unificadora.</div>
+      <div class="tag-row"><span class="tag tag-type">WPAN Mesh</span><span class="tag tag-task">Smart Home</span><span class="tag tag-domain">Domótica / Sensores</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">2.4 GHz (global, 16 canais), 868/915 MHz (sub-GHz regional); O-QPSK DSSS</span>
+        <span class="prop-label range">Alcance:</span><span class="prop-value">10-100 m por hop, estendido via mesh (roteadores + end devices)</span>
+        <span class="prop-label std">Stacks:</span><span class="prop-value">Zigbee (ZCL, coordinator/router/end), Thread (IPv6/6LoWPAN/RPL), Matter (CSA, sobre Thread/WiFi, IP-based, smart home unificado)</span>
+        <span class="prop-label tool">Ferr.:</span><span class="prop-value">Zigbee2MQTT, Home Assistant, Silicon Labs, Nordic nRF, ESP32-H2 (Thread)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Bluetooth / BLE / Mesh</div>
+      <div class="card-desc">WPAN curto alcance. BLE: baixo consumo (wearables, beacons). BT Mesh: rede de muitos nós. BT 5: maior alcance/taxa.</div>
+      <div class="tag-row"><span class="tag tag-type">WPAN</span><span class="tag tag-task">Wearables / Beacons</span><span class="tag tag-domain">Pessoal / Áudio</span></div>
+      <div class="props">
+        <span class="prop-label band">Faixa:</span><span class="prop-value">2.4 GHz ISM, 40 canais (BLE), GFSK; FHSS (Classic)</span>
+        <span class="prop-label rate">Taxa:</span><span class="prop-value">BR/EDR 1-3 Mbps; BLE 125k-2M (LE Coded/2M PHY); LE Audio (LC3 codec, Auracast)</span>
+        <span class="prop-label std">Versões:</span><span class="prop-value">BT 4.0 (BLE), 5.0 (4x range/2x speed), 5.1 (direction finding AoA/AoD), 5.2 (LE Audio), 5.3/5.4</span>
+        <span class="prop-label spec">Apps:</span><span class="prop-value">Beacons (iBeacon, Eddystone), wearables, BT Mesh (iluminação), fones TWS</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Wi-Fi IoT &mdash; HaLow / 6 / 7</div>
+      <div class="card-desc">Wi-Fi HaLow (802.11ah): sub-GHz, longo alcance p/ IoT. Wi-Fi 6/7 também úteis em IoT de alta taxa indoor.</div>
+      <div class="tag-row"><span class="tag tag-type">WLAN IoT</span><span class="tag tag-task">IoT Médio Alcance</span></div>
+      <div class="props">
+        <span class="prop-label band">HaLow:</span><span class="prop-value">802.11ah, sub-GHz (900 MHz), alcance ~1 km, baixo consumo, milhares de devices/AP</span>
+        <span class="prop-label spec">Apps:</span><span class="prop-value">Câmeras IoT, sensores industriais, smart agriculture; vs Zigbee/BLE: maior taxa, IP nativo</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">Protocolos App IoT &mdash; MQTT / CoAP / AMQP</div>
+      <div class="card-desc">MQTT: pub/sub leve sobre TCP, broker central. CoAP: REST sobre UDP p/ constrained. AMQP: enterprise messaging.</div>
+      <div class="tag-row"><span class="tag tag-type">Aplicação IoT</span><span class="tag tag-task">Mensageria</span><span class="tag tag-domain">Cloud / Edge</span></div>
+      <div class="props">
+        <span class="prop-label std">MQTT:</span><span class="prop-value">OASIS, pub/sub, broker (Mosquitto, EMQX, HiveMQ), QoS 0/1/2, retained, LWT, MQTT-SN (UDP); porta 1883/8883 TLS</span>
+        <span class="prop-label std">CoAP:</span><span class="prop-value">RFC 7252, REST sobre UDP, observe, block-wise, DTLS; p/ devices constrained, 6LoWPAN</span>
+        <span class="prop-label std">Outros:</span><span class="prop-value">AMQP (RabbitMQ), HTTP/REST, WebSocket, LwM2M (device mgmt), OPC-UA (industrial), DDS (real-time)</span>
+      </div>
+    </div>
+    <div class="card net-card">
+      <div class="card-name">6LoWPAN / RPL / Edge / Industrial</div>
+      <div class="card-desc">6LoWPAN: IPv6 comprimido p/ 802.15.4. RPL: roteamento mesh low-power. Edge computing aproxima processamento.</div>
+      <div class="tag-row"><span class="tag tag-type">Rede / Edge IoT</span><span class="tag tag-task">Roteamento / Process.</span><span class="tag tag-domain">Industrial / Edge</span></div>
+      <div class="props">
+        <span class="prop-label std">6LoWPAN:</span><span class="prop-value">RFC 6282 (compress IPv6), RFC 6550 RPL (routing protocol low-power lossy networks), DODAG</span>
+        <span class="prop-label std">Industrial:</span><span class="prop-value">WirelessHART, ISA100.11a, Modbus, PROFINET, EtherCAT, TSN (Time-Sensitive Networking), 5G URLLC</span>
+        <span class="prop-label tool">Edge/Plat:</span><span class="prop-value">AWS IoT Core, Azure IoT Hub, Google Cloud IoT, ThingsBoard, Node-RED, Edge Impulse (TinyML), Arduino/ESP32/RP2040</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-info">
+  Telecom Cheat Sheet Completo v1 &mdash; Prof. Ramon Mayor Martins, Ph.D. &mdash; IFSC Campus São José &mdash; 2026<br>
+  Ref: Sklar / Proakis / Haykin (Digital Comm), Razavi / Pozar (RF), Balanis (Antennas), Rappaport (Wireless), Agrawal / Senior (Fiber Optics), Tanenbaum / Kurose (Networks), 3GPP / ITU-R / IEEE / IETF
+</div>
+
+<script>
+function showSection(id,tab) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.className='nav-tab');
+  document.getElementById('sec-'+id).classList.add('active');
+  tab.classList.add('active-'+id);
+}
+</script>
+</body>
+</html>
