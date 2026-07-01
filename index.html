@@ -181,6 +181,7 @@ header.top-bar {
 .section-header .dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .section-header .dot.orange { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
 .section-header .dot.gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.section-header .dot.violet { background: var(--violet); box-shadow: 0 0 8px var(--violet); }
 .section-header h2 {
   font-family: var(--font-display);
   font-weight: 600; font-size: 13px;
@@ -279,6 +280,18 @@ header.top-bar {
 }
 @keyframes blink { 50% { opacity: 0.3; } }
 
+/* neutral reference tag (cheat sheet) */
+.ref-tag {
+  display: inline-flex; align-items: center;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--bg-0);
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
+}
+
 .lab-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-family: var(--font-display); font-size: 9px;
@@ -344,6 +357,65 @@ header.top-bar {
 }
 .tool-card .card-year {
   font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
+}
+
+/* ========== card stat chips (cheat sheet) ========== */
+.card-stats {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  position: relative; z-index: 1;
+}
+.card-stat-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.card-stat-chip strong {
+  color: var(--red); font-weight: 600;
+}
+
+/* ========== wide / flat cheat sheet card ========== */
+.cheatsheet-wide {
+  flex-direction: row;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 24px;
+}
+.cheatsheet-wide .cs-icon {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; font-size: 24px; flex-shrink: 0;
+  background: var(--red-soft);
+  border: 1px solid rgba(244,63,94,0.2);
+  position: relative; z-index: 1;
+}
+.cheatsheet-wide .cs-main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 5px;
+  position: relative; z-index: 1;
+}
+.cheatsheet-wide .cs-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.cheatsheet-wide .cs-head h3 { line-height: 1.2; }
+.cheatsheet-wide .card-desc { flex: none; }
+.cheatsheet-wide .cs-side {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+}
+.cheatsheet-wide .cs-side .card-stats { justify-content: flex-end; }
+.cheatsheet-wide .cs-meta {
+  display: flex; align-items: center; gap: 12px;
+}
+@media (max-width: 768px) {
+  .cheatsheet-wide { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 18px; }
+  .cheatsheet-wide .cs-side { align-items: flex-start; width: 100%; }
+  .cheatsheet-wide .cs-side .card-stats { justify-content: flex-start; }
 }
 
 /* accent colors */
@@ -451,6 +523,10 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
       <span class="value">ONLINE</span>
     </div>
     <div class="top-stat">
+      <span class="label">Cheat Sheet</span>
+      <span class="value">1</span>
+    </div>
+    <div class="top-stat">
       <span class="label">Labs</span>
       <span class="value">11</span>
     </div>
@@ -464,13 +540,51 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
     </div>
     <div class="top-stat">
       <span class="label">Total</span>
-      <span class="value">18<span class="unit">tools</span></span>
+      <span class="value">19<span class="unit">tools</span></span>
     </div>
   </div>
 </header>
 
 <!-- ========== CONTENT ========== -->
 <div class="content">
+
+  <!-- ============================================================== -->
+  <!--                         CHEAT SHEET                             -->
+  <!-- ============================================================== -->
+  <div class="section-header">
+    <span class="dot red"></span>
+    <h2>Cheat Sheet</h2>
+    <span class="count">1 referência</span>
+  </div>
+
+  <!-- ---- Material de Referência ---- -->
+  <div class="sub-label">Material de Referência</div>
+  <div class="cheatsheet-row">
+
+    <a href="telecom-cheatsheet.html" class="tool-card cheatsheet-wide" data-accent="red">
+      <div class="cs-icon">📚</div>
+      <div class="cs-main">
+        <div class="cs-head">
+          <h3>Telecom Cheat Sheet</h3>
+          <span class="lab-badge red-b">REF</span>
+          <span class="ref-tag">Cheat Sheet</span>
+        </div>
+        <p class="card-desc">Referência abrangente de Telecomunicações cobrindo radiofrequência, antenas, propagação, modulação, enlaces, sistemas celulares, ópticos, via satélite, DSP e redes, com fórmulas, parâmetros e valores típicos por área</p>
+      </div>
+      <div class="cs-side">
+        <div class="card-stats">
+          <span class="card-stat-chip"><strong>~80</strong> Tópicos</span>
+          <span class="card-stat-chip"><strong>10</strong> Áreas</span>
+          <span class="card-stat-chip"><strong>HTML</strong> Formato</span>
+        </div>
+        <div class="cs-meta">
+          <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+          <span class="card-year">2026</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
 
   <!-- ============================================================== -->
   <!--                    LABORATÓRIOS INTERATIVOS                     -->
