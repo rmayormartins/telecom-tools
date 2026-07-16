@@ -115,7 +115,7 @@ input[type="range"]:focus-visible{outline:2px solid var(--vio);outline-offset:2p
 .chip.mod .n{color:var(--text-3);font-size:9px;}
 .chip.mod.active .n{color:var(--vio);}
 .viz-stack{display:none;min-height:0;}
-.viz-stack.active{display:grid;}
+.viz-stack.active{display:grid;flex:1;min-height:0;}
 .vz-1{grid-template-rows:1fr;}
 .vz-rlgc{grid-template-rows:minmax(0,0.9fr) minmax(0,1.1fr);gap:1px;background:var(--border-soft);}
 .vz-cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border-soft);min-height:0;}
@@ -154,6 +154,7 @@ footer em{font-family:var(--font-serif);}
 footer a{color:var(--vio);text-decoration:none;}
 footer a:hover{text-decoration:underline;}
 .m-only{display:none;}
+.app[data-anim="0"] .flowline,.app[data-anim="0"] .sine{animation-play-state:paused!important;}
 .app[data-mod="0"] .section.m0,.app[data-mod="1"] .section.m1,.app[data-mod="2"] .section.m2,.app[data-mod="3"] .section.m3,.app[data-mod="4"] .section.m4{display:block;}
 @media (prefers-reduced-motion: reduce){
 .brand .tl-mark .sine,.flowline{animation:none!important;}
@@ -205,6 +206,7 @@ main{grid-template-columns:1fr;}
       <div class="field"><label>G <span class="rv" id="r0Gv"></span></label><input type="range" id="r0G" min="0" max="500" step="0.5" value="0"><div class="help">condut&acirc;ncia shunt, &micro;S/m</div></div>
       <div class="field"><label>C <span class="rv" id="r0Cv"></span></label><input type="range" id="r0C" min="10" max="300" step="1" value="100"><div class="help">capacit&acirc;ncia shunt, pF/m</div></div>
       <div class="field"><label>Frequ&ecirc;ncia <span class="rv" id="r0Fv"></span></label><input type="range" id="r0F" min="3" max="9" step="0.01" value="7"><div class="help">escala log &middot; 1 kHz a 1 GHz</div></div>
+      <div class="field"><label>Comprimento &#8467; <span class="rv" id="r0lenv"></span></label><input type="range" id="r0len" min="0" max="4" step="0.01" value="2"><div class="help">escala log &middot; 1 m a 10 km &middot; perdas e atraso totais</div></div>
     </div></div>
 
     <div class="section m-only m1"><div class="section-head open" data-toggle><h3><span class="dot cyan"></span>Linha e Carga</h3><span class="chev">&#9654;</span></div><div class="section-body open">
@@ -214,13 +216,14 @@ main{grid-template-columns:1fr;}
       <label class="ck"><input type="checkbox" id="k1open"> Carga em aberto (ZL &rarr; &infin;)</label>
       <label class="ck"><input type="checkbox" id="k1cur"> Mostrar envolt&oacute;ria de corrente</label>
       <div class="field"><label>Velocidade <span class="rv" id="r1spdv"></span></label><input type="range" id="r1spd" min="0.1" max="3" step="0.05" value="1"></div>
-      <div class="help">linha sem perdas, comprimento 2&lambda; &middot; carga &agrave; direita</div>
+      <div class="help">linha sem perdas, comprimento 2&lambda; &middot; carga &agrave; direita &middot; arraste no gr&aacute;fico para mover a sonda</div>
     </div></div>
 
     <div class="section m-only m2"><div class="section-head open" data-toggle><h3><span class="dot cyan"></span>Carga</h3><span class="chev">&#9654;</span></div><div class="section-body open">
       <div class="field"><label>Z0 <span class="rv" id="r2z0v"></span></label><input type="range" id="r2z0" min="10" max="200" step="1" value="50"></div>
       <div class="field"><label>RL <span class="rv" id="r2rlv"></span></label><input type="range" id="r2rl" min="0" max="500" step="1" value="25"></div>
       <div class="field"><label>XL <span class="rv" id="r2xlv"></span></label><input type="range" id="r2xl" min="-300" max="300" step="1" value="-60"></div>
+      <label class="ck"><input type="checkbox" id="k2fine"> Grade fina</label>
       <div class="help">arraste o ponto na carta para editar ZL</div>
     </div></div>
     <div class="section m-only m2"><div class="section-head open" data-toggle><h3><span class="dot amber"></span>Rota&ccedil;&atilde;o</h3><span class="chev">&#9654;</span></div><div class="section-body open">
@@ -259,6 +262,7 @@ main{grid-template-columns:1fr;}
     <div class="section m-only m4"><div class="section-head open" data-toggle><h3><span class="dot green"></span>Sonda e Tempo</h3><span class="chev">&#9654;</span></div><div class="section-body open">
       <div class="field"><label>Posi&ccedil;&atilde;o da sonda <span class="rv" id="r4xv"></span></label><input type="range" id="r4x" min="0" max="1" step="0.01" value="0"></div>
       <div class="field"><label>Tempo t <span class="rv" id="r4tv"></span></label><input type="range" id="r4t" min="0" max="10" step="0.02" value="2.5"></div>
+      <label class="ck"><input type="checkbox" id="k4cur"> Mostrar corrente (i&middot;Z0)</label>
       <div class="help">sonda em 0 = TDR na entrada &middot; Animar varre o tempo</div>
     </div></div>
 
@@ -310,6 +314,9 @@ main{grid-template-columns:1fr;}
       <div class="kv"><span class="k">vp</span><span class="v acc" id="v0vp">--</span></div>
       <div class="kv"><span class="k">vp / c</span><span class="v acc" id="v0vpc">--</span></div>
       <div class="kv"><span class="k">&lambda;</span><span class="v" id="v0lam">--</span></div>
+      <div class="kv"><span class="k">Perda total em &#8467;</span><span class="v bad" id="v0lt">--</span></div>
+      <div class="kv"><span class="k">Atraso em &#8467;</span><span class="v" id="v0dl">--</span></div>
+      <div class="kv"><span class="k">&#8467; / &lambda;</span><span class="v" id="v0nl">--</span></div>
       <div id="v0disp"></div>
     </div></div>
 
@@ -321,6 +328,9 @@ main{grid-template-columns:1fr;}
       <div class="kv"><span class="k">Perda de retorno</span><span class="v" id="v1rl">--</span></div>
       <div class="kv"><span class="k">1&ordm; m&iacute;nimo (da carga)</span><span class="v acc" id="v1dmin">--</span></div>
       <div class="kv"><span class="k">1&ordm; m&aacute;ximo (da carga)</span><span class="v good" id="v1dmax">--</span></div>
+      <div class="kv"><span class="k">Sonda d</span><span class="v vio-c" id="v1pd">--</span></div>
+      <div class="kv"><span class="k">|V| na sonda</span><span class="v" id="v1pv">--</span></div>
+      <div class="kv"><span class="k">|I|&middot;Z0 na sonda</span><span class="v" id="v1pi">--</span></div>
       <div class="info-box" id="v1note">A envolt&oacute;ria se repete a cada 0.5&lambda;. Na t&eacute;cnica da linha fendida, d(m&iacute;nimo) e VSWR determinam ZL.</div>
     </div></div>
 
@@ -331,6 +341,7 @@ main{grid-template-columns:1fr;}
       <div class="kv"><span class="k">Perda de retorno</span><span class="v" id="v2rl">--</span></div>
     </div></div>
     <div class="section m-only m2"><div class="section-head open" data-toggle><h3><span class="dot amber"></span>Ap&oacute;s girar d</h3><span class="chev">&#9654;</span></div><div class="section-body open">
+      <div class="kv"><span class="k">Rota&ccedil;&atilde;o 2&beta;d</span><span class="v" id="v2rot">--</span></div>
       <div class="kv"><span class="k">z(d)</span><span class="v" id="v2zd">--</span></div>
       <div class="kv"><span class="k">Z(d)</span><span class="v acc" id="v2Zd">--</span></div>
       <div class="kv"><span class="k">y(d)</span><span class="v" id="v2yd">--</span></div>
@@ -366,7 +377,7 @@ main{grid-template-columns:1fr;}
 </div>
 </main>
 <footer>
-  <span><b style="color:var(--vio)">&Gamma;</b>TL Lab v1.0 &middot; D. Pozar, <em>Microwave Engineering</em> &middot; F. Ulaby, <em>Applied Electromagnetics</em></span>
+  <span><b style="color:var(--vio)">&Gamma;</b>TL Lab v1.1 &middot; teclas 1..5 e espa&ccedil;o &middot; D. Pozar, <em>Microwave Engineering</em> &middot; F. Ulaby, <em>Applied Electromagnetics</em></span>
   <span><a href="index.html">telecom-tools</a> &middot; Prof. Ramon Mayor Martins &middot; IFSC</span>
 </footer>
 </div>
@@ -477,14 +488,14 @@ function qwGamma(fn,ZL,Z0,qw){
   return cabs(refl(Zi,Z0));
 }
 
-// Transitorios: tensao na posicao x (0..1) no tempo t (unidades de T)
-function bounceV(x,t,V1,gs,gl){
+// Transitorios: tensao (sgn=+1) ou corrente*Z0 (sgn=-1) na posicao x (0..1), tempo t em T
+function bounceV(x,t,V1,gs,gl,sgn=1){
   const P=gs*gl;let v=0,pw=1;
   for(let m=0;m<=60;m++){
     const tf=2*m+x,tb=2*m+2-x;
     let used=false;
     if(tf<=t){v+=V1*pw;used=true;}
-    if(tb<=t){v+=V1*gl*pw;used=true;}
+    if(tb<=t){v+=sgn*V1*gl*pw;used=true;}
     if(!used&&tf>t&&tb>t)break;
     pw*=P;
     if(Math.abs(pw)<1e-9&&m>2)break;
@@ -511,6 +522,7 @@ function u(s){return '<span class="unit">'+s+'</span>';}
 
 // ---------- canvas ----------
 const FMONO='JetBrains Mono, monospace';
+const HOV={},PMAP={};
 function fit(cv){
   const dpr=window.devicePixelRatio||1;
   const w=cv.clientWidth||10,h=cv.clientHeight||10;
@@ -534,12 +546,15 @@ function plot(cv,cfg){
   const FX=cfg.logx?Math.log10:(x=>x);
   const X0=FX(cfg.x0),X1=FX(cfg.x1);
   let y0=cfg.y0,y1=cfg.y1;
-  if(y0===undefined){
-    y0=Infinity;y1=-Infinity;
-    for(const s of cfg.series)for(const p of s.pts){if(p&&isFinite(p[1])){if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];}}
-    if(!isFinite(y0)){y0=0;y1=1;}
+  if(y0===undefined||y1===undefined){
+    let lo=Infinity,hi=-Infinity;
+    for(const s of cfg.series)for(const p of s.pts){if(p&&isFinite(p[1])){if(p[1]<lo)lo=p[1];if(p[1]>hi)hi=p[1];}}
+    if(!isFinite(lo)){lo=0;hi=1;}
+    if(hi-lo<1e-12){lo-=1;hi+=1;}
+    const mg=(hi-lo)*0.1;
+    if(y0===undefined)y0=lo-mg;
+    if(y1===undefined)y1=hi+mg;
     if(y1-y0<1e-12){y0-=1;y1+=1;}
-    const m=(y1-y0)*0.1;y0-=m;y1+=m;
   }
   const px=x=>padL+(FX(x)-X0)/(X1-X0)*pw;
   const py=y=>padT+(1-(y-y0)/(y1-y0))*ph;
@@ -584,8 +599,48 @@ function plot(cv,cfg){
   g.fillStyle='#6b7889';g.font='9.5px '+FMONO;
   if(cfg.xl){g.textAlign='center';g.textBaseline='bottom';g.fillText(cfg.xl,padL+pw/2,H-1);}
   if(cfg.yl){g.textAlign='left';g.textBaseline='top';g.fillText(cfg.yl,padL+4,3);}
+  // crosshair de leitura (hover / toque)
+  PMAP[cv.id]={x0:cfg.x0,x1:cfg.x1,logx:!!cfg.logx,padL,pw};
+  const hx=HOV[cv.id];
+  if(hx!=null&&hx>=Math.min(cfg.x0,cfg.x1)&&hx<=Math.max(cfg.x0,cfg.x1)){
+    const HX=px(hx);
+    g.strokeStyle='rgba(230,236,245,0.3)';g.setLineDash([2,3]);
+    g.beginPath();g.moveTo(HX,padT);g.lineTo(HX,padT+ph);g.stroke();g.setLineDash([]);
+    g.font='9.5px '+FMONO;g.textAlign='right';g.textBaseline='top';
+    let ty=padT+3;
+    g.fillStyle='#b6c2d4';
+    g.fillText(cfg.hxfmt?cfg.hxfmt(hx):''+ +hx.toPrecision(3),padL+pw-4,ty);ty+=12;
+    const LHX=cfg.logx?Math.log10(hx):hx;
+    for(const s of cfg.series){
+      let best=null,bd=Infinity;
+      for(const p of s.pts){
+        if(!p||!isFinite(p[1]))continue;
+        const dd=Math.abs((cfg.logx?Math.log10(p[0]):p[0])-LHX);
+        if(dd<bd){bd=dd;best=p;}
+      }
+      if(best){
+        g.fillStyle=s.color;
+        g.beginPath();g.arc(px(best[0]),Math.max(padT,Math.min(padT+ph,py(best[1]))),3,0,TAU);g.fill();
+        g.fillText(''+ +best[1].toPrecision(4),padL+pw-4,ty);ty+=12;
+      }
+    }
+  }
   return {px,py,padL,padT,pw,ph,g,y0,y1};
 }
+['c0a','c0v','c0z','c3a','c3b','c3c','c4v','c4f'].forEach(id=>{
+  const cv=$(id);
+  cv.addEventListener('pointermove',e=>{
+    const pm=PMAP[id];if(!pm)return;
+    const rc=cv.getBoundingClientRect();
+    const fr=(e.clientX-rc.left-pm.padL)/pm.pw;
+    if(fr<0||fr>1){if(HOV[id]!=null){delete HOV[id];uCurrent();}return;}
+    let x;
+    if(pm.logx){const l0=Math.log10(pm.x0),l1=Math.log10(pm.x1);x=Math.pow(10,l0+fr*(l1-l0));}
+    else x=pm.x0+fr*(pm.x1-pm.x0);
+    HOV[id]=x;uCurrent();
+  });
+  cv.addEventListener('pointerleave',()=>{if(HOV[id]!=null){delete HOV[id];uCurrent();}});
+});
 // ================= MODULO 0 : LINHA RLGC =================
 const VIO='#a78bfa',VIOB='#c4b5fd',CYAN='#38bdf8',AMBER='#fbbf24',ROSE='#fb7185',PHOS='#4ade80',TEAL='#2dd4bf',MUT='#6b7889';
 function xfmtHz(v){const e=Math.round(Math.log10(v));if(e>=9)return (v/1e9)+'G';if(e>=6)return (v/1e6)+'M';if(e>=3)return (v/1e3)+'k';return v+'';}
@@ -665,6 +720,11 @@ function u0(){
   $('v0vp').innerHTML=fsi(vp,'m/s',3);
   $('v0vpc').innerHTML=fnum(vp/C_LIGHT,3)+u('c');
   $('v0lam').innerHTML=fsi(lam,'m',3);
+  const len=Math.pow(10,+$('r0len').value);
+  $('r0lenv').textContent=fsi(len,'m',3);
+  $('v0lt').innerHTML=fsi(al*8.685889638*len,'dB',3);
+  $('v0dl').innerHTML=fsi(len/vp,'s',3);
+  $('v0nl').innerHTML=fnum(len/lam,1)+u('\u03BB');
   let badge;
   if(R<1e-9&&G<1e-12)badge='<div class="info-box ok"><strong>Sem perdas:</strong> \u03B1 = 0, vp = 1/\u221A(LC) constante, Z0 real. N\u00E3o h\u00E1 dispers\u00E3o.</div>';
   else{
@@ -683,14 +743,14 @@ function u0(){
     Z.push([fx,cabs(r.Z0)]);
   }
   const vl=[{x:f,color:VIOB}];
-  plot($('c0a'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,series:[{pts:A,color:ROSE,glow:1}],vlines:vl,xl:'f',yl:'dB/m',y0:0});
-  plot($('c0v'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,series:[{pts:V,color:CYAN,glow:1}],vlines:vl,xl:'f',yl:'vp/c',y0:0});
-  plot($('c0z'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,series:[{pts:Z,color:VIO,glow:1}],vlines:vl,xl:'f',yl:'\u03A9'});
+  plot($('c0a'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,hxfmt:v=>fsi(v,'Hz',3),series:[{pts:A,color:ROSE,glow:1}],vlines:vl,xl:'f',yl:'dB/m',y0:0});
+  plot($('c0v'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,hxfmt:v=>fsi(v,'Hz',3),series:[{pts:V,color:CYAN,glow:1}],vlines:vl,xl:'f',yl:'vp/c',y0:0});
+  plot($('c0z'),{x0:1e3,x1:1e9,logx:true,xfmt:xfmtHz,hxfmt:v=>fsi(v,'Hz',3),series:[{pts:Z,color:VIO,glow:1}],vlines:vl,xl:'f',yl:'\u03A9'});
   setHS(fnum(cabs(Z0),1),'--','--');
 }
 
 // ================= MODULO 1 : ONDAS ESTACIONARIAS =================
-let m1phase=0;
+let m1phase=0,m1probe=0.25;
 function m1gam(){
   if($('k1open').checked)return cpx(1,0);
   const z0=+$('r1z0').value;
@@ -715,6 +775,10 @@ function u1(){
   }else{
     $('v1dmin').innerHTML='--';$('v1dmax').innerHTML='--';
   }
+  $('v1pd').innerHTML=fnum(m1probe,3)+u('\u03BB');
+  const Ge=cmul(G,cexpj(-4*PI*m1probe));
+  $('v1pv').innerHTML=fnum(cabs(cadd(cpx(1,0),Ge)),3);
+  $('v1pi').innerHTML=fnum(cabs(csub(cpx(1,0),Ge)),3);
   setHS(z0+'',fnum(gm,3),isFinite(S)?fnum(S,2):'\u221E');
   draw1();
 }
@@ -784,6 +848,23 @@ function draw1(){
       g.fillStyle=PHOS;g.beginPath();g.moveTo(X,padT+2);g.lineTo(X-4,padT-6);g.lineTo(X+4,padT-6);g.closePath();g.fill();
     }
   }
+  // sonda arrastavel
+  {
+    const dP=m1probe,XP=xp(Lw-dP);
+    const GeP=cmul(G,cexpj(-4*PI*dP));
+    const eV=cabs(cadd(cpx(1,0),GeP)),eI=cabs(csub(cpx(1,0),GeP));
+    g.strokeStyle=VIOB;g.setLineDash([4,3]);g.lineWidth=1.2;
+    g.beginPath();g.moveTo(XP,padT);g.lineTo(XP,padT+ph);g.stroke();g.setLineDash([]);
+    g.fillStyle=VIOB;
+    g.beginPath();g.arc(XP,mid-eV*sy,3.5,0,TAU);g.fill();
+    g.beginPath();g.arc(XP,mid+eV*sy,3.5,0,TAU);g.fill();
+    g.font='9.5px '+FMONO;
+    const right=XP>padL+pw-120;
+    g.textAlign=right?'right':'left';g.textBaseline='top';
+    const tx=right?XP-6:XP+6;
+    g.fillText('d = '+dP.toFixed(3)+' \u03BB',tx,padT+3);
+    g.fillText('|V| = '+eV.toFixed(3)+'  |I|Z0 = '+eI.toFixed(3),tx,padT+15);
+  }
   // gerador e carga
   g.fillStyle='#8fa0b8';g.font='12px '+FMONO;g.textAlign='center';g.textBaseline='middle';
   g.strokeStyle='#8fa0b8';g.beginPath();g.arc(padL-16,mid,10,0,TAU);g.stroke();
@@ -792,6 +873,23 @@ function draw1(){
   g.fillRect(padL+pw+6,mid-34,6,68);g.shadowBlur=0;
   g.fillStyle=VIOB;g.font='10px '+FMONO;g.fillText('ZL',padL+pw+9,mid+46);
 }
+// sonda: arraste no grafico de ondas
+(function(){
+  const cv=$('c1');let dg=false;
+  function ap(e){
+    const rc=cv.getBoundingClientRect();
+    const padL=40,padR=30,pw=rc.width-padL-padR;
+    if(pw<10)return;
+    let fr=(e.clientX-rc.left-padL)/pw;
+    fr=Math.max(0,Math.min(1,fr));
+    m1probe=Math.round((2-fr*2)*1000)/1000;
+    u1();
+  }
+  cv.addEventListener('pointerdown',e=>{dg=true;cv.setPointerCapture(e.pointerId);ap(e);});
+  cv.addEventListener('pointermove',e=>{if(dg)ap(e);});
+  cv.addEventListener('pointerup',()=>{dg=false;});
+  cv.addEventListener('pointercancel',()=>{dg=false;});
+})();
 // ================= MODULO 2 : CARTA DE SMITH =================
 function m2z(){return cpx(+$('r2rl').value,+$('r2xl').value);}
 function u2(){
@@ -806,6 +904,7 @@ function u2(){
   $('v2g').innerHTML=fnum(gm,4)+' \u2220 '+fnum(carg(G)*180/PI,1)+u('\u00B0');
   $('v2s').innerHTML=isFinite(S)?fnum(S,3):'\u221E';
   $('v2rl').innerHTML=gm<1e-9?'\u221E'+u('dB'):fnum(-20*Math.log10(gm),2)+u('dB');
+  $('v2rot').innerHTML=fnum(720*d,1)+u('\u00B0');
   const Gr=cmul(G,cexpj(-4*PI*d));
   const den=csub(cpx(1,0),Gr);
   if(cabs(den)<1e-6){
@@ -840,13 +939,14 @@ function draw2(){
   // circulos r constantes
   g.lineWidth=1;
   const rset=[0.2,0.5,1,2,5];
-  for(const r of rset){
+  const rsetG=$('k2fine').checked?[0.1,0.2,0.3,0.5,0.7,1,1.5,2,3,5,10]:rset;
+  for(const r of rsetG){
     g.strokeStyle=r===1?'rgba(107,120,137,0.42)':'rgba(107,120,137,0.18)';
     g.beginPath();g.arc(cx+r/(1+r)*R,cy,R/(1+r),0,TAU);g.stroke();
   }
   // arcos x constantes (recorte no circulo unitario)
   g.save();g.beginPath();g.arc(cx,cy,R,0,TAU);g.clip();
-  for(const x of rset){
+  for(const x of rsetG){
     for(const s of [1,-1]){
       g.strokeStyle=x===1?'rgba(107,120,137,0.42)':'rgba(107,120,137,0.18)';
       g.beginPath();g.arc(cx+R,cy-s*R/x,R/x,0,TAU);g.stroke();
@@ -875,6 +975,16 @@ function draw2(){
   if(gm>0.004){
     g.strokeStyle=VIO;g.globalAlpha=0.6;g.setLineDash([5,5]);g.lineWidth=1.2;
     g.beginPath();g.arc(cx,cy,gm*R,0,TAU);g.stroke();g.setLineDash([]);g.globalAlpha=1;
+  }
+  // Vmax / Vmin no eixo real
+  if(gm>0.03){
+    g.fillStyle=PHOS;g.fillRect(cx+gm*R-2.5,cy-2.5,5,5);
+    g.fillStyle=ROSE;g.fillRect(cx-gm*R-2.5,cy-2.5,5,5);
+    if(gm>0.12){
+      g.font='8.5px '+FMONO;g.textAlign='center';g.textBaseline='top';
+      g.fillStyle=PHOS;g.fillText('Vmax',cx+gm*R,cy+5);
+      g.fillStyle=ROSE;g.fillText('Vmin',cx-gm*R,cy+5);
+    }
   }
   // arco de rotacao rumo ao gerador
   if(gm>0.004&&d>0.0005){
@@ -1024,8 +1134,10 @@ function u3(){
     yp.push([dd,yv>12?NaN:yv]);
   }
   const mks=st.sols.map((s,i)=>({x:s.d,y:1,color:i?AMBER:ROSE,r:4.5,halo:true,label:i?'B':'A'}));
+  const vl3=[];
+  if(st.status==='ok'&&st.sols[m3sel])vl3.push({x:st.sols[m3sel].d,color:m3sel?AMBER:ROSE,dash:[3,3]});
   plot($('c3c'),{x0:0,x1:0.5,xn:5,series:[{pts:yp,color:TEAL,glow:1}],
-    hlines:[{y:1,color:'rgba(74,222,128,0.7)',dash:[5,4],label:'Re{y}=1'}],marks:mks,xl:'d/\u03BB',yl:'Re{y}'});
+    hlines:[{y:1,color:'rgba(74,222,128,0.7)',dash:[5,4],label:'Re{y}=1'}],marks:mks,vlines:vl3,xl:'d/\u03BB',yl:'Re{y}'});
   if(st.status==='matched'){
     $('v3msg').innerHTML='<div class="info-box ok"><strong>Carga j\u00E1 casada:</strong> \u0393L \u2248 0, nenhum estube \u00E9 necess\u00E1rio.</div>';
     $('sol1').style.display='none';$('sol2').style.display='none';
@@ -1078,10 +1190,15 @@ function u4(){
   else if(!st.conv)note='<div class="info-box warn"><strong>Ressonante:</strong> |\u0393s\u00B7\u0393L| \u2248 1 sem perdas, a soma de reflex\u00F5es n\u00E3o converge. Perdas reais amortecem o processo.</div>';
   $('v4note').innerHTML=note;
   // limites de amplitude para os plots
+  const showI=$('k4cur').checked;
   let lo=0,hi=0;
   for(let tt=0;tt<=10.01;tt+=0.25)for(const xx of [0,0.25,0.5,0.75,1]){
     const v=bounceV(xx,tt,st.V1,st.gs,st.gl);
     if(v<lo)lo=v;if(v>hi)hi=v;
+    if(showI){
+      const iv=bounceV(xx,tt,st.V1,st.gs,st.gl,-1);
+      if(iv<lo)lo=iv;if(iv>hi)hi=iv;
+    }
   }
   if(st.conv){if(st.Vinf<lo)lo=st.Vinf;if(st.Vinf>hi)hi=st.Vinf;}
   const m=(hi-lo)*0.12+0.05;
@@ -1138,31 +1255,39 @@ function draw4b(st){
   g.fillText('sonda',xp(px_),padT-2);
 }
 function draw4v(st){
-  const N=1200,pts=[];
+  const N=1200,pts=[],ipts=[];
+  const showI=$('k4cur').checked;
   const px_=+$('r4x').value,tt=+$('r4t').value;
   for(let i=0;i<=N;i++){
     const t=i/N*10;
     pts.push([t,bounceV(px_,t,st.V1,st.gs,st.gl)]);
+    if(showI)ipts.push([t,bounceV(px_,t,st.V1,st.gs,st.gl,-1)]);
   }
+  const ser=[{pts,color:PHOS,glow:1,w:1.8}];
+  if(showI)ser.push({pts:ipts,color:TEAL,dash:[5,3],w:1.4});
   const hl=[{y:0,color:'rgba(107,120,137,0.4)',dash:[2,4]}];
   if(st.conv)hl.push({y:st.Vinf,color:'rgba(74,222,128,0.65)',dash:[6,4],label:'v(\u221E)'});
   plot($('c4v'),{x0:0,x1:10,xn:5,y0:m4bounds.lo,y1:m4bounds.hi,
-    series:[{pts,color:PHOS,glow:1,w:1.8}],hlines:hl,
+    series:ser,hlines:hl,
     vlines:[{x:tt,color:VIOB}],
     marks:[{x:tt,y:bounceV(px_,tt,st.V1,st.gs,st.gl),color:VIOB,r:4,halo:true}],
     xl:'t/T',yl:'V'});
 }
 function draw4f(st){
-  const N=360,pts=[];
+  const N=360,pts=[],ipts=[];
+  const showI=$('k4cur').checked;
   const tt=+$('r4t').value,px_=+$('r4x').value;
   for(let i=0;i<=N;i++){
     const x=i/N;
     pts.push([x,bounceV(x,tt,st.V1,st.gs,st.gl)]);
+    if(showI)ipts.push([x,bounceV(x,tt,st.V1,st.gs,st.gl,-1)]);
   }
+  const ser=[{pts,color:CYAN,glow:1,w:1.8}];
+  if(showI)ser.push({pts:ipts,color:TEAL,dash:[5,3],w:1.4});
   const hl=[{y:0,color:'rgba(107,120,137,0.4)',dash:[2,4]}];
   if(st.conv)hl.push({y:st.Vinf,color:'rgba(74,222,128,0.5)',dash:[6,4]});
   plot($('c4f'),{x0:0,x1:1,xn:4,y0:m4bounds.lo,y1:m4bounds.hi,
-    series:[{pts,color:CYAN,glow:1,w:1.8}],hlines:hl,
+    series:ser,hlines:hl,
     vlines:[{x:px_,color:VIOB}],xl:'z/L',yl:'V'});
 }
 
@@ -1261,15 +1386,16 @@ document.querySelectorAll('[data-toggle]').forEach(h=>{
     h.nextElementSibling.classList.toggle('open');
   });
 });
-const DEFAULTS={r0R:0.3,r0L:250,r0G:0,r0C:100,r0F:7,r1z0:50,r1rl:100,r1xl:50,r1spd:1,r2z0:50,r2rl:25,r2xl:-60,r2d:0,r3z0:50,r3rl:60,r3xl:-80,r3d:0.1,r3gm:0.2,r4vs:1,r4rs:25,r4rl:100,r4x:0,r4t:2.5};
-const CKDEF={k1open:false,k1cur:false,k2adm:false,k3short:true,k3open:false,k4open:false};
+const DEFAULTS={r0R:0.3,r0L:250,r0G:0,r0C:100,r0F:7,r0len:2,r1z0:50,r1rl:100,r1xl:50,r1spd:1,r2z0:50,r2rl:25,r2xl:-60,r2d:0,r3z0:50,r3rl:60,r3xl:-80,r3d:0.1,r3gm:0.2,r4vs:1,r4rs:25,r4rl:100,r4x:0,r4t:2.5};
+const CKDEF={k1open:false,k1cur:false,k2adm:false,k2fine:false,k3short:true,k3open:false,k4open:false,k4cur:false};
 $('btn-reset').addEventListener('click',()=>{
   for(const k in DEFAULTS)$(k).value=DEFAULTS[k];
   for(const k in CKDEF)$(k).checked=CKDEF[k];
-  m1phase=0;m3sel=0;
+  m1phase=0;m3sel=0;m1probe=0.25;
   uCurrent();
 });
 function setAnimBtn(){
+  $('app').dataset.anim=ANIM?'1':'0';
   $('btn-anim-t').textContent=ANIM?'Pausar':'Animar';
   $('btn-anim').querySelector('svg').innerHTML=ANIM
     ?'<rect x="5" y="4" width="4" height="16"/><rect x="15" y="4" width="4" height="16"/>'
@@ -1300,6 +1426,12 @@ function loop(now){
   }
   requestAnimationFrame(loop);
 }
+window.addEventListener('keydown',e=>{
+  if(e.target&&e.target.matches&&e.target.matches('input,textarea'))return;
+  if(e.key>='1'&&e.key<='5'){setMod(+e.key-1);}
+  else if(e.key===' '){e.preventDefault();ANIM=!ANIM;setAnimBtn();}
+});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>uCurrent());
 setMod(0);
 requestAnimationFrame(loop);
 </script>
