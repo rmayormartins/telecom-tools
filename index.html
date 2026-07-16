@@ -140,6 +140,23 @@ header.top-bar {
   font-style: italic; font-family: var(--font-serif);
   font-size: 14px; color: var(--red); letter-spacing: 0.04em;
 }
+.brand-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.brand-title-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand-byline {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+.brand-byline a {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--text-1); transition: color 0.15s;
+}
+.brand-byline a:hover { color: var(--red); text-decoration: underline; }
+.brand-byline .gh-icon { color: var(--text-2); transition: color 0.15s; }
+.brand-byline a:hover .gh-icon { color: var(--red); }
+.brand-byline .sep { color: var(--text-3); }
+.brand-byline .dash { color: var(--text-3); }
 
 .top-stats {
   display: flex; gap: 18px; margin-left: auto;
@@ -514,8 +531,21 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
 <header class="top-bar">
   <div class="brand">
     <span class="logo-mark"></span>
-    <h1>TELECOM TOOLS</h1>
-    <span class="tag">Laboratórios <em>Interativos de Telecom</em></span>
+    <div class="brand-text">
+      <div class="brand-title-row">
+        <h1>TELECOM TOOLS</h1>
+        <span class="tag">Laboratórios <em>Interativos de Telecom</em></span>
+      </div>
+      <div class="brand-byline">
+        <a href="https://rmayormartins.github.io" target="_blank" rel="noopener">Author Ramon Mayor Martins, Ph.D.</a>
+        <span class="sep">·</span>
+        <a href="https://github.com/rmayormartins" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden="true" style="vertical-align:-1px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>@rmayormartins</a>
+        <span class="sep">·</span>
+        <a href="https://www.ifsc.edu.br/web/campus-sao-jose" target="_blank" rel="noopener">IFSC SJ</a>
+        <span class="dash">-</span>
+        <a href="https://wiki.sj.ifsc.edu.br/index.php/P%C3%A1gina_principal" target="_blank" rel="noopener">Área de Telecomunicações</a>
+      </div>
+    </div>
   </div>
   <div class="top-stats">
     <div class="top-stat live">
@@ -528,7 +558,7 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
     </div>
     <div class="top-stat">
       <span class="label">Labs</span>
-      <span class="value">15</span>
+      <span class="value">16</span>
     </div>
     <div class="top-stat">
       <span class="label">Commanders</span>
@@ -540,7 +570,7 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
     </div>
     <div class="top-stat">
       <span class="label">Total</span>
-      <span class="value">23<span class="unit">tools</span></span>
+      <span class="value">24<span class="unit">tools</span></span>
     </div>
   </div>
 </header>
@@ -592,7 +622,7 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
   <div class="section-header">
     <span class="dot red"></span>
     <h2>Laboratórios Interativos</h2>
-    <span class="count">15 labs</span>
+    <span class="count">16 labs</span>
   </div>
 
   <!-- ---- LABs ---- -->
@@ -657,6 +687,22 @@ footer .ts a:hover { color: var(--red); text-decoration: underline; }
       </div>
       <h3>Transmission Line LAB</h3>
       <p class="card-desc">Laboratório interativo de linhas de transmissão, ondas estacionárias e carta de Smith</p>
+      <div class="card-footer">
+        <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
+        <span class="card-year">2026</span>
+      </div>
+    </a>
+
+    <a href="microwave-lab.html" class="tool-card" data-accent="red">
+      <div class="card-top">
+        <div class="card-icon red-icon">🔬</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span class="lab-badge red-b">LAB</span>
+          <span class="status-badge"><span class="live-dot"></span> Running</span>
+        </div>
+      </div>
+      <h3>Microwave LAB</h3>
+      <p class="card-desc">Laboratório interativo de micro-ondas, guias de onda, microstrip, parâmetros S e cavidades ressonantes</p>
       <div class="card-footer">
         <span class="card-author"><span class="avatar">RM</span> rmayormartins</span>
         <span class="card-year">2026</span>
