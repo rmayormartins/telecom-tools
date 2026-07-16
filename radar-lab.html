@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Radar Lab · Laboratório de Sistemas Radar</title>
+<meta name="description" content="Laboratório interativo de sistemas radar: equação radar com detecção Pd/Pfa (Albersheim), ambiguidades de PRF e eco de segunda volta, Doppler e MTI com velocidades cegas, compressão de pulso LFM com filtro casado real e display PPI animado com persistência de fósforo." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  /* palette - mission control / deep space observatory */
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  /* canais de instrumentacao */
+  --phos: #4ade80;            /* accent do lab: fosforo do PPI, eco, ok */
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;            /* dados / filtros / referencia */
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;           /* pulso TX / energia */
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+
+  --rose: #fb7185;            /* ameaca / fantasma / zona cega */
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;          /* Doppler / MTI */
+  --violet-soft: #4c1d9540;
+
+  /* spacing */
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  /* fonts */
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, #0d2137 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #0d2b1a 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+/* grade sutil de fundo */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== layout ========== */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+/* ========== header ========== */
+header.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; flex-direction: column; gap: 1px; min-width: 200px; }
+.brand-line { display: flex; align-items: baseline; gap: 8px; }
+.brand h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--text-0);
+}
+.brand h1 .hl { color: var(--phos); text-shadow: 0 0 14px var(--phos-glow); }
+.ver {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--phos);
+  border: 1px solid var(--phos);
+  border-radius: 3px;
+  padding: 1px 5px;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+.tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+nav.tabs { display: flex; gap: 6px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+nav.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.tab:hover { color: var(--text-1); border-color: var(--border-strong); }
+.tab.on {
+  color: var(--phos);
+  border-color: var(--phos);
+  background: linear-gradient(180deg, #0a1f12, var(--bg-panel));
+  text-shadow: 0 0 12px var(--phos-glow);
+}
+.tab:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.hud { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.clock {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-1);
+  letter-spacing: 0.08em;
+}
+.clock small { color: var(--text-3); font-size: 9px; margin-left: 4px; }
+.led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--phos);
+  box-shadow: 0 0 10px var(--phos);
+  animation: pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .led { animation: none; }
+  * { transition: none !important; }
+}
+
+/* ========== main / modulos ========== */
+main { min-height: 0; padding: var(--gap); }
+.mod {
+  display: none;
+  grid-template-columns: 300px minmax(0, 1fr) 300px;
+  gap: var(--gap);
+  height: 100%;
+  min-height: 0;
+}
+.mod.on { display: grid; }
+.col { min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: var(--gap); padding-right: 2px; }
+.col::-webkit-scrollbar { width: 8px; }
+.col::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.col::-webkit-scrollbar-track { background: transparent; }
+
+/* ========== paineis e secoes ========== */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sec-h {
+  width: 100%;
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-panel));
+  border: none;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  padding: 9px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.sec-h .chev { margin-left: auto; color: var(--text-3); font-size: 10px; transition: transform .15s; }
+.panel.closed .chev { transform: rotate(-90deg); }
+.panel.closed .sec-b { display: none; }
+.sec-b { padding: 12px; display: flex; flex-direction: column; gap: 11px; }
+
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.d-amber  { background: var(--amber);  box-shadow: 0 0 8px var(--amber-glow); }
+.d-cyan   { background: var(--cyan);   box-shadow: 0 0 8px var(--cyan-glow); }
+.d-phos   { background: var(--phos);   box-shadow: 0 0 8px var(--phos-glow); }
+.d-violet { background: var(--violet); box-shadow: 0 0 8px var(--violet-soft); }
+.d-rose   { background: var(--rose);   box-shadow: 0 0 8px var(--rose-soft); }
+
+/* ========== controles ========== */
+.ctl { display: flex; flex-direction: column; gap: 5px; }
+.ctl-l { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ctl-l label { font-size: 11.5px; color: var(--text-1); }
+.ctl-l label sub { font-size: 9px; }
+.cv { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.cv b { color: var(--phos); font-weight: 600; }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px;
+  background: var(--phos);
+  border: 1px solid #14532d;
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--phos-glow);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px;
+  background: var(--phos);
+  border: 1px solid #14532d;
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--phos-glow);
+}
+
+select {
+  width: 100%;
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 8px;
+}
+.chk { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-1); cursor: pointer; }
+.chk input { accent-color: var(--phos); width: 13px; height: 13px; }
+
+.btn {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+  text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:hover { border-color: var(--border-strong); color: var(--text-0); }
+.btn.playing { border-color: var(--phos); color: var(--phos); background: #0a1a10; }
+
+/* ========== cards de visualizacao ========== */
+.card {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 10px 12px 12px;
+  flex-shrink: 0;
+}
+.card::before, .card::after {
+  content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none;
+}
+.card::before { top: -1px; left: -1px; border-top: 1px solid var(--phos); border-left: 1px solid var(--phos); opacity: .5; }
+.card::after { bottom: -1px; right: -1px; border-bottom: 1px solid var(--phos); border-right: 1px solid var(--phos); opacity: .5; }
+.card h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em;
+  color: var(--text-2);
+  display: flex; align-items: center; gap: 8px;
+}
+.card h3 .u { margin-left: auto; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--text-3); font-weight: 400; }
+canvas.plot { display: block; width: 100%; background: #0a0f16; border: 1px solid var(--border-soft); border-radius: var(--radius); }
+canvas.ppi { background: radial-gradient(circle at 50% 50%, #0b1710 0%, #080d0a 70%, #060907 100%); }
+
+/* ========== resultados / metricas ========== */
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mc {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 7px 9px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.mc .mk { font-family: var(--font-mono); font-size: 9px; color: var(--text-3); letter-spacing: .06em; }
+.mc .mv { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text-0); }
+.mc .mv.a { color: var(--amber); } .mc .mv.c { color: var(--cyan); } .mc .mv.g { color: var(--phos); } .mc .mv.r { color: var(--rose); } .mc .mv.v { color: var(--violet); }
+.mc .ms { font-size: 9.5px; color: var(--text-2); }
+.mc.wide { grid-column: 1 / -1; }
+
+.alert {
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  border: 1px solid;
+}
+.alert.rose { background: var(--rose-soft); border-color: #7f1d1d; color: #fecdd3; }
+.alert.amber { background: var(--amber-soft); border-color: #78350f; color: #fde68a; }
+.alert.phos { background: var(--phos-soft); border-color: #14532d; color: #bbf7d0; }
+.alert.cyan { background: var(--cyan-soft); border-color: #0c4a6e; color: #bae6fd; }
+.alert b { font-weight: 600; }
+
+/* tabela de alvos (PPI) */
+table.tb-t { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 10px; }
+table.tb-t th { color: var(--text-3); font-weight: 500; text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--border-soft); }
+table.tb-t td { color: var(--text-1); padding: 3px 4px; border-bottom: 1px solid var(--border-soft); white-space: nowrap; }
+table.tb-t td.g { color: var(--phos); } table.tb-t td.r { color: var(--rose); } table.tb-t td.a { color: var(--amber); }
+.pdbar { display: inline-block; width: 40px; height: 6px; background: var(--bg-3); border-radius: 2px; overflow: hidden; vertical-align: middle; }
+.pdbar i { display: block; height: 100%; }
+
+/* teoria */
+details.theory { border-top: 1px solid var(--border-soft); }
+details.theory summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  font-family: var(--font-display); font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em;
+  color: var(--text-1);
+}
+details.theory summary::-webkit-details-marker { display: none; }
+details.theory .tb { padding: 2px 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+.fx {
+  font-family: var(--font-mono); font-size: 11px; color: var(--cyan);
+  background: var(--bg-2); border: 1px solid var(--border-soft); border-radius: var(--radius);
+  padding: 6px 9px; overflow-x: auto; white-space: nowrap;
+}
+.fx sub, .fx sup { font-size: 8px; }
+.tnote { font-size: 11px; color: var(--text-2); line-height: 1.5; }
+.tnote b { color: var(--text-1); }
+.tnote i { font-family: var(--font-serif); color: var(--text-1); }
+
+/* legenda */
+.probes { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--font-mono); font-size: 9.5px; color: var(--text-2); margin-top: 7px; }
+.probes span { display: flex; align-items: center; gap: 5px; }
+.probes i { width: 14px; height: 2px; display: inline-block; }
+
+/* ========== footer ========== */
+footer.status {
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 16px;
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+footer .hint { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+footer .cred { margin-left: auto; white-space: nowrap; }
+footer .cred b { color: var(--text-2); font-weight: 500; }
+
+/* ========== responsivo ========== */
+@media (max-width: 1100px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100vh; }
+  main { padding: 10px; }
+  .mod { grid-template-columns: 1fr; height: auto; }
+  .mod.on { display: flex; flex-direction: column; }
+  .col { overflow: visible; }
+  header.top-bar { flex-wrap: wrap; gap: 10px; }
+  .brand { min-width: unset; }
+  .hud { margin-left: 0; }
+  footer .hint { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="top-bar">
+  <div class="brand">
+    <div class="brand-line">
+      <h1><span class="hl">RADAR</span> LAB</h1>
+      <span class="ver">v1.0</span>
+    </div>
+    <span class="tagline">o eco mede a dist&acirc;ncia; o Doppler, a velocidade</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-mod="eq" role="tab">EQUA&Ccedil;&Atilde;O</button>
+    <button class="tab" data-mod="pr" role="tab">PULSOS &amp; PRF</button>
+    <button class="tab" data-mod="dp" role="tab">DOPPLER &amp; MTI</button>
+    <button class="tab" data-mod="ch" role="tab">COMPRESS&Atilde;O</button>
+    <button class="tab" data-mod="pp" role="tab">PPI</button>
+  </nav>
+  <div class="hud">
+    <span class="clock"><span id="clk">00:00:00</span><small>UTC</small></span>
+    <span class="led" id="led" title="simulador ativo"></span>
+  </div>
+</header>
+
+<main>
+
+<!-- ==================== MODULO EQUACAO RADAR ==================== -->
+<section class="mod on" id="mod-eq">
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>TRANSMISSOR &amp; ANTENA<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="eq_preset">Preset</label></div>
+          <select id="eq_preset">
+            <option value="">personalizado</option>
+            <option value="atc">Vigil&acirc;ncia a&eacute;rea banda S</option>
+            <option value="lr">Longo alcance banda L</option>
+            <option value="mar">Mar&iacute;timo banda X</option>
+            <option value="uav">Ca&ccedil;a-drone banda Ku</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_pt">Pot&ecirc;ncia de pico P<sub>t</sub></label><span class="cv"><b id="eq_pt_v">500</b> kW</span></div>
+          <input type="range" id="eq_pt" min="1" max="1000" step="1" value="500"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_g">Ganho da antena G</label><span class="cv"><b id="eq_g_v">34</b> dBi</span></div>
+          <input type="range" id="eq_g" min="20" max="45" step="1" value="34"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_f">Frequ&ecirc;ncia f</label><span class="cv"><b id="eq_f_v">2,8</b> GHz</span></div>
+          <input type="range" id="eq_f" min="0.5" max="35" step="0.1" value="2.8"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_sigma">Alvo (RCS &sigma;)</label></div>
+          <select id="eq_sigma">
+            <option value="0.001">inseto &middot; 0,001 m&sup2;</option>
+            <option value="0.01">p&aacute;ssaro &middot; 0,01 m&sup2;</option>
+            <option value="0.1">drone pequeno &middot; 0,1 m&sup2;</option>
+            <option value="1" selected>ca&ccedil;a (frontal) &middot; 1 m&sup2;</option>
+            <option value="20">jato executivo &middot; 20 m&sup2;</option>
+            <option value="100">avi&atilde;o de linha &middot; 100 m&sup2;</option>
+            <option value="10000">navio cargueiro &middot; 10&#8308; m&sup2;</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-cyan"></span>RECEPTOR &amp; DETEC&Ccedil;&Atilde;O<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="eq_b">Largura de banda B</label><span class="cv"><b id="eq_b_v">1,0</b> MHz</span></div>
+          <input type="range" id="eq_b" min="0.1" max="50" step="0.1" value="1"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_nf">Figura de ru&iacute;do F</label><span class="cv"><b id="eq_nf_v">3</b> dB</span></div>
+          <input type="range" id="eq_nf" min="1" max="10" step="1" value="3"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_loss">Perdas L (2 vias)</label><span class="cv"><b id="eq_loss_v">6</b> dB</span></div>
+          <input type="range" id="eq_loss" min="0" max="15" step="1" value="6"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_n">Pulsos integrados n</label><span class="cv"><b id="eq_n_v">10</b></span></div>
+          <input type="range" id="eq_n" min="1" max="100" step="1" value="10"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_pd">P<sub>d</sub> desejada</label><span class="cv"><b id="eq_pd_v">0,90</b></span></div>
+          <input type="range" id="eq_pd" min="0.5" max="0.99" step="0.01" value="0.9"></div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_pfa">P<sub>fa</sub></label></div>
+          <select id="eq_pfa">
+            <option value="1e-4">10&#8315;&#8308;</option>
+            <option value="1e-6" selected>10&#8315;&#8310;</option>
+            <option value="1e-8">10&#8315;&#8312;</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="eq_r">Alvo em R</label><span class="cv"><b id="eq_r_v">100</b> km</span></div>
+          <input type="range" id="eq_r" min="1" max="400" step="1" value="100"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3><span class="dot d-phos"></span>OR&Ccedil;AMENTO DE POT&Ecirc;NCIA vs ALCANCE<span class="u">eixo R em log &middot; note os 40 dB/d&eacute;cada</span></h3>
+      <canvas class="plot" id="eq_chart" height="430"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--phos)"></i>eco radar (R&#8308;)</span>
+        <span><i style="background:var(--cyan)"></i>farol 1 via (R&sup2;)</span>
+        <span><i style="background:var(--rose)"></i>piso de ru&iacute;do</span>
+        <span><i style="background:var(--amber)"></i>limiar de detec&ccedil;&atilde;o</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>RESULTADOS<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div id="eq_alert"></div>
+        <div class="metrics" id="eq_metrics"></div>
+      </div>
+      <details class="theory">
+        <summary><span class="dot d-amber"></span>FUNDAMENTOS</summary>
+        <div class="tb">
+          <div class="fx">P<sub>r</sub> = P<sub>t</sub>&middot;G&sup2;&middot;&lambda;&sup2;&middot;&sigma; / [(4&pi;)&sup3;&middot;R&#8308;&middot;L]</div>
+          <div class="tnote">O sinal viaja ida <b>e</b> volta: por isso R&#8308; e a inclina&ccedil;&atilde;o de 40 dB/d&eacute;cada. Dobrar o alcance custa <b>16 vezes</b> mais pot&ecirc;ncia (ou +12 dB de ganho combinado).</div>
+          <div class="fx">SNR = P<sub>r</sub> / (k&middot;T&#8320;&middot;B&middot;F)   |   n pulsos ajudam</div>
+          <div class="tnote"><b>Albersheim:</b> dado P<sub>fa</sub>, P<sub>d</sub> e n pulsos integrados, existe um SNR m&iacute;nimo por pulso. O gr&aacute;fico marca onde a curva do eco cruza esse limiar: R<sub>max</sub>.</div>
+          <div class="tnote">Compare com o <i>farol</i> (transponder, 1 via, R&sup2;): a mesma pot&ecirc;ncia chega muito mais longe. &Eacute; por isso que radar secund&aacute;rio (SSR) alcan&ccedil;a mais que o prim&aacute;rio.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULO PULSOS & PRF ==================== -->
+<section class="mod" id="mod-pr">
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-amber"></span>FORMA DE ONDA<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="pr_preset">Preset</label></div>
+          <select id="pr_preset">
+            <option value="">personalizado</option>
+            <option value="classic">Vigil&acirc;ncia cl&aacute;ssica (PRF 1 kHz)</option>
+            <option value="ghost">Eco de segunda volta (alvo a 380 km)</option>
+            <option value="hiprf">PRF alta: tudo dobra</option>
+            <option value="blind">Pulso longo: alvo eclipsado</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="pr_prf">PRF</label><span class="cv"><b id="pr_prf_v">1000</b> Hz</span></div>
+          <input type="range" id="pr_prf" min="300" max="10000" step="50" value="1000"></div>
+        <div class="ctl"><div class="ctl-l"><label for="pr_tau">Largura do pulso &tau;</label><span class="cv"><b id="pr_tau_v">10,0</b> &micro;s</span></div>
+          <input type="range" id="pr_tau" min="0.5" max="100" step="0.5" value="10"></div>
+        <div class="ctl"><div class="ctl-l"><label for="pr_rx">Alvo X em R</label><span class="cv"><b id="pr_rx_v">380</b> km</span></div>
+          <input type="range" id="pr_rx" min="5" max="600" step="5" value="380"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <details class="theory" open>
+        <summary><span class="dot d-amber"></span>FUNDAMENTOS</summary>
+        <div class="tb">
+          <div class="fx">R<sub>ua</sub> = c / (2&middot;PRF)   |   &Delta;R = c&middot;&tau; / 2</div>
+          <div class="tnote">O radar assume que cada eco pertence ao <b>&uacute;ltimo pulso transmitido</b>. Um alvo al&eacute;m de R<sub>ua</sub> devolve o eco depois do pulso seguinte e aparece <i>perto</i>: o eco de segunda volta.</div>
+          <div class="tnote"><b>Zona cega inicial:</b> enquanto transmite (&tau;), o receptor fica surdo; ecos de at&eacute; c&middot;&tau;/2 s&atilde;o eclipsados.</div>
+          <div class="fx">P<sub>m&eacute;d</sub> = P<sub>pico</sub> &middot; (&tau;&middot;PRF)</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3><span class="dot d-amber"></span>LINHA DO TEMPO<span class="u">dois per&iacute;odos de repeti&ccedil;&atilde;o</span></h3>
+      <canvas class="plot" id="pr_time" height="215"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--amber)"></i>pulso TX</span>
+        <span><i style="background:var(--phos)"></i>eco (1&ordf; volta)</span>
+        <span><i style="background:var(--rose)"></i>eco de 2&ordf; volta / eclipsado</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="dot d-amber"></span>R&Eacute;GUA DE ALCANCE<span class="u">real vs aparente</span></h3>
+      <canvas class="plot" id="pr_rng" height="185"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--phos)"></i>posi&ccedil;&atilde;o real</span>
+        <span><i style="background:var(--rose)"></i>posi&ccedil;&atilde;o aparente (dobrada)</span>
+        <span><i style="background:var(--bg-3)"></i>faixas de R<sub>ua</sub></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>RESULTADOS<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div id="pr_alert"></div>
+        <div class="metrics" id="pr_metrics"></div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ==================== MODULO DOPPLER & MTI ==================== -->
+<section class="mod" id="mod-dp">
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-violet"></span>CONFIGURA&Ccedil;&Atilde;O<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="dp_preset">Preset</label></div>
+          <select id="dp_preset">
+            <option value="">personalizado</option>
+            <option value="mti2">Cancelador duplo</option>
+            <option value="cego">Alvo na velocidade cega</option>
+            <option value="dobrado">Doppler dobrado (alvo r&aacute;pido)</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="dp_f">Frequ&ecirc;ncia do radar</label><span class="cv"><b id="dp_f_v">3,0</b> GHz</span></div>
+          <input type="range" id="dp_f" min="0.5" max="35" step="0.1" value="3"></div>
+        <div class="ctl"><div class="ctl-l"><label for="dp_prf">PRF</label><span class="cv"><b id="dp_prf_v">1500</b> Hz</span></div>
+          <input type="range" id="dp_prf" min="300" max="10000" step="50" value="1500"></div>
+        <div class="ctl"><div class="ctl-l"><label for="dp_v">Velocidade radial do alvo</label><span class="cv"><b id="dp_v_v">90</b> m/s</span></div>
+          <input type="range" id="dp_v" min="-300" max="300" step="1" value="90"></div>
+        <div class="ctl"><div class="ctl-l"><label for="dp_mti">Filtro MTI</label></div>
+          <select id="dp_mti">
+            <option value="0">nenhum</option>
+            <option value="1" selected>cancelador simples (1 atraso)</option>
+            <option value="2">cancelador duplo (2 atrasos)</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="dp_cw">Largura espectral do clutter</label><span class="cv"><b id="dp_cw_v">30</b> Hz</span></div>
+          <input type="range" id="dp_cw" min="5" max="100" step="1" value="30"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <details class="theory" open>
+        <summary><span class="dot d-amber"></span>FUNDAMENTOS</summary>
+        <div class="tb">
+          <div class="fx">f<sub>d</sub> = 2&middot;v / &lambda;   |   v<sub>cega</sub> = k&middot;&lambda;&middot;PRF / 2</div>
+          <div class="tnote">O espectro Doppler &eacute; amostrado na PRF: tudo se repete a cada PRF. Alvo com f<sub>d</sub> = k&middot;PRF cai <b>em cima do clutter</b> e o MTI o apaga: velocidade cega.</div>
+          <div class="fx">|H(f)| = |2&middot;sen(&pi;f/PRF)|&#8319;  (n canceladores)</div>
+          <div class="tnote">Se |f<sub>d</sub>| &gt; PRF/2 o Doppler <b>dobra</b>: o alvo aparece com velocidade errada (at&eacute; de sinal trocado). PRFs m&uacute;ltiplas resolvem a ambiguidade.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3><span class="dot d-violet"></span>ESPECTRO DOPPLER<span class="u">clutter + alvo + resposta do MTI</span></h3>
+      <canvas class="plot" id="dp_spec" height="330"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--text-2)"></i>clutter</span>
+        <span><i style="background:var(--phos)"></i>alvo (sa&iacute;da)</span>
+        <span><i style="background:var(--text-3)"></i>alvo antes do MTI</span>
+        <span><i style="background:var(--violet)"></i>|H(f)| do MTI</span>
+        <span><i style="background:var(--rose)"></i>velocidades cegas</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>RESULTADOS<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div id="dp_alert"></div>
+        <div class="metrics" id="dp_metrics"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULO COMPRESSAO ==================== -->
+<section class="mod" id="mod-ch">
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-cyan"></span>CHIRP LFM<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="ch_preset">Preset</label></div>
+          <select id="ch_preset">
+            <option value="">personalizado</option>
+            <option value="basic">B&aacute;sico (B&tau; = 500)</option>
+            <option value="hires">Alta resolu&ccedil;&atilde;o (B&tau; = 3500)</option>
+            <option value="merge">Sem banda: alvos fundidos</option>
+            <option value="hamm">Janela de Hamming</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="ch_b">Varredura B</label><span class="cv"><b id="ch_b_v">10,0</b> MHz</span></div>
+          <input type="range" id="ch_b" min="1" max="50" step="0.5" value="10"></div>
+        <div class="ctl"><div class="ctl-l"><label for="ch_tau">Dura&ccedil;&atilde;o &tau;</label><span class="cv"><b id="ch_tau_v">50</b> &micro;s</span></div>
+          <input type="range" id="ch_tau" min="1" max="200" step="1" value="50"></div>
+        <div class="ctl"><div class="ctl-l"><label for="ch_win">Janela no filtro casado</label></div>
+          <select id="ch_win">
+            <option value="rect">retangular (sem janela)</option>
+            <option value="hamm">Hamming</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="ch_sep">Separa&ccedil;&atilde;o dos alvos</label><span class="cv"><b id="ch_sep_v">400</b> m</span></div>
+          <input type="range" id="ch_sep" min="10" max="3000" step="10" value="400"></div>
+        <label class="chk"><input type="checkbox" id="ch_show" checked><span>Mostrar eco sem compress&atilde;o</span></label>
+      </div>
+    </div>
+    <div class="panel">
+      <details class="theory" open>
+        <summary><span class="dot d-amber"></span>FUNDAMENTOS</summary>
+        <div class="tb">
+          <div class="fx">&Delta;R = c / (2&middot;B)   |   ganho = 10&middot;log&#8321;&#8320;(B&middot;&tau;)</div>
+          <div class="tnote">O pulso longo carrega energia; a varredura de frequ&ecirc;ncia carrega resolu&ccedil;&atilde;o. O filtro casado <b>comprime</b> &tau; para 1/B: alcance longo E resolu&ccedil;&atilde;o fina, sem pico de pot&ecirc;ncia absurdo.</div>
+          <div class="tnote"><b>L&oacute;bulos laterais:</b> sem janela, o primeiro fica em -13,2 dB e pode esconder um alvo fraco vizinho. Hamming derruba para ~-43 dB ao custo de alargar o l&oacute;bulo principal (~1,5x) e perder ~1,3 dB de SNR.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3><span class="dot d-cyan"></span>PULSO TRANSMITIDO<span class="u">cor = frequ&ecirc;ncia instant&acirc;nea (representa&ccedil;&atilde;o)</span></h3>
+      <canvas class="plot" id="ch_wave" height="180"></canvas>
+      <div class="probes">
+        <span><i style="background:linear-gradient(90deg,#38bdf8,#a78bfa,#fb7185)"></i>f cresce ao longo de &tau;</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><span class="dot d-cyan"></span>SA&Iacute;DA DO FILTRO CASADO<span class="u">simula&ccedil;&atilde;o real via FFT &middot; dB</span></h3>
+      <canvas class="plot" id="ch_out" height="290"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--phos)"></i>comprimido</span>
+        <span><i style="background:var(--amber)"></i>eco bruto (sem MF)</span>
+        <span><i style="background:var(--cyan)"></i>posi&ccedil;&otilde;es reais dos alvos</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>RESULTADOS<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div id="ch_alert"></div>
+        <div class="metrics" id="ch_metrics"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULO PPI ==================== -->
+<section class="mod" id="mod-pp">
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>ANTENA &amp; DETEC&Ccedil;&Atilde;O<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div class="ctl"><div class="ctl-l"><label for="pp_rpm">Rota&ccedil;&atilde;o da antena</label><span class="cv"><b id="pp_rpm_v">12</b> rpm</span></div>
+          <input type="range" id="pp_rpm" min="5" max="30" step="1" value="12"></div>
+        <div class="ctl"><div class="ctl-l"><label for="pp_bw">Largura do feixe</label><span class="cv"><b id="pp_bw_v">3,0</b>&deg;</span></div>
+          <input type="range" id="pp_bw" min="1" max="10" step="0.5" value="3"></div>
+        <div class="ctl"><div class="ctl-l"><label for="pp_pfa">P<sub>fa</sub> (limiar)</label></div>
+          <select id="pp_pfa">
+            <option value="1e-3">10&#8315;&sup3; (limiar baixo, tela suja)</option>
+            <option value="1e-4">10&#8315;&#8308;</option>
+            <option value="1e-6" selected>10&#8315;&#8310;</option>
+            <option value="1e-8">10&#8315;&#8312; (limiar alto)</option>
+          </select>
+        </div>
+        <div class="ctl"><div class="ctl-l"><label for="pp_rng">Escala de alcance</label></div>
+          <select id="pp_rng">
+            <option value="50">50 km</option>
+            <option value="100">100 km</option>
+            <option value="200" selected>200 km</option>
+            <option value="400">400 km</option>
+          </select>
+        </div>
+        <button class="btn" id="pp_pause">&#10074;&#10074; CONGELAR VARREDURA</button>
+      </div>
+    </div>
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-cyan"></span>ALVOS NO AR<span class="chev">&#9662;</span></button>
+      <div class="sec-b" id="pp_targets"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <h3><span class="dot d-phos"></span>PPI &middot; PLAN POSITION INDICATOR<span class="u" id="pp_scope_u">radar fixo: 500 kW &middot; 34 dBi &middot; 2,8 GHz &middot; PRF 1 kHz</span></h3>
+      <canvas class="plot ppi" id="pp_scope" height="470"></canvas>
+    </div>
+    <div class="card">
+      <h3><span class="dot d-phos"></span>A-SCOPE<span class="u">amplitude vs alcance no azimute atual</span></h3>
+      <canvas class="plot" id="pp_ascope" height="150"></canvas>
+      <div class="probes">
+        <span><i style="background:var(--phos)"></i>v&iacute;deo + ru&iacute;do</span>
+        <span><i style="background:var(--amber)"></i>limiar (P<sub>fa</sub>)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="panel">
+      <button class="sec-h" data-toggle><span class="dot d-phos"></span>RESULTADOS<span class="chev">&#9662;</span></button>
+      <div class="sec-b">
+        <div id="pp_alert"></div>
+        <div class="metrics" id="pp_metrics"></div>
+      </div>
+      <details class="theory">
+        <summary><span class="dot d-amber"></span>FUNDAMENTOS</summary>
+        <div class="tb">
+          <div class="tnote"><b>Por que os alvos piscam?</b> A cada varredura o radar joga a moeda da detec&ccedil;&atilde;o: um alvo com P<sub>d</sub> = 0,6 aparece em ~6 de cada 10 passagens. Alvos pequenos e distantes cintilam; os grandes ficam s&oacute;lidos.</div>
+          <div class="tnote"><b>Tempo no alvo:</b> o feixe s&oacute; ilumina cada azimute por &theta;/(6&middot;rpm) segundos; os pulsos que cabem a&iacute; s&atilde;o os que a integra&ccedil;&atilde;o pode somar. Girar mais r&aacute;pido atualiza mais, mas detecta menos.</div>
+          <div class="tnote"><b>Eco Fantasma:</b> um alvo al&eacute;m de R<sub>ua</sub> = 150 km aparece dobrado perto do centro, na cor rosa. O m&oacute;dulo PULSOS &amp; PRF explica o porqu&ecirc;.</div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="status">
+  <span>SIM &middot; <span id="foot_mod">EQUA&Ccedil;&Atilde;O</span></span>
+  <span class="hint" id="foot_hint">note a inclina&ccedil;&atilde;o de 40 dB por d&eacute;cada: o pre&ccedil;o do caminho de ida e volta</span>
+  <span class="cred"><b>Prof. Ramon Mayor Martins (PU4MAY)</b> &middot; IFSC S&atilde;o Jos&eacute; &middot; fins educacionais</span>
+</footer>
+
+</div>
+<script>
+'use strict';
+/* =====================================================================
+   RADAR LAB - nucleo de utilidades
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const TAU = Math.PI * 2;
+
+function fmt(x, d = 1) {
+  if (!isFinite(x)) return '~';
+  return x.toFixed(d).replace('.', ',');
+}
+
+/* ---------- bindings ---------- */
+const B = {};
+function bind(id, dec, cb, fmtFn) {
+  const el = $(id), lab = $(id + '_v');
+  B[id] = { el, lab, dec, fmtFn };
+  const upd = () => { if (lab) lab.textContent = fmtFn ? fmtFn(+el.value) : fmt(+el.value, dec); };
+  el.addEventListener('input', () => { upd(); cb && cb(); });
+  upd();
+}
+function setV(id, val) {
+  const b = B[id]; if (!b) return;
+  b.el.value = val;
+  if (b.lab) b.lab.textContent = b.fmtFn ? b.fmtFn(+b.el.value) : fmt(+b.el.value, b.dec);
+}
+function bindSel(id, cb) { $(id).addEventListener('change', cb); }
+function bindChk(id, cb) { $(id).addEventListener('change', cb); }
+const V = id => +$(id).value;
+
+/* ---------- canvas HiDPI ---------- */
+function cv(id) {
+  const el = $(id), dpr = window.devicePixelRatio || 1;
+  const w = el.clientWidth || el.parentElement.clientWidth - 24;
+  const h = +el.getAttribute('height');
+  el.width = Math.max(60, Math.round(w * dpr));
+  el.height = Math.round(h * dpr);
+  el.style.height = h + 'px';
+  const g = el.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { g, w: Math.max(60, w), h };
+}
+
+const COL = {
+  bg: '#0a0f16', grid: '#141d2c', axis: '#26334a',
+  t1: '#b6c2d4', t2: '#6b7889', t3: '#3f4a5b',
+  cyan: '#38bdf8', amber: '#fbbf24', phos: '#4ade80', rose: '#fb7185', violet: '#a78bfa'
+};
+function frame(g, w, h) {
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = COL.bg; g.fillRect(0, 0, w, h);
+}
+function gridBox(g, x0, y0, pw, ph, nx = 10, ny = 6) {
+  g.strokeStyle = COL.grid; g.lineWidth = 1;
+  g.beginPath();
+  for (let i = 0; i <= nx; i++) { const x = x0 + pw * i / nx; g.moveTo(x, y0); g.lineTo(x, y0 + ph); }
+  for (let j = 0; j <= ny; j++) { const y = y0 + ph * j / ny; g.moveTo(x0, y); g.lineTo(x0 + pw, y); }
+  g.stroke();
+  g.strokeStyle = COL.axis; g.strokeRect(x0, y0, pw, ph);
+}
+function label(g, txt, x, y, color = COL.t2, align = 'center', size = 9) {
+  g.fillStyle = color; g.font = size + 'px "JetBrains Mono", monospace';
+  g.textAlign = align; g.textBaseline = 'alphabetic';
+  g.fillText(txt, x, y);
+}
+function stem(g, x, yBase, yTop, color, wpx = 2, ghost = false) {
+  g.save();
+  if (ghost) { g.setLineDash([3, 3]); g.globalAlpha = 0.5; }
+  else { g.shadowColor = color; g.shadowBlur = 6; }
+  g.strokeStyle = color; g.lineWidth = wpx;
+  g.beginPath(); g.moveTo(x, yBase); g.lineTo(x, yTop); g.stroke();
+  if (!ghost) { g.fillStyle = color; g.beginPath(); g.arc(x, yTop, 2, 0, TAU); g.fill(); }
+  g.restore();
+}
+function ticks(a, b, n = 6) {
+  const span = b - a, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10) * mag;
+  const out = [];
+  for (let v = Math.ceil(a / step - 1e-9) * step; v <= b + 1e-9; v += step) out.push(v);
+  return out;
+}
+function mcCard(k, v, s, cls = '') {
+  return '<div class="mc"><span class="mk">' + k + '</span><span class="mv ' + cls + '">' + v + '</span><span class="ms">' + s + '</span></div>';
+}
+function alBox(kind, html) {
+  return '<div class="alert ' + kind + '">' + html + '</div>';
+}
+
+/* ---------- fisica do radar ---------- */
+/*MATH-BEGIN*/
+const C = 299792458;                        /* m/s */
+function lambdaM(fGHz) { return C / (fGHz * 1e9); }
+function noiseDbm(bMHz, nfDb) { return 10 * Math.log10(1.38e-23 * 290 * bMHz * 1e6) + 30 + nfDb; }
+function prDbm(ptKw, gDbi, fGHz, sigma, rKm, lossDb) {
+  const lam = lambdaM(fGHz);
+  return 10 * Math.log10(ptKw * 1000) + 30 + 2 * gDbi + 20 * Math.log10(lam)
+       + 10 * Math.log10(sigma) - 30 * Math.log10(4 * Math.PI) - 40 * Math.log10(rKm * 1000) - lossDb;
+}
+/* Albersheim: SNR por pulso exigido para Pd/Pfa com n pulsos (nao coerente) */
+function albSNR(pd, pfa, n) {
+  const A = Math.log(0.62 / pfa);
+  const Bb = Math.log(pd / (1 - pd));
+  return -5 * Math.log10(n) + (6.2 + 4.54 / Math.sqrt(n + 0.44)) * Math.log10(A + 0.12 * A * Bb + 1.7 * Bb);
+}
+function albPd(snrDb, pfa, n) {
+  const A = Math.log(0.62 / pfa);
+  const den = 6.2 + 4.54 / Math.sqrt(n + 0.44);
+  const X = Math.pow(10, (snrDb + 5 * Math.log10(n)) / den);
+  const Bb = (X - A) / (0.12 * A + 1.7);
+  return 1 / (1 + Math.exp(-Math.max(-30, Math.min(30, Bb))));
+}
+function ruaKm(prfHz) { return C / (2 * prfHz) / 1000; }
+function drM(tauUs) { return C * tauUs * 1e-6 / 2; }
+function fdHz(vMs, fGHz) { return 2 * vMs / lambdaM(fGHz); }
+function vbMs(fGHz, prfHz, k) { return k * lambdaM(fGHz) * prfHz / 2; }
+function foldF(f, prf) { return f - prf * Math.round(f / prf); }
+function mtiH(f, prf, order) {            /* normalizado: pico 1 em PRF/2 */
+  if (order === 0) return 1;
+  const s = Math.abs(Math.sin(Math.PI * f / prf));
+  return order === 1 ? s : s * s;
+}
+function dB(x) { return 20 * Math.log10(Math.max(x, 1e-12)); }
+/*MATH-END*/
+
+/*FFT-BEGIN*/
+function fft(re, im, inv) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = (inv ? 1 : -1) * TAU / len;
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const ur = re[i + k], ui = im[i + k];
+        const vr = re[i + k + len / 2] * cr - im[i + k + len / 2] * ci;
+        const vi = re[i + k + len / 2] * ci + im[i + k + len / 2] * cr;
+        re[i + k] = ur + vr; im[i + k] = ui + vi;
+        re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+        const ncr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = ncr;
+      }
+    }
+  }
+  if (inv) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+}
+/*FFT-END*/
+
+/* ---------- navegacao ---------- */
+const MODS = ['eq', 'pr', 'dp', 'ch', 'pp'];
+const MOD_NAMES = { eq: 'EQUAÇÃO', pr: 'PULSOS & PRF', dp: 'DOPPLER & MTI', ch: 'COMPRESSÃO', pp: 'PPI' };
+const MOD_HINTS = {
+  eq: 'note a inclinação de 40 dB por década: o preço do caminho de ida e volta',
+  pr: 'empurre o Alvo X além de Rua e veja o eco de segunda volta',
+  dp: 'leve o alvo até uma velocidade cega e veja o MTI apagá-lo',
+  ch: 'aproxime os dois alvos e veja a compressão separá-los',
+  pp: 'alvos pequenos e distantes piscam: a Pd manda no fósforo'
+};
+let curMod = 'eq';
+function showMod(m) {
+  curMod = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.mod === m));
+  MODS.forEach(k => $('mod-' + k).classList.toggle('on', k === m));
+  $('foot_mod').textContent = MOD_NAMES[m];
+  $('foot_hint').textContent = MOD_HINTS[m];
+  requestAnimationFrame(() => renderMod(m));
+}
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (tab) { showMod(tab.dataset.mod); return; }
+  const sh = e.target.closest('.sec-h[data-toggle]');
+  if (sh) sh.parentElement.classList.toggle('closed');
+});
+function renderMod(m) {
+  if (m !== 'pp') ppStop();
+  if (m === 'eq') renderEQ();
+  else if (m === 'pr') renderPR();
+  else if (m === 'dp') renderDP();
+  else if (m === 'ch') chRun();
+  else { ppSizeScope(); ppStart(); }
+}
+window.addEventListener('resize', () => renderMod(curMod));
+
+function tick() {
+  const d = new Date();
+  const pz = n => String(n).padStart(2, '0');
+  $('clk').textContent = pz(d.getUTCHours()) + ':' + pz(d.getUTCMinutes()) + ':' + pz(d.getUTCSeconds());
+}
+setInterval(tick, 1000); tick();
+
+/* =====================================================================
+   MODULO EQUACAO RADAR
+   ===================================================================== */
+function eqParams() {
+  return {
+    pt: V('eq_pt'), g: V('eq_g'), f: V('eq_f'), sigma: +$('eq_sigma').value,
+    b: V('eq_b'), nf: V('eq_nf'), loss: V('eq_loss'),
+    n: V('eq_n'), pd: V('eq_pd'), pfa: +$('eq_pfa').value, r: V('eq_r')
+  };
+}
+
+function drawEQ(p, D) {
+  const { g, w, h } = cv('eq_chart');
+  frame(g, w, h);
+  const L = 48, R = 12, Tp = 16, Bm = 28, pw = w - L - R, ph = h - Tp - Bm;
+  const x2 = Math.log10(400);
+  const y1 = -150, y2 = -40;
+  const RX = r => L + pw * Math.log10(r) / x2;
+  const Y = v => Tp + ph * (1 - (v - y1) / (y2 - y1));
+  const rticks = [1, 2, 5, 10, 20, 50, 100, 200, 400];
+  g.strokeStyle = COL.grid; g.lineWidth = 1; g.beginPath();
+  for (const r of rticks) { g.moveTo(RX(r), Tp); g.lineTo(RX(r), Tp + ph); }
+  for (let v = y1; v <= y2; v += 10) { g.moveTo(L, Y(v)); g.lineTo(L + pw, Y(v)); }
+  g.stroke();
+  g.strokeStyle = COL.axis; g.strokeRect(L, Tp, pw, ph);
+  const clampY = v => Math.max(y1, Math.min(y2, v));
+  /* farol 1 via (R^2), ancorado no eco em 2 km */
+  const anchor = D.pr1 - 40 * Math.log10(2);
+  g.save(); g.strokeStyle = COL.cyan; g.setLineDash([5, 4]); g.globalAlpha = 0.75; g.lineWidth = 1.3;
+  g.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const r = Math.pow(10, x2 * i / 200);
+    const yy = Y(clampY(anchor - 20 * Math.log10(r / 2)));
+    if (i === 0) g.moveTo(RX(r), yy); else g.lineTo(RX(r), yy);
+  }
+  g.stroke(); g.restore();
+  /* eco radar (R^4) */
+  g.save(); g.strokeStyle = COL.phos; g.lineWidth = 1.8; g.shadowColor = COL.phos; g.shadowBlur = 6;
+  g.beginPath();
+  for (let i = 0; i <= 240; i++) {
+    const r = Math.pow(10, x2 * i / 240);
+    const yy = Y(clampY(D.pr1 - 40 * Math.log10(r)));
+    if (i === 0) g.moveTo(RX(r), yy); else g.lineTo(RX(r), yy);
+  }
+  g.stroke(); g.restore();
+  /* piso de ruido e limiar */
+  g.strokeStyle = COL.rose; g.lineWidth = 1.3;
+  g.beginPath(); g.moveTo(L, Y(D.N)); g.lineTo(L + pw, Y(D.N)); g.stroke();
+  label(g, 'ruído N = ' + fmt(D.N, 1) + ' dBm', L + pw - 4, Y(D.N) + 11, COL.rose, 'right');
+  g.strokeStyle = COL.amber; g.setLineDash([5, 4]);
+  g.beginPath(); g.moveTo(L, Y(D.N + D.snrReq)); g.lineTo(L + pw, Y(D.N + D.snrReq)); g.stroke();
+  g.setLineDash([]);
+  label(g, 'limiar N + SNRreq', L + pw - 4, Y(D.N + D.snrReq) - 4, COL.amber, 'right');
+  /* Rmax */
+  if (D.rmax >= 1 && D.rmax <= 400) {
+    g.strokeStyle = COL.phos; g.setLineDash([2, 4]);
+    g.beginPath(); g.moveTo(RX(D.rmax), Tp); g.lineTo(RX(D.rmax), Tp + ph); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = COL.phos; g.shadowColor = COL.phos; g.shadowBlur = 8;
+    g.beginPath(); g.arc(RX(D.rmax), Y(D.N + D.snrReq), 3.5, 0, TAU); g.fill();
+    g.shadowBlur = 0;
+    label(g, 'Rmax ' + fmt(D.rmax, 0) + ' km', RX(D.rmax), Tp + 12, COL.phos);
+  }
+  /* alvo */
+  g.save(); g.strokeStyle = '#e2e8f0'; g.globalAlpha = 0.8; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(RX(p.r), Tp); g.lineTo(RX(p.r), Tp + ph); g.stroke(); g.restore();
+  g.fillStyle = '#e2e8f0'; g.shadowColor = '#e2e8f0'; g.shadowBlur = 7;
+  g.beginPath(); g.arc(RX(p.r), Y(clampY(D.prR)), 3.2, 0, TAU); g.fill();
+  g.shadowBlur = 0;
+  label(g, 'alvo: Pd ' + fmt(D.pdR * 100, 0) + '%', RX(p.r), Y(clampY(D.prR)) - 8, '#e2e8f0');
+  /* anotacao de inclinacao */
+  label(g, '-40 dB/década', RX(14), Y(clampY(D.pr1 - 40 * Math.log10(14))) - 10, COL.phos, 'left');
+  /* eixos */
+  for (const r of rticks) label(g, String(r), RX(r), h - 10, COL.t3);
+  for (let v = y1 + 10; v <= y2; v += 20) label(g, String(v), L - 5, Y(v) + 3, COL.t3, 'right');
+  label(g, 'R (km)', w - R, h - 10, COL.t3, 'right');
+  label(g, 'Pr (dBm)', L + 4, Tp + 11, COL.t2, 'left');
+}
+
+function eqMetrics(p, D) {
+  const cards = [];
+  cards.push(mcCard('λ', fmt(lambdaM(p.f) * 100, 1) + ' cm', 'comprimento de onda', 'c'));
+  cards.push(mcCard('N', fmt(D.N, 1) + ' dBm', 'piso de ruído k·T0·B·F', 'r'));
+  cards.push(mcCard('SNR req', fmt(D.snrReq, 1) + ' dB', 'Albersheim: Pd ' + fmt(p.pd * 100, 0) + '% | Pfa ' + p.pfa + ' | n ' + p.n, 'a'));
+  cards.push(mcCard('ganho n', '+' + fmt(10 * Math.log10(p.n), 1) + ' dB', 'integração de ' + p.n + ' pulsos', 'v'));
+  cards.push(mcCard('Pr no alvo', fmt(D.prR, 1) + ' dBm', 'eco vindo de R = ' + fmt(p.r, 0) + ' km'));
+  cards.push(mcCard('SNR no alvo', fmt(D.snrR, 1) + ' dB', 'por pulso', D.snrR >= D.snrReq ? 'g' : 'r'));
+  cards.push(mcCard('Pd no alvo', fmt(D.pdR * 100, 1) + '%', 'probabilidade de detecção', D.pdR >= p.pd ? 'g' : D.pdR > 0.3 ? 'a' : 'r'));
+  cards.push(mcCard('Rmax', fmt(D.rmax, 0) + ' km', 'alcance para a Pd desejada', 'g'));
+  $('eq_metrics').innerHTML = cards.join('');
+
+  let alert = '';
+  if (D.pdR >= p.pd) {
+    alert = alBox('phos', '<b>Alvo dentro do alcance confiável:</b> Pd = ' + fmt(D.pdR * 100, 1) + '% a ' + fmt(p.r, 0) + ' km. Sobra de ' + fmt(D.snrR - D.snrReq, 1) + ' dB sobre o limiar.');
+  } else if (D.pdR > 0.3) {
+    alert = alBox('amber', '<b>Zona marginal:</b> o alvo aparece e some entre varreduras (Pd = ' + fmt(D.pdR * 100, 0) + '%). Integre mais pulsos ou aceite o pisca-pisca.');
+  } else {
+    alert = alBox('rose', '<b>Fora de alcance:</b> Pd = ' + fmt(D.pdR * 100, 1) + '%. Lembre: dobrar o alcance pede 12 dB; cada dB aqui custa caro. Tente mais potência, ganho, pulsos ou um alvo maior.');
+  }
+  if (D.rmax > 400) alert += alBox('cyan', 'Rmax = ' + fmt(D.rmax, 0) + ' km, além da escala do gráfico.');
+  $('eq_alert').innerHTML = alert;
+}
+
+function renderEQ() {
+  const p = eqParams();
+  const N = noiseDbm(p.b, p.nf);
+  const snrReq = albSNR(p.pd, p.pfa, p.n);
+  const pr1 = prDbm(p.pt, p.g, p.f, p.sigma, 1, p.loss);
+  const rmax = Math.pow(10, (pr1 - (N + snrReq)) / 40);
+  const prR = pr1 - 40 * Math.log10(p.r);
+  const snrR = prR - N;
+  const pdR = albPd(snrR, p.pfa, p.n);
+  drawEQ(p, { N, snrReq, pr1, rmax, prR, snrR, pdR });
+  eqMetrics(p, { N, snrReq, pr1, rmax, prR, snrR, pdR });
+}
+
+/* =====================================================================
+   MODULO PULSOS & PRF
+   ===================================================================== */
+const PR_FIX = [{ n: 'Alvo A', r: 40 }, { n: 'Alvo B', r: 120 }];
+const KUSKM = 2e9 / C;                     /* microssegundos de ida e volta por km */
+
+function prCompute() {
+  const prf = V('pr_prf'), tau = V('pr_tau'), rx = V('pr_rx');
+  const pri = 1e6 / prf;
+  const rua = ruaKm(prf);
+  const tg = [...PR_FIX.map(t => ({ ...t, x: false })), { n: 'Alvo X', r: rx, x: true }];
+  for (const t of tg) {
+    t.t = t.r * KUSKM;
+    t.trip = Math.floor(t.t / pri) + 1;
+    t.tm = t.t % pri;
+    t.rApp = t.tm / KUSKM;
+    t.ecl = t.tm < tau;
+  }
+  return { prf, tau, rx, pri, rua, tg, blindKm: drM(tau) / 1000, duty: tau * 1e-6 * prf };
+}
+
+function drawPRTime(D) {
+  const { g, w, h } = cv('pr_time');
+  frame(g, w, h);
+  const L = 40, R = 10, Tp = 26, Bm = 22, pw = w - L - R, ph = h - Tp - Bm;
+  gridBox(g, L, Tp, pw, ph, 10, 4);
+  const span = 2 * D.pri;
+  const X = t => L + pw * t / span;
+  /* pulsos TX */
+  for (const t0 of [0, D.pri]) {
+    g.fillStyle = 'rgba(251,191,36,0.28)';
+    g.fillRect(X(t0), Tp, Math.max(2, X(t0 + D.tau) - X(t0)), ph);
+    g.strokeStyle = COL.amber; g.strokeRect(X(t0), Tp, Math.max(2, X(t0 + D.tau) - X(t0)), ph);
+    label(g, 'TX', X(t0) + 3, Tp + 12, COL.amber, 'left');
+  }
+  /* ecos: como o operador ve (apos o ultimo pulso) */
+  const sorted = [...D.tg].sort((a, b) => a.tm - b.tm);
+  sorted.forEach((t, idx) => {
+    const bad = t.trip > 1 || t.ecl;
+    const color = bad ? COL.rose : COL.phos;
+    const yTop = Tp + 14 + (idx % 3) * 16;
+    for (const off of [0, D.pri]) {
+      stem(g, X(off + t.tm), Tp + ph, yTop + 12, color, 2);
+    }
+    label(g, t.n + (t.ecl ? ' (eclipsado)' : t.trip > 1 ? ' (2ª volta)' : ''), X(t.tm) + 4, yTop + 9, color, 'left');
+    /* chegada real do eco de volta multipla */
+    if (t.trip > 1 && t.t <= span) {
+      stem(g, X(t.t), Tp + ph, Tp + ph * 0.35, color, 1.6, true);
+      label(g, 'chegada real', X(t.t), Tp + ph * 0.35 - 4, COL.t3);
+    }
+  });
+  for (let k = 0; k <= 4; k++) label(g, fmt(span * k / 4, 0), L + pw * k / 4, h - 7, COL.t3);
+  label(g, 't (µs)', w - R, h - 7, COL.t3, 'right');
+  label(g, 'PRI = ' + fmt(D.pri, 0) + ' µs', X(D.pri), Tp - 6, COL.t2);
+}
+
+function drawPRRng(D) {
+  const { g, w, h } = cv('pr_rng');
+  frame(g, w, h);
+  const L = 36, R = 10, Tp = 24, Bm = 22, pw = w - L - R, ph = h - Tp - Bm;
+  const rmaxAx = Math.max(600, D.rx + 40);
+  const X = r => L + pw * r / rmaxAx;
+  /* faixas de Rua */
+  for (let k = 0; k * D.rua < rmaxAx; k++) {
+    const a = k * D.rua, b2 = Math.min((k + 1) * D.rua, rmaxAx);
+    if (k % 2 === 1) { g.fillStyle = 'rgba(251,113,133,0.06)'; g.fillRect(X(a), Tp, X(b2) - X(a), ph); }
+    g.strokeStyle = COL.axis; g.beginPath(); g.moveTo(X(a), Tp); g.lineTo(X(a), Tp + ph); g.stroke();
+    if (b2 - a > rmaxAx * 0.06) label(g, (k + 1) + 'ª volta', X((a + b2) / 2), Tp + 11, k ? COL.rose : COL.t3);
+  }
+  g.strokeStyle = COL.axis; g.strokeRect(L, Tp, pw, ph);
+  /* zona cega inicial */
+  if (D.blindKm > 0.5) {
+    g.fillStyle = 'rgba(251,113,133,0.22)';
+    g.fillRect(L, Tp, Math.max(2, X(D.blindKm) - L), ph);
+  }
+  /* alvos */
+  const ymid = Tp + ph * 0.62;
+  for (const t of D.tg) {
+    const bad = t.trip > 1;
+    const color = t.ecl ? COL.rose : bad ? COL.rose : COL.phos;
+    g.fillStyle = color; g.shadowColor = color; g.shadowBlur = 7;
+    g.beginPath(); g.arc(X(t.r), ymid, 4, 0, TAU); g.fill();
+    g.shadowBlur = 0;
+    label(g, t.n, X(t.r), ymid - 10, color);
+    if (bad) {
+      /* posicao aparente */
+      g.strokeStyle = COL.rose; g.lineWidth = 1.6;
+      g.beginPath(); g.arc(X(t.rApp), ymid, 4.5, 0, TAU); g.stroke();
+      g.setLineDash([4, 4]); g.globalAlpha = 0.7;
+      g.beginPath(); g.moveTo(X(t.rApp) + 5, ymid); g.lineTo(X(t.r) - 5, ymid); g.stroke();
+      g.setLineDash([]); g.globalAlpha = 1;
+      label(g, 'aparece em ' + fmt(t.rApp, 0) + ' km', X(t.rApp), ymid + 18, COL.rose);
+    }
+  }
+  for (const tk of ticks(0, rmaxAx, 7)) label(g, fmt(tk, 0), X(tk), h - 7, COL.t3);
+  label(g, 'R (km)', w - R, h - 7, COL.t3, 'right');
+  label(g, 'Rua = ' + fmt(D.rua, 0) + ' km', X(Math.min(D.rua, rmaxAx)) - 4, Tp + ph - 6, COL.t2, 'right');
+}
+
+function prMetrics(D) {
+  const x = D.tg[2];
+  const cards = [];
+  cards.push(mcCard('Rua', fmt(D.rua, 1) + ' km', 'alcance não ambíguo c/(2·PRF)', 'g'));
+  cards.push(mcCard('PRI', fmt(D.pri, 0) + ' us', 'período entre pulsos'));
+  cards.push(mcCard('ΔR', fmt(drM(D.tau), 0) + ' m', 'resolução c·τ/2', 'c'));
+  cards.push(mcCard('zona cega', fmt(D.blindKm, 1) + ' km', 'eclipse durante o TX', 'r'));
+  cards.push(mcCard('duty', fmt(D.duty * 100, 2) + '%', 'Pméd / Ppico', 'a'));
+  cards.push(mcCard('Alvo X real', fmt(x.r, 0) + ' km', 'posição verdadeira'));
+  cards.push(mcCard('Alvo X na tela', fmt(x.rApp, 0) + ' km', x.trip > 1 ? 'dobrado: ' + x.trip + 'ª volta' : 'sem ambiguidade', x.trip > 1 ? 'r' : 'g'));
+  $('pr_metrics').innerHTML = cards.join('');
+
+  let alert = '';
+  const ecl = D.tg.find(t => t.ecl);
+  if (x.trip > 1) {
+    alert = alBox('rose', '<b>Eco de segunda volta!</b> O Alvo X está a ' + fmt(x.r, 0) + ' km, além de Rua = ' + fmt(D.rua, 0) + ' km. O eco chega depois do pulso seguinte e o radar o marca em ' + fmt(x.rApp, 0) + ' km. Antídoto clássico: alternar a PRF; o fantasma muda de lugar, o alvo real não.');
+  } else if (ecl) {
+    alert = alBox('rose', '<b>' + ecl.n + ' eclipsado:</b> o eco chega enquanto o radar ainda transmite (zona cega de ' + fmt(D.blindKm, 1) + ' km). Encurte o pulso ou use compressão.');
+  } else if (D.rua < 45) {
+    alert = alBox('amber', '<b>PRF alta:</b> Rua caiu para ' + fmt(D.rua, 0) + ' km; quase tudo vira eco de volta múltipla. É o preço que radares Doppler pagam de bom grado.');
+  } else {
+    alert = alBox('phos', '<b>Sem ambiguidade:</b> todos os alvos dentro de Rua = ' + fmt(D.rua, 0) + ' km.');
+  }
+  $('pr_alert').innerHTML = alert;
+}
+
+function renderPR() {
+  const D = prCompute();
+  drawPRTime(D);
+  drawPRRng(D);
+  prMetrics(D);
+}
+
+/* =====================================================================
+   MODULO DOPPLER & MTI
+   ===================================================================== */
+function dpCompute() {
+  const f = V('dp_f'), prf = V('dp_prf'), v = V('dp_v');
+  const order = +$('dp_mti').value, cw = V('dp_cw');
+  const lam = lambdaM(f);
+  const fd = fdHz(v, f);
+  const ff = foldF(fd, prf);
+  const vApp = ff * lam / 2;
+  const vb1 = vbMs(f, prf, 1);
+  const hT = mtiH(ff, prf, order);
+  return { f, prf, v, order, cw, lam, fd, ff, vApp, vb1, hT };
+}
+
+function drawDP(D) {
+  const { g, w, h } = cv('dp_spec');
+  frame(g, w, h);
+  const L = 42, R = 12, Tp = 16, Bm = 26, pw = w - L - R, ph = h - Tp - Bm;
+  gridBox(g, L, Tp, pw, ph, 8, 5);
+  const f1 = -D.prf, f2 = D.prf;
+  const FX = f => L + pw * (f - f1) / (f2 - f1);
+  const YA = a => Tp + ph * (1 - 0.94 * Math.max(0, Math.min(1, a)));
+  /* zonas de replica (fora da janela de Nyquist do Doppler) */
+  g.fillStyle = 'rgba(0,0,0,0.36)';
+  g.fillRect(L, Tp, FX(-D.prf / 2) - L, ph);
+  g.fillRect(FX(D.prf / 2), Tp, L + pw - FX(D.prf / 2), ph);
+  label(g, 'réplica', FX(-0.75 * D.prf), Tp + 12, COL.t3);
+  label(g, 'réplica', FX(0.75 * D.prf), Tp + 12, COL.t3);
+  g.strokeStyle = COL.axis; g.setLineDash([4, 4]);
+  g.beginPath();
+  g.moveTo(FX(-D.prf / 2), Tp); g.lineTo(FX(-D.prf / 2), Tp + ph);
+  g.moveTo(FX(D.prf / 2), Tp); g.lineTo(FX(D.prf / 2), Tp + ph);
+  g.stroke(); g.setLineDash([]);
+  /* clutter (entrada) com replicas */
+  g.fillStyle = 'rgba(107,120,137,0.30)';
+  g.beginPath(); g.moveTo(L, Tp + ph);
+  for (let c = 0; c <= pw; c += 2) {
+    const f = f1 + (f2 - f1) * c / pw;
+    let a = 0;
+    for (const f0 of [-D.prf, 0, D.prf]) a += Math.exp(-((f - f0) ** 2) / (2 * D.cw * D.cw));
+    g.lineTo(L + c, YA(Math.min(1, a)));
+  }
+  g.lineTo(L + pw, Tp + ph); g.closePath(); g.fill();
+  /* resposta do MTI */
+  if (D.order > 0) {
+    g.strokeStyle = COL.violet; g.lineWidth = 1.5; g.shadowColor = COL.violet; g.shadowBlur = 4;
+    g.beginPath();
+    for (let c = 0; c <= pw; c += 2) {
+      const f = f1 + (f2 - f1) * c / pw;
+      const y = YA(mtiH(f, D.prf, D.order));
+      if (c === 0) g.moveTo(L + c, y); else g.lineTo(L + c, y);
+    }
+    g.stroke(); g.shadowBlur = 0;
+  }
+  /* velocidades cegas: f = k PRF */
+  for (const f0 of [-D.prf, 0, D.prf]) {
+    g.strokeStyle = COL.rose; g.setLineDash([2, 5]); g.globalAlpha = 0.75;
+    g.beginPath(); g.moveTo(FX(f0), Tp); g.lineTo(FX(f0), Tp + ph); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+  }
+  label(g, 'v cega: 0, ±' + fmt(D.vb1, 0) + ' m/s ...', FX(0), Tp + ph - 6, COL.rose);
+  /* alvo: entrada (fantasma) e saida do MTI */
+  stem(g, FX(D.ff), Tp + ph, YA(0.8), COL.t3, 1.6, true);
+  stem(g, FX(D.ff), Tp + ph, YA(0.8 * D.hT), COL.phos, 2.4);
+  label(g, 'alvo', FX(D.ff), YA(0.8 * Math.max(D.hT, 0.12)) - 8, COL.phos);
+  if (Math.abs(D.fd) > D.prf / 2 && Math.abs(D.fd) <= D.prf) {
+    stem(g, FX(D.fd), Tp + ph, YA(0.8), COL.rose, 1.8, true);
+    label(g, 'fd real', FX(D.fd), YA(0.8) - 8, COL.rose);
+  } else if (Math.abs(D.fd) > D.prf) {
+    label(g, 'fd real fora da tela (' + fmt(D.fd / 1000, 1) + ' kHz)', FX(D.fd > 0 ? 0.55 * D.prf : -0.55 * D.prf), Tp + 26, COL.rose);
+  }
+  /* eixos */
+  const kHz = D.prf >= 2500;
+  for (const t of ticks(f1, f2, 8)) label(g, kHz ? fmt(t / 1000, 1) : fmt(t, 0), FX(t), h - 8, COL.t3);
+  label(g, 'f Doppler (' + (kHz ? 'kHz' : 'Hz') + ')', w - R, h - 8, COL.t3, 'right');
+  label(g, 'PRF/2', FX(D.prf / 2), Tp - 4, COL.t2);
+  label(g, '-PRF/2', FX(-D.prf / 2), Tp - 4, COL.t2);
+}
+
+function dpMetrics(D) {
+  const cards = [];
+  cards.push(mcCard('λ', fmt(D.lam * 100, 1) + ' cm', 'comprimento de onda', 'c'));
+  cards.push(mcCard('fd', Math.abs(D.fd) >= 2000 ? fmt(D.fd / 1000, 2) + ' kHz' : fmt(D.fd, 0) + ' Hz', '2·v / λ', 'v'));
+  cards.push(mcCard('fd dobrado', fmt(D.ff, 0) + ' Hz', 'dentro de ±PRF/2'));
+  cards.push(mcCard('v real', fmt(D.v, 0) + ' m/s', 'velocidade radial'));
+  cards.push(mcCard('v aparente', fmt(D.vApp, 0) + ' m/s', 'o que o radar mede', Math.abs(D.vApp - D.v) > 1 ? 'r' : 'g'));
+  cards.push(mcCard('v cega', '±' + fmt(D.vb1, 1) + ' m/s', 'e múltiplos (k·λ·PRF/2)', 'r'));
+  if (D.order > 0) {
+    cards.push(mcCard('alvo no MTI', fmt(dB(D.hT), 1) + ' dB', 'ganho do filtro no alvo', D.hT > 0.7 ? 'g' : D.hT > 0.18 ? 'a' : 'r'));
+    cards.push(mcCard('supressão', fmt(-dB(mtiH(D.cw, D.prf, D.order)), 1) + ' dB', 'do clutter em f = σc', 'v'));
+  }
+  $('dp_metrics').innerHTML = cards.join('');
+
+  let alert = '';
+  if (D.order > 0 && D.hT < 0.18) {
+    alert = alBox('rose', '<b>Velocidade cega!</b> fd caiu em k·PRF: o alvo entra no nulo do cancelador junto com o clutter e some da tela. Antídoto: PRF alternada (stagger) ou outra frequência.');
+  } else if (Math.abs(D.fd) > D.prf / 2) {
+    alert = alBox('amber', '<b>Doppler dobrado:</b> o alvo vai a ' + fmt(D.v, 0) + ' m/s, mas o radar mede ' + fmt(D.vApp, 0) + ' m/s' + (D.vApp * D.v < 0 ? ' (até o sentido inverte!)' : '') + '. PRFs múltiplas desfazem a ambiguidade.');
+  } else if (D.order === 0) {
+    alert = alBox('cyan', '<b>Sem MTI:</b> o clutter em torno de zero domina o espectro. Ligue o cancelador e veja o entalhe em f = 0.');
+  } else if (D.order === 2) {
+    alert = alBox('phos', '<b>Cancelador duplo:</b> nulo mais largo em torno do clutter; melhor para clutter com espalhamento espectral, ao custo de comer alvos lentos.');
+  } else {
+    alert = alBox('phos', '<b>Alvo na região boa:</b> o MTI passa o alvo com ' + fmt(dB(D.hT), 1) + ' dB e cava o clutter em zero.');
+  }
+  $('dp_alert').innerHTML = alert;
+}
+
+function renderDP() {
+  const D = dpCompute();
+  drawDP(D);
+  dpMetrics(D);
+}
+
+/* =====================================================================
+   MODULO COMPRESSAO DE PULSO (chirp LFM)
+   ===================================================================== */
+/*CHIRP-BEGIN*/
+function chirpMF(bMHz, tauUs, win, sepM, two) {
+  const Bhz = bMHz * 1e6, tau = tauUs * 1e-6;
+  const fs = 3 * Bhz;
+  const Ns = Math.max(64, Math.round(fs * tau));
+  const i0 = Math.round(fs * 8e-6);
+  const i1 = i0 + Math.round(fs * (2 * sepM / C));
+  const need = i1 + 2 * Ns + 64;
+  let NF = 1024;
+  while (NF < need) NF <<= 1;
+  const dt = 1 / fs, K = Bhz / tau;
+  const rr = new Float64Array(NF), ri = new Float64Array(NF);
+  for (let i = 0; i < Ns; i++) {
+    const t = i * dt - tau / 2;
+    const ph = Math.PI * K * t * t;
+    let wnd = 1;
+    if (win === 'hamm') wnd = 0.54 - 0.46 * Math.cos(TAU * i / (Ns - 1));
+    rr[i] = wnd * Math.cos(ph); ri[i] = wnd * Math.sin(ph);
+  }
+  const sr = new Float64Array(NF), si = new Float64Array(NF);
+  for (let i = 0; i < Ns; i++) {
+    const t = i * dt - tau / 2, ph = Math.PI * K * t * t;
+    const c = Math.cos(ph), s = Math.sin(ph);
+    sr[i0 + i] += c; si[i0 + i] += s;
+    if (two) { sr[i1 + i] += 0.8 * c; si[i1 + i] += 0.8 * s; }
+  }
+  fft(sr, si, false); fft(rr, ri, false);
+  for (let i = 0; i < NF; i++) {
+    const a = sr[i], b2 = si[i], c2 = rr[i], d = -ri[i];
+    sr[i] = a * c2 - b2 * d;
+    si[i] = a * d + b2 * c2;
+  }
+  fft(sr, si, true);
+  const mag = new Float64Array(NF);
+  let mmax = 1e-12, ipk = 0;
+  for (let i = 0; i < NF; i++) {
+    mag[i] = Math.hypot(sr[i], si[i]);
+    if (mag[i] > mmax) { mmax = mag[i]; ipk = i; }
+  }
+  for (let i = 0; i < NF; i++) mag[i] /= mmax;
+  return { mag, fs, NF, ipk, i0, i1, dt, Ns };
+}
+function chMeasure(res) {
+  const { mag, ipk, dt } = res;
+  const dbi = i => dB(mag[Math.max(0, Math.min(mag.length - 1, i))]);
+  let l = ipk; while (l > 0 && dbi(l) > -3) l--;
+  let r = ipk; while (r < mag.length - 1 && dbi(r) > -3) r++;
+  const fl = l + (-3 - dbi(l)) / ((dbi(l + 1) - dbi(l)) || 1);
+  const fr = r - (-3 - dbi(r)) / ((dbi(r - 1) - dbi(r)) || 1);
+  const wS = Math.max(0.6, fr - fl);
+  const drMeas = wS * dt * C / 2;
+  const excl = Math.ceil(1.13 * wS) + 1;
+  const span = Math.min(Math.floor(mag.length / 3), Math.max(80, Math.ceil(50 * wS)));
+  let psl = 1e-12;
+  for (let i = ipk + excl; i <= Math.min(mag.length - 1, ipk + span); i++) if (mag[i] > psl) psl = mag[i];
+  for (let i = Math.max(0, ipk - span); i <= ipk - excl; i++) if (mag[i] > psl) psl = mag[i];
+  return { drMeas, pslDb: dB(psl), wS };
+}
+/*CHIRP-END*/
+
+const CH = { timer: 0 };
+function chParams() {
+  return { b: V('ch_b'), tau: V('ch_tau'), win: $('ch_win').value, sep: V('ch_sep'), show: $('ch_show').checked };
+}
+function chSched() { clearTimeout(CH.timer); CH.timer = setTimeout(chRun, 70); }
+
+function drawCHWave(p, tauEff) {
+  const { g, w, h } = cv('ch_wave');
+  frame(g, w, h);
+  const L = 14, R = 14, Tp = 12, Bm = 22, pw = w - L - R, ph = h - Tp - Bm;
+  g.strokeStyle = COL.axis; g.strokeRect(L, Tp, pw, ph);
+  const N = 1300, mid = Tp + ph / 2, amp = ph * 0.42;
+  const seg = 10;
+  g.lineWidth = 1.3;
+  for (let i = 0; i < N - 1; i += seg) {
+    const u0 = (i + seg / 2) / N;
+    g.strokeStyle = 'hsl(' + (210 + 140 * u0) + ', 85%, 62%)';
+    g.beginPath();
+    for (let k = i; k <= Math.min(N - 1, i + seg); k++) {
+      const u = k / N;
+      const y = mid - amp * Math.cos(TAU * (5 * u + 9 * u * u));
+      const x = L + pw * u;
+      if (k === i) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  label(g, '0', L, h - 7, COL.t3, 'left');
+  label(g, 'τ = ' + fmt(tauEff, 0) + ' µs', L + pw, h - 7, COL.t3, 'right');
+  label(g, 'B = ' + fmt(p.b, 1) + ' MHz (varredura fora de escala visual)', L + pw / 2, Tp - 3, COL.t3);
+}
+
+function drawCHOut(p, dual, M, tauEff) {
+  const { g, w, h } = cv('ch_out');
+  frame(g, w, h);
+  const L = 44, R = 12, Tp = 14, Bm = 24, pw = w - L - R, ph = h - Tp - Bm;
+  gridBox(g, L, Tp, pw, ph, 10, 5);
+  const pad = Math.max(8 * M.drMeas, 0.18 * (p.sep + 1));
+  const xmin = -pad, xmax = p.sep + pad;
+  const X = r => L + pw * (r - xmin) / (xmax - xmin);
+  const YD = db => Tp + ph * Math.min(1, -db / 60);
+  const rOf = i => (i - dual.i0) * dual.dt * C / 2;
+  const iOf = r => dual.i0 + Math.round(r / (dual.dt * C / 2));
+  /* eco bruto (sem filtro casado): plateaus dos dois pulsos */
+  if (p.show) {
+    const drRaw = drM(tauEff);
+    g.save(); g.strokeStyle = COL.amber; g.setLineDash([5, 4]); g.globalAlpha = 0.75; g.lineWidth = 1.3;
+    g.beginPath();
+    let prev = null;
+    for (let c = 0; c <= pw; c++) {
+      const r = xmin + (xmax - xmin) * c / pw;
+      let a = 0;
+      if (r >= 0 && r < drRaw) a = 1;
+      if (r >= p.sep && r < p.sep + drRaw) a = Math.max(a, 0.8);
+      const y = YD(a > 0 ? dB(a) : -60);
+      if (prev === null) g.moveTo(L + c, y); else g.lineTo(L + c, y);
+      prev = y;
+    }
+    g.stroke(); g.restore();
+    if (drRaw > xmax) label(g, 'eco bruto segue até ' + fmt(drRaw, 0) + ' m', L + pw - 4, YD(0) - 5, COL.amber, 'right');
+  }
+  /* saida comprimida (maximo por coluna) */
+  g.strokeStyle = COL.phos; g.lineWidth = 1.4; g.shadowColor = COL.phos; g.shadowBlur = 4;
+  g.beginPath();
+  for (let c = 0; c <= pw; c++) {
+    const rA = xmin + (xmax - xmin) * c / pw;
+    const rB = xmin + (xmax - xmin) * (c + 1) / pw;
+    let m = 0;
+    for (let i = Math.max(0, iOf(rA)); i <= Math.min(dual.mag.length - 1, iOf(rB)); i++) if (dual.mag[i] > m) m = dual.mag[i];
+    const y = YD(dB(Math.max(m, 1e-3)));
+    if (c === 0) g.moveTo(L + c, y); else g.lineTo(L + c, y);
+  }
+  g.stroke(); g.shadowBlur = 0;
+  /* posicoes reais */
+  for (const [r, nm] of [[0, 'alvo 1'], [p.sep, 'alvo 2']]) {
+    g.strokeStyle = COL.cyan; g.setLineDash([3, 4]); g.globalAlpha = 0.6;
+    g.beginPath(); g.moveTo(X(r), Tp); g.lineTo(X(r), Tp + ph); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+    label(g, nm, X(r), Tp - 3, COL.cyan);
+  }
+  for (const t of ticks(xmin, xmax, 7)) label(g, fmt(t, 0), X(t), h - 8, COL.t3);
+  label(g, 'alcance relativo (m)', w - R, h - 8, COL.t3, 'right');
+  label(g, '0 dB', L - 5, Tp + 8, COL.t3, 'right');
+  label(g, '-60', L - 5, Tp + ph, COL.t3, 'right');
+}
+
+function chMetrics(p, M, tauEff, clamped) {
+  const bt = p.b * tauEff;
+  const theo = (p.win === 'hamm' ? 1.30 : 0.886) * C / (2 * p.b * 1e6);
+  const resolved = p.sep > 1.05 * M.drMeas;
+  const cards = [];
+  cards.push(mcCard('B·τ', fmt(bt, 0), clamped ? 'limitado para manter interativo' : 'produto tempo-banda', clamped ? 'a' : 'c'));
+  cards.push(mcCard('ganho', '+' + fmt(10 * Math.log10(bt), 1) + ' dB', 'compressão 10·log(B·τ)', 'g'));
+  cards.push(mcCard('ΔR bruto', fmt(drM(tauEff), 0) + ' m', 'sem compressão: c·τ/2', 'a'));
+  cards.push(mcCard('ΔR teórico', fmt(theo, 1) + ' m', (p.win === 'hamm' ? '1,30' : '0,886') + ' c/(2B)', 'c'));
+  cards.push(mcCard('ΔR medido', fmt(M.drMeas, 1) + ' m', 'largura a -3 dB na simulação', 'g'));
+  cards.push(mcCard('PSL medido', fmt(M.pslDb, 1) + ' dB', 'maior lóbulo lateral', p.win === 'hamm' ? 'g' : 'a'));
+  cards.push(mcCard('alvos', resolved ? 'RESOLVIDOS' : 'FUNDIDOS', 'separação ' + fmt(p.sep, 0) + ' m vs ΔR ' + fmt(M.drMeas, 1) + ' m', resolved ? 'g' : 'r'));
+  $('ch_metrics').innerHTML = cards.join('');
+
+  let alert = '';
+  if (resolved) {
+    alert = alBox('phos', '<b>Dois picos distintos:</b> a compressão transformou um pulso de ' + fmt(drM(tauEff), 0) + ' m em picos de ' + fmt(M.drMeas, 1) + ' m. Energia de pulso longo, resolução de pulso curto.');
+  } else {
+    alert = alBox('rose', '<b>Alvos fundidos:</b> separação de ' + fmt(p.sep, 0) + ' m contra resolução de ' + fmt(M.drMeas, 1) + ' m. Aumente a varredura B: a resolução só depende dela.');
+  }
+  if (p.win === 'hamm') alert += alBox('cyan', '<b>Hamming:</b> lóbulos caem para ~-43 dB e um alvo fraco vizinho sobrevive; o preço é o lóbulo principal ~1,5x mais largo e ~1,3 dB de SNR.');
+  else if (M.pslDb > -16) alert += alBox('amber', '<b>Lóbulos em -13 dB:</b> um alvo 20 dB mais fraco ao lado sumiria embaixo deles. Experimente a janela de Hamming.');
+  if (clamped) alert += alBox('amber', 'B·τ limitado a 3500 na simulação (τ efetivo: ' + fmt(tauEff, 1) + ' µs).');
+  $('ch_alert').innerHTML = alert;
+}
+
+function chRun() {
+  const p = chParams();
+  let tauEff = p.tau, clamped = false;
+  if (p.b * p.tau > 3500) { tauEff = 3500 / p.b; clamped = true; }
+  const single = chirpMF(p.b, tauEff, p.win, 0, false);
+  const dual = chirpMF(p.b, tauEff, p.win, p.sep, true);
+  const M = chMeasure(single);
+  drawCHWave(p, tauEff);
+  drawCHOut(p, dual, M, tauEff);
+  chMetrics(p, M, tauEff, clamped);
+}
+
+/* =====================================================================
+   MODULO PPI (display animado com persistencia)
+   ===================================================================== */
+const PP = {
+  running: false, paused: false, raf: 0, last: 0, tabAt: 0,
+  ang: 0, scale: 200, prf: 1000, blips: [],
+  radar: { pt: 500, g: 34, f: 2.8, b: 1, nf: 3, loss: 6 },
+  tgts: []
+};
+const PP_TGT0 = [
+  { n: 'Voo Atlântico 271', r: 160, az: 40, v: 230, hdg: 255, sig: 30 },
+  { n: 'Caça Falcão', r: 90, az: 120, v: 290, hdg: 300, sig: 2 },
+  { n: 'Cessna Costeira', r: 45, az: 210, v: 60, hdg: 20, sig: 1 },
+  { n: 'Navio Estrela do Mar', r: 70, az: 300, v: 8, hdg: 90, sig: 5000 },
+  { n: 'Balão Meteo', r: 30, az: 80, v: 15, hdg: 120, sig: 0.05 },
+  { n: 'Eco Fantasma', r: 330, az: 170, v: 240, hdg: 350, sig: 40, ghost: true }
+];
+function ppReset() {
+  PP.tgts = PP_TGT0.map(t => ({ ...t, painted: false, pd: 0, snr: 0 }));
+}
+function angDist(a, b) {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+function ppSizeScope() {
+  const el = $('pp_scope');
+  const w = el.clientWidth || el.parentElement.clientWidth - 24;
+  const h = +el.getAttribute('height');
+  if (el.width !== w || el.height !== h) {
+    el.width = w; el.height = h;
+    el.style.height = h + 'px';
+    ppClear();
+  }
+}
+function ppClear() {
+  const el = $('pp_scope'), g = el.getContext('2d');
+  g.fillStyle = '#070c09';
+  g.fillRect(0, 0, el.width, el.height);
+}
+function ppGeom() {
+  const el = $('pp_scope');
+  return { g: el.getContext('2d'), w: el.width, h: el.height,
+           cx: el.width / 2, cy: el.height / 2,
+           rad: Math.min(el.width, el.height) / 2 - 22 };
+}
+
+function ppStart() {
+  if (PP.running) return;
+  if (!PP.tgts.length) ppReset();
+  PP.running = true; PP.last = 0;
+  PP.raf = requestAnimationFrame(ppLoop);
+}
+function ppStop() {
+  if (!PP.running) return;
+  PP.running = false;
+  cancelAnimationFrame(PP.raf);
+}
+
+function ppLoop(ts) {
+  if (!PP.running) return;
+  PP.raf = requestAnimationFrame(ppLoop);
+  if (!PP.last) { PP.last = ts; return; }
+  let dt = (ts - PP.last) / 1000;
+  PP.last = ts;
+  if (dt > 0.1) dt = 0.1;
+  if (PP.paused) dt = 0;
+  const rpm = V('pp_rpm'), bw = V('pp_bw'), pfa = +$('pp_pfa').value;
+  PP.ang = (PP.ang + rpm * 6 * dt) % 360;
+  const rua = ruaKm(PP.prf);
+  for (const t of PP.tgts) {
+    if (dt > 0) {
+      const rd = t.az * Math.PI / 180, hd = t.hdg * Math.PI / 180;
+      let x = t.r * Math.sin(rd), y = t.r * Math.cos(rd);
+      x += (t.v * dt / 1000) * Math.sin(hd);
+      y += (t.v * dt / 1000) * Math.cos(hd);
+      t.r = Math.hypot(x, y);
+      t.az = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+      if (t.r > 460 || t.r < 4) t.hdg = (t.hdg + 180) % 360;
+    }
+    const d = angDist(PP.ang, t.az);
+    if (d <= bw / 2) {
+      if (!t.painted && dt > 0) {
+        t.painted = true;
+        const dwell = bw / (6 * rpm);
+        const n = Math.max(1, Math.round(dwell * PP.prf));
+        t.snr = prDbm(PP.radar.pt, PP.radar.g, PP.radar.f, t.sig, t.r, PP.radar.loss) - noiseDbm(PP.radar.b, PP.radar.nf);
+        t.n = n;
+        t.pd = albPd(t.snr, pfa, n);
+        t.rDisp = t.ghost ? (t.r % rua) : t.r;
+        if (Math.random() < t.pd && t.rDisp <= PP.scale) {
+          PP.blips.push({
+            r: t.rDisp, az: t.az,
+            color: t.ghost ? COL.rose : COL.phos,
+            i: Math.max(0.35, Math.min(1, 0.45 + (t.snr + 5) / 55))
+          });
+        }
+      }
+    } else t.painted = false;
+  }
+  ppDrawScope(pfa);
+  ppDrawA(bw, pfa);
+  if (ts - PP.tabAt > 260) { PP.tabAt = ts; ppTable(); ppMetrics(rpm, bw); }
+}
+
+function ppDrawScope(pfa) {
+  const { g, w, h, cx, cy, rad } = ppGeom();
+  const K = rad / PP.scale;
+  const a = (PP.ang - 90) * Math.PI / 180;      /* 0 graus = norte */
+  if (!PP.paused) {
+    /* persistencia de fosforo */
+    g.fillStyle = 'rgba(7,12,9,0.05)';
+    g.fillRect(0, 0, w, h);
+    /* speckle de ruido (falsos alarmes visuais) */
+    const dens = { '0.001': 14, '0.0001': 5, '0.000001': 1.1, '1e-8': 0.18 }[String(pfa)] ?? 1.1;
+    let cnt = dens;
+    while (cnt > 0) {
+      if (cnt >= 1 || Math.random() < cnt) {
+        const rr = Math.random() * rad;
+        const aa = a + (Math.random() - 0.5) * 0.05;
+        g.fillStyle = 'rgba(74,222,128,0.4)';
+        g.fillRect(cx + rr * Math.cos(aa), cy + rr * Math.sin(aa), 1.4, 1.4);
+      }
+      cnt -= 1;
+    }
+  }
+  /* blips desta passagem */
+  for (const b of PP.blips) {
+    const ba = (b.az - 90) * Math.PI / 180;
+    const x = cx + b.r * K * Math.cos(ba), y = cy + b.r * K * Math.sin(ba);
+    g.save();
+    g.fillStyle = b.color;
+    g.shadowColor = b.color; g.shadowBlur = 10;
+    g.globalAlpha = b.i;
+    g.beginPath(); g.ellipse(x, y, 3.6, 2.3, ba + Math.PI / 2, 0, TAU); g.fill();
+    g.restore();
+  }
+  PP.blips.length = 0;
+  /* linha de varredura */
+  g.save();
+  g.strokeStyle = 'rgba(74,222,128,0.9)';
+  g.lineWidth = 1.6;
+  g.shadowColor = COL.phos; g.shadowBlur = 8;
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + rad * Math.cos(a), cy + rad * Math.sin(a)); g.stroke();
+  g.restore();
+  /* aneis, radiais e rotulos */
+  g.save();
+  g.strokeStyle = 'rgba(74,222,128,0.28)'; g.lineWidth = 1;
+  for (let k = 1; k <= 4; k++) { g.beginPath(); g.arc(cx, cy, rad * k / 4, 0, TAU); g.stroke(); }
+  g.strokeStyle = 'rgba(74,222,128,0.16)';
+  for (let az = 0; az < 360; az += 30) {
+    const t2 = (az - 90) * Math.PI / 180;
+    g.beginPath();
+    g.moveTo(cx + rad * 0.97 * Math.cos(t2), cy + rad * 0.97 * Math.sin(t2));
+    g.lineTo(cx + rad * Math.cos(t2), cy + rad * Math.sin(t2));
+    g.stroke();
+  }
+  g.fillStyle = 'rgba(182,194,212,0.78)';
+  g.font = '9px "JetBrains Mono", monospace';
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  for (let k = 1; k <= 4; k++) g.fillText(fmt(PP.scale * k / 4, 0), cx + rad * k / 4, cy - 5);
+  g.fillText('N', cx, cy - rad - 8);
+  g.restore();
+}
+
+const PPA = { noise: null };
+function ppDrawA(bw, pfa) {
+  const { g, w, h } = cv('pp_ascope');
+  frame(g, w, h);
+  const L = 36, R = 10, Tp = 10, Bm = 20, pw = w - L - R, ph = h - Tp - Bm;
+  gridBox(g, L, Tp, pw, ph, 8, 3);
+  const NS = 240;
+  if (!PPA.noise || PPA.noise.length !== NS) PPA.noise = new Float64Array(NS);
+  for (let i = 0; i < NS; i++) PPA.noise[i] = 0.7 * PPA.noise[i] + 0.3 * Math.random();
+  const thr = { '0.001': 0.55, '0.0001': 0.63, '0.000001': 0.74, '1e-8': 0.84 }[String(pfa)] ?? 0.74;
+  const rua = ruaKm(PP.prf);
+  const Y = v => Tp + ph * (1 - Math.min(1, v));
+  g.strokeStyle = COL.phos; g.lineWidth = 1; g.globalAlpha = 0.9;
+  g.beginPath();
+  for (let i = 0; i < NS; i++) {
+    let v = 0.12 + 0.28 * PPA.noise[i];
+    const rKm = PP.scale * i / NS;
+    for (const t of PP.tgts) {
+      const rD = t.ghost ? (t.r % rua) : t.r;
+      if (angDist(PP.ang, t.az) <= bw / 2 && Math.abs(rD - rKm) < PP.scale / 90) {
+        v = Math.max(v, Math.min(1, 0.3 + ((t.snr || 10) + 5) / 45));
+      }
+    }
+    const x = L + pw * i / (NS - 1);
+    if (i === 0) g.moveTo(x, Y(v)); else g.lineTo(x, Y(v));
+  }
+  g.stroke(); g.globalAlpha = 1;
+  g.strokeStyle = COL.amber; g.setLineDash([5, 4]);
+  g.beginPath(); g.moveTo(L, Y(thr)); g.lineTo(L + pw, Y(thr)); g.stroke();
+  g.setLineDash([]);
+  label(g, 'limiar', L + pw - 3, Y(thr) - 4, COL.amber, 'right');
+  for (const t of ticks(0, PP.scale, 5)) label(g, fmt(t, 0), L + pw * t / PP.scale, h - 6, COL.t3);
+  label(g, 'R (km) | azimute ' + fmt(PP.ang, 0) + '°', w - R, h - 6, COL.t3, 'right');
+}
+
+function ppTable() {
+  const rua = ruaKm(PP.prf);
+  let html = '<table class="tb-t"><tr><th>alvo</th><th>R km</th><th>az</th><th>Pd</th></tr>';
+  for (const t of PP.tgts) {
+    const rD = t.ghost ? (t.r % rua) : t.r;
+    const pd = t.pd || 0;
+    const cls = t.ghost ? 'r' : pd > 0.8 ? 'g' : pd > 0.4 ? 'a' : 'r';
+    const pcol = t.ghost ? COL.rose : pd > 0.8 ? COL.phos : pd > 0.4 ? COL.amber : COL.rose;
+    html += '<tr><td class="' + (t.ghost ? 'r' : '') + '">' + t.n + '</td>' +
+      '<td>' + fmt(rD, 0) + (t.ghost ? ' <span style="color:var(--text-3)">(' + fmt(t.r, 0) + ')</span>' : '') + '</td>' +
+      '<td>' + fmt(t.az, 0) + '&deg;</td>' +
+      '<td class="' + cls + '">' + fmt(pd * 100, 0) + '% <span class="pdbar"><i style="width:' + Math.round(pd * 100) + '%;background:' + pcol + '"></i></span></td></tr>';
+  }
+  html += '</table>';
+  $('pp_targets').innerHTML = html;
+}
+
+function ppMetrics(rpm, bw) {
+  const dwell = bw / (6 * rpm);
+  const n = Math.max(1, Math.round(dwell * PP.prf));
+  const cards = [];
+  cards.push(mcCard('varredura', fmt(60 / rpm, 1) + ' s', 'período de atualização', 'c'));
+  cards.push(mcCard('tempo no alvo', fmt(dwell * 1000, 0) + ' ms', 'feixe de ' + fmt(bw, 1) + '° a ' + rpm + ' rpm'));
+  cards.push(mcCard('pulsos/alvo', String(n), 'integrados por passagem', 'v'));
+  cards.push(mcCard('ganho n', '+' + fmt(10 * Math.log10(n), 1) + ' dB', 'integração de n pulsos', 'g'));
+  cards.push(mcCard('Rua', fmt(ruaKm(PP.prf), 0) + ' km', 'PRF fixa de 1 kHz', 'g'));
+  $('pp_metrics').innerHTML = cards.join('');
+  const gh = PP.tgts.find(t => t.ghost);
+  if (gh) {
+    $('pp_alert').innerHTML = alBox('rose', '<b>Eco Fantasma:</b> voa de verdade a ' + fmt(gh.r, 0) + ' km, mas aparece dobrado em ' + fmt(gh.r % ruaKm(PP.prf), 0) + ' km, em rosa. O módulo PULSOS &amp; PRF explica a caça: mude a PRF e o fantasma se mexe.');
+  }
+}
+
+/* =====================================================================
+   PRESETS
+   ===================================================================== */
+const PRESETS = {
+  eq: {
+    atc: () => { setV('eq_pt', 500); setV('eq_g', 34); setV('eq_f', 2.8); $('eq_sigma').value = '1'; setV('eq_b', 1); setV('eq_nf', 3); setV('eq_loss', 6); setV('eq_n', 10); setV('eq_pd', 0.9); $('eq_pfa').value = '1e-6'; setV('eq_r', 100); },
+    lr:  () => { setV('eq_pt', 1000); setV('eq_g', 40); setV('eq_f', 1.3); $('eq_sigma').value = '1'; setV('eq_b', 0.5); setV('eq_n', 20); setV('eq_r', 300); },
+    mar: () => { setV('eq_pt', 25); setV('eq_g', 31); setV('eq_f', 9.4); $('eq_sigma').value = '10000'; setV('eq_b', 20); setV('eq_nf', 5); setV('eq_n', 8); setV('eq_r', 30); },
+    uav: () => { setV('eq_pt', 5); setV('eq_g', 35); setV('eq_f', 15); $('eq_sigma').value = '0.1'; setV('eq_b', 10); setV('eq_n', 30); setV('eq_r', 8); }
+  },
+  pr: {
+    classic: () => { setV('pr_prf', 1000); setV('pr_tau', 10); setV('pr_rx', 100); },
+    ghost:   () => { setV('pr_prf', 1000); setV('pr_tau', 10); setV('pr_rx', 380); },
+    hiprf:   () => { setV('pr_prf', 8000); setV('pr_tau', 5); setV('pr_rx', 100); },
+    blind:   () => { setV('pr_prf', 1000); setV('pr_tau', 60); setV('pr_rx', 8); }
+  },
+  dp: {
+    mti2:    () => { $('dp_mti').value = '2'; setV('dp_cw', 60); },
+    cego:    () => { setV('dp_f', 3); setV('dp_prf', 1500); $('dp_mti').value = '1'; setV('dp_v', Math.round(vbMs(3, 1500, 1))); },
+    dobrado: () => { setV('dp_f', 10); setV('dp_prf', 2000); setV('dp_v', 250); $('dp_mti').value = '1'; }
+  },
+  ch: {
+    basic: () => { setV('ch_b', 10); setV('ch_tau', 50); $('ch_win').value = 'rect'; setV('ch_sep', 400); },
+    hires: () => { setV('ch_b', 50); setV('ch_tau', 70); $('ch_win').value = 'rect'; setV('ch_sep', 30); },
+    merge: () => { setV('ch_b', 1); setV('ch_tau', 100); $('ch_win').value = 'rect'; setV('ch_sep', 120); },
+    hamm:  () => { setV('ch_b', 10); setV('ch_tau', 50); $('ch_win').value = 'hamm'; setV('ch_sep', 60); }
+  }
+};
+
+/* =====================================================================
+   INICIALIZACAO
+   ===================================================================== */
+function init() {
+  /* EQUACAO */
+  bind('eq_pt', 0, renderEQ); bind('eq_g', 0, renderEQ); bind('eq_f', 1, renderEQ);
+  bind('eq_b', 1, renderEQ); bind('eq_nf', 0, renderEQ); bind('eq_loss', 0, renderEQ);
+  bind('eq_n', 0, renderEQ); bind('eq_pd', 2, renderEQ); bind('eq_r', 0, renderEQ);
+  bindSel('eq_sigma', renderEQ); bindSel('eq_pfa', renderEQ);
+  bindSel('eq_preset', () => { const f = PRESETS.eq[$('eq_preset').value]; if (f) { f(); renderEQ(); } });
+
+  /* PULSOS */
+  bind('pr_prf', 0, renderPR); bind('pr_tau', 1, renderPR); bind('pr_rx', 0, renderPR);
+  bindSel('pr_preset', () => { const f = PRESETS.pr[$('pr_preset').value]; if (f) { f(); renderPR(); } });
+
+  /* DOPPLER */
+  bind('dp_f', 1, renderDP); bind('dp_prf', 0, renderDP); bind('dp_v', 0, renderDP); bind('dp_cw', 0, renderDP);
+  bindSel('dp_mti', renderDP);
+  bindSel('dp_preset', () => { const f = PRESETS.dp[$('dp_preset').value]; if (f) { f(); renderDP(); } });
+
+  /* COMPRESSAO */
+  bind('ch_b', 1, chSched); bind('ch_tau', 0, chSched); bind('ch_sep', 0, chSched);
+  bindSel('ch_win', chSched); bindChk('ch_show', chSched);
+  bindSel('ch_preset', () => { const f = PRESETS.ch[$('ch_preset').value]; if (f) { f(); chRun(); } });
+
+  /* PPI */
+  bind('pp_rpm', 0); bind('pp_bw', 1);
+  bindSel('pp_pfa', () => {});
+  bindSel('pp_rng', () => { PP.scale = +$('pp_rng').value; ppClear(); });
+  $('pp_pause').addEventListener('click', () => {
+    PP.paused = !PP.paused;
+    $('pp_pause').innerHTML = PP.paused ? '&#9654; RETOMAR VARREDURA' : '&#10074;&#10074; CONGELAR VARREDURA';
+    $('pp_pause').classList.toggle('playing', PP.paused);
+  });
+
+  ppReset();
+  renderEQ();
+}
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
