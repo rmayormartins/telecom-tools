@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MW Lab | Laboratorio de Micro-ondas</title>
+<meta name="description" content="Laboratorio interativo de micro-ondas: guias de onda retangulares, microstrip (Hammerstad-Jensen), parametros S, divisor Wilkinson, hibridas branch-line e rat-race, acoplador de linhas acopladas e cavidades ressonantes com fator Q." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-0: #07090d;
+  --bg-1: #0c1016;
+  --bg-2: #11161f;
+  --bg-3: #161d28;
+  --bg-panel: #0e131b;
+  --border: #1e2838;
+  --border-soft: #172030;
+  --border-strong: #2a3a52;
+
+  --text-0: #e6ecf5;
+  --text-1: #b6c2d4;
+  --text-2: #6b7889;
+  --text-3: #3f4a5b;
+
+  --phos: #4ade80;
+  --phos-soft: #14532d40;
+  --phos-glow: #4ade8033;
+
+  --cyan: #38bdf8;
+  --cyan-soft: #0c4a6e40;
+  --cyan-glow: #38bdf833;
+
+  --amber: #fbbf24;
+  --amber-soft: #78350f40;
+  --amber-glow: #fbbf2433;
+
+  --rose: #fb7185;
+  --rose-soft: #7f1d1d40;
+
+  --violet: #a78bfa;
+  --violet-soft: #4c1d9540;
+
+  --orange: #f97316;
+  --teal: #2dd4bf;
+
+  /* acento deste lab: fucsia mmWave */
+  --mw: #e879f9;
+  --mw-soft: #70108040;
+  --mw-glow: #e879f933;
+
+  --gap: 14px;
+  --radius: 4px;
+  --radius-lg: 8px;
+
+  --font-display: 'Chakra Petch', sans-serif;
+  --font-serif: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-body: 'Chakra Petch', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 600px at 82% -10%, #1a0d1a 0%, transparent 60%),
+    radial-gradient(800px 400px at -10% 100%, #0d1a2b 0%, transparent 55%),
+    var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 13px;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(to right, rgba(255,255,255,0.012) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, rgba(255,255,255,0.012) 1px, transparent 1px) 0 0 / 48px 48px;
+  pointer-events: none; z-index: 0;
+}
+
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+}
+
+/* ========== HEADER ========== */
+header.top-bar {
+  display: flex; align-items: center; gap: 20px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.95), rgba(10,14,20,0.7));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand .logo-mark {
+  display: inline-flex; width: 30px; height: 22px;
+  align-items: center; justify-content: center; position: relative;
+  align-self: center;
+}
+/* abertura de guia de ondas retangular com flange */
+.brand .logo-mark::before {
+  content: ''; position: absolute; inset: 0;
+  border: 1.5px solid var(--mw); border-radius: 2px;
+  animation: pulse-mw 2.5s ease-in-out infinite;
+}
+.brand .logo-mark::after {
+  content: ''; position: absolute;
+  width: 6px; height: 6px;
+  background: var(--mw); border-radius: 50%;
+  box-shadow: 0 0 14px var(--mw), 0 0 4px var(--mw);
+}
+.brand .logo-mark .ring2 {
+  position: absolute; inset: -5px;
+  border: 1px solid rgba(232,121,249,0.3); border-radius: 3px;
+  animation: pulse-mw 2.5s ease-in-out infinite 0.3s;
+}
+.brand .logo-mark .ring3 {
+  position: absolute; inset: -10px;
+  border: 1px solid rgba(232,121,249,0.14); border-radius: 4px;
+  animation: pulse-mw 2.5s ease-in-out infinite 0.6s;
+}
+@keyframes pulse-mw {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.35; }
+}
+.brand h1 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 700; font-size: 18px; letter-spacing: 0.18em;
+}
+.brand .tag {
+  color: var(--text-2); font-size: 10px;
+  letter-spacing: 0.25em; text-transform: uppercase;
+}
+.brand .tag em {
+  font-style: italic; font-family: var(--font-serif);
+  font-size: 13px; color: var(--mw); letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.top-stats {
+  display: flex; gap: 18px; margin-left: auto;
+  font-family: var(--font-mono); font-size: 11px;
+}
+.top-stat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding-right: 18px; border-right: 1px solid var(--border);
+}
+.top-stat:last-child { border-right: none; padding-right: 0; }
+.top-stat .label {
+  color: var(--text-2); font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+}
+.top-stat .value { color: var(--text-0); font-weight: 500; }
+.top-stat.live .value { color: var(--phos); }
+.top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300; }
+
+.btn {
+  background: var(--bg-2); color: var(--text-0);
+  border: 1px solid var(--border-strong);
+  padding: 7px 14px; border-radius: var(--radius);
+  font-family: var(--font-display); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--bg-3); border-color: var(--text-2); }
+.btn.primary {
+  background: linear-gradient(180deg, #4a0f52, #2e0a33);
+  border-color: var(--mw); color: var(--mw);
+  box-shadow: 0 0 0 1px rgba(232,121,249,0.2), inset 0 1px 0 rgba(232,121,249,0.12);
+}
+.btn.primary:hover { background: linear-gradient(180deg, #5e1468, #3a0d41); }
+
+/* ========== MAIN GRID ========== */
+main {
+  display: grid;
+  grid-template-columns: 350px 1fr 340px;
+  gap: 1px;
+  background: var(--border-soft);
+  min-height: 0;
+}
+
+.panel {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.35), rgba(30,40,56,0.1));
+  position: sticky; top: 0; z-index: 3;
+}
+.panel-header h2 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-0);
+}
+.panel-header .panel-sub {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); letter-spacing: 0.06em;
+}
+.panel-body {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.panel-body::-webkit-scrollbar { width: 6px; }
+.panel-body::-webkit-scrollbar-track { background: transparent; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* ========== SECTIONS ========== */
+.section {
+  border: 1px solid var(--border); background: var(--bg-1);
+  border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+}
+.section-head {
+  display: flex; align-items: center;
+  padding: 9px 12px; cursor: pointer;
+  background: linear-gradient(180deg, #141a25, #0d121a);
+  border-bottom: 1px solid transparent;
+  transition: background .15s; user-select: none;
+}
+.section-head:hover { background: #151c28; }
+.section-head.open { border-bottom-color: var(--border); }
+.section-head h3 {
+  margin: 0 auto 0 0;
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-1); display: flex; align-items: center; gap: 8px;
+}
+.section-head h3 .dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.dot.mw { background: var(--mw); box-shadow: 0 0 6px var(--mw); }
+.dot.green { background: var(--phos); box-shadow: 0 0 6px var(--phos); }
+.dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.dot.violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
+.dot.rose { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+.chev {
+  color: var(--text-2); font-family: var(--font-mono); font-size: 11px;
+  transition: transform .2s;
+}
+.section-head.open .chev { transform: rotate(90deg); }
+.section-body { padding: 12px; display: none; }
+.section-body.open { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ========== SELETOR DE MODULO ========== */
+.mod-list { display: flex; flex-direction: column; gap: 6px; }
+.mod-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; text-align: left; width: 100%;
+  background: var(--bg-2); color: var(--text-1);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all .15s;
+  font-family: var(--font-display);
+}
+.mod-btn:hover { border-color: var(--text-2); color: var(--text-0); }
+.mod-btn .mi {
+  font-family: var(--font-mono); font-size: 13px; width: 22px; text-align: center;
+  color: var(--text-2);
+}
+.mod-btn .mt { display: flex; flex-direction: column; gap: 1px; }
+.mod-btn .mt b {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.mod-btn .mt small {
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--text-2);
+  letter-spacing: 0.02em; text-transform: none;
+}
+.mod-btn.active {
+  background: rgba(232,121,249,0.08); border-color: var(--mw); color: var(--mw);
+  box-shadow: 0 0 12px rgba(232,121,249,0.08) inset;
+}
+.mod-btn.active .mi, .mod-btn.active .mt small { color: rgba(232,121,249,0.7); }
+
+/* ========== FORM ========== */
+.field { margin-bottom: 10px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.field label, .field-row label, .field-row-3 label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-family: var(--font-display);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text-2); margin-bottom: 4px;
+}
+input[type="number"], input[type="text"], select, textarea {
+  width: 100%; background: var(--bg-0); color: var(--text-0);
+  border: 1px solid var(--border);
+  padding: 7px 10px; border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 12px;
+  transition: border-color .15s, background .15s;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--mw); background: #090d13;
+  box-shadow: 0 0 0 2px rgba(232,121,249,0.15);
+}
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+                    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position: right 10px top 50%, right 6px top 50%;
+  background-size: 4px 4px; background-repeat: no-repeat;
+  padding-right: 24px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; margin: 8px 0 4px;
+  background: var(--bg-3);
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 2px;
+  background: var(--mw); border: 1px solid #f0abfc;
+  box-shadow: 0 0 8px var(--mw-glow);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 2px; border: 1px solid #f0abfc;
+  background: var(--mw); box-shadow: 0 0 8px var(--mw-glow);
+}
+input[type="range"]:focus-visible { outline: 1px solid var(--mw); outline-offset: 3px; }
+
+.help {
+  font-size: 10px; color: var(--text-2);
+  margin-top: 3px; line-height: 1.4; font-family: var(--font-mono);
+}
+.tip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; border: 1px solid var(--border-strong);
+  border-radius: 50%; color: var(--text-2);
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 10px; cursor: help; position: relative;
+}
+.tip:hover { color: var(--mw); border-color: var(--mw); }
+.tip::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%); width: 240px;
+  background: var(--bg-3); border: 1px solid var(--border-strong);
+  color: var(--text-1); padding: 8px 10px; border-radius: var(--radius);
+  font-family: var(--font-body); font-size: 10.5px; font-style: normal;
+  letter-spacing: 0; text-transform: none; line-height: 1.5;
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+  z-index: 100; box-shadow: 0 6px 20px rgba(0,0,0,0.5); text-align: left;
+  white-space: normal;
+}
+.tip:hover::after { opacity: 1; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  padding: 5px 10px; background: var(--bg-2);
+  border: 1px solid var(--border); border-radius: 3px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  cursor: pointer; transition: all .15s; color: var(--text-1);
+}
+.chip:hover { border-color: var(--text-2); color: var(--text-0); }
+.chip.active { background: rgba(232,121,249,0.12); border-color: var(--mw); color: var(--mw); }
+
+/* ========== VIZ ========== */
+.viz {
+  display: grid; grid-template-rows: 1fr 250px;
+  gap: 1px; background: var(--border-soft);
+  min-height: 0;
+}
+.viz-main {
+  position: relative; min-height: 0; background: var(--bg-panel);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.bottom-strip {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--border-soft); min-height: 0;
+}
+.card {
+  background: var(--bg-panel);
+  display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(30,40,56,0.3), transparent);
+}
+.card-header h3 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: 500; font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-1);
+}
+.card-header .meta {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
+}
+.card-body { flex: 1; position: relative; padding: 4px; min-height: 0; }
+.card-body canvas { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); display: block; }
+
+.viz-badge {
+  position: absolute; top: 46px; right: 12px;
+  background: rgba(7,9,13,0.88); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 6px 10px;
+  z-index: 5; font-family: var(--font-mono);
+  font-size: 10px; color: var(--text-1);
+  backdrop-filter: blur(8px); text-align: right;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.viz-badge .big { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.1em; }
+.viz-badge .big.good { color: var(--phos); }
+.viz-badge .big.warn { color: var(--amber); }
+.viz-badge .big.bad { color: var(--rose); }
+.viz-badge .big.acc { color: var(--mw); }
+
+/* ========== RESULTADOS ========== */
+.kv {
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 4px 10px; padding: 5px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.kv:last-child { border-bottom: none; }
+.kv .k {
+  font-family: var(--font-display); font-size: 10.5px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-2); display: flex; align-items: center; gap: 6px;
+}
+.kv .v {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-0); text-align: right; white-space: nowrap;
+}
+.kv .v .unit { color: var(--text-2); margin-left: 3px; font-weight: 300; font-size: 10px; }
+.kv .v.good { color: var(--phos); }
+.kv .v.warn { color: var(--amber); }
+.kv .v.bad { color: var(--rose); }
+.kv .v.acc { color: var(--cyan); }
+.kv .v.mwc { color: var(--mw); }
+
+table.modes {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font-mono); font-size: 10.5px;
+}
+table.modes th {
+  text-align: left; color: var(--text-2); font-weight: 500;
+  font-family: var(--font-display); font-size: 9.5px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 3px 4px; border-bottom: 1px solid var(--border);
+}
+table.modes td { padding: 3px 4px; border-bottom: 1px dashed var(--border-soft); color: var(--text-1); }
+table.modes tr.hl td { color: var(--mw); }
+table.modes td.r, table.modes th.r { text-align: right; }
+
+.info-box {
+  margin: 8px 0; padding: 8px 10px;
+  background: rgba(232,121,249,0.04);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--mw);
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 10px;
+  line-height: 1.55; color: var(--text-1);
+}
+.info-box.ok { border-left-color: var(--phos); background: rgba(74,222,128,0.03); }
+.info-box.warn-box { border-left-color: var(--amber); background: rgba(251,191,36,0.04); }
+.info-box.bad-box { border-left-color: var(--rose); background: rgba(251,113,133,0.04); }
+.info-box strong { color: var(--text-0); }
+
+.eq {
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.9;
+  color: var(--text-1); white-space: pre-wrap;
+}
+.eq b { color: var(--mw); font-weight: 500; }
+
+.check-line {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); padding: 2.5px 0;
+}
+.check-line .st { width: 34px; font-weight: 600; flex: none; }
+.check-line .st.p { color: var(--phos); }
+.check-line .st.f { color: var(--rose); }
+
+.live-dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--phos); border-radius: 50%;
+  box-shadow: 0 0 6px var(--phos);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+.live-dot.off { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+
+/* footer */
+footer {
+  padding: 6px 18px;
+  background: linear-gradient(180deg, rgba(10,14,20,0.7), rgba(10,14,20,0.95));
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2);
+  display: flex; align-items: center; justify-content: space-between;
+}
+footer .author { display: flex; align-items: center; gap: 8px; }
+footer .author a { color: var(--mw); text-decoration: none; }
+footer .author a:hover { text-decoration: underline; }
+footer .ts { color: var(--text-3); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+@media (max-width: 1180px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100vh; }
+  main { grid-template-columns: 1fr; }
+  .viz { grid-template-rows: 420px 250px; }
+  .top-stats { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand .logo-mark::before, .brand .logo-mark .ring2, .brand .logo-mark .ring3,
+  .live-dot { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- HEADER -->
+<header class="top-bar">
+  <div class="brand">
+    <span class="logo-mark"><span class="ring2"></span><span class="ring3"></span></span>
+    <h1>MW LAB</h1>
+    <span class="tag">Laboratorio de <em>Micro-ondas</em></span>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat live">
+      <span class="label">Status</span>
+      <span class="value" id="hdr-status">BOOT</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Modulo</span>
+      <span class="value" id="hdr-mod">GUIA</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Frequencia</span>
+      <span class="value" id="hdr-freq">10.00<span class="unit">GHz</span></span>
+    </div>
+    <div class="top-stat">
+      <span class="label">Banda IEEE</span>
+      <span class="value" id="hdr-band">X</span>
+    </div>
+    <div class="top-stat">
+      <span class="label">&lambda;0</span>
+      <span class="value" id="hdr-lam">30.0<span class="unit">mm</span></span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn primary" id="btn-anim" onclick="toggleAnim()">Pausar</button>
+    <button class="btn" onclick="resetAll()">Reset</button>
+  </div>
+</header>
+
+<main>
+
+<!-- PAINEL ESQUERDO: CONFIGURACAO -->
+<aside class="panel">
+  <div class="panel-header"><h2>Configura&ccedil;&atilde;o</h2><span class="panel-sub" id="cfg-sub">Guia de Ondas</span></div>
+  <div class="panel-body">
+    <div class="section">
+      <div class="section-head open" data-toggle><h3><span class="dot mw"></span>M&oacute;dulo</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body open"><div class="mod-list" id="mod-list"></div></div>
+    </div>
+    <div id="mod-params"></div>
+    <div class="section">
+      <div class="section-head" data-toggle><h3><span class="dot violet"></span>Notas</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body"><div class="help" id="notes" style="font-size:10.5px;line-height:1.65;"></div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- CENTRO: VISUALIZACAO -->
+<section class="viz">
+  <div class="viz-main">
+    <div class="card-header"><h3 id="cvA-title">Campo TE10</h3><span class="meta" id="cvA-meta"></span></div>
+    <div class="card-body">
+      <canvas id="cvA"></canvas>
+    </div>
+    <div class="viz-badge" id="cvA-badge" style="display:none;"></div>
+  </div>
+  <div class="bottom-strip">
+    <div class="card">
+      <div class="card-header"><h3 id="cvB-title">Carta de modos</h3><span class="meta" id="cvB-meta"></span></div>
+      <div class="card-body"><canvas id="cvB"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3 id="cvC-title">Dispers&atilde;o</h3><span class="meta" id="cvC-meta"></span></div>
+      <div class="card-body"><canvas id="cvC"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- PAINEL DIREITO: RESULTADOS -->
+<aside class="panel">
+  <div class="panel-header"><h2>Resultados</h2><span class="panel-sub"><span class="live-dot"></span>&nbsp;tempo real</span></div>
+  <div class="panel-body">
+    <div id="results"></div>
+    <div class="section">
+      <div class="section-head" data-toggle><h3><span class="dot cyan"></span>Equa&ccedil;&otilde;es</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body"><div class="eq" id="eq-box"></div></div>
+    </div>
+    <div class="section">
+      <div class="section-head" data-toggle><h3><span class="dot green"></span>Valida&ccedil;&atilde;o</h3><span class="chev">&#9654;</span></div>
+      <div class="section-body">
+        <div class="help" style="margin-bottom:6px;">Autoteste no carregamento: motor nodal e formas fechadas vs refer&ecirc;ncias scikit-rf / Pozar.</div>
+        <div id="selftest"></div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+</main>
+
+<footer>
+  <div class="author">
+    <span>MW LAB v1.0</span>
+    <span>|</span>
+    <a href="https://rmayormartins.github.io" target="_blank" rel="noopener">Prof. Ramon Mayor Martins</a>
+    <span>| IFSC S&atilde;o Jos&eacute; | PU4MAY</span>
+  </div>
+  <span class="ts" id="ftr-ts">An&aacute;lise nodal complexa | Hammerstad-Jensen | Pozar eq. 6.46 | validado vs scikit-rf</span>
+</footer>
+
+</div>
+
+<script>
+/* ============================================================
+   MW ENGINE - nucleo numerico do Microwave Lab
+   Analise nodal complexa multiportas + fisica de micro-ondas
+   Referencias: Pozar 4a ed., Hammerstad-Jensen, Wheeler
+   ============================================================ */
+'use strict';
+
+const C0 = 299792458, ETA0 = 376.730313668, MU0 = 4e-7 * Math.PI;
+const EPS0 = 1 / (MU0 * C0 * C0);
+
+/* ---------- complexos: pares [re, im] ---------- */
+const cx = (re, im) => [re, im || 0];
+const cadd = (a, b) => [a[0] + b[0], a[1] + b[1]];
+const csub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const cmul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+const cdiv = (a, b) => {
+  const d = b[0] * b[0] + b[1] * b[1];
+  return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d];
+};
+const cabs = a => Math.hypot(a[0], a[1]);
+const carg = a => Math.atan2(a[1], a[0]);
+const cneg = a => [-a[0], -a[1]];
+const ccosh = a => [Math.cosh(a[0]) * Math.cos(a[1]), Math.sinh(a[0]) * Math.sin(a[1])];
+const csinh = a => [Math.sinh(a[0]) * Math.cos(a[1]), Math.cosh(a[0]) * Math.sin(a[1])];
+const ctanh = a => cdiv(csinh(a), ccosh(a));
+const dB = m => 20 * Math.log10(Math.max(m, 1e-15));
+
+/* ---------- matrizes complexas n x n (arrays de linhas) ---------- */
+function cmatZero(n) {
+  return Array.from({ length: n }, () => Array.from({ length: n }, () => cx(0)));
+}
+function cmatEye(n) {
+  const m = cmatZero(n);
+  for (let i = 0; i < n; i++) m[i][i] = cx(1);
+  return m;
+}
+function cmatMul(A, B) {
+  const n = A.length, p = B[0].length, m = B.length, R = [];
+  for (let i = 0; i < n; i++) {
+    R[i] = [];
+    for (let j = 0; j < p; j++) {
+      let s = cx(0);
+      for (let k = 0; k < m; k++) s = cadd(s, cmul(A[i][k], B[k][j]));
+      R[i][j] = s;
+    }
+  }
+  return R;
+}
+/* resolve A X = B por eliminacao de Gauss com pivotamento parcial */
+function cmatSolve(A, B) {
+  const n = A.length, m = B[0].length;
+  const M = A.map((row, i) => row.map(v => v.slice()).concat(B[i].map(v => v.slice())));
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) if (cabs(M[r][c]) > cabs(M[piv][c])) piv = r;
+    if (piv !== c) { const t = M[c]; M[c] = M[piv]; M[piv] = t; }
+    const d = M[c][c];
+    for (let j = c; j < n + m; j++) M[c][j] = cdiv(M[c][j], d);
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = M[r][c];
+      if (f[0] === 0 && f[1] === 0) continue;
+      for (let j = c; j < n + m; j++) M[r][j] = csub(M[r][j], cmul(f, M[c][j]));
+    }
+  }
+  return M.map(row => row.slice(n));
+}
+const cmatInv = A => cmatSolve(A, cmatEye(A.length));
+
+/* ---------- rede multiportas por analise nodal ----------
+   Nos numerados de 0..N-1 (terra implicito). ports = indices de nos.
+   Elementos estampam admitancias no Y global.                      */
+function Network(nNodes) {
+  const Y = cmatZero(nNodes);
+  const st = (i, j, y) => {
+    Y[i][i] = cadd(Y[i][i], y);
+    if (j >= 0) {
+      Y[j][j] = cadd(Y[j][j], y);
+      Y[i][j] = csub(Y[i][j], y);
+      Y[j][i] = csub(Y[j][i], y);
+    }
+  };
+  return {
+    Y,
+    /* linha de transmissao serie entre n1 e n2: Z0, gamma*l complexo */
+    tl(n1, n2, z0, gl) {
+      const sh = csinh(gl), ch = ccosh(gl);
+      const B = cmul(cx(z0), sh);            /* ABCD: B = Z0 sinh */
+      const y12 = cneg(cdiv(cx(1), B));      /* Y12 = -1/B        */
+      const y11 = cdiv(ch, B);               /* Y11 = cosh/B      */
+      /* estampa de dois portos: diag += y11, off += y12 */
+      Y[n1][n1] = cadd(Y[n1][n1], y11);
+      Y[n2][n2] = cadd(Y[n2][n2], y11);
+      Y[n1][n2] = cadd(Y[n1][n2], y12);
+      Y[n2][n1] = cadd(Y[n2][n1], y12);
+    },
+    /* estube em derivacao no no n (aberto: Yin = tanh(gl)/Z0) */
+    stubOpen(n, z0, gl) { st(n, -1, cdiv(ctanh(gl), cx(z0))); },
+    stubShort(n, z0, gl) { st(n, -1, cdiv(cx(1), cmul(cx(z0), ctanh(gl)))); },
+    res(n1, n2, R) { st(n1, n2, cx(1 / R)); },
+    resGnd(n, R) { st(n, -1, cx(1 / R)); },
+    /* matriz S nas portas (mesmo Z0ref), reduzindo nos internos */
+    sparams(ports, z0ref) {
+      const n = Y.length, P = ports.length;
+      const int_ = [];
+      for (let i = 0; i < n; i++) if (!ports.includes(i)) int_.push(i);
+      let Yr;
+      if (int_.length === 0) {
+        Yr = ports.map(i => ports.map(j => Y[i][j]));
+      } else {
+        const Ypp = ports.map(i => ports.map(j => Y[i][j]));
+        const Ypi = ports.map(i => int_.map(j => Y[i][j]));
+        const Yip = int_.map(i => ports.map(j => Y[i][j]));
+        const Yii = int_.map(i => int_.map(j => Y[i][j]));
+        const X = cmatSolve(Yii, Yip);           /* X = Yii^-1 Yip  */
+        const corr = cmatMul(Ypi, X);
+        Yr = Ypp.map((row, i) => row.map((v, j) => csub(v, corr[i][j])));
+      }
+      /* S = (I - Z0 Y)(I + Z0 Y)^-1 */
+      const A = cmatZero(P), Bm = cmatZero(P);
+      for (let i = 0; i < P; i++) for (let j = 0; j < P; j++) {
+        const zy = cmul(cx(z0ref), Yr[i][j]);
+        A[i][j] = i === j ? csub(cx(1), zy) : cneg(zy);
+        Bm[i][j] = i === j ? cadd(cx(1), zy) : zy;
+      }
+      return cmatMul(A, cmatInv(Bm));
+    }
+  };
+}
+
+const LOSS = 2e-8; /* perda residual p/ evitar singularidade em theta = n*pi */
+const gl = theta => cx(LOSS * (1 + Math.abs(theta)), theta);
+
+/* ---------- componentes do modulo divisores/hibridas ---------- */
+function wilkinsonS(z0, theta) {
+  const nw = Network(3);
+  nw.tl(0, 1, z0 * Math.SQRT2, gl(theta));
+  nw.tl(0, 2, z0 * Math.SQRT2, gl(theta));
+  nw.res(1, 2, 2 * z0);
+  return nw.sparams([0, 1, 2], z0);
+}
+function branchlineS(z0, theta) {
+  const nw = Network(4);
+  nw.tl(0, 1, z0 / Math.SQRT2, gl(theta)); /* serie superior  */
+  nw.tl(3, 2, z0 / Math.SQRT2, gl(theta)); /* serie inferior  */
+  nw.tl(0, 3, z0, gl(theta));              /* ramo esquerdo   */
+  nw.tl(1, 2, z0, gl(theta));              /* ramo direito    */
+  return nw.sparams([0, 1, 2, 3], z0);
+}
+function ratraceS(z0, theta) {
+  const za = z0 * Math.SQRT2;
+  const nw = Network(4);
+  nw.tl(0, 1, za, gl(theta));
+  nw.tl(1, 2, za, gl(theta));
+  nw.tl(2, 3, za, gl(theta));
+  nw.tl(3, 0, za, gl(3 * theta));
+  return nw.sparams([0, 1, 2, 3], z0);
+}
+/* acoplador de linhas acopladas: forma fechada Pozar 7.6 (ideal) */
+function couplerS(cLin, theta) {
+  const q = Math.sqrt(1 - cLin * cLin);
+  const den = cx(q * Math.cos(theta), Math.sin(theta));
+  const s21 = cdiv(cx(q), den);
+  const s31 = cdiv(cx(0, cLin * Math.sin(theta)), den);
+  return { s21, s31, s11: cx(0), s41: cx(0) };
+}
+
+/* ---------- DUTs do modulo parametros S (2 portas) ---------- */
+function dutLineS(z0ref, zline, theta) {
+  const nw = Network(2);
+  nw.tl(0, 1, zline, gl(theta));
+  return nw.sparams([0, 1], z0ref);
+}
+function dutStubS(z0ref, zstub, theta) {
+  const nw = Network(3);
+  nw.tl(0, 1, z0ref, gl(Math.PI / 8));   /* trechos de acesso 22.5 graus */
+  nw.tl(1, 2, z0ref, gl(Math.PI / 8));
+  nw.stubOpen(1, zstub, gl(theta));
+  return nw.sparams([0, 2], z0ref);
+}
+function attT(z0, dBv) {
+  const K = Math.pow(10, dBv / 20);
+  return { R1: z0 * (K - 1) / (K + 1), R2: z0 * 2 * K / (K * K - 1) };
+}
+function attPi(z0, dBv) {
+  const K = Math.pow(10, dBv / 20);
+  return { R1: z0 * (K + 1) / (K - 1), R2: z0 * (K * K - 1) / (2 * K) };
+}
+function dutAttTS(z0ref, dBv) {
+  const { R1, R2 } = attT(z0ref, dBv);
+  const nw = Network(3);            /* no 2 = centro do T (interno) */
+  nw.res(0, 2, R1); nw.res(2, 1, R1); nw.resGnd(2, R2);
+  return nw.sparams([0, 1], z0ref);
+}
+function dutAttPiS(z0ref, dBv) {
+  const { R1, R2 } = attPi(z0ref, dBv);
+  const nw = Network(2);
+  nw.resGnd(0, R1); nw.res(0, 1, R2); nw.resGnd(1, R1);
+  return nw.sparams([0, 1], z0ref);
+}
+
+/* ---------- guia de ondas retangular (ar) ---------- */
+function wgFc(a, b, m, n) { return C0 / 2 * Math.hypot(m / a, n / b); }
+function wgParams(a, b, f) {
+  const fc = wgFc(a, b, 1, 0);
+  const out = { fc };
+  if (f > fc) {
+    const fac = Math.sqrt(1 - (fc / f) ** 2);
+    const lam0 = C0 / f;
+    out.propaga = true;
+    out.lamg = lam0 / fac;
+    out.vp = C0 / fac; out.vg = C0 * fac;
+    out.beta = 2 * Math.PI / lam0 * fac;
+    out.zte = ETA0 / fac;
+  } else {
+    const k = 2 * Math.PI * f / C0, kc = Math.PI / a;
+    out.propaga = false;
+    out.alpha = Math.sqrt(kc * kc - k * k);     /* Np/m */
+  }
+  return out;
+}
+function wgModes(a, b, nMax) {
+  const list = [];
+  for (let m = 0; m <= 4; m++) for (let n = 0; n <= 4; n++) {
+    if (m + n === 0) continue;
+    const fc = wgFc(a, b, m, n);
+    list.push({ tipo: 'TE', m, n, fc });
+    if (m >= 1 && n >= 1) list.push({ tipo: 'TM', m, n, fc });
+  }
+  list.sort((x, y) => x.fc - y.fc);
+  return list.slice(0, nMax);
+}
+
+/* ---------- microstrip: Hammerstad (analise) + Wheeler (sintese) ---------- */
+function msAnalysis(er, u) {
+  let eeff, z0;
+  if (u <= 1) {
+    eeff = (er + 1) / 2 + (er - 1) / 2 * (Math.pow(1 + 12 / u, -0.5) + 0.04 * (1 - u) ** 2);
+    z0 = 60 / Math.sqrt(eeff) * Math.log(8 / u + u / 4);
+  } else {
+    eeff = (er + 1) / 2 + (er - 1) / 2 * Math.pow(1 + 12 / u, -0.5);
+    z0 = 120 * Math.PI / (Math.sqrt(eeff) * (u + 1.393 + 0.667 * Math.log(u + 1.444)));
+  }
+  return { eeff, z0 };
+}
+function msSynthesis(er, z0) {
+  const A = z0 / 60 * Math.sqrt((er + 1) / 2) + (er - 1) / (er + 1) * (0.23 + 0.11 / er);
+  let u = 8 * Math.exp(A) / (Math.exp(2 * A) - 2);
+  if (u > 2) {
+    const B = 377 * Math.PI / (2 * z0 * Math.sqrt(er));
+    u = 2 / Math.PI * (B - 1 - Math.log(2 * B - 1)
+        + (er - 1) / (2 * er) * (Math.log(B - 1) + 0.39 - 0.61 / er));
+  }
+  return u;
+}
+
+/* ---------- cavidade retangular ---------- */
+function cavF(a, b, d, er, m, n, p) {
+  return C0 / (2 * Math.sqrt(er)) * Math.sqrt((m / a) ** 2 + (n / b) ** 2 + (p / d) ** 2);
+}
+function cavModes(a, b, d, er, nMax) {
+  const list = [];
+  for (let m = 0; m <= 3; m++) for (let n = 0; n <= 3; n++) for (let p = 0; p <= 3; p++) {
+    if (m + n >= 1 && p >= 1) list.push({ tipo: 'TE', m, n, p, f: cavF(a, b, d, er, m, n, p) });
+    if (m >= 1 && n >= 1 && p >= 0) list.push({ tipo: 'TM', m, n, p, f: cavF(a, b, d, er, m, n, p) });
+  }
+  list.sort((x, y) => x.f - y.f);
+  return list.slice(0, nMax);
+}
+/* Q de condutor p/ TE10p (Pozar eq. 6.46) - validado por integracao independente */
+function cavQ(a, b, d, p, sigma, er, tand) {
+  const f0 = cavF(a, b, d, er, 1, 0, p);
+  const k = 2 * Math.PI * f0 * Math.sqrt(er) / C0;
+  const Rs = Math.sqrt(Math.PI * f0 * MU0 / sigma);
+  const eta = ETA0 / Math.sqrt(er);
+  const Qc = Math.pow(k * a * d, 3) * b * eta / (2 * Math.PI ** 2 * Rs)
+    / (2 * p * p * a ** 3 * b + 2 * b * d ** 3 + p * p * a ** 3 * d + a * d ** 3);
+  const Qd = tand > 0 ? 1 / tand : Infinity;
+  const Q = 1 / (1 / Qc + (tand > 0 ? tand : 0));
+  return { f0, Qc, Qd, Q, Rs, delta: Math.sqrt(2 / (2 * Math.PI * f0 * MU0 * sigma)) };
+}
+
+/* ---------- banda IEEE ---------- */
+function bandaIEEE(fGHz) {
+  const t = [[1,'L'],[2,'S'],[4,'C'],[8,'X'],[12,'Ku'],[18,'K'],[27,'Ka'],[40,'V'],[75,'W'],[110,'mm']];
+  let nome = 'UHF';
+  for (const [lim, n] of t) if (fGHz >= lim) nome = n;
+  return fGHz < 1 ? 'UHF' : nome;
+}
+
+
+/* ============================================================
+   UI: helpers de canvas, plot e formatacao
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const COL = {
+  bg0:'#07090d', bg1:'#0c1016', bg3:'#161d28', grid:'#1e2838', frame:'#2a3a52',
+  t0:'#e6ecf5', t1:'#b6c2d4', t2:'#6b7889', t3:'#3f4a5b',
+  mw:'#e879f9', phos:'#4ade80', cyan:'#38bdf8', amber:'#fbbf24',
+  rose:'#fb7185', violet:'#a78bfa'
+};
+function fmt(x, d) {
+  if (!isFinite(x)) return '&infin;';
+  if (d === undefined) d = 2;
+  return x.toFixed(d);
+}
+function fmtF(hz) {           /* frequencia legivel */
+  if (hz >= 1e9) return fmt(hz / 1e9, hz >= 100e9 ? 1 : 3) + ' GHz';
+  return fmt(hz / 1e6, 1) + ' MHz';
+}
+function fit(cv) {
+  const r = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(60, Math.floor(r.width)), h = Math.max(60, Math.floor(r.height));
+  if (cv.width !== Math.floor(w * dpr) || cv.height !== Math.floor(h * dpr)) {
+    cv.width = Math.floor(w * dpr); cv.height = Math.floor(h * dpr);
+  }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function niceTicks(a, b, n) {
+  const span = b - a, raw = span / n;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  let st = raw / mag;
+  st = st < 1.5 ? 1 : st < 3.5 ? 2 : st < 7.5 ? 5 : 10;
+  st *= mag;
+  const t = [];
+  for (let v = Math.ceil(a / st) * st; v <= b + 1e-9; v += st) t.push(v);
+  return t;
+}
+/* plot com moldura, grade e ticks; retorna funcoes de mapeamento */
+function makePlot(ctx, w, h, o) {
+  const L = o.padL || 48, R = w - (o.padR || 14), T = o.padT || 14, B = h - (o.padB || 24);
+  const lx = v => Math.log10(v);
+  const X = o.xlog
+    ? x => L + (lx(x) - lx(o.x0)) / (lx(o.x1) - lx(o.x0)) * (R - L)
+    : x => L + (x - o.x0) / (o.x1 - o.x0) * (R - L);
+  const Y = y => B - (y - o.y0) / (o.y1 - o.y0) * (B - T);
+  ctx.font = '9px JetBrains Mono';
+  ctx.lineWidth = 1;
+  const xt = o.xticks || (o.xlog ? [] : niceTicks(o.x0, o.x1, 6));
+  const yt = o.yticks || niceTicks(o.y0, o.y1, 5);
+  ctx.strokeStyle = COL.grid; ctx.fillStyle = COL.t3;
+  xt.forEach(v => {
+    const px = X(v);
+    ctx.beginPath(); ctx.moveTo(px, T); ctx.lineTo(px, B); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillText(o.xf ? o.xf(v) : (+v.toFixed(6)).toString(), px, B + 13);
+  });
+  yt.forEach(v => {
+    const py = Y(v);
+    ctx.beginPath(); ctx.moveTo(L, py); ctx.lineTo(R, py); ctx.stroke();
+    ctx.textAlign = 'right';
+    ctx.fillText(o.yf ? o.yf(v) : (+v.toFixed(6)).toString(), L - 5, py + 3);
+  });
+  ctx.strokeStyle = COL.frame;
+  ctx.strokeRect(L, T, R - L, B - T);
+  ctx.fillStyle = COL.t2; ctx.textAlign = 'right';
+  if (o.xlab) ctx.fillText(o.xlab, R, B + 13);
+  ctx.textAlign = 'left';
+  if (o.ylab) ctx.fillText(o.ylab, L + 4, T - 4 + (o.padT ? 0 : 0));
+  return { X, Y, L, R, T, B };
+}
+function poly(ctx, pts, color, wdt, dash) {
+  if (pts.length < 2) return;
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = wdt || 1.6;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  let started = false;
+  for (const p of pts) {
+    if (!p) { started = false; continue; }
+    if (!started) { ctx.moveTo(p[0], p[1]); started = true; }
+    else ctx.lineTo(p[0], p[1]);
+  }
+  ctx.stroke(); ctx.restore();
+}
+function dot(ctx, x, y, color, r) {
+  ctx.save();
+  ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 8;
+  ctx.beginPath(); ctx.arc(x, y, r || 3.4, 0, 6.2832); ctx.fill();
+  ctx.restore();
+}
+function txt(ctx, s, x, y, color, align, font) {
+  ctx.save();
+  ctx.fillStyle = color || COL.t1;
+  ctx.font = font || '10px JetBrains Mono';
+  ctx.textAlign = align || 'left';
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+function legend(ctx, items, x, y) {
+  let yy = y;
+  items.forEach(it => {
+    ctx.fillStyle = it[1]; ctx.fillRect(x, yy - 7, 14, 2.5);
+    txt(ctx, it[0], x + 19, yy - 3, COL.t1);
+    yy += 14;
+  });
+}
+/* mapa de calor: fn(u,v) em [-1,1]; ciano negativo, fucsia positivo */
+const OFF = document.createElement('canvas');
+const OCT = OFF.getContext('2d');
+function fieldRGB(v) {
+  const t = Math.pow(Math.min(1, Math.abs(v)), 0.8);
+  if (v >= 0) return [7 + t * 225, 9 + t * 112, 13 + t * 236];
+  return [7 + t * 49, 9 + t * 180, 13 + t * 235];
+}
+function heat(ctx, rect, nx, nz, fn) {
+  OFF.width = nz; OFF.height = nx;
+  const img = OCT.createImageData(nz, nx);
+  for (let ix = 0; ix < nx; ix++) {
+    const u = ix / (nx - 1);
+    for (let iz = 0; iz < nz; iz++) {
+      const v = fn(u, iz / (nz - 1));
+      const c = fieldRGB(v);
+      const k = 4 * (ix * nz + iz);
+      img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255;
+    }
+  }
+  OCT.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(OFF, rect.x, rect.y, rect.w, rect.h);
+}
+function badge(html) {
+  const b = $('cvA-badge');
+  if (!html) { b.style.display = 'none'; return; }
+  b.style.display = 'flex'; b.innerHTML = html;
+}
+/* esquematicos */
+function wire(ctx, pts, color) { poly(ctx, pts, color || COL.t2, 1.5); }
+function portDot(ctx, x, y, lab, sub) {
+  dot(ctx, x, y, COL.mw, 3.5);
+  txt(ctx, lab, x, y - 9, COL.t0, 'center', '10px JetBrains Mono');
+  if (sub) txt(ctx, sub, x, y + 17, COL.t2, 'center', '9px JetBrains Mono');
+}
+function tlBar(ctx, x1, y1, x2, y2, zlab, llab) {
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  ctx.save();
+  ctx.strokeStyle = '#22304a'; ctx.lineWidth = 8; ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = COL.mw; ctx.globalAlpha = 0.85; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.restore();
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  const nx = -Math.sin(ang), ny = Math.cos(ang);
+  if (zlab) txt(ctx, zlab, mx - nx * 12, my - ny * 12 + 3, COL.amber, 'center');
+  if (llab) txt(ctx, llab, mx + nx * 13, my + ny * 13 + 3, COL.t2, 'center', '9px JetBrains Mono');
+}
+function resZig(ctx, x1, y1, x2, y2, lab) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+  const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+  const n = 6, amp = 4, lead = (len - 24) / 2;
+  const pts = [[x1, y1], [x1 + ux * lead, y1 + uy * lead]];
+  for (let i = 0; i <= n; i++) {
+    const s = lead + 24 * i / n;
+    const a = (i === 0 || i === n) ? 0 : (i % 2 ? amp : -amp);
+    pts.push([x1 + ux * s + nx * a, y1 + uy * s + ny * a]);
+  }
+  pts.push([x2, y2]);
+  poly(ctx, pts, COL.rose, 1.5);
+  if (lab) txt(ctx, lab, (x1 + x2) / 2 + nx * 14, (y1 + y2) / 2 + ny * 14 + 3, COL.rose, 'center', '9.5px JetBrains Mono');
+}
+function gndSym(ctx, x, y) {
+  wire(ctx, [[x, y], [x, y + 6]]);
+  [8, 5, 2].forEach((wd, i) => {
+    wire(ctx, [[x - wd, y + 6 + i * 3], [x + wd, y + 6 + i * 3]]);
+  });
+}
+
+/* ============================================================
+   ESTADO E DEFINICAO DOS MODULOS
+   ============================================================ */
+const WRS = [
+  ['WR-284', 72.14, 34.04], ['WR-187', 47.55, 22.15], ['WR-137', 34.85, 15.80],
+  ['WR-90', 22.86, 10.16], ['WR-62', 15.80, 7.90], ['WR-42', 10.67, 4.32], ['WR-28', 7.11, 3.56]
+];
+const SUBS = [
+  ['FR-4', 4.4, 0.020, 1.6], ['Rogers RO4003C', 3.55, 0.0027, 0.813],
+  ['RT/duroid 5880', 2.20, 0.0009, 0.787], ['Alumina 96%', 9.8, 0.0002, 0.635]
+];
+const CONDS = [['Cobre', 5.813e7], ['Aluminio', 3.816e7], ['Prata', 6.173e7], ['Latao', 2.564e7]];
+const DIELS = [['Ar / vacuo', 1.0, 0], ['PTFE (Teflon)', 2.08, 0.0004], ['Alumina 96%', 9.8, 0.0002]];
+
+const DEF = () => ({
+  guia: { pre: 3, a: 22.86, b: 10.16, f: 10 },
+  ms:   { modo: 'sin', sub: 0, er: 4.4, h: 1.6, f: 2.4, z0: 50, w: 3.06, th: 90 },
+  sp:   { dut: 'linha', f0: 2.0, zl: 100, th0: 90, zst: 50, att: 10 },
+  div:  { comp: 'wilk', z0: 50, f0: 2.45, cdb: 10 },
+  cav:  { pre: 0, a: 22.86, b: 10.16, d: 22.86, p: 1, cond: 0, diel: 0 }
+});
+const S = Object.assign({ mod: 'guia', anim: true, t: 0 }, DEF());
+
+const MODS = [
+  { id: 'guia', mi: '&#9646;', nome: 'Guia de ondas', sub: 'modos TE/TM, corte, dispersao', hdr: 'GUIA' },
+  { id: 'ms',   mi: '&#9644;', nome: 'Microstrip', sub: 'Hammerstad: Z0, eeff, sintese', hdr: 'uSTRIP' },
+  { id: 'sp',   mi: 'S', nome: 'Parametros S', sub: 'DUTs de 2 portas + Smith', hdr: 'PARAM S' },
+  { id: 'div',  mi: '&#8862;', nome: 'Divisores & hibridas', sub: 'Wilkinson, 90&deg;, 180&deg;, acoplador', hdr: 'DIV/HIB' },
+  { id: 'cav',  mi: '&#9633;', nome: 'Cavidade ressonante', sub: 'modos, fator Q, largura de banda', hdr: 'CAVIDADE' }
+];
+
+function fieldNum(id, lab, val, step, min, max, help) {
+  return '<div class="field"><label for="' + id + '">' + lab + '</label>' +
+    '<input type="number" id="' + id + '" value="' + val + '" step="' + step + '"' +
+    (min !== undefined ? ' min="' + min + '"' : '') + (max !== undefined ? ' max="' + max + '"' : '') + ' />' +
+    (help ? '<div class="help">' + help + '</div>' : '') + '</div>';
+}
+function secHTML(title, dotc, body, open) {
+  return '<div class="section"><div class="section-head' + (open ? ' open' : '') + '" data-toggle>' +
+    '<h3><span class="dot ' + dotc + '"></span>' + title + '</h3><span class="chev">&#9654;</span></div>' +
+    '<div class="section-body' + (open ? ' open' : '') + '">' + body + '</div></div>';
+}
+function chipRow(id, items, activeIdx) {
+  let h = '<div class="chips" id="' + id + '">';
+  items.forEach((it, i) => {
+    h += '<button type="button" class="chip' + (i === activeIdx ? ' active' : '') + '" data-i="' + i + '">' + it + '</button>';
+  });
+  return h + '</div>';
+}
+
+/* -------- HTML de parametros por modulo -------- */
+function paramsGuia() {
+  const g = S.guia;
+  return secHTML('Guia retangular', 'cyan',
+    '<div class="field"><label>Padr&atilde;o EIA</label>' + chipRow('g-pre', WRS.map(w => w[0]), g.pre) + '</div>' +
+    '<div class="field-row">' +
+    fieldNum('g-a', 'a (mm)', g.a, 0.01, 1) + fieldNum('g-b', 'b (mm)', g.b, 0.01, 0.5) +
+    '</div><div class="help">a = parede larga, b = parede estreita (ar)</div>', true) +
+  secHTML('Excita&ccedil;&atilde;o', 'amber',
+    fieldNum('g-f', 'Frequ&ecirc;ncia f (GHz)', S.guia.f, 0.01, 0.1) +
+    '<input type="range" id="g-fr" min="1" max="20" step="0.01" value="' + S.guia.f + '" aria-label="frequencia" />' +
+    '<div class="help" id="g-frange"></div>' +
+    '<div class="field" style="margin-top:8px;"><label>Atalhos</label>' +
+    chipRow('g-quick', ['0.8&middot;fc', '1.05&middot;fc', 'banda m&eacute;dia', '1.5&middot;fc'], -1) + '</div>', true);
+}
+function paramsMs() {
+  const m = S.ms;
+  return secHTML('Substrato', 'cyan',
+    '<div class="field"><label>Material</label>' + chipRow('m-sub', SUBS.map(s => s[0]).concat(['Custom']), m.sub) + '</div>' +
+    '<div class="field-row">' + fieldNum('m-er', '&epsilon;r', m.er, 0.01, 1.01) +
+    fieldNum('m-h', 'h (mm)', m.h, 0.001, 0.05) + '</div>', true) +
+  secHTML('Projeto', 'amber',
+    '<div class="field"><label>Modo</label>' + chipRow('m-modo', ['S&iacute;ntese Z0 &rarr; W', 'An&aacute;lise W &rarr; Z0'], m.modo === 'sin' ? 0 : 1) + '</div>' +
+    (m.modo === 'sin'
+      ? fieldNum('m-z0', 'Z0 alvo (&Omega;)', m.z0, 0.1, 5, 250)
+      : fieldNum('m-w', 'Largura W (mm)', m.w, 0.01, 0.01)) +
+    '<div class="field-row">' + fieldNum('m-f', 'f (GHz)', m.f, 0.01, 0.05) +
+    fieldNum('m-th', '&theta; el&eacute;trico (&deg;)', m.th, 1, 1, 360) + '</div>' +
+    '<div class="help">quase-est&aacute;tico (t = 0); &theta; define o comprimento f&iacute;sico</div>', true);
+}
+function paramsSp() {
+  const p = S.sp;
+  const duts = [['linha', 'Linha desadaptada'], ['stub', 'Estube aberto &lambda;/4'], ['attT', 'Atenuador T'], ['attPi', 'Atenuador &pi;']];
+  let extra = '';
+  if (p.dut === 'linha') {
+    extra = '<div class="field-row">' + fieldNum('p-zl', 'Z linha (&Omega;)', p.zl, 1, 5, 400) +
+      fieldNum('p-th0', '&theta; em f0 (&deg;)', p.th0, 1, 5, 360) + '</div>';
+  } else if (p.dut === 'stub') {
+    extra = fieldNum('p-zst', 'Z do estube (&Omega;)', p.zst, 1, 10, 200,
+      'estube aberto em deriva&ccedil;&atilde;o, &lambda;/4 em f0: rejeita f0');
+  } else {
+    extra = fieldNum('p-att', 'Atenua&ccedil;&atilde;o (dB)', p.att, 0.5, 1, 40);
+  }
+  return secHTML('Dispositivo sob teste', 'cyan',
+    '<div class="field"><label>DUT</label>' + chipRow('p-dut', duts.map(d => d[1]), duts.findIndex(d => d[0] === p.dut)) + '</div>', true) +
+  secHTML('Par&acirc;metros', 'amber',
+    fieldNum('p-f0', 'f0 de refer&ecirc;ncia (GHz)', p.f0, 0.01, 0.05) + extra +
+    '<div class="help">varredura 0.05&middot;f0 a 2&middot;f0, Z0 = 50 &Omega;</div>', true);
+}
+function paramsDiv() {
+  const d = S.div;
+  const comps = [['wilk', 'Wilkinson'], ['bl', 'Branch-line 90&deg;'], ['rr', 'Rat-race 180&deg;'], ['cpl', 'Acoplador acopl.']];
+  return secHTML('Componente', 'cyan',
+    '<div class="field"><label>Topologia</label>' + chipRow('d-comp', comps.map(c => c[1]), comps.findIndex(c => c[0] === d.comp)) + '</div>', true) +
+  secHTML('Projeto', 'amber',
+    '<div class="field-row">' + fieldNum('d-z0', 'Z0 (&Omega;)', d.z0, 1, 10, 200) +
+    fieldNum('d-f0', 'f0 (GHz)', d.f0, 0.01, 0.05) + '</div>' +
+    (d.comp === 'cpl' ? '<div class="field"><label>Acoplamento</label>' + chipRow('d-cdb', ['10 dB', '15 dB', '20 dB'], [10, 15, 20].indexOf(d.cdb)) + '</div>' : '') +
+    '<div class="field"><label>f0 usuais</label>' + chipRow('d-fq', ['0.915', '2.45', '5.8', '10'], -1) + '</div>', true);
+}
+function paramsCav() {
+  const c = S.cav;
+  return secHTML('Geometria', 'cyan',
+    '<div class="field"><label>Presets</label>' + chipRow('c-pre', ['WR-90 &lambda;/2', 'Cubo 30 mm', 'Banda C'], c.pre) + '</div>' +
+    '<div class="field-row-3">' + fieldNum('c-a', 'a (mm)', c.a, 0.01, 2) +
+    fieldNum('c-b', 'b (mm)', c.b, 0.01, 1) + fieldNum('c-d', 'd (mm)', c.d, 0.01, 2) + '</div>', true) +
+  secHTML('Modo & materiais', 'amber',
+    '<div class="field"><label>Modo TE10p</label>' + chipRow('c-p', ['p = 1', 'p = 2', 'p = 3'], c.p - 1) + '</div>' +
+    '<div class="field"><label>Condutor</label><select id="c-cond">' +
+    CONDS.map((x, i) => '<option value="' + i + '"' + (i === c.cond ? ' selected' : '') + '>' + x[0] + ' (&sigma; = ' + (x[1] / 1e7).toFixed(3) + 'e7 S/m)</option>').join('') +
+    '</select></div>' +
+    '<div class="field"><label>Diel&eacute;trico</label><select id="c-diel">' +
+    DIELS.map((x, i) => '<option value="' + i + '"' + (i === c.diel ? ' selected' : '') + '>' + x[0] + ' (&epsilon;r = ' + x[1] + ', tan&delta; = ' + x[2] + ')</option>').join('') +
+    '</select></div>', true);
+}
+
+/* ============================================================
+   MODULO 1: GUIA DE ONDAS
+   ============================================================ */
+function computeGuia() {
+  const g = S.guia, a = g.a / 1e3, b = g.b / 1e3, f = g.f * 1e9;
+  g.calc = { wp: wgParams(a, b, f), modes: wgModes(a, b, 9), a, b, f };
+}
+function renderGuia() {
+  const c = S.guia.calc, wp = c.wp;
+  const fc = wp.fc / 1e9;
+  let s1 = '<div class="kv"><span class="k">Regime</span><span class="v ' +
+    (wp.propaga ? 'good">PROPAGANTE' : 'bad">EVANESCENTE') + '</span></div>' +
+    '<div class="kv"><span class="k">fc TE10</span><span class="v mwc">' + fmt(fc, 3) + '<span class="unit">GHz</span></span></div>';
+  if (wp.propaga) {
+    s1 += '<div class="kv"><span class="k">&lambda;g</span><span class="v">' + fmt(wp.lamg * 1e3, 2) + '<span class="unit">mm</span></span></div>' +
+      '<div class="kv"><span class="k">&beta;</span><span class="v">' + fmt(wp.beta, 1) + '<span class="unit">rad/m</span></span></div>' +
+      '<div class="kv"><span class="k">vp / c</span><span class="v acc">' + fmt(wp.vp / C0, 4) + '</span></div>' +
+      '<div class="kv"><span class="k">vg / c</span><span class="v acc">' + fmt(wp.vg / C0, 4) + '</span></div>' +
+      '<div class="kv"><span class="k">Z TE10</span><span class="v">' + fmt(wp.zte, 1) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">vp &middot; vg</span><span class="v">c&sup2;<span class="unit">(verif.)</span></span></div>';
+  } else {
+    s1 += '<div class="kv"><span class="k">&alpha; evanescente</span><span class="v bad">' + fmt(wp.alpha, 1) + '<span class="unit">Np/m</span></span></div>' +
+      '<div class="kv"><span class="k">Atenua&ccedil;&atilde;o</span><span class="v bad">' + fmt(8.686 * wp.alpha / 100, 2) + '<span class="unit">dB/cm</span></span></div>';
+  }
+  let rows = '';
+  const others = c.modes.filter(m => !(m.tipo === 'TE' && m.m === 1 && m.n === 0));
+  const proxima = others.length ? others[0].fc / 1e9 : fc * 2;
+  c.modes.forEach((m, i) => {
+    const hl = (m.tipo === 'TE' && m.m === 1 && m.n === 0) ? ' class="hl"' : '';
+    rows += '<tr' + hl + '><td>' + m.tipo + m.m + m.n + '</td><td class="r">' + fmt(m.fc / 1e9, 3) + ' GHz</td></tr>';
+  });
+  const s2 = '<table class="modes"><tr><th>Modo</th><th class="r">fc</th></tr>' + rows + '</table>';
+  const s3 = '<div class="info-box ok"><strong>Banda recomendada:</strong> ' + fmt(1.25 * fc, 2) + ' a ' + fmt(1.9 * fc, 2) +
+    ' GHz<br><strong>Mono-modo:</strong> ' + fmt(fc, 2) + ' a ' + fmt(proxima, 2) + ' GHz (s&oacute; TE10 propaga)</div>';
+  $('results').innerHTML =
+    secHTML('Propaga&ccedil;&atilde;o TE10', 'mw', s1, true) +
+    secHTML('Modos e frequ&ecirc;ncias de corte', 'cyan', s2 + s3, true);
+}
+function drawGuiaA() {
+  const { ctx, w, h } = fit($('cvA'));
+  const c = S.guia.calc; if (!c) return;
+  const wp = c.wp;
+  const rect = { x: 64, y: 30, w: w - 64 - 26, h: h - 30 - 52 };
+  const Lz = 6 * c.a;
+  const PH = 2 * Math.PI * S.t / 2.5;
+  heat(ctx, rect, 64, 220, (u, v) => {
+    const sx = Math.sin(Math.PI * u);
+    if (wp.propaga) return sx * Math.cos(PH - wp.beta * v * Lz);
+    return sx * Math.exp(-wp.alpha * v * Lz) * Math.cos(PH);
+  });
+  ctx.strokeStyle = COL.t3; ctx.lineWidth = 2;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = COL.mw; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(rect.x, rect.y); ctx.lineTo(rect.x, rect.y + rect.h); ctx.stroke();
+  ctx.save(); ctx.translate(rect.x - 34, rect.y + rect.h / 2); ctx.rotate(-Math.PI / 2);
+  txt(ctx, 'a = ' + fmt(S.guia.a, 2) + ' mm', 0, 0, COL.t1, 'center'); ctx.restore();
+  dimV(ctx, rect.x - 16, rect.y, rect.y + rect.h);
+  const zy = rect.y + rect.h + 16;
+  wire(ctx, [[rect.x, zy], [rect.x + 60, zy]], COL.t2);
+  poly(ctx, [[rect.x + 60, zy], [rect.x + 53, zy - 3]], COL.t2, 1.5);
+  poly(ctx, [[rect.x + 60, zy], [rect.x + 53, zy + 3]], COL.t2, 1.5);
+  txt(ctx, 'z  (janela = 6a = ' + fmt(Lz * 1e3, 0) + ' mm)', rect.x + 68, zy + 3, COL.t2);
+  if (wp.propaga) {
+    const px = rect.w * (wp.lamg / Lz);
+    if (px < rect.w * 0.92) {
+      const y2 = rect.y + rect.h + 32, x0 = rect.x + rect.w - px - 8;
+      poly(ctx, [[x0, y2], [x0 + px, y2]], COL.phos, 1.5);
+      poly(ctx, [[x0, y2 - 4], [x0, y2 + 4]], COL.phos, 1.5);
+      poly(ctx, [[x0 + px, y2 - 4], [x0 + px, y2 + 4]], COL.phos, 1.5);
+      txt(ctx, '\u03BBg = ' + fmt(wp.lamg * 1e3, 1) + ' mm', x0 + px / 2, y2 - 6, COL.phos, 'center');
+    }
+    badge('<span class="big good">PROPAGANTE</span><span>f &gt; fc &middot; vp = ' + fmt(wp.vp / C0, 2) + 'c</span>');
+  } else {
+    badge('<span class="big bad">EVANESCENTE</span><span>f &lt; fc &middot; sem propaga&ccedil;&atilde;o</span>');
+  }
+  $('cvA-meta').innerHTML = 'TE10 | fc = ' + fmt(wp.fc / 1e9, 3) + ' GHz | f = ' + fmt(S.guia.f, 2) + ' GHz';
+}
+function dimV(ctx, x, y1, y2) {
+  poly(ctx, [[x, y1], [x, y2]], COL.t3, 1);
+  poly(ctx, [[x - 3, y1], [x + 3, y1]], COL.t3, 1);
+  poly(ctx, [[x - 3, y2], [x + 3, y2]], COL.t3, 1);
+}
+function dimH(ctx, x1, x2, y) {
+  poly(ctx, [[x1, y], [x2, y]], COL.t3, 1);
+  poly(ctx, [[x1, y - 3], [x1, y + 3]], COL.t3, 1);
+  poly(ctx, [[x2, y - 3], [x2, y + 3]], COL.t3, 1);
+}
+function drawGuiaB() {
+  const { ctx, w, h } = fit($('cvB'));
+  const c = S.guia.calc; if (!c) return;
+  const fmax = Math.max(c.modes[c.modes.length - 1].fc, c.f) * 1.1 / 1e9;
+  const p = makePlot(ctx, w, h, { x0: 0, x1: fmax, y0: 0, y1: 1, xlab: 'f (GHz)', yticks: [] });
+  const fc = c.wp.fc / 1e9;
+  const others = c.modes.filter(m => !(m.tipo === 'TE' && m.m === 1 && m.n === 0));
+  const prox = others.length ? others[0].fc / 1e9 : fc * 2;
+  ctx.fillStyle = 'rgba(232,121,249,0.07)';
+  ctx.fillRect(p.X(fc), p.T, p.X(prox) - p.X(fc), p.B - p.T);
+  txt(ctx, 'mono-modo', (p.X(fc) + p.X(prox)) / 2, p.T + 12, 'rgba(232,121,249,0.8)', 'center');
+  c.modes.forEach((m, i) => {
+    const px = p.X(m.fc / 1e9);
+    const col = m.tipo === 'TE' ? COL.cyan : COL.amber;
+    const top = p.T + 22 + (i % 3) * 13;
+    poly(ctx, [[px, p.B], [px, top]], col, m.tipo === 'TE' && m.m === 1 && m.n === 0 ? 2 : 1.2);
+    txt(ctx, m.tipo + m.m + m.n, px, top - 3, col, 'center', '8.5px JetBrains Mono');
+  });
+  const pf = p.X(c.f / 1e9);
+  poly(ctx, [[pf, p.T], [pf, p.B]], COL.phos, 1.4, [4, 3]);
+  txt(ctx, 'f', pf + 4, p.T + 10, COL.phos);
+  $('cvB-meta').textContent = 'TE ciano | TM ambar';
+}
+function drawGuiaC() {
+  const { ctx, w, h } = fit($('cvC'));
+  const c = S.guia.calc; if (!c) return;
+  const fc10 = c.wp.fc;
+  const fmax = Math.max(2.3 * fc10, 1.15 * c.f);
+  const kmax = 2 * Math.PI * fmax / C0;
+  const p = makePlot(ctx, w, h, { x0: 0, x1: fmax / 1e9, y0: 0, y1: kmax * 1.03, xlab: 'f (GHz)', ylab: 'beta (rad/m)', yf: v => v.toFixed(0) });
+  const luz = [];
+  for (let i = 0; i <= 60; i++) { const f = fmax * i / 60; luz.push([p.X(f / 1e9), p.Y(2 * Math.PI * f / C0)]); }
+  poly(ctx, luz, COL.t2, 1.2, [5, 4]);
+  txt(ctx, 'linha de luz (TEM)', p.X(fmax * 0.55 / 1e9), p.Y(2 * Math.PI * fmax * 0.55 / C0) - 6, COL.t2, 'left', '8.5px JetBrains Mono');
+  const curvas = [[1, 0, COL.mw, 'TE10'], [2, 0, COL.cyan, 'TE20'], [0, 1, COL.amber, 'TE01']];
+  curvas.forEach(cv => {
+    const fcm = wgFc(c.a, c.b, cv[0], cv[1]);
+    if (fcm > fmax) return;
+    const pts = [];
+    for (let i = 1; i <= 90; i++) {
+      const f = fcm + (fmax - fcm) * i / 90;
+      const bt = 2 * Math.PI * f / C0 * Math.sqrt(1 - (fcm / f) ** 2);
+      pts.push([p.X(f / 1e9), p.Y(bt)]);
+    }
+    poly(ctx, pts, cv[2], 1.7);
+    txt(ctx, cv[3], pts[pts.length - 1][0] - 4, pts[pts.length - 1][1] + 12, cv[2], 'right', '8.5px JetBrains Mono');
+  });
+  if (c.wp.propaga) {
+    dot(ctx, p.X(c.f / 1e9), p.Y(c.wp.beta), COL.phos);
+    poly(ctx, [[p.X(c.f / 1e9), p.B], [p.X(c.f / 1e9), p.Y(c.wp.beta)]], COL.phos, 1, [3, 3]);
+  }
+  $('cvC-meta').textContent = 'abaixo da linha de luz: vp > c';
+}
+
+/* ============================================================
+   MODULO 2: MICROSTRIP
+   ============================================================ */
+function computeMs() {
+  const m = S.ms;
+  let u;
+  if (m.modo === 'sin') { u = msSynthesis(m.er, m.z0); m.w = u * m.h; }
+  else u = m.w / m.h;
+  const an = msAnalysis(m.er, u);
+  const lg = C0 / (m.f * 1e9 * Math.sqrt(an.eeff));
+  m.calc = {
+    u, an, lg,
+    L: m.th / 360 * lg,
+    vp: C0 / Math.sqrt(an.eeff),
+    q: m.er > 1 ? (an.eeff - 1) / (m.er - 1) : 1
+  };
+}
+function renderMs() {
+  const m = S.ms, c = m.calc;
+  const ok = c.u >= 0.1 && c.u <= 10;
+  let s1 = '<div class="kv"><span class="k">Largura W</span><span class="v mwc">' + fmt(m.w, 3) + '<span class="unit">mm</span></span></div>' +
+    '<div class="kv"><span class="k">W / h</span><span class="v">' + fmt(c.u, 3) + '</span></div>' +
+    '<div class="kv"><span class="k">Z0 obtido</span><span class="v good">' + fmt(c.an.z0, 2) + '<span class="unit">&Omega;</span></span></div>' +
+    '<div class="kv"><span class="k">&epsilon;eff</span><span class="v acc">' + fmt(c.an.eeff, 3) + '</span></div>' +
+    '<div class="kv"><span class="k">&lambda;g em f</span><span class="v">' + fmt(c.lg * 1e3, 2) + '<span class="unit">mm</span></span></div>' +
+    '<div class="kv"><span class="k">L para &theta; = ' + fmt(m.th, 0) + '&deg;</span><span class="v mwc">' + fmt(c.L * 1e3, 2) + '<span class="unit">mm</span></span></div>' +
+    '<div class="kv"><span class="k">vp</span><span class="v">' + fmt(c.vp / C0 * 100, 1) + '<span class="unit">% c</span></span></div>' +
+    '<div class="kv"><span class="k">Campo no diel&eacute;trico</span><span class="v">' + fmt(c.q * 100, 1) + '<span class="unit">%</span></span></div>';
+  const s2 = ok
+    ? '<div class="info-box ok"><strong>V&aacute;lido:</strong> 0.1 &lt; W/h &lt; 10 (Hammerstad-Jensen, quase-est&aacute;tico, t = 0). Dispers&atilde;o desprezada.</div>'
+    : '<div class="info-box warn-box"><strong>Aten&ccedil;&atilde;o:</strong> W/h = ' + fmt(c.u, 2) + ' fora da faixa 0.1 a 10; o modelo perde precis&atilde;o.</div>';
+  $('results').innerHTML = secHTML('Linha microstrip', 'mw', s1 + s2, true);
+}
+function drawMsA() {
+  badge(null);
+  const { ctx, w, h } = fit($('cvA'));
+  const m = S.ms; if (!m.calc) return;
+  const subW = Math.min(w * 0.72, 560);
+  let s = Math.min((w * 0.5) / m.w, (h * 0.36) / m.h);
+  let Wpx = Math.max(16, Math.min(m.w * s, subW * 0.8));
+  let hs = Math.max(24, Math.min(m.h * s, h * 0.42));
+  const gY = h * 0.72, sx0 = (w - subW) / 2, cxm = w / 2;
+  /* substrato */
+  ctx.fillStyle = 'rgba(251,191,36,0.05)';
+  ctx.fillRect(sx0, gY - hs, subW, hs);
+  ctx.strokeStyle = COL.grid; ctx.strokeRect(sx0, gY - hs, subW, hs);
+  /* terra com hachura */
+  ctx.fillStyle = '#22304a'; ctx.fillRect(sx0, gY, subW, 7);
+  ctx.strokeStyle = COL.t3; ctx.lineWidth = 1;
+  for (let x = sx0; x < sx0 + subW; x += 9) {
+    ctx.beginPath(); ctx.moveTo(x, gY + 7); ctx.lineTo(x + 5, gY + 13); ctx.stroke();
+  }
+  /* linhas de campo E no dielectrico */
+  ctx.strokeStyle = 'rgba(56,189,248,0.55)'; ctx.lineWidth = 1;
+  const sl = cxm - Wpx / 2, sr = cxm + Wpx / 2, st = gY - hs - 4;
+  for (let i = 0; i <= 8; i++) {
+    const x1 = sl + Wpx * i / 8;
+    const x2 = cxm + (x1 - cxm) * 1.6;
+    ctx.beginPath(); ctx.moveTo(x1, gY - hs + 1);
+    ctx.quadraticCurveTo((x1 + x2) / 2, gY - hs / 2, x2, gY - 1); ctx.stroke();
+    poly(ctx, [[x2 - 3, gY - 5], [x2, gY - 1], [x2 + 3, gY - 5]], 'rgba(56,189,248,0.55)', 1);
+  }
+  /* franjas no ar */
+  ctx.strokeStyle = 'rgba(56,189,248,0.32)';
+  for (let j = 0; j < 3; j++) {
+    const r = 12 + j * 9;
+    [[sl, -1], [sr, 1]].forEach(e => {
+      ctx.beginPath();
+      ctx.moveTo(e[0], st + 2);
+      ctx.bezierCurveTo(e[0] + e[1] * r, st - r * 0.9, e[0] + e[1] * (r + 8), gY - hs - 4, e[0] + e[1] * (r * 0.8), gY - 1);
+      ctx.stroke();
+    });
+  }
+  /* fita */
+  ctx.save(); ctx.shadowColor = COL.mw; ctx.shadowBlur = 10;
+  ctx.fillStyle = COL.mw; ctx.fillRect(sl, st, Wpx, 4); ctx.restore();
+  /* cotas e rotulos */
+  dimH(ctx, sl, sr, st - 12);
+  txt(ctx, 'W = ' + fmt(m.w, 3) + ' mm', cxm, st - 17, COL.t1, 'center');
+  dimV(ctx, sx0 + subW + 14, gY - hs, gY);
+  txt(ctx, 'h = ' + fmt(m.h, 3) + ' mm', sx0 + subW + 20, gY - hs / 2 + 3, COL.t1);
+  ctx.font = 'italic 15px Instrument Serif'; ctx.fillStyle = COL.amber; ctx.textAlign = 'center';
+  ctx.fillText('\u03B5r = ' + fmt(m.er, 2), cxm, gY - hs / 2 + 24);
+  txt(ctx, 'ar (\u03B50)', sx0 + 6, gY - hs - 26, COL.t2);
+  txt(ctx, 'plano de terra', sx0 + 6, gY + 24, COL.t2);
+  txt(ctx, 't \u2248 0', sr + 8, st + 2, COL.t3, 'left', '8.5px JetBrains Mono');
+  $('cvA-meta').innerHTML = 'Z0 = ' + fmt(m.calc.an.z0, 1) + ' &Omega; | &epsilon;eff = ' + fmt(m.calc.an.eeff, 2) + ' | escala aprox.';
+}
+function msCurve(ctx, p, fn, color) {
+  const pts = [];
+  for (let i = 0; i <= 160; i++) {
+    const u = Math.pow(10, -1 + 2 * i / 160);
+    pts.push([p.X(u), p.Y(fn(u))]);
+  }
+  poly(ctx, pts, color, 1.8);
+}
+function drawMsB() {
+  const { ctx, w, h } = fit($('cvB'));
+  const m = S.ms; if (!m.calc) return;
+  const ymax = Math.max(150, m.calc.an.z0 * 1.3);
+  const p = makePlot(ctx, w, h, { x0: 0.1, x1: 10, xlog: true, y0: 0, y1: ymax, xlab: 'W/h', ylab: 'Z0 (ohm)', xticks: [0.1, 0.2, 0.5, 1, 2, 5, 10], xf: v => v < 1 ? v.toFixed(1) : v.toFixed(0) });
+  msCurve(ctx, p, u => msAnalysis(m.er, u).z0, COL.mw);
+  const px = p.X(Math.min(10, Math.max(0.1, m.calc.u))), py = p.Y(m.calc.an.z0);
+  poly(ctx, [[px, p.B], [px, py], [p.L, py]], COL.phos, 1, [3, 3]);
+  dot(ctx, px, py, COL.phos);
+  $('cvB-meta').innerHTML = '&epsilon;r = ' + fmt(m.er, 2);
+}
+function drawMsC() {
+  const { ctx, w, h } = fit($('cvC'));
+  const m = S.ms; if (!m.calc) return;
+  const p = makePlot(ctx, w, h, { x0: 0.1, x1: 10, xlog: true, y0: 1, y1: m.er * 1.06 + 0.2, xlab: 'W/h', ylab: 'eeff', xticks: [0.1, 0.2, 0.5, 1, 2, 5, 10], xf: v => v < 1 ? v.toFixed(1) : v.toFixed(0) });
+  poly(ctx, [[p.L, p.Y(m.er)], [p.R, p.Y(m.er)]], COL.amber, 1, [4, 3]);
+  txt(ctx, '\u03B5r', p.R - 6, p.Y(m.er) + 11, COL.amber, 'right');
+  const mid = (m.er + 1) / 2;
+  poly(ctx, [[p.L, p.Y(mid)], [p.R, p.Y(mid)]], COL.t3, 1, [4, 3]);
+  txt(ctx, '(\u03B5r+1)/2', p.R - 6, p.Y(mid) - 4, COL.t3, 'right', '8.5px JetBrains Mono');
+  msCurve(ctx, p, u => msAnalysis(m.er, u).eeff, COL.cyan);
+  const px = p.X(Math.min(10, Math.max(0.1, m.calc.u)));
+  dot(ctx, px, p.Y(m.calc.an.eeff), COL.phos);
+  $('cvC-meta').textContent = 'limites: quase-TEM';
+}
+
+/* ============================================================
+   MODULO 3: PARAMETROS S
+   ============================================================ */
+function computeSp() {
+  const p = S.sp, N = 241, fs = [], s11 = [], s21 = [];
+  const mk = fr => {
+    if (p.dut === 'linha') return dutLineS(50, p.zl, p.th0 * Math.PI / 180 * fr);
+    if (p.dut === 'stub') return dutStubS(50, p.zst, Math.PI / 2 * fr);
+    if (p.dut === 'attT') return dutAttTS(50, p.att);
+    return dutAttPiS(50, p.att);
+  };
+  for (let i = 0; i < N; i++) {
+    const fr = 0.05 + 1.95 * i / (N - 1);
+    const Sm = mk(fr);
+    fs.push(fr * p.f0); s11.push(Sm[0][0]); s21.push(Sm[1][0]);
+  }
+  const S0 = mk(1), g = S0[0][0], t = S0[1][0];
+  const ag = cabs(g), at = cabs(t);
+  p.calc = {
+    fs, s11, s21,
+    at0: {
+      s11dB: dB(ag), s21dB: dB(at),
+      vswr: ag < 0.99999 ? (1 + ag) / (1 - ag) : Infinity,
+      ph21: carg(t) * 180 / Math.PI,
+      diss: Math.max(0, 1 - ag * ag - at * at),
+      recip: cabs(csub(S0[0][1], S0[1][0]))
+    },
+    zin: p.dut === 'linha' ? cdiv(cmul(cx(50), cadd(cx(1), g)), csub(cx(1), g)) : null
+  };
+}
+function renderSp() {
+  const p = S.sp, c = p.calc, a = c.at0;
+  const casado = a.s11dB < -15;
+  let s1 = '<div class="kv"><span class="k">|S11|</span><span class="v ' + (casado ? 'good' : 'warn') + '">' +
+    (a.s11dB < -80 ? '&lt; -80' : fmt(a.s11dB, 2)) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">|S21|</span><span class="v mwc">' + fmt(a.s21dB, 2) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">VSWR</span><span class="v">' + (isFinite(a.vswr) ? fmt(a.vswr, 2) : '1.00') + '</span></div>' +
+    '<div class="kv"><span class="k">Fase S21</span><span class="v acc">' + fmt(a.ph21, 1) + '<span class="unit">&deg;</span></span></div>' +
+    '<div class="kv"><span class="k">Pot. dissipada</span><span class="v">' + fmt(a.diss * 100, 1) + '<span class="unit">%</span></span></div>';
+  let s2 = '';
+  if (p.dut === 'linha' && c.zin) {
+    const im = c.zin[1];
+    s2 = '<div class="kv"><span class="k">Zin em f0</span><span class="v mwc">' + fmt(c.zin[0], 1) +
+      (im >= 0 ? ' + j' : ' - j') + fmt(Math.abs(im), 1) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="info-box">Linha de ' + fmt(p.zl, 0) + ' &Omega; com &theta; = ' + fmt(p.th0, 0) +
+      '&deg; em f0. Com &theta; = 90&deg; ela age como transformador &lambda;/4: Zin = Z&sup2;/50.</div>';
+  } else if (p.dut === 'stub') {
+    s2 = '<div class="info-box">Estube aberto de &lambda;/4 em deriva&ccedil;&atilde;o: em f0 ele se transforma em curto no ponto de jun&ccedil;&atilde;o e rejeita o sinal (notch). Fora de f0, volta a deixar passar.</div>';
+  } else {
+    const v = p.dut === 'attT' ? attT(50, p.att) : attPi(50, p.att);
+    s2 = (p.dut === 'attT'
+      ? '<div class="kv"><span class="k">R s&eacute;rie (x2)</span><span class="v mwc">' + fmt(v.R1, 2) + '<span class="unit">&Omega;</span></span></div>' +
+        '<div class="kv"><span class="k">R deriva&ccedil;&atilde;o</span><span class="v mwc">' + fmt(v.R2, 2) + '<span class="unit">&Omega;</span></span></div>'
+      : '<div class="kv"><span class="k">R deriva&ccedil;&atilde;o (x2)</span><span class="v mwc">' + fmt(v.R1, 2) + '<span class="unit">&Omega;</span></span></div>' +
+        '<div class="kv"><span class="k">R s&eacute;rie</span><span class="v mwc">' + fmt(v.R2, 2) + '<span class="unit">&Omega;</span></span></div>') +
+      '<div class="info-box ok">Atenuador resistivo casado: |S11| = 0 e |S21| = -' + fmt(p.att, 1) + ' dB em qualquer frequ&ecirc;ncia.</div>';
+  }
+  const s3 = '<div class="kv"><span class="k">Reciprocidade |S12-S21|</span><span class="v good">' + a.recip.toExponential(1) + '</span></div>' +
+    '<div class="kv"><span class="k">|S11|&sup2;+|S21|&sup2;</span><span class="v ' + (a.diss > 0.001 ? '' : 'good') + '">' + fmt(1 - a.diss, 4) + '</span></div>';
+  $('results').innerHTML =
+    secHTML('Em f0 = ' + fmt(p.f0, 2) + ' GHz', 'mw', s1, true) +
+    secHTML('Projeto', 'amber', s2, true) +
+    secHTML('Sanidade f&iacute;sica', 'green', s3, false);
+}
+function drawSpA() {
+  badge(null);
+  const { ctx, w, h } = fit($('cvA'));
+  const p = S.sp, cy = h * 0.5, x1 = 60, x2 = w - 60;
+  portDot(ctx, x1, cy, 'P1', '50 \u03A9');
+  portDot(ctx, x2, cy, 'P2', '50 \u03A9');
+  if (p.dut === 'linha') {
+    wire(ctx, [[x1, cy], [x1 + 50, cy]]);
+    tlBar(ctx, x1 + 50, cy, x2 - 50, cy, 'Z = ' + fmt(p.zl, 0) + ' \u03A9', '\u03B8 = ' + fmt(p.th0, 0) + '\u00B0 @ f0');
+    wire(ctx, [[x2 - 50, cy], [x2, cy]]);
+  } else if (p.dut === 'stub') {
+    const xm = (x1 + x2) / 2;
+    wire(ctx, [[x1, cy], [x1 + 34, cy]]);
+    tlBar(ctx, x1 + 34, cy, xm, cy, '50 \u03A9', '');
+    tlBar(ctx, xm, cy, x2 - 34, cy, '50 \u03A9', '');
+    wire(ctx, [[x2 - 34, cy], [x2, cy]]);
+    tlBar(ctx, xm, cy, xm, cy - 74, '', '');
+    txt(ctx, 'Zst = ' + fmt(p.zst, 0) + ' \u03A9, \u03BB/4', xm + 10, cy - 44, COL.amber);
+    ctx.strokeStyle = COL.t1; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(xm, cy - 82, 4, 0, 6.2832); ctx.stroke();
+    txt(ctx, 'aberto', xm + 10, cy - 80, COL.t2);
+    dot(ctx, xm, cy, COL.cyan, 2.6);
+  } else if (p.dut === 'attT') {
+    const v = attT(50, p.att), xa = x1 + 60, xb = x2 - 60, xm = (xa + xb) / 2;
+    wire(ctx, [[x1, cy], [xa, cy]]);
+    resZig(ctx, xa, cy, xm - 12, cy, 'R1 = ' + fmt(v.R1, 1));
+    resZig(ctx, xm + 12, cy, xb, cy, 'R1');
+    wire(ctx, [[xm - 12, cy], [xm + 12, cy]]);
+    wire(ctx, [[xb, cy], [x2, cy]]);
+    resZig(ctx, xm, cy, xm, cy + 52, '');
+    txt(ctx, 'R2 = ' + fmt(v.R2, 1), xm + 12, cy + 32, COL.rose);
+    gndSym(ctx, xm, cy + 52);
+  } else {
+    const v = attPi(50, p.att), xa = x1 + 70, xb = x2 - 70;
+    wire(ctx, [[x1, cy], [xa, cy]]);
+    resZig(ctx, xa, cy, xb, cy, 'R2 = ' + fmt(v.R2, 1));
+    wire(ctx, [[xb, cy], [x2, cy]]);
+    resZig(ctx, xa, cy, xa, cy + 52, '');
+    resZig(ctx, xb, cy, xb, cy + 52, '');
+    txt(ctx, 'R1 = ' + fmt(v.R1, 1), xa - 12, cy + 32, COL.rose, 'right');
+    txt(ctx, 'R1', xb + 12, cy + 32, COL.rose);
+    gndSym(ctx, xa, cy + 52); gndSym(ctx, xb, cy + 52);
+    dot(ctx, xa, cy, COL.cyan, 2.6); dot(ctx, xb, cy, COL.cyan, 2.6);
+  }
+  $('cvA-meta').innerHTML = 'refer&ecirc;ncia 50 &Omega; nas duas portas';
+}
+function drawSpB() {
+  const { ctx, w, h } = fit($('cvB'));
+  const c = S.sp.calc; if (!c) return;
+  const p = makePlot(ctx, w, h, { x0: c.fs[0], x1: c.fs[c.fs.length - 1], y0: -40, y1: 0, xlab: 'f (GHz)', ylab: 'dB', xf: v => fmt(v, 1) });
+  const map = arr => arr.map((v, i) => [p.X(c.fs[i]), p.Y(Math.max(-40, dB(cabs(v))))]);
+  const pf = p.X(S.sp.f0);
+  poly(ctx, [[pf, p.T], [pf, p.B]], COL.t3, 1, [4, 3]);
+  poly(ctx, map(c.s11), COL.rose, 1.7);
+  poly(ctx, map(c.s21), COL.phos, 1.7);
+  legend(ctx, [['|S11|', COL.rose], ['|S21|', COL.phos]], p.R - 64, p.T + 14);
+  $('cvB-meta').textContent = 'varredura 0.05 a 2 x f0';
+}
+function drawSpC() {
+  const { ctx, w, h } = fit($('cvC'));
+  const c = S.sp.calc; if (!c) return;
+  const R = Math.min(w, h) / 2 - 16, cxp = w / 2, cyp = h / 2;
+  const G2P = g => [cxp + g[0] * R, cyp - g[1] * R];
+  ctx.strokeStyle = COL.grid; ctx.lineWidth = 1;
+  [0.2, 0.5, 1, 2, 5].forEach(r => {
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const x = Math.tan(-1.5 + 3 * i / 80) * 3;
+      pts.push(G2P(cdiv(cx(r - 1, x), cx(r + 1, x))));
+    }
+    poly(ctx, pts, COL.grid, 1);
+  });
+  [0.5, 1, 2].forEach(xv => [xv, -xv].forEach(x => {
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const r = Math.tan(1.55 * i / 60) * 2;
+      pts.push(G2P(cdiv(cx(r - 1, x), cx(r + 1, x))));
+    }
+    poly(ctx, pts, COL.grid, 1);
+  }));
+  poly(ctx, [[cxp - R, cyp], [cxp + R, cyp]], COL.grid, 1);
+  ctx.strokeStyle = COL.frame; ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 6.2832); ctx.stroke();
+  txt(ctx, 'curto', cxp - R + 3, cyp - 5, COL.t3, 'left', '8px JetBrains Mono');
+  txt(ctx, 'aberto', cxp + R - 3, cyp - 5, COL.t3, 'right', '8px JetBrains Mono');
+  txt(ctx, '50', cxp + 3, cyp - 4, COL.t3, 'left', '8px JetBrains Mono');
+  const locus = c.s11.map(g => G2P(g));
+  poly(ctx, locus, COL.mw, 1.8);
+  const i0 = Math.round((1 - 0.05) / 1.95 * (c.s11.length - 1));
+  dot(ctx, locus[i0][0], locus[i0][1], COL.phos);
+  txt(ctx, 'S11(f)', cxp - R, cyp - R + 4, COL.mw, 'left', '9px JetBrains Mono');
+  $('cvC-meta').innerHTML = 'ponto: f0';
+}
+
+/* ============================================================
+   MODULO 4: DIVISORES E HIBRIDAS
+   ============================================================ */
+function computeDiv() {
+  const d = S.div, N = 241, rs = [];
+  const m = { s11: [], s21: [], s31: [], s41: [], iso: [] }, ph = { a: [], b: [] };
+  const at = r => {
+    const th = Math.PI / 2 * r;
+    if (d.comp === 'wilk') { const Q = wilkinsonS(d.z0, th); return { s11: Q[0][0], s21: Q[1][0], s31: Q[2][0], iso: Q[1][2] }; }
+    if (d.comp === 'bl') { const Q = branchlineS(d.z0, th); return { s11: Q[0][0], s21: Q[1][0], s31: Q[2][0], s41: Q[3][0] }; }
+    if (d.comp === 'rr') { const Q = ratraceS(d.z0, th); return { s11: Q[0][0], s21: Q[1][0], s31: Q[2][0], s41: Q[3][0] }; }
+    const cc = Math.pow(10, -d.cdb / 20);
+    const Q = couplerS(cc, th); return { s11: Q.s11, s21: Q.s21, s31: Q.s31, s41: Q.s41 };
+  };
+  for (let i = 0; i < N; i++) {
+    const r = 0.2 + 1.6 * i / (N - 1); rs.push(r);
+    const q = at(r);
+    m.s11.push(dB(cabs(q.s11))); m.s21.push(dB(cabs(q.s21)));
+    m.s31.push(q.s31 ? dB(cabs(q.s31)) : -99);
+    m.s41.push(q.s41 ? dB(cabs(q.s41)) : -99);
+    m.iso.push(q.iso ? dB(cabs(q.iso)) : -99);
+    ph.a.push(carg(q.s21) * 180 / Math.PI);
+    const sb = d.comp === 'rr' ? q.s41 : q.s31;
+    ph.b.push(carg(sb) * 180 / Math.PI);
+  }
+  const q0 = at(1);
+  const sec0 = d.comp === 'rr' ? q0.s41 : q0.s31;
+  const iso0 = d.comp === 'wilk' ? q0.iso : d.comp === 'bl' ? q0.s41 : d.comp === 'rr' ? q0.s31 : q0.s41;
+  let dphi = (carg(q0.s21) - carg(sec0)) * 180 / Math.PI;
+  dphi = ((dphi % 360) + 360) % 360; if (dphi > 180) dphi = 360 - dphi;
+  let band;
+  if (d.comp === 'cpl') {
+    const ref = dB(cabs(q0.s31));
+    band = m.s31.filter(v => Math.abs(v - ref) < 0.5).length / N * 160;
+  } else {
+    band = m.s11.filter(v => v < -15).length / N * 160;
+  }
+  d.calc = {
+    rs, m, ph, band,
+    at0: {
+      out: dB(cabs(q0.s21)), sec: dB(cabs(sec0)),
+      iso: dB(cabs(iso0)), ret: dB(cabs(q0.s11)), dphi
+    }
+  };
+}
+function renderDiv() {
+  const d = S.div, c = d.calc, a = c.at0;
+  const rt2 = Math.SQRT2;
+  let s1 = '';
+  if (d.comp === 'wilk') {
+    s1 = '<div class="kv"><span class="k">Linhas &lambda;/4</span><span class="v mwc">' + fmt(rt2 * d.z0, 2) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">Resistor</span><span class="v mwc">' + fmt(2 * d.z0, 0) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="info-box">Divide -3 dB em fase e isola as sa&iacute;das: o resistor s&oacute; dissipa quando h&aacute; desequil&iacute;brio.</div>';
+  } else if (d.comp === 'bl') {
+    s1 = '<div class="kv"><span class="k">Bra&ccedil;os s&eacute;rie</span><span class="v mwc">' + fmt(d.z0 / rt2, 2) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">Bra&ccedil;os deriv.</span><span class="v mwc">' + fmt(d.z0, 0) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="info-box">H&iacute;brida de quadratura: sa&iacute;das -3 dB defasadas de 90&deg;. Base de misturadores e amplificadores balanceados.</div>';
+  } else if (d.comp === 'rr') {
+    s1 = '<div class="kv"><span class="k">Anel</span><span class="v mwc">' + fmt(rt2 * d.z0, 2) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">Circunfer&ecirc;ncia</span><span class="v">1.5<span class="unit">&lambda;</span></span></div>' +
+      '<div class="info-box">Alimentando a porta 1 (&Delta;): sa&iacute;das 2 e 4 com 180&deg; entre si; a porta 3 (&Sigma;) fica isolada. Alimentando &Sigma;, as sa&iacute;das ficam em fase.</div>';
+  } else {
+    const cc = Math.pow(10, -d.cdb / 20);
+    s1 = '<div class="kv"><span class="k">Z0e</span><span class="v mwc">' + fmt(d.z0 * Math.sqrt((1 + cc) / (1 - cc)), 2) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">Z0o</span><span class="v mwc">' + fmt(d.z0 * Math.sqrt((1 - cc) / (1 + cc)), 2) + '<span class="unit">&Omega;</span></span></div>' +
+      '<div class="kv"><span class="k">c linear</span><span class="v">' + fmt(cc, 4) + '</span></div>' +
+      '<div class="info-box">Linhas acopladas &lambda;/4 (ideal): casado e com porta isolada em toda a banda; o acoplamento &eacute; m&aacute;ximo em f0.</div>';
+  }
+  const s2 = '<div class="kv"><span class="k">Sa&iacute;da |S21|</span><span class="v mwc">' + fmt(a.out, 2) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">' + (d.comp === 'cpl' ? 'Acoplada |S31|' : 'Sa&iacute;da 2') + '</span><span class="v mwc">' + fmt(a.sec, 2) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">Isola&ccedil;&atilde;o</span><span class="v good">' + (a.iso < -80 ? '&lt; -80' : fmt(a.iso, 1)) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">Retorno |S11|</span><span class="v good">' + (a.ret < -80 ? '&lt; -80' : fmt(a.ret, 1)) + '<span class="unit">dB</span></span></div>' +
+    '<div class="kv"><span class="k">&Delta;fase sa&iacute;das</span><span class="v acc">' + fmt(a.dphi, 1) + '<span class="unit">&deg;</span></span></div>';
+  const s3 = '<div class="kv"><span class="k">' + (d.comp === 'cpl' ? 'Acoplamento &plusmn;0.5 dB' : '|S11| &lt; -15 dB') + '</span><span class="v acc">' + fmt(c.band, 0) + '<span class="unit">% de f0</span></span></div>';
+  $('results').innerHTML =
+    secHTML('Valores de projeto', 'amber', s1, true) +
+    secHTML('Em f0 = ' + fmt(d.f0, 2) + ' GHz', 'mw', s2, true) +
+    secHTML('Largura de banda', 'cyan', s3, true);
+}
+function drawDivA() {
+  badge(null);
+  const { ctx, w, h } = fit($('cvA'));
+  const d = S.div, cxp = w / 2, cyp = h / 2, rt2 = Math.SQRT2;
+  if (d.comp === 'wilk') {
+    const x1 = 70, xj = 130, x2 = w - 150, xr = x2 + 26, xp = w - 64;
+    portDot(ctx, x1, cyp, 'P1', 'entrada');
+    wire(ctx, [[x1, cyp], [xj, cyp]]);
+    tlBar(ctx, xj, cyp, x2, cyp - 42, fmt(rt2 * d.z0, 1) + ' \u03A9', '\u03BB/4');
+    tlBar(ctx, xj, cyp, x2, cyp + 42, fmt(rt2 * d.z0, 1) + ' \u03A9', '\u03BB/4');
+    wire(ctx, [[x2, cyp - 42], [xp, cyp - 42]]);
+    wire(ctx, [[x2, cyp + 42], [xp, cyp + 42]]);
+    resZig(ctx, xr, cyp - 42, xr, cyp + 42, '2Z0 = ' + fmt(2 * d.z0, 0));
+    portDot(ctx, xp, cyp - 42, 'P2', '-3 dB');
+    portDot(ctx, xp, cyp + 42, 'P3', '-3 dB');
+  } else if (d.comp === 'bl') {
+    const L = Math.min(w * 0.4, h * 0.52), x0 = cxp - L / 2, x1 = cxp + L / 2, y0 = cyp - L / 2.6, y1 = cyp + L / 2.6;
+    tlBar(ctx, x0, y0, x1, y0, fmt(d.z0 / rt2, 1) + ' \u03A9', '\u03BB/4');
+    tlBar(ctx, x0, y1, x1, y1, fmt(d.z0 / rt2, 1) + ' \u03A9', '\u03BB/4');
+    tlBar(ctx, x0, y0, x0, y1, fmt(d.z0, 0) + ' \u03A9', '');
+    tlBar(ctx, x1, y0, x1, y1, fmt(d.z0, 0) + ' \u03A9', '');
+    wire(ctx, [[x0 - 34, y0], [x0, y0]]); wire(ctx, [[x0 - 34, y1], [x0, y1]]);
+    wire(ctx, [[x1, y0], [x1 + 34, y0]]); wire(ctx, [[x1, y1], [x1 + 34, y1]]);
+    portDot(ctx, x0 - 34, y0, 'P1', 'entrada');
+    portDot(ctx, x1 + 34, y0, 'P2', '-90\u00B0');
+    portDot(ctx, x1 + 34, y1, 'P3', '-180\u00B0');
+    portDot(ctx, x0 - 34, y1, 'P4', 'isolada');
+  } else if (d.comp === 'rr') {
+    const R = Math.min(w, h) * 0.3;
+    ctx.strokeStyle = '#22304a'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 6.2832); ctx.stroke();
+    ctx.strokeStyle = COL.mw; ctx.globalAlpha = 0.85; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(cxp, cyp, R, 0, 6.2832); ctx.stroke();
+    ctx.globalAlpha = 1;
+    const ports = [[Math.PI, 'P1', '\u0394 entrada'], [-Math.PI / 2, 'P2', 'saida'], [0, 'P3', '\u03A3 isolada'], [Math.PI / 2, 'P4', 'saida']];
+    ports.forEach(pp => {
+      const px = cxp + Math.cos(pp[0]) * R, py = cyp + Math.sin(pp[0]) * R;
+      const qx = cxp + Math.cos(pp[0]) * (R + 24), qy = cyp + Math.sin(pp[0]) * (R + 24);
+      wire(ctx, [[px, py], [qx, qy]]);
+      portDot(ctx, qx, qy, pp[1], pp[2]);
+    });
+    const labs = [[-3 * Math.PI / 4, '\u03BB/4'], [-Math.PI / 4, '\u03BB/4'], [Math.PI / 4, '\u03BB/4'], [3 * Math.PI / 4, '3\u03BB/4']];
+    labs.forEach(lb => txt(ctx, lb[1], cxp + Math.cos(lb[0]) * (R + 16), cyp + Math.sin(lb[0]) * (R + 16) + 3, COL.t2, 'center'));
+    txt(ctx, 'anel \u221A2\u00B7Z0 = ' + fmt(rt2 * d.z0, 1) + ' \u03A9', cxp, cyp + 4, COL.amber, 'center');
+  } else {
+    const x0 = cxp - w * 0.24, x1 = cxp + w * 0.24, ya = cyp - 17, yb = cyp + 17;
+    tlBar(ctx, x0, yb, x1, yb, '', '');
+    tlBar(ctx, x0, ya, x1, ya, '', '');
+    wire(ctx, [[x0 - 36, yb], [x0, yb]]); wire(ctx, [[x1, yb], [x1 + 36, yb]]);
+    wire(ctx, [[x0 - 36, ya], [x0, ya]]); wire(ctx, [[x1, ya], [x1 + 36, ya]]);
+    portDot(ctx, x0 - 36, yb, 'P1', 'entrada');
+    portDot(ctx, x1 + 36, yb, 'P2', 'direta');
+    portDot(ctx, x0 - 36, ya, 'P3', 'acoplada');
+    portDot(ctx, x1 + 36, ya, 'P4', 'isolada');
+    txt(ctx, '\u03BB/4', cxp, yb + 22, COL.t2, 'center');
+    txt(ctx, 'C = ' + fmt(d.cdb, 0) + ' dB', cxp, ya - 14, COL.amber, 'center');
+  }
+  $('cvA-meta').innerHTML = 'f0 = ' + fmt(d.f0, 2) + ' GHz';
+}
+function drawDivB() {
+  const { ctx, w, h } = fit($('cvB'));
+  const d = S.div, c = d.calc; if (!c) return;
+  const p = makePlot(ctx, w, h, { x0: 0.2, x1: 1.8, y0: -40, y1: 0, xlab: 'f / f0', ylab: 'dB', xf: v => fmt(v, 1) });
+  const map = arr => arr.map((v, i) => [p.X(c.rs[i]), p.Y(Math.max(-40, v))]);
+  const gv = d.comp === 'cpl' ? -d.cdb : -3.0103;
+  poly(ctx, [[p.L, p.Y(gv)], [p.R, p.Y(gv)]], COL.t3, 1, [4, 3]);
+  txt(ctx, fmt(gv, 1) + ' dB', p.L + 4, p.Y(gv) - 4, COL.t3, 'left', '8.5px JetBrains Mono');
+  const pf = p.X(1);
+  poly(ctx, [[pf, p.T], [pf, p.B]], COL.t3, 1, [4, 3]);
+  let ser;
+  if (d.comp === 'wilk') ser = [['s11', COL.rose, '|S11|'], ['s21', COL.phos, '|S21|=|S31|'], ['iso', COL.amber, 'iso |S23|']];
+  else if (d.comp === 'bl') ser = [['s11', COL.rose, '|S11|'], ['s21', COL.phos, '|S21|'], ['s31', COL.cyan, '|S31|'], ['s41', COL.amber, 'iso |S41|']];
+  else if (d.comp === 'rr') ser = [['s11', COL.rose, '|S11|'], ['s21', COL.phos, '|S21|'], ['s41', COL.cyan, '|S41|'], ['s31', COL.amber, 'iso |S31|']];
+  else ser = [['s21', COL.phos, '|S21| direta'], ['s31', COL.cyan, '|S31| acopl.']];
+  ser.forEach(sr => poly(ctx, map(c.m[sr[0]]), sr[1], 1.7));
+  legend(ctx, ser.map(sr => [sr[2], sr[1]]), p.L + 8, p.T + 14);
+  $('cvB-meta').textContent = d.comp === 'cpl' ? 'ideal: |S11|=|S41|=0' : 'banda: |S11| < -15 dB';
+}
+function drawDivC() {
+  const { ctx, w, h } = fit($('cvC'));
+  const d = S.div, c = d.calc; if (!c) return;
+  const p = makePlot(ctx, w, h, { x0: 0.2, x1: 1.8, y0: -180, y1: 180, xlab: 'f / f0', ylab: 'fase (graus)', yticks: [-180, -90, 0, 90, 180], xf: v => fmt(v, 1) });
+  const map = arr => {
+    const pts = [];
+    arr.forEach((v, i) => {
+      if (i > 0 && Math.abs(v - arr[i - 1]) > 180) pts.push(null);
+      pts.push([p.X(c.rs[i]), p.Y(v)]);
+    });
+    return pts;
+  };
+  const pf = p.X(1);
+  poly(ctx, [[pf, p.T], [pf, p.B]], COL.t3, 1, [4, 3]);
+  poly(ctx, map(c.ph.a), COL.phos, 1.7);
+  const two = d.comp !== 'wilk';
+  if (two) poly(ctx, map(c.ph.b), COL.cyan, 1.7);
+  legend(ctx, two ? [['fase S21', COL.phos], [d.comp === 'rr' ? 'fase S41' : 'fase S31', COL.cyan]] : [['fase S21 = S31', COL.phos]], p.L + 8, p.T + 14);
+  $('cvC-meta').innerHTML = '&Delta;&phi;(f0) = ' + fmt(c.at0.dphi, 1) + '&deg;';
+}
+
+/* ============================================================
+   MODULO 5: CAVIDADE RESSONANTE
+   ============================================================ */
+function computeCav() {
+  const v = S.cav;
+  const a = v.a / 1e3, b = v.b / 1e3, dd = v.d / 1e3;
+  const er = DIELS[v.diel][1], tand = DIELS[v.diel][2], sig = CONDS[v.cond][1];
+  v.calc = {
+    q: cavQ(a, b, dd, v.p, sig, er, tand),
+    modes: cavModes(a, b, dd, er, 8),
+    er
+  };
+  v.calc.bw = v.calc.q.f0 / v.calc.q.Q;
+}
+function renderCav() {
+  const v = S.cav, c = v.calc, q = c.q;
+  const s1 = '<div class="kv"><span class="k">Modo</span><span class="v mwc">TE10' + v.p + '</span></div>' +
+    '<div class="kv"><span class="k">f0</span><span class="v mwc">' + fmt(q.f0 / 1e9, 4) + '<span class="unit">GHz</span></span></div>' +
+    '<div class="kv"><span class="k">Qc (condutor)</span><span class="v">' + fmt(q.Qc, 0) + '</span></div>' +
+    '<div class="kv"><span class="k">Qd (diel&eacute;trico)</span><span class="v">' + (isFinite(q.Qd) ? fmt(q.Qd, 0) : '&infin;') + '</span></div>' +
+    '<div class="kv"><span class="k">Q total</span><span class="v good">' + fmt(q.Q, 0) + '</span></div>' +
+    '<div class="kv"><span class="k">BW (-3 dB)</span><span class="v acc">' + fmt(c.bw / 1e6, 3) + '<span class="unit">MHz</span></span></div>' +
+    '<div class="kv"><span class="k">Rs superficial</span><span class="v">' + fmt(q.Rs * 1e3, 2) + '<span class="unit">m&Omega;</span></span></div>' +
+    '<div class="kv"><span class="k">&delta; pelicular</span><span class="v">' + fmt(q.delta * 1e6, 3) + '<span class="unit">&mu;m</span></span></div>';
+  let rows = '';
+  c.modes.forEach(m => {
+    const hl = (m.tipo === 'TE' && m.m === 1 && m.n === 0 && m.p === v.p) ? ' class="hl"' : '';
+    rows += '<tr' + hl + '><td>' + m.tipo + m.m + m.n + m.p + '</td><td class="r">' + fmt(m.f / 1e9, 3) + ' GHz</td></tr>';
+  });
+  const s2 = '<table class="modes"><tr><th>Modo</th><th class="r">f</th></tr>' + rows + '</table>' +
+    '<div class="info-box"><strong>Dominante:</strong> ' + c.modes[0].tipo + c.modes[0].m + c.modes[0].n + c.modes[0].p +
+    '. Q alto significa resson&acirc;ncia estreita: BW = f0/Q.</div>';
+  $('results').innerHTML =
+    secHTML('Resson&acirc;ncia', 'mw', s1, true) +
+    secHTML('Espectro de modos', 'cyan', s2, true);
+}
+function drawCavA() {
+  const { ctx, w, h } = fit($('cvA'));
+  const v = S.cav; if (!v.calc) return;
+  const rect = { x: 70, y: 30, w: w - 70 - 30, h: h - 30 - 54 };
+  const PH = 2 * Math.PI * S.t / 2.5;
+  heat(ctx, rect, 64, 200, (u, z) => Math.sin(Math.PI * u) * Math.sin(v.p * Math.PI * z) * Math.cos(PH));
+  ctx.strokeStyle = COL.t1; ctx.lineWidth = 2.5;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  for (let k = 1; k < v.p; k++) {
+    const px = rect.x + rect.w * k / v.p;
+    poly(ctx, [[px, rect.y], [px, rect.y + rect.h]], COL.t3, 1, [5, 4]);
+  }
+  ctx.save(); ctx.translate(rect.x - 34, rect.y + rect.h / 2); ctx.rotate(-Math.PI / 2);
+  txt(ctx, 'a = ' + fmt(v.a, 2) + ' mm', 0, 0, COL.t1, 'center'); ctx.restore();
+  dimV(ctx, rect.x - 16, rect.y, rect.y + rect.h);
+  dimH(ctx, rect.x, rect.x + rect.w, rect.y + rect.h + 16);
+  txt(ctx, 'd = ' + fmt(v.d, 2) + ' mm', rect.x + rect.w / 2, rect.y + rect.h + 32, COL.t1, 'center');
+  badge('<span class="big acc">TE10' + v.p + '</span><span>f0 = ' + fmt(v.calc.q.f0 / 1e9, 3) + ' GHz &middot; onda estacion&aacute;ria</span>');
+  $('cvA-meta').innerHTML = 'paredes: ' + CONDS[v.cond][0] + ' | interior: ' + DIELS[v.diel][0];
+}
+function drawCavB() {
+  const { ctx, w, h } = fit($('cvB'));
+  const v = S.cav, c = v.calc; if (!c) return;
+  const fmax = c.modes[c.modes.length - 1].f * 1.1 / 1e9;
+  const p = makePlot(ctx, w, h, { x0: 0, x1: fmax, y0: 0, y1: 1, xlab: 'f (GHz)', yticks: [] });
+  c.modes.forEach((m, i) => {
+    const sel = m.tipo === 'TE' && m.m === 1 && m.n === 0 && m.p === v.p;
+    const col = sel ? COL.mw : m.tipo === 'TE' ? COL.cyan : COL.amber;
+    const px = p.X(m.f / 1e9), top = p.T + 20 + (i % 3) * 13;
+    poly(ctx, [[px, p.B], [px, top]], col, sel ? 2.2 : 1.2);
+    txt(ctx, m.tipo + m.m + m.n + m.p, px, top - 3, col, 'center', '8.5px JetBrains Mono');
+  });
+  $('cvB-meta').textContent = 'TE ciano | TM ambar | sel. fucsia';
+}
+function drawCavC() {
+  const { ctx, w, h } = fit($('cvC'));
+  const v = S.cav, c = v.calc; if (!c) return;
+  const bwM = c.bw / 1e6, f0 = c.q.f0, Q = c.q.Q;
+  const half = 4 * bwM;
+  const p = makePlot(ctx, w, h, { x0: -half, x1: half, y0: -30, y1: 0, xlab: 'f - f0 (MHz)', ylab: 'dB', xf: x => fmt(x, half < 1 ? 2 : 1) });
+  const pts = [];
+  for (let i = 0; i <= 200; i++) {
+    const df = (-half + 2 * half * i / 200) * 1e6;
+    pts.push([p.X(df / 1e6), p.Y(Math.max(-30, -10 * Math.log10(1 + Math.pow(2 * Q * df / f0, 2))))]);
+  }
+  poly(ctx, pts, COL.mw, 1.9);
+  poly(ctx, [[p.L, p.Y(-3)], [p.R, p.Y(-3)]], COL.amber, 1, [4, 3]);
+  txt(ctx, '-3 dB', p.L + 4, p.Y(-3) - 4, COL.amber, 'left', '8.5px JetBrains Mono');
+  [-bwM / 2, bwM / 2].forEach(x => poly(ctx, [[p.X(x), p.Y(-3)], [p.X(x), p.B]], COL.phos, 1, [3, 3]));
+  txt(ctx, 'BW = ' + fmt(bwM, 3) + ' MHz', p.X(0), p.Y(-3) - 12, COL.phos, 'center');
+  $('cvC-meta').innerHTML = 'Q = ' + fmt(Q, 0);
+}
+
+/* ============================================================
+   CABECALHO, TEXTOS, NAVEGACAO
+   ============================================================ */
+function updateHeader() {
+  const mm = MODS.find(x => x.id === S.mod);
+  $('hdr-mod').textContent = mm.hdr;
+  let fGHz = 10;
+  if (S.mod === 'guia') fGHz = S.guia.f;
+  else if (S.mod === 'ms') fGHz = S.ms.f;
+  else if (S.mod === 'sp') fGHz = S.sp.f0;
+  else if (S.mod === 'div') fGHz = S.div.f0;
+  else if (S.cav.calc) fGHz = S.cav.calc.q.f0 / 1e9;
+  $('hdr-freq').innerHTML = fmt(fGHz, 2) + '<span class="unit">GHz</span>';
+  $('hdr-band').textContent = bandaIEEE(fGHz);
+  $('hdr-lam').innerHTML = fmt(299.792458 / fGHz, 1) + '<span class="unit">mm</span>';
+}
+const CFG = { guia: 'Guia de Ondas', ms: 'Microstrip', sp: 'Par&acirc;metros S', div: 'Divisores & H&iacute;bridas', cav: 'Cavidade' };
+const TITLES = {
+  guia: { A: 'Campo Ey (vista superior TE10)', B: 'Carta de modos', C: 'Diagrama de dispers&atilde;o' },
+  ms: { A: 'Se&ccedil;&atilde;o transversal', B: 'Z0 vs W/h', C: '&epsilon;eff vs W/h' },
+  sp: { A: 'Esquem&aacute;tico do DUT', B: '|S| vs frequ&ecirc;ncia', C: 'Carta de Smith' },
+  div: { A: 'Esquem&aacute;tico', B: '|S| vs f/f0', C: 'Fase das sa&iacute;das' },
+  cav: { A: 'Onda estacion&aacute;ria (plano x-z)', B: 'Espectro de modos', C: 'Resson&acirc;ncia (-3 dB)' }
+};
+const EQS = {
+  guia: '<b>fc</b> = (c/2)&middot;&radic;[(m/a)&sup2;+(n/b)&sup2;]\n<b>&lambda;g</b> = &lambda;0/&radic;[1-(fc/f)&sup2;]\n<b>vp&middot;vg</b> = c&sup2;\n<b>ZTE</b> = &eta;0/&radic;[1-(fc/f)&sup2;]\n<b>&alpha;</b> = &radic;(kc&sup2;-k&sup2;)  se f &lt; fc',
+  ms: '<b>Z0, &epsilon;eff</b>: Hammerstad-Jensen\n<b>W/h</b>: s&iacute;ntese de Wheeler\n<b>&lambda;g</b> = c/(f&middot;&radic;&epsilon;eff)\n<b>L</b> = (&theta;/360&deg;)&middot;&lambda;g',
+  sp: '<b>S</b> = (I-Z0Y)(I+Z0Y)^-1\n<b>RL</b> = -20log|S11|\n<b>VSWR</b> = (1+|&Gamma;|)/(1-|&Gamma;|)\n<b>Zin</b> = Z0(1+&Gamma;)/(1-&Gamma;)',
+  div: '<b>Wilkinson</b>: Z = &radic;2&middot;Z0, R = 2Z0\n<b>Branch-line</b>: Z0/&radic;2 e Z0\n<b>Rat-race</b>: &radic;2&middot;Z0, anel 1.5&lambda;\n<b>Acoplador</b>: Z0e = Z0&radic;[(1+c)/(1-c)]',
+  cav: '<b>f(mnp)</b> = (c/2&radic;&epsilon;r)&middot;&radic;[(m/a)&sup2;+(n/b)&sup2;+(p/d)&sup2;]\n<b>Qc</b>: Pozar eq. 6.46\n<b>1/Q</b> = 1/Qc + tan&delta;\n<b>BW</b> = f0/Q'
+};
+const NOTES = {
+  guia: 'Guia retangular a ar (Pozar cap. 3). Abaixo de fc o modo n&atilde;o propaga: decai como e^(-&alpha;z). A banda &uacute;til recomendada fica entre 1.25 e 1.9 vezes fc do TE10, garantindo opera&ccedil;&atilde;o mono-modo com dispers&atilde;o moderada.',
+  ms: 'Modelo quase-est&aacute;tico de Hammerstad-Jensen com s&iacute;ntese de Wheeler (Pozar cap. 3.8), fita de espessura nula. Precis&atilde;o t&iacute;pica melhor que 1% para 0.1 &lt; W/h &lt; 10. Dispers&atilde;o em frequ&ecirc;ncia n&atilde;o &eacute; considerada.',
+  sp: 'S&iacute;ntese por an&aacute;lise nodal complexa: cada DUT vira uma matriz Y estampada e reduzida (complemento de Schur), da qual sai a matriz S em 50 &Omega; (Pozar cap. 4). O mesmo motor foi validado contra o scikit-rf.',
+  div: 'Divisores e h&iacute;bridas de Pozar cap. 7, montados como redes de linhas &lambda;/4 ideais e resolvidos numericamente (o acoplador usa a forma fechada 7.6). Observe como cada topologia troca banda por isola&ccedil;&atilde;o e fase.',
+  cav: 'Cavidade retangular TE10p (Pozar cap. 6): f0 pela geometria, Qc pela eq. 6.46 e Qd = 1/tan&delta;. A curva lorentziana mostra por que Q alto significa filtro estreito: BW = f0/Q.'
+};
+
+function buildModList() {
+  $('mod-list').innerHTML = MODS.map(m =>
+    '<button type="button" class="mod-btn" data-id="' + m.id + '"><span class="mi">' + m.mi +
+    '</span><span class="mt"><b>' + m.nome + '</b><small>' + m.sub + '</small></span></button>').join('');
+  document.querySelectorAll('.mod-btn').forEach(b => b.addEventListener('click', () => setMod(b.dataset.id)));
+}
+function setMod(id) {
+  S.mod = id;
+  document.querySelectorAll('.mod-btn').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  refreshParams(false);
+  $('cfg-sub').innerHTML = CFG[id];
+  $('cvA-title').innerHTML = TITLES[id].A;
+  $('cvB-title').innerHTML = TITLES[id].B;
+  $('cvC-title').innerHTML = TITLES[id].C;
+  $('eq-box').innerHTML = EQS[id];
+  $('notes').innerHTML = NOTES[id];
+  badge(null);
+  update();
+}
+function refreshParams(doUpdate) {
+  const P = { guia: paramsGuia, ms: paramsMs, sp: paramsSp, div: paramsDiv, cav: paramsCav };
+  $('mod-params').innerHTML = P[S.mod]();
+  bindParams();
+  if (doUpdate !== false) update();
+}
+function bindChips(id, fn) {
+  const box = $(id); if (!box) return;
+  box.querySelectorAll('.chip').forEach(ch => ch.addEventListener('click', () => fn(+ch.dataset.i)));
+}
+function bindParams() {
+  document.querySelectorAll('#mod-params input[type="number"], #mod-params select').forEach(el => {
+    el.addEventListener('input', () => update());
+    el.addEventListener('change', () => update());
+  });
+  const fr = $('g-fr');
+  if (fr) fr.addEventListener('input', () => { const f = $('g-f'); if (f) f.value = fr.value; update(); });
+  bindChips('g-pre', i => { S.guia.pre = i; S.guia.a = WRS[i][1]; S.guia.b = WRS[i][2]; refreshParams(); });
+  bindChips('g-quick', i => {
+    const fc = wgFc(S.guia.a / 1e3, S.guia.b / 1e3, 1, 0) / 1e9;
+    S.guia.f = +([0.8, 1.05, 1.575, 1.5][i] * fc).toFixed(3);
+    const f = $('g-f'); if (f) f.value = S.guia.f;
+    update();
+  });
+  bindChips('m-sub', i => { S.ms.sub = i; if (i < SUBS.length) { S.ms.er = SUBS[i][1]; S.ms.h = SUBS[i][3]; } refreshParams(); });
+  bindChips('m-modo', i => { S.ms.modo = i === 0 ? 'sin' : 'ana'; refreshParams(); });
+  bindChips('p-dut', i => { S.sp.dut = ['linha', 'stub', 'attT', 'attPi'][i]; refreshParams(); });
+  bindChips('d-comp', i => { S.div.comp = ['wilk', 'bl', 'rr', 'cpl'][i]; refreshParams(); });
+  bindChips('d-cdb', i => { S.div.cdb = [10, 15, 20][i]; refreshParams(); });
+  bindChips('d-fq', i => { S.div.f0 = [0.915, 2.45, 5.8, 10][i]; const e = $('d-f0'); if (e) e.value = S.div.f0; update(); });
+  bindChips('c-pre', i => {
+    S.cav.pre = i;
+    const P = [[22.86, 10.16, 22.86], [30, 30, 30], [47.55, 22.15, 47.55]][i];
+    S.cav.a = P[0]; S.cav.b = P[1]; S.cav.d = P[2];
+    refreshParams();
+  });
+  bindChips('c-p', i => { S.cav.p = i + 1; refreshParams(); });
+}
+function num(id, cur) {
+  const el = $(id); if (!el) return cur;
+  const v = parseFloat(el.value);
+  return isFinite(v) && v > 0 ? v : cur;
+}
+function readInputs() {
+  if (S.mod === 'guia') {
+    S.guia.a = num('g-a', S.guia.a); S.guia.b = num('g-b', S.guia.b); S.guia.f = num('g-f', S.guia.f);
+  } else if (S.mod === 'ms') {
+    S.ms.er = num('m-er', S.ms.er); S.ms.h = num('m-h', S.ms.h);
+    S.ms.f = num('m-f', S.ms.f); S.ms.th = num('m-th', S.ms.th);
+    if (S.ms.modo === 'sin') S.ms.z0 = num('m-z0', S.ms.z0); else S.ms.w = num('m-w', S.ms.w);
+  } else if (S.mod === 'sp') {
+    S.sp.f0 = num('p-f0', S.sp.f0); S.sp.zl = num('p-zl', S.sp.zl);
+    S.sp.th0 = num('p-th0', S.sp.th0); S.sp.zst = num('p-zst', S.sp.zst); S.sp.att = num('p-att', S.sp.att);
+  } else if (S.mod === 'div') {
+    S.div.z0 = num('d-z0', S.div.z0); S.div.f0 = num('d-f0', S.div.f0);
+  } else {
+    S.cav.a = num('c-a', S.cav.a); S.cav.b = num('c-b', S.cav.b); S.cav.d = num('c-d', S.cav.d);
+    const cc = $('c-cond'); if (cc) S.cav.cond = parseInt(cc.value) || 0;
+    const cd = $('c-diel'); if (cd) S.cav.diel = parseInt(cd.value) || 0;
+  }
+}
+function syncGuiaSlider() {
+  const fc = wgFc(S.guia.a / 1e3, S.guia.b / 1e3, 1, 0) / 1e9;
+  const fr = $('g-fr'); if (!fr) return;
+  fr.min = (0.3 * fc).toFixed(2); fr.max = (2.2 * fc).toFixed(2); fr.value = S.guia.f;
+  $('g-frange').innerHTML = 'fc = ' + fmt(fc, 3) + ' GHz &middot; controle: ' + fmt(0.3 * fc, 2) + ' a ' + fmt(2.2 * fc, 2) + ' GHz';
+}
+function update() {
+  readInputs();
+  if (S.mod === 'guia') { computeGuia(); renderGuia(); syncGuiaSlider(); }
+  else if (S.mod === 'ms') { computeMs(); renderMs(); }
+  else if (S.mod === 'sp') { computeSp(); renderSp(); }
+  else if (S.mod === 'div') { computeDiv(); renderDiv(); }
+  else { computeCav(); renderCav(); }
+  updateHeader();
+  drawStatic();
+  if (!S.anim) drawAnimA();
+}
+function drawStatic() {
+  if (S.mod === 'guia') { drawGuiaB(); drawGuiaC(); }
+  else if (S.mod === 'ms') { drawMsA(); drawMsB(); drawMsC(); }
+  else if (S.mod === 'sp') { drawSpA(); drawSpB(); drawSpC(); }
+  else if (S.mod === 'div') { drawDivA(); drawDivB(); drawDivC(); }
+  else { drawCavB(); drawCavC(); }
+}
+function drawAnimA() {
+  if (S.mod === 'guia') drawGuiaA();
+  else if (S.mod === 'cav') drawCavA();
+}
+function toggleAnim() {
+  S.anim = !S.anim;
+  $('btn-anim').textContent = S.anim ? 'Pausar' : 'Retomar';
+  if (!S.anim) drawAnimA();
+}
+function resetAll() { Object.assign(S, DEF()); setMod(S.mod); }
+
+/* ============================================================
+   AUTOTESTE (valores de referencia: scikit-rf / Pozar)
+   ============================================================ */
+const TESTS = [
+  ['fc TE10 WR-90 = 6.5571 GHz', () => Math.abs(wgFc(0.02286, 0.01016, 1, 0) / 1e9 - 6.55714) < 1e-3],
+  ['Microstrip FR-4 50 ohm: sintese + reanalise', () => Math.abs(msAnalysis(4.4, msSynthesis(4.4, 50)).z0 - 50.2342) < 0.02],
+  ['Linha 100 ohm, teta 90: S11 = -4.437 dB', () => Math.abs(dB(cabs(dutLineS(50, 100, Math.PI / 2)[0][0])) + 4.43697) < 0.02],
+  ['Atenuador T 10 dB: S21 = -10.000 dB', () => Math.abs(dB(cabs(dutAttTS(50, 10)[1][0])) + 10) < 0.01],
+  ['Wilkinson f0: S21 = -3.010 dB', () => Math.abs(dB(cabs(wilkinsonS(50, Math.PI / 2)[1][0])) + 3.0103) < 0.01],
+  ['Wilkinson f0: isolacao abaixo de -60 dB', () => dB(cabs(wilkinsonS(50, Math.PI / 2)[1][2])) < -60],
+  ['Wilkinson 1.2 f0: S11 = -19.283 dB', () => Math.abs(dB(cabs(wilkinsonS(50, Math.PI / 2 * 1.2)[0][0])) + 19.2828) < 0.02],
+  ['Branch-line f0: quadratura 90.0 graus', () => {
+    const Q = branchlineS(50, Math.PI / 2);
+    let d = (carg(Q[1][0]) - carg(Q[2][0])) * 180 / Math.PI;
+    d = ((d % 360) + 360) % 360; if (d > 180) d = 360 - d;
+    return Math.abs(d - 90) < 0.1;
+  }],
+  ['Branch-line 0.8 f0: S11 = -8.525 dB', () => Math.abs(dB(cabs(branchlineS(50, Math.PI / 2 * 0.8)[0][0])) + 8.5255) < 0.02],
+  ['Rat-race f0: defasagem 2-4 = 180 graus', () => {
+    const Q = ratraceS(50, Math.PI / 2);
+    let d = (carg(Q[1][0]) - carg(Q[3][0])) * 180 / Math.PI;
+    d = ((d % 360) + 360) % 360; if (d > 180) d = 360 - d;
+    return Math.abs(d - 180) < 0.1;
+  }],
+  ['Acoplador 10 dB: S31 = -10.000 dB', () => Math.abs(dB(cabs(couplerS(Math.pow(10, -0.5), Math.PI / 2).s31)) + 10) < 0.01],
+  ['Cavidade TE101 Cu: Qc = 7846.6', () => Math.abs(cavQ(0.02286, 0.01016, 0.02286, 1, 5.813e7, 1, 0).Qc - 7846.61) < 2]
+];
+function runSelfTests() {
+  let ok = 0, html = '';
+  TESTS.forEach(t => {
+    let pass = false;
+    try { pass = !!t[1](); } catch (e) { pass = false; }
+    if (pass) ok++;
+    html += '<div class="check-line"><span class="st ' + (pass ? 'p">PASS' : 'f">FAIL') + '</span><span>' + t[0] + '</span></div>';
+  });
+  $('selftest').innerHTML = html +
+    '<div class="help" style="margin-top:6px;">' + ok + '/' + TESTS.length + ' verifica&ccedil;&otilde;es</div>';
+  const st = $('hdr-status');
+  if (ok === TESTS.length) { st.textContent = 'NOMINAL'; }
+  else { st.textContent = 'FALHA'; st.style.color = '#fb7185'; }
+}
+
+/* ============================================================
+   LOOP DE ANIMACAO E BOOT
+   ============================================================ */
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  if (S.anim) { S.t += dt; drawAnimA(); }
+  requestAnimationFrame(loop);
+}
+(function init() {
+  buildModList();
+  document.addEventListener('click', e => {
+    const hd = e.target.closest('.section-head[data-toggle]');
+    if (!hd) return;
+    hd.classList.toggle('open');
+    const b = hd.nextElementSibling;
+    if (b) b.classList.toggle('open');
+  });
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    S.anim = false;
+    $('btn-anim').textContent = 'Retomar';
+  }
+  setMod('guia');
+  runSelfTests();
+  const ro = new ResizeObserver(() => { drawStatic(); drawAnimA(); });
+  ['cvA', 'cvB', 'cvC'].forEach(id => ro.observe($(id).parentElement));
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
