@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RF Lab — Laboratório de Radiofrequência e Propagação</title>
-<meta name="description" content="Laboratório interativo de RF: link budget completo, modelos de propagação (ITU-R, Okumura-Hata, COST-231), enlace micro-ondas, Fresnel zone, HF/VHF/UHF/SHF, normas ITU e visualização em mapa." />
+<title>RF Lab | Laboratório de Radiofrequência e Propagação</title>
+<meta name="description" content="Laboratório interativo de RF: link budget, relevo real (ITU-R P.1812-6, delta-Bullington), morfologia (ITU-R P.2108), Okumura-Hata, COST-231, mancha de cobertura em mapa e presets de serviços VHF/UHF (FM, DMR, APCO P25, TETRA)." />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,15 +92,17 @@ body::before {
 /* ========== HEADER ========== */
 header.top-bar {
   display: flex; align-items: center; gap: 20px;
-  padding: 10px 18px;
+  padding: 8px 18px;
   background: linear-gradient(180deg, rgba(10,14,20,0.95), rgba(10,14,20,0.7));
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(10px);
 }
+.brand-wrap { display: flex; flex-direction: column; gap: 3px; }
 .brand { display: flex; align-items: baseline; gap: 12px; }
 .brand .logo-mark {
   display: inline-flex; width: 28px; height: 28px;
   align-items: center; justify-content: center; position: relative;
+  align-self: center;
 }
 .brand .logo-mark::before {
   content: ''; position: absolute; inset: 0;
@@ -117,7 +119,6 @@ header.top-bar {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.2); opacity: 0.3; }
 }
-/* concentric rings */
 .brand .logo-mark .ring2 {
   position: absolute; inset: -4px;
   border: 1px solid rgba(249,115,22,0.3); border-radius: 50%;
@@ -140,6 +141,14 @@ header.top-bar {
   font-style: italic; font-family: var(--font-serif);
   font-size: 13px; color: var(--orange); letter-spacing: 0.04em;
 }
+.signature {
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--text-2);
+  letter-spacing: 0.03em; display: flex; align-items: center; gap: 6px;
+  padding-left: 40px; white-space: nowrap;
+}
+.signature a { color: var(--text-1); text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.signature a:hover { color: var(--orange); }
+.signature .sep { color: var(--text-3); }
 
 .top-stats {
   display: flex; gap: 18px; margin-left: auto;
@@ -154,7 +163,7 @@ header.top-bar {
   color: var(--text-2); font-size: 9px;
   letter-spacing: 0.2em; text-transform: uppercase;
 }
-.top-stat .value { color: var(--text-0); font-weight: 500; }
+.top-stat .value { color: var(--text-0); font-weight: 500; white-space: nowrap; }
 .top-stat.live .value { color: var(--phos); }
 .top-stat .value .unit { color: var(--text-2); margin-left: 4px; font-weight: 300; }
 
@@ -244,6 +253,7 @@ main {
 .dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
 .dot.violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
 .dot.rose { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+.dot.teal { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
 .chev {
   color: var(--text-2); font-family: var(--font-mono); font-size: 11px;
   transition: transform .2s;
@@ -256,6 +266,7 @@ main {
 /* ========== FORM ========== */
 .field { margin-bottom: 10px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.field-row .field { margin-bottom: 0; }
 .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
 .field label, .field-row label, .field-row-3 label {
   display: flex; align-items: center; gap: 6px;
@@ -274,6 +285,7 @@ input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:foc
   outline: none; border-color: var(--orange); background: #090d13;
   box-shadow: 0 0 0 2px rgba(249,115,22,0.15);
 }
+input[readonly] { color: var(--teal); background: #0a0e14; }
 select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
@@ -282,6 +294,28 @@ select {
   background-size: 4px 4px; background-repeat: no-repeat;
   padding-right: 24px;
 }
+select optgroup { background: var(--bg-2); color: var(--text-2); font-style: normal; }
+select option { background: var(--bg-1); color: var(--text-0); }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 18px; background: transparent; margin: 2px 0 0;
+}
+input[type="range"]:focus { outline: none; }
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; margin-top: -5.5px; border-radius: 50%;
+  background: var(--teal); box-shadow: 0 0 8px var(--teal); border: 2px solid #062a26; cursor: pointer;
+}
+input[type="range"]::-moz-range-track { height: 4px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 2px; }
+input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal); border: 2px solid #062a26; cursor: pointer; }
+
+.toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-1);
+  margin-bottom: 10px; user-select: none;
+}
+.toggle input { accent-color: var(--orange); width: 14px; height: 14px; margin: 0; }
 
 .help {
   font-size: 10px; color: var(--text-2);
@@ -293,6 +327,7 @@ select {
   border-radius: 50%; color: var(--text-2);
   font-family: var(--font-serif); font-style: italic;
   font-size: 10px; cursor: help; position: relative;
+  text-transform: none; letter-spacing: 0;
 }
 .tip:hover { color: var(--orange); border-color: var(--orange); }
 .tip::after {
@@ -318,6 +353,26 @@ select {
 }
 .chip:hover { border-color: var(--text-2); color: var(--text-0); }
 .chip.active { background: rgba(249,115,22,0.12); border-color: var(--orange); color: var(--orange); }
+.chips.teal .chip.active { background: rgba(45,212,191,0.12); border-color: var(--teal); color: var(--teal); }
+
+/* ========== SERVICE PANEL ========== */
+.svc-panel {
+  margin-top: 4px; padding: 10px;
+  border: 1px solid var(--border-strong); border-left: 3px solid var(--teal);
+  background: rgba(45,212,191,0.035); border-radius: var(--radius);
+}
+.svc-panel[hidden] { display: none; }
+.svc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.svc-head .t { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); }
+.svc-head .b { font-family: var(--font-mono); font-size: 10px; color: var(--text-2); white-space: nowrap; }
+.svc-scale { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 9.5px; color: var(--text-2); margin: 1px 0 10px; gap: 6px; }
+.svc-scale { margin-bottom: 2px; }
+.svc-ch { font-family: var(--font-mono); font-size: 11px; color: var(--text-0); text-align: center; margin-bottom: 10px; }
+.svc-ch.out { color: var(--rose); }
+.svc-tech { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-family: var(--font-mono); font-size: 10px; line-height: 1.4; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.svc-tech .k { color: var(--text-2); white-space: nowrap; }
+.svc-tech .v { color: var(--text-1); }
+.svc-note { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-2); margin-top: 6px; line-height: 1.45; }
 
 /* ========== VIZ AREA ========== */
 .viz {
@@ -331,42 +386,63 @@ select {
   position: absolute; inset: 0; background: #04070c;
 }
 .leaflet-container { background: #04070c !important; font-family: var(--font-mono); }
-.leaflet-control-zoom a {
+.leaflet-bar { border: 1px solid var(--border) !important; box-shadow: none !important; }
+.leaflet-bar a, .leaflet-control-zoom a {
   background: var(--bg-2) !important; color: var(--text-0) !important;
   border-color: var(--border) !important;
 }
-.leaflet-control-zoom a:hover { background: var(--bg-3) !important; }
+.leaflet-bar a:hover { background: var(--bg-3) !important; }
 .leaflet-tooltip {
   background: var(--bg-3); color: var(--text-0);
   border: 1px solid var(--border-strong); box-shadow: none;
   font-family: var(--font-mono); font-size: 11px;
 }
+.leaflet-tooltip-top:before { border-top-color: var(--border-strong); }
+.leaflet-control-layers {
+  background: rgba(7,9,13,0.92) !important; color: var(--text-1) !important;
+  border: 1px solid var(--border) !important; border-radius: var(--radius) !important;
+  box-shadow: none !important; font-family: var(--font-mono); font-size: 10.5px;
+}
+.leaflet-control-layers-toggle { width: 30px !important; height: 30px !important; filter: invert(0.88) hue-rotate(180deg); }
+.leaflet-control-layers-expanded { padding: 8px 10px !important; }
+.leaflet-control-layers-separator { border-top-color: var(--border) !important; }
+.leaflet-control-layers label { margin: 3px 0; cursor: pointer; }
+.leaflet-control-layers input { accent-color: var(--orange); }
+.leaflet-control-attribution { background: rgba(7,9,13,0.75) !important; color: var(--text-3) !important; font-size: 9px !important; }
+.leaflet-control-attribution a { color: var(--text-2) !important; }
+.leaflet-control-scale-line { background: rgba(7,9,13,0.7) !important; color: var(--text-1) !important; border-color: var(--text-2) !important; font-size: 9px !important; }
 
 .map-legend {
-  position: absolute; top: 10px; left: 10px;
-  background: rgba(7,9,13,0.88); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 8px 12px;
+  position: absolute; bottom: 10px; left: 10px;
+  max-width: calc(100% - 200px);
+  background: rgba(7,9,13,0.9); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 7px 11px;
   z-index: 500; font-family: var(--font-mono);
   font-size: 10px; color: var(--text-1);
   backdrop-filter: blur(8px);
-  display: flex; gap: 14px;
+  display: flex; flex-direction: column; gap: 5px;
+  pointer-events: none;
 }
-.map-legend .li { display: flex; align-items: center; gap: 6px; }
+.map-legend .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.map-legend .li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .map-legend .sw { display: inline-block; }
 .map-legend .sw.tx { background: var(--orange); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px var(--orange); }
 .map-legend .sw.rx { background: var(--cyan); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px var(--cyan); }
 .map-legend .sw.link { background: var(--phos); width: 14px; height: 2px; box-shadow: 0 0 4px var(--phos); }
 .map-legend .sw.fz { background: rgba(74,222,128,0.15); border: 1px solid var(--phos); width: 14px; height: 8px; border-radius: 4px; }
-.map-legend .sw.cov { background: rgba(249,115,22,0.15); border: 1px solid var(--orange); width: 10px; height: 10px; border-radius: 50%; }
+.map-legend .sw.box { width: 12px; height: 9px; border-radius: 2px; }
+.map-legend .ttl { color: var(--text-2); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+.map-legend .readout { color: var(--text-2); font-size: 9.5px; border-top: 1px dashed var(--border); padding-top: 5px; }
+.map-legend .readout b { color: var(--text-0); font-weight: 500; }
 
 .map-badge {
   position: absolute; top: 10px; right: 10px;
-  background: rgba(7,9,13,0.88); border: 1px solid var(--border);
+  background: rgba(7,9,13,0.9); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 8px 12px;
   z-index: 500; font-family: var(--font-mono);
   font-size: 10px; color: var(--text-1);
   backdrop-filter: blur(8px); text-align: right;
-  display: flex; flex-direction: column; gap: 3px;
+  display: flex; flex-direction: column; gap: 3px; min-width: 150px;
 }
 .map-badge .big {
   font-family: var(--font-display); font-size: 14px;
@@ -375,6 +451,10 @@ select {
 .map-badge .big.good { color: var(--phos); }
 .map-badge .big.warn { color: var(--amber); }
 .map-badge .big.bad { color: var(--rose); }
+.map-badge .cov { border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 4px; font-size: 9.5px; color: var(--text-2); }
+.map-badge .cov b { color: var(--text-0); font-weight: 500; }
+.progress { height: 3px; background: var(--bg-3); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.progress > div { height: 100%; width: 0; background: var(--teal); box-shadow: 0 0 6px var(--teal); transition: width .15s; }
 
 /* Bottom strip */
 .bottom-strip {
@@ -399,11 +479,8 @@ select {
 .card-header .meta {
   font-family: var(--font-mono); font-size: 10px; color: var(--text-2);
 }
-.card .card-body { flex: 1; position: relative; padding: 6px 8px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
-.card .card-body::-webkit-scrollbar { width: 5px; }
-.card .card-body::-webkit-scrollbar-track { background: transparent; }
-.card .card-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-.card canvas { width: 100%; min-height: 220px; display: block; }
+.card .card-body { flex: 1; position: relative; padding: 6px 8px; overflow: hidden; min-height: 0; }
+.card canvas { display: block; }
 
 /* ========== RESULTS PANEL ========== */
 .kv {
@@ -427,6 +504,9 @@ select {
 .kv .v.bad { color: var(--rose); }
 .kv .v.acc { color: var(--cyan); }
 .kv .v.orange { color: var(--orange); }
+.kv .v.teal { color: var(--teal); }
+.kv .v.violet { color: var(--violet); }
+.kv .v.small { font-size: 10.5px; }
 
 .live-dot {
   display: inline-block; width: 6px; height: 6px;
@@ -435,8 +515,6 @@ select {
   animation: blink 1.6s ease-in-out infinite;
 }
 @keyframes blink { 50% { opacity: 0.3; } }
-.live-dot.off { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
-.live-dot.standby { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
 
 /* gauge bar */
 .gauge { margin-top: 4px; height: 10px; background: var(--bg-0); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; position: relative; }
@@ -463,7 +541,10 @@ select {
 .info-box.ok { border-left-color: var(--phos); background: rgba(74,222,128,0.03); }
 .info-box.warn-box { border-left-color: var(--amber); background: rgba(251,191,36,0.04); }
 .info-box.bad-box { border-left-color: var(--rose); background: rgba(251,113,133,0.04); }
+.info-box.teal-box { border-left-color: var(--teal); background: rgba(45,212,191,0.035); }
 .info-box strong { color: var(--text-0); }
+.morph-grid { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin-top: 4px; }
+.morph-grid .k { color: var(--text-2); }
 
 .divider {
   border: none; border-top: 1px solid var(--border);
@@ -477,16 +558,22 @@ footer {
   border-top: 1px solid var(--border);
   font-family: var(--font-mono); font-size: 10px;
   color: var(--text-2);
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-footer .author { display: flex; align-items: center; gap: 8px; }
+footer .author { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 footer .author a { color: var(--orange); text-decoration: none; }
 footer .author a:hover { text-decoration: underline; }
-footer .ts { color: var(--text-3); }
+footer .ts { color: var(--text-3); text-align: right; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+@media (max-width: 1280px) {
+  main { grid-template-columns: 320px 1fr 300px; }
+  .top-stat:nth-child(5) { display: none; }
+  .signature { display: none; }
+}
 </style>
 </head>
 <body>
@@ -495,10 +582,18 @@ footer .ts { color: var(--text-3); }
 
 <!-- HEADER -->
 <header class="top-bar">
-  <div class="brand">
-    <span class="logo-mark"><span class="ring2"></span><span class="ring3"></span></span>
-    <h1>RF LAB</h1>
-    <span class="tag">Laboratorio de <em>Radiofrequencia</em></span>
+  <div class="brand-wrap">
+    <div class="brand">
+      <span class="logo-mark"><span class="ring2"></span><span class="ring3"></span></span>
+      <h1>RF LAB</h1>
+      <span class="tag">Laboratorio de <em>Radiofrequencia</em></span>
+    </div>
+    <div class="signature">
+      <span>Author Ramon Mayor Martins, Ph.D.</span><span class="sep">//</span>
+      <a href="https://github.com/rmayormartins" target="_blank" rel="noopener">@rmayormartins
+        <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <span class="sep">//</span><span>IFSC SJ - Area de Telecomunicacoes</span>
+    </div>
   </div>
   <div class="top-stats">
     <div class="top-stat live">
@@ -519,11 +614,11 @@ footer .ts { color: var(--text-3); }
     </div>
     <div class="top-stat">
       <span class="label">Modelo</span>
-      <span class="value" id="hdr-model">Free Space</span>
+      <span class="value" id="hdr-model">P.1812 Relevo</span>
     </div>
   </div>
   <div style="display:flex;gap:8px;">
-    <button class="btn primary" onclick="runCalculation()">
+    <button class="btn primary" onclick="runCalculation({fit:false})">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="5,3 19,12 5,21"/></svg>
       Calcular
     </button>
@@ -540,7 +635,7 @@ footer .ts { color: var(--text-3); }
     <h2>Configuracao RF</h2>
     <span class="panel-sub">TX / RX / PROP</span>
   </div>
-  <div class="panel-body">
+  <div class="panel-body" id="cfg-panel">
 
     <!-- BAND & FREQ -->
     <div class="section">
@@ -562,7 +657,7 @@ footer .ts { color: var(--text-3); }
         <div class="field-row">
           <div class="field">
             <label>Frequencia <span style="color:var(--text-3)">(MHz)</span></label>
-            <input type="number" id="freq" value="150" step="0.01" min="0.1">
+            <input type="number" id="freq" value="150" step="0.0125" min="0.1">
           </div>
           <div class="field">
             <label>Comprimento de onda</label>
@@ -570,30 +665,67 @@ footer .ts { color: var(--text-3); }
           </div>
         </div>
         <div class="field">
-          <label>Preset de aplicacao <span class="tip" data-tip="Presets com valores tipicos para aplicacoes comuns de RF.">i</span></label>
+          <label>Preset de aplicacao <span class="tip" data-tip="Presets com valores tipicos. Os de Servicos (VHF/UHF) abrem um painel para escolher o canal dentro da faixa e o tipo de terminal.">i</span></label>
           <select id="preset" onchange="applyPreset()">
             <option value="">-- Selecionar --</option>
-            <option value="fm-broadcast">FM Broadcast (88-108 MHz)</option>
-            <option value="vhf-marine">VHF Maritimo (156 MHz)</option>
-            <option value="vhf-air">VHF Aeronautico (118-137 MHz)</option>
-            <option value="uhf-pmr">UHF PMR446 (446 MHz)</option>
-            <option value="uhf-tv">UHF TV (470-890 MHz)</option>
-            <option value="cell-900">Celular GSM 900</option>
-            <option value="cell-1800">Celular GSM 1800</option>
-            <option value="cell-2100">UMTS 2100</option>
-            <option value="lte-2600">LTE 2600 MHz</option>
-            <option value="wifi-24">Wi-Fi 2.4 GHz</option>
-            <option value="wifi-5">Wi-Fi 5 GHz</option>
-            <option value="micro-7">Micro-ondas 7 GHz</option>
-            <option value="micro-15">Micro-ondas 15 GHz</option>
-            <option value="micro-23">Micro-ondas 23 GHz</option>
-            <option value="micro-38">Micro-ondas 38 GHz</option>
-            <option value="sat-ku">Satelite Ku (12 GHz)</option>
-            <option value="sat-ka">Satelite Ka (20 GHz)</option>
-            <option value="hf-sw">HF Onda Curta (7 MHz)</option>
-            <option value="hf-cb">HF CB Radio (27 MHz)</option>
-            <option value="5g-mmwave">5G mmWave (28 GHz)</option>
+            <optgroup label="Servicos: saude, defesa civil, seguranca publica">
+              <option value="svc-vhf-fm">VHF Servicos FM analogico (148-174 MHz)</option>
+              <option value="svc-vhf-dmr">VHF DMR Tier II (148-174 MHz)</option>
+              <option value="svc-uhf-fm">UHF Servicos FM analogico (450-470 MHz)</option>
+              <option value="svc-uhf-dmr">UHF DMR Tier III troncalizado (450-470 MHz)</option>
+              <option value="svc-uhf-p25">UHF APCO P25 Fase 1/2 (450-470 MHz)</option>
+              <option value="svc-uhf-tetra">UHF TETRA (450-470 MHz)</option>
+            </optgroup>
+            <optgroup label="Radiocomunicacao e radiodifusao">
+              <option value="fm-broadcast">FM Broadcast (88-108 MHz)</option>
+              <option value="vhf-marine">VHF Maritimo (156 MHz)</option>
+              <option value="vhf-air">VHF Aeronautico (118-137 MHz)</option>
+              <option value="uhf-pmr">UHF PMR446 (446 MHz)</option>
+              <option value="uhf-tv">UHF TV (470-890 MHz)</option>
+            </optgroup>
+            <optgroup label="Celular e Wi-Fi">
+              <option value="cell-900">Celular GSM 900</option>
+              <option value="cell-1800">Celular GSM 1800</option>
+              <option value="cell-2100">UMTS 2100</option>
+              <option value="lte-2600">LTE 2600 MHz</option>
+              <option value="wifi-24">Wi-Fi 2.4 GHz</option>
+              <option value="wifi-5">Wi-Fi 5 GHz</option>
+              <option value="5g-mmwave">5G mmWave (28 GHz)</option>
+            </optgroup>
+            <optgroup label="Micro-ondas e satelite">
+              <option value="micro-7">Micro-ondas 7 GHz</option>
+              <option value="micro-15">Micro-ondas 15 GHz</option>
+              <option value="micro-23">Micro-ondas 23 GHz</option>
+              <option value="micro-38">Micro-ondas 38 GHz</option>
+              <option value="sat-ku">Satelite Ku (12 GHz)</option>
+              <option value="sat-ka">Satelite Ka (20 GHz)</option>
+            </optgroup>
+            <optgroup label="HF">
+              <option value="hf-sw">HF Onda Curta (7 MHz)</option>
+              <option value="hf-cb">HF CB Radio (27 MHz)</option>
+            </optgroup>
           </select>
+        </div>
+
+        <!-- SERVICE PANEL -->
+        <div class="svc-panel" id="svc-panel" hidden>
+          <div class="svc-head"><span class="t" id="svc-name">Servico</span><span class="b" id="svc-band">148-174 MHz</span></div>
+          <label style="display:flex;justify-content:space-between;font-size:10px;font-family:var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--text-2);">
+            <span>Canal / frequencia</span><span id="svc-step" style="font-family:var(--font-mono);letter-spacing:0;text-transform:none;">passo 12.5 kHz</span>
+          </label>
+          <input type="range" id="svc-freq" min="148" max="174" step="0.0125" value="155">
+          <div class="svc-scale"><span id="svc-min">148.000</span><span id="svc-max">174.000</span></div>
+          <div class="svc-ch" id="svc-ch">--</div>
+          <div class="field" style="margin-bottom:4px;">
+            <label>Terminal receptor (descida: repetidora para terminal)</label>
+            <div class="chips teal" id="svc-term">
+              <span class="chip active" data-term="portatil" onclick="selectTerminal('portatil')">Portatil</span>
+              <span class="chip" data-term="veicular" onclick="selectTerminal('veicular')">Veicular</span>
+              <span class="chip" data-term="fixo" onclick="selectTerminal('fixo')">Fixo</span>
+            </div>
+            <div class="svc-note" id="svc-term-note"></div>
+          </div>
+          <div class="svc-tech" id="svc-tech"></div>
         </div>
       </div>
     </div>
@@ -646,11 +778,11 @@ footer .ts { color: var(--text-3); }
         </div>
         <div class="field-row">
           <div class="field">
-            <label>Altura antena TX <span style="color:var(--text-3)">(m)</span></label>
+            <label>Altura antena TX <span style="color:var(--text-3)">(m)</span> <span class="tip" data-tip="Altura acima do solo (agl). A altitude da antena (amsl) soma a cota do terreno no ponto TX.">i</span></label>
             <input type="number" id="tx-height" value="30" step="1" min="1">
           </div>
           <div class="field">
-            <label>Perda cabo TX <span style="color:var(--text-3)">(dB)</span> <span class="tip" data-tip="Perda total de cabos, conectores e diplexers entre TX e antena.">i</span></label>
+            <label>Perda cabo TX <span style="color:var(--text-3)">(dB)</span> <span class="tip" data-tip="Perda total de cabos, conectores e duplexadores/combinadores entre TX e antena.">i</span></label>
             <input type="number" id="tx-cable-loss" value="2" step="0.1" min="0">
           </div>
         </div>
@@ -662,6 +794,16 @@ footer .ts { color: var(--text-3); }
           <div class="field">
             <label>Lon TX</label>
             <input type="number" id="tx-lon" value="-48.5242" step="0.0001">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Cota do solo <span style="color:var(--text-3)">(m)</span></label>
+            <input type="text" id="tx-ground" value="--" readonly>
+          </div>
+          <div class="field">
+            <label>Antena <span style="color:var(--text-3)">(m amsl)</span></label>
+            <input type="text" id="tx-amsl" value="--" readonly>
           </div>
         </div>
       </div>
@@ -698,14 +840,14 @@ footer .ts { color: var(--text-3); }
             </select>
           </div>
           <div class="field">
-            <label>Perda cabo RX <span style="color:var(--text-3)">(dB)</span></label>
+            <label>Perdas RX <span style="color:var(--text-3)">(dB)</span> <span class="tip" data-tip="Cabo e conectores; em terminais portateis inclui a perda de corpo (tipico 3 dB).">i</span></label>
             <input type="number" id="rx-cable-loss" value="1" step="0.1" min="0">
           </div>
         </div>
         <div class="field-row">
           <div class="field">
             <label>Altura antena RX <span style="color:var(--text-3)">(m)</span></label>
-            <input type="number" id="rx-height" value="10" step="1" min="1">
+            <input type="number" id="rx-height" value="10" step="0.5" min="0.5">
           </div>
           <div class="field">
             <label>Figura ruido RX <span style="color:var(--text-3)">(dB)</span></label>
@@ -722,6 +864,16 @@ footer .ts { color: var(--text-3); }
             <input type="number" id="rx-lon" value="-48.5100" step="0.0001">
           </div>
         </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Cota do solo <span style="color:var(--text-3)">(m)</span></label>
+            <input type="text" id="rx-ground" value="--" readonly>
+          </div>
+          <div class="field">
+            <label>Antena <span style="color:var(--text-3)">(m amsl)</span></label>
+            <input type="text" id="rx-amsl" value="--" readonly>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -733,13 +885,14 @@ footer .ts { color: var(--text-3); }
       </div>
       <div class="section-body open">
         <div class="field">
-          <label>Modelo <span class="tip" data-tip="Modelo matematico para estimar a perda de propagacao no enlace. Cada modelo tem faixa de frequencia e cenarios de validade.">i</span></label>
+          <label>Modelo <span class="tip" data-tip="Modelo matematico para estimar a perda de propagacao. O ITU-R P.1812-6 usa o perfil real do terreno com a morfologia; os demais servem de comparacao e usam so a morfologia.">i</span></label>
           <select id="prop-model" onchange="onModelChange()">
+            <option value="terrain" selected>Relevo real: ITU-R P.1812-6 (delta-Bullington)</option>
             <option value="fspl">Espaco Livre (FSPL / ITU-R P.525)</option>
             <option value="two-ray">Dois Raios (Reflexao no solo)</option>
             <option value="okumura-hata">Okumura-Hata (150-1500 MHz)</option>
             <option value="cost231">COST-231 Hata (1500-2000 MHz)</option>
-            <option value="itu-r-p1546">ITU-R P.1546 (VHF/UHF)</option>
+            <option value="itu-r-p1546">ITU-R P.1546 (VHF/UHF, simplificado)</option>
             <option value="egli">Egli (40-900 MHz, terreno irregular)</option>
             <option value="itu-r-p676">ITU-R P.676 (atenuacao atmosferica)</option>
             <option value="itu-r-p530">ITU-R P.530 (micro-ondas)</option>
@@ -748,21 +901,9 @@ footer .ts { color: var(--text-3); }
             <option value="log-distance">Log-Distance Path Loss</option>
           </select>
         </div>
-        <div class="field">
-          <label>Ambiente / Terreno</label>
-          <select id="environment">
-            <option value="urban-dense">Urbano Denso (centro)</option>
-            <option value="urban">Urbano</option>
-            <option value="suburban">Suburbano</option>
-            <option value="rural" selected>Rural / Aberto</option>
-            <option value="open">Campo Aberto (LOS)</option>
-            <option value="maritime">Maritimo</option>
-            <option value="forest">Floresta</option>
-          </select>
-        </div>
         <div class="field-row">
           <div class="field">
-            <label>Distancia <span style="color:var(--text-3)">(km)</span></label>
+            <label>Distancia <span style="color:var(--text-3)">(km)</span> <span class="tip" data-tip="Acoplada aos marcadores: ao digitar, o RX se move no mesmo azimute. Acima de 500 km o enlace fica desacoplado do mapa (ex.: satelite).">i</span></label>
             <input type="number" id="distance" value="10" step="0.1" min="0.01">
           </div>
           <div class="field">
@@ -779,7 +920,54 @@ footer .ts { color: var(--text-3); }
             <option value="99.999">99.999%</option>
           </select>
         </div>
-        <div id="model-params"></div>
+      </div>
+    </div>
+
+    <!-- MORPHOLOGY & TOPOGRAPHY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Morfologia &amp; Topografia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="field">
+          <label>Morfologia (clutter) <span class="tip" data-tip="Classe de ocupacao do solo ao longo do percurso e no entorno do terminal. Define a altura representativa de clutter (P.1812-6), a perda no terminal (P.2108) e a categoria dos modelos empiricos.">i</span></label>
+          <select id="environment" onchange="updateMorphInfo()">
+            <option value="water">Agua / Mar</option>
+            <option value="rural">Aberto / Rural</option>
+            <option value="suburban" selected>Suburbano</option>
+            <option value="urban">Urbano</option>
+            <option value="forest">Floresta / Mata</option>
+            <option value="urban-dense">Urbano denso</option>
+          </select>
+        </div>
+        <div class="info-box teal-box" id="morph-info" style="margin-top:0;"></div>
+        <label class="toggle"><input type="checkbox" id="use-terrain" checked> Usar relevo real (SRTM 30 m)</label>
+        <div class="field-row">
+          <div class="field">
+            <label>Fator k <span class="tip" data-tip="Fator de raio efetivo da Terra. 4/3 = atmosfera padrao (ae = 8495 km). P.1812 usa k50 = 157/(157 - dN).">i</span></label>
+            <input type="number" id="k-factor" value="1.333" step="0.01" min="0.5" max="4">
+          </div>
+          <div class="field">
+            <label>Refratividade N0 <span class="tip" data-tip="Refratividade da superficie ao nivel do mar (N-units), usada na tropodifusao do P.1812. Sul do Brasil: cerca de 330.">i</span></label>
+            <input type="number" id="n0" value="330" step="1" min="250" max="400">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Raio da mancha <span style="color:var(--text-3)">(km)</span></label>
+            <input type="number" id="cov-radius" value="20" step="1" min="1" max="120">
+          </div>
+          <div class="field">
+            <label>Radiais <span class="tip" data-tip="Numero de radiais calculados a partir do TX. 180 = um a cada 2 graus.">i</span></label>
+            <select id="cov-radials">
+              <option value="90">90 (4°)</option>
+              <option value="180" selected>180 (2°)</option>
+              <option value="360">360 (1°)</option>
+            </select>
+          </div>
+        </div>
+        <div class="help" id="terrain-status">Relevo: aguardando calculo.</div>
       </div>
     </div>
 
@@ -793,7 +981,7 @@ footer .ts { color: var(--text-3); }
         <div class="field-row">
           <div class="field">
             <label>Largura de banda <span style="color:var(--text-3)">(kHz)</span></label>
-            <input type="number" id="bandwidth" value="200" step="1" min="1">
+            <input type="number" id="bandwidth" value="200" step="0.5" min="1">
           </div>
           <div class="field">
             <label>Temperatura ruido <span style="color:var(--text-3)">(K)</span></label>
@@ -802,7 +990,7 @@ footer .ts { color: var(--text-3); }
         </div>
         <div class="field-row">
           <div class="field">
-            <label>Perda adicional <span style="color:var(--text-3)">(dB)</span> <span class="tip" data-tip="Perdas extras: difracao em obstaculos, vegetacao, chuva (ITU-R P.838), body loss, penetracao em edificios, etc.">i</span></label>
+            <label>Perda adicional <span style="color:var(--text-3)">(dB)</span> <span class="tip" data-tip="Perdas extras: penetracao em edificios, vegetacao (ITU-R P.833), body loss adicional etc. A difracao no relevo ja e calculada pelo P.1812.">i</span></label>
             <input type="number" id="extra-loss" value="0" step="0.5" min="0">
           </div>
           <div class="field">
@@ -812,7 +1000,7 @@ footer .ts { color: var(--text-3); }
         </div>
         <div class="info-box">
           <strong>Normas ITU aplicaveis:</strong><br>
-          <span id="itu-norms">ITU-R P.525 (FSPL), ITU-R P.676 (absorçao atmosferica), ITU-R P.838 (atenuacao por chuva), ITU-R P.530 (enlace micro-ondas), ITU-R P.1546 (VHF/UHF), ITU-R P.452 (interferencia)</span>
+          <span id="itu-norms">ITU-R P.1812-6 (ponto-area VHF/UHF com relevo), ITU-R P.2108 (perda por clutter), ITU-R P.526 (difracao), ITU-R P.525 (espaco livre), ITU-R P.676 (gases), ITU-R P.838 (chuva), ITU-R P.530 (micro-ondas), ITU-R P.1546 (VHF/UHF)</span>
         </div>
       </div>
     </div>
@@ -822,26 +1010,36 @@ footer .ts { color: var(--text-3); }
 
 <!-- CENTER: VISUALIZATION -->
 <div class="panel viz">
-  <div class="map-wrap">
+  <div class="map-wrap" id="map-wrap">
     <div id="map"></div>
     <div class="map-legend">
-      <div class="li"><span class="sw tx"></span> TX</div>
-      <div class="li"><span class="sw rx"></span> RX</div>
-      <div class="li"><span class="sw link"></span> Enlace</div>
-      <div class="li"><span class="sw fz"></span> Fresnel</div>
-      <div class="li"><span class="sw cov"></span> Cobertura</div>
+      <div class="row">
+        <div class="li"><span class="sw tx"></span> TX</div>
+        <div class="li"><span class="sw rx"></span> RX</div>
+        <div class="li"><span class="sw link"></span> Enlace</div>
+        <div class="li"><span class="sw fz"></span> 1a Fresnel</div>
+      </div>
+      <div class="row" id="cov-legend">
+        <span class="ttl">Pr</span>
+        <div class="li"><span class="sw box" style="background:#4ade80"></span><span id="lg-c1">--</span></div>
+        <div class="li"><span class="sw box" style="background:#2dd4bf"></span><span id="lg-c2">--</span></div>
+        <div class="li"><span class="sw box" style="background:#fbbf24"></span><span id="lg-c3">--</span></div>
+      </div>
+      <div class="readout" id="readout">clique no mapa para posicionar o RX | arraste TX e RX</div>
     </div>
     <div class="map-badge">
       <div style="font-size:9px;color:var(--text-2);letter-spacing:0.1em;">LINK MARGIN</div>
       <div class="big good" id="map-margin">-- dB</div>
       <div style="font-size:9px;color:var(--text-2);margin-top:2px;" id="map-status-text">Aguardando calculo</div>
+      <div class="cov" id="cov-status">Mancha: --</div>
+      <div class="progress" id="cov-progress" style="visibility:hidden"><div id="cov-progress-bar"></div></div>
     </div>
   </div>
   <div class="bottom-strip">
     <div class="card">
       <div class="card-header">
         <h3>Perda de Propagacao vs Distancia</h3>
-        <span class="meta" id="chart1-meta">FSPL</span>
+        <span class="meta" id="chart1-meta">--</span>
       </div>
       <div class="card-body">
         <canvas id="propChart"></canvas>
@@ -849,8 +1047,8 @@ footer .ts { color: var(--text-3); }
     </div>
     <div class="card">
       <div class="card-header">
-        <h3>Perfil de Fresnel &amp; Enlace</h3>
-        <span class="meta" id="chart2-meta">1ª zona</span>
+        <h3>Perfil do Terreno &amp; Fresnel</h3>
+        <span class="meta" id="chart2-meta">--</span>
       </div>
       <div class="card-body">
         <canvas id="fresnelChart"></canvas>
@@ -882,11 +1080,12 @@ footer .ts { color: var(--text-3); }
         <div class="kv"><span class="k">Path Loss total</span><span class="v" id="r-pl">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k"><span style="padding-left:10px;">Free-space loss</span></span><span class="v acc" id="r-fspl">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k"><span style="padding-left:10px;">Extra modelo</span></span><span class="v" id="r-model-extra">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k"><span style="padding-left:10px;">Morfologia (clutter)</span></span><span class="v teal" id="r-clutter">--<span class="unit">dB</span></span></div>
         <div class="kv"><span class="k"><span style="padding-left:10px;">Atenuacao chuva</span></span><span class="v" id="r-rain">--<span class="unit">dB</span></span></div>
-        <div class="kv"><span class="k"><span style="padding-left:10px;">Perda adicional</span></span><span class="v" id="r-extra">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k"><span style="padding-left:10px;">Perda adicional + gases</span></span><span class="v" id="r-extra">--<span class="unit">dB</span></span></div>
         <hr class="divider">
         <div class="kv"><span class="k">Ganho RX</span><span class="v" id="r-grx">--<span class="unit">dBi</span></span></div>
-        <div class="kv"><span class="k">Perda cabo RX</span><span class="v" id="r-lrx">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k">Perdas RX</span><span class="v" id="r-lrx">--<span class="unit">dB</span></span></div>
         <hr class="divider">
         <div class="kv"><span class="k"><strong style="color:var(--text-0)">Pot. Recebida (Pr)</strong></span><span class="v" id="r-prx">--<span class="unit">dBm</span></span></div>
         <div class="kv"><span class="k"><strong style="color:var(--text-0)">Sensibilidade RX</strong></span><span class="v" id="r-sens">--<span class="unit">dBm</span></span></div>
@@ -895,6 +1094,27 @@ footer .ts { color: var(--text-3); }
           <div class="gauge-fill good" id="margin-fill" style="width:0%"></div>
           <div class="gauge-label" id="margin-label">--</div>
         </div>
+      </div>
+    </div>
+
+    <!-- TERRAIN & MORPHOLOGY -->
+    <div class="section">
+      <div class="section-head open" onclick="toggleSection(this)">
+        <h3><span class="dot teal"></span>Relevo &amp; Morfologia</h3>
+        <span class="chev">&#9654;</span>
+      </div>
+      <div class="section-body open">
+        <div class="kv"><span class="k">Fonte do relevo</span><span class="v small" id="r-tsrc">--</span></div>
+        <div class="kv"><span class="k">Visada (com clutter)</span><span class="v" id="r-los">--</span></div>
+        <div class="kv"><span class="k">Folga minima (h/F1)</span><span class="v" id="r-clear">--</span></div>
+        <div class="kv"><span class="k">Difracao Ld (P.1812)</span><span class="v" id="r-ld">--<span class="unit">dB</span></span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k"><span style="padding-left:10px;">Terra esferica</span></span><span class="v violet" id="r-dec-sph">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k"><span style="padding-left:10px;">Relevo</span></span><span class="v violet" id="r-dec-ter">--<span class="unit">dB</span></span></div>
+        <div class="kv"><span class="k"><span style="padding-left:10px;">Morfologia</span></span><span class="v violet" id="r-dec-mor">--<span class="unit">dB</span></span></div>
+        <hr class="divider">
+        <div class="kv"><span class="k">Area coberta (Pr &ge; S)</span><span class="v" id="r-cov-area">--</span></div>
+        <div class="kv"><span class="k">Area confiavel (margem)</span><span class="v" id="r-cov-rel">--</span></div>
       </div>
     </div>
 
@@ -918,29 +1138,29 @@ footer .ts { color: var(--text-3); }
 
     <!-- FRESNEL -->
     <div class="section">
-      <div class="section-head open" onclick="toggleSection(this)">
+      <div class="section-head" onclick="toggleSection(this)">
         <h3><span class="dot cyan"></span>Zona de Fresnel</h3>
         <span class="chev">&#9654;</span>
       </div>
-      <div class="section-body open">
-        <div class="kv"><span class="k">Raio 1ª zona (centro)</span><span class="v acc" id="r-f1">--<span class="unit">m</span></span></div>
-        <div class="kv"><span class="k">Raio 2ª zona (centro)</span><span class="v" id="r-f2">--<span class="unit">m</span></span></div>
-        <div class="kv"><span class="k">60% da 1ª zona</span><span class="v" id="r-f60">--<span class="unit">m</span></span></div>
-        <div class="info-box ok" id="fresnel-info">Para LOS desimpedido, manter 60% da 1ª zona livre de obstaculos (ITU-R P.530).</div>
+      <div class="section-body">
+        <div class="kv"><span class="k">Raio 1a zona (centro)</span><span class="v acc" id="r-f1">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">Raio 2a zona (centro)</span><span class="v" id="r-f2">--<span class="unit">m</span></span></div>
+        <div class="kv"><span class="k">60% da 1a zona</span><span class="v" id="r-f60">--<span class="unit">m</span></span></div>
+        <div class="info-box ok" id="fresnel-info">Para LOS desimpedido, manter 60% da 1a zona livre de obstaculos (ITU-R P.530).</div>
       </div>
     </div>
 
     <!-- RF INFO -->
     <div class="section">
       <div class="section-head" onclick="toggleSection(this)">
-        <h3><span class="dot violet"></span>Informacoes RF</h3>
+        <h3><span class="dot violet"></span>Informacoes RF &amp; ITU</h3>
         <span class="chev">&#9654;</span>
       </div>
       <div class="section-body">
         <div class="kv"><span class="k">Comprimento de onda</span><span class="v orange" id="r-wl">--<span class="unit">m</span></span></div>
         <div class="kv"><span class="k">EIRP</span><span class="v" id="r-eirp2">--<span class="unit">W</span></span></div>
-        <div class="kv"><span class="k">Distancia horizonte TX</span><span class="v" id="r-hor-tx">--<span class="unit">km</span></span></div>
-        <div class="kv"><span class="k">Distancia horizonte RX</span><span class="v" id="r-hor-rx">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Horizonte radio TX</span><span class="v" id="r-hor-tx">--<span class="unit">km</span></span></div>
+        <div class="kv"><span class="k">Horizonte radio RX</span><span class="v" id="r-hor-rx">--<span class="unit">km</span></span></div>
         <div class="kv"><span class="k">Horizonte radio total</span><span class="v" id="r-hor-total">--<span class="unit">km</span></span></div>
         <div class="kv"><span class="k">Alcance maximo est.</span><span class="v" id="r-max-range">--<span class="unit">km</span></span></div>
         <div class="kv"><span class="k">Atenuacao atmosf.</span><span class="v" id="r-atm">--<span class="unit">dB/km</span></span></div>
@@ -957,10 +1177,12 @@ footer .ts { color: var(--text-3); }
 <!-- FOOTER -->
 <footer>
   <div class="author">
-    RF Lab v1.0 &mdash; Prof. Ramon Mayor Martins &mdash;
-    <a href="https://github.com/rmayormartins" target="_blank">github.com/rmayormartins</a>
+    <span>RF LAB v2.0</span><span>|</span><span>2026</span><span>|</span>
+    <a href="https://rmayormartins.github.io" target="_blank" rel="noopener">Prof. Ramon Mayor Martins</a>
+    <span>| IFSC S&atilde;o Jos&eacute; | PU4MAY |</span>
+    <a href="mailto:ramon.mayor@ifsc.edu.br">ramon.mayor@ifsc.edu.br</a>
   </div>
-  <span class="ts" id="footer-ts"></span>
+  <span class="ts"><span>P.1812-6 validado vs Py1812 | P.2108 vs NTIA</span> | <span id="footer-ts"></span></span>
 </footer>
 
 </div>
@@ -970,877 +1192,1609 @@ footer .ts { color: var(--text-3); }
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 <script>
-// ===== STATE =====
-let map, txMarker, rxMarker, linkLine, fresnelPoly, coverageCircle;
-let results = null;
+/* ===== PROPAGATION CORE =====
+   ITU-R P.1812-6 (p = 50 %): espaco livre + difracao delta-Bullington + tropodifusao
+   ITU-R P.526 J(nu) (gume de faca), ITU-R P.2108 (perda por clutter no terminal)
+   Portado de Py1812 (I. Stevanovic, OFCOM) e NTIA p2108; validado contra os logs oficiais. */
+const P1812 = (function () {
+  const LOG10 = Math.log10;
 
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  updateWavelength();
-  updateFooterTime();
-  setInterval(updateFooterTime, 1000);
-  document.getElementById('freq').addEventListener('input', updateWavelength);
-});
-
-function updateFooterTime() {
-  const now = new Date();
-  document.getElementById('footer-ts').textContent = now.toISOString().replace('T',' ').slice(0,19) + ' UTC';
-}
-
-// ===== MAP =====
-function initMap() {
-  map = L.map('map', {
-    center: [-27.595, -48.517],
-    zoom: 13,
-    zoomControl: true,
-  });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; CartoDB',
-    maxZoom: 19
-  }).addTo(map);
-
-  const txIcon = L.divIcon({
-    className: '',
-    html: '<div style="width:14px;height:14px;background:var(--orange);border-radius:50%;box-shadow:0 0 12px var(--orange),0 0 4px var(--orange);border:2px solid rgba(255,255,255,0.3);"></div>',
-    iconSize: [14,14], iconAnchor: [7,7]
-  });
-  const rxIcon = L.divIcon({
-    className: '',
-    html: '<div style="width:14px;height:14px;background:#38bdf8;border-radius:50%;box-shadow:0 0 12px #38bdf8,0 0 4px #38bdf8;border:2px solid rgba(255,255,255,0.3);"></div>',
-    iconSize: [14,14], iconAnchor: [7,7]
-  });
-
-  const txLat = parseFloat(document.getElementById('tx-lat').value);
-  const txLon = parseFloat(document.getElementById('tx-lon').value);
-  const rxLat = parseFloat(document.getElementById('rx-lat').value);
-  const rxLon = parseFloat(document.getElementById('rx-lon').value);
-
-  txMarker = L.marker([txLat, txLon], {icon: txIcon, draggable: true}).addTo(map)
-    .bindTooltip('TX', {permanent: true, direction: 'top', offset: [0, -10]});
-  rxMarker = L.marker([rxLat, rxLon], {icon: rxIcon, draggable: true}).addTo(map)
-    .bindTooltip('RX', {permanent: true, direction: 'top', offset: [0, -10]});
-
-  txMarker.on('dragend', onMarkerDrag);
-  rxMarker.on('dragend', onMarkerDrag);
-
-  linkLine = L.polyline([[txLat,txLon],[rxLat,rxLon]], {
-    color: '#4ade80', weight: 2, opacity: 0.7, dashArray: '8,6'
-  }).addTo(map);
-}
-
-function onMarkerDrag() {
-  const tll = txMarker.getLatLng();
-  const rll = rxMarker.getLatLng();
-  document.getElementById('tx-lat').value = tll.lat.toFixed(4);
-  document.getElementById('tx-lon').value = tll.lng.toFixed(4);
-  document.getElementById('rx-lat').value = rll.lat.toFixed(4);
-  document.getElementById('rx-lon').value = rll.lng.toFixed(4);
-
-  // update distance
-  const d = haversine(tll.lat, tll.lng, rll.lat, rll.lng);
-  document.getElementById('distance').value = d.toFixed(2);
-  linkLine.setLatLngs([[tll.lat,tll.lng],[rll.lat,rll.lng]]);
-}
-
-function haversine(lat1,lon1,lat2,lon2) {
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLon = (lon2-lon1)*Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function updateMapMarkers() {
-  const txLat = parseFloat(document.getElementById('tx-lat').value);
-  const txLon = parseFloat(document.getElementById('tx-lon').value);
-  const rxLat = parseFloat(document.getElementById('rx-lat').value);
-  const rxLon = parseFloat(document.getElementById('rx-lon').value);
-  txMarker.setLatLng([txLat, txLon]);
-  rxMarker.setLatLng([rxLat, rxLon]);
-  linkLine.setLatLngs([[txLat,txLon],[rxLat,rxLon]]);
-  map.fitBounds([[txLat,txLon],[rxLat,rxLon]], {padding:[60,60]});
-}
-
-// ===== UI HELPERS =====
-function toggleSection(el) {
-  el.classList.toggle('open');
-  const body = el.nextElementSibling;
-  body.classList.toggle('open');
-}
-
-function selectBand(band) {
-  document.querySelectorAll('#band-chips .chip').forEach(c => c.classList.remove('active'));
-  document.querySelector(`#band-chips .chip[data-band="${band}"]`).classList.add('active');
-  const freqs = { hf: 14, vhf: 150, uhf: 450, shf: 7000, ehf: 38000 };
-  document.getElementById('freq').value = freqs[band] || 150;
-  updateWavelength();
-  document.getElementById('hdr-band').textContent = band.toUpperCase();
-}
-
-function updateWavelength() {
-  const f = parseFloat(document.getElementById('freq').value);
-  if (!f || f <= 0) return;
-  const wl = 299.792458 / f; // m (f in MHz)
-  let display;
-  if (wl >= 1) display = wl.toFixed(3) + ' m';
-  else if (wl >= 0.01) display = (wl*100).toFixed(2) + ' cm';
-  else display = (wl*1000).toFixed(2) + ' mm';
-  document.getElementById('wavelength').value = display;
-  document.getElementById('hdr-freq').innerHTML = f.toFixed(2) + '<span class="unit">MHz</span>';
-
-  // auto-detect band
-  let band = 'vhf';
-  if (f < 30) band = 'hf';
-  else if (f < 300) band = 'vhf';
-  else if (f < 3000) band = 'uhf';
-  else if (f < 30000) band = 'shf';
-  else band = 'ehf';
-  document.getElementById('hdr-band').textContent = band.toUpperCase();
-}
-
-function syncTxPower(from) {
-  if (from === 'w') {
-    const w = parseFloat(document.getElementById('tx-power-w').value);
-    if (w > 0) document.getElementById('tx-power-dbm').value = (10*Math.log10(w*1000)).toFixed(1);
-  } else {
-    const dbm = parseFloat(document.getElementById('tx-power-dbm').value);
-    document.getElementById('tx-power-w').value = (Math.pow(10, dbm/10)/1000).toFixed(3);
+  // P.526 / P.1812 eq (12): perda de gume de faca
+  function J(nu) {
+    return nu > -0.78 ? 6.9 + 20 * LOG10(Math.sqrt((nu - 0.1) * (nu - 0.1) + 1) + nu - 0.1) : 0;
   }
-}
 
-function setAntennaGain(side) {
-  const sel = document.getElementById(side === 'tx' ? 'tx-ant-type' : 'rx-ant-type');
-  const gainInput = document.getElementById(side === 'tx' ? 'tx-gain' : 'rx-gain');
-  const freq = parseFloat(document.getElementById('freq').value) || 150;
-  const v = sel.value;
-  const gains = {
-    'dipole': 2.15, 'yagi-3': 7.1, 'yagi-5': 10.2, 'yagi-10': 13.1,
-    'omni-0': 0, 'omni-3': 3, 'omni-6': 6, 'omni-9': 9,
-    'patch-8': 8, 'horn-15': 15, 'horn-20': 20,
-    'sector-90': 14, 'sector-120': 12
-  };
-  if (gains[v] !== undefined) {
-    gainInput.value = gains[v];
-  } else if (v.startsWith('parabolic-')) {
-    const diam = parseFloat(v.split('-')[1]) / 10;
-    const wl = 299.792458 / freq;
-    const eff = 0.55;
-    const g = 10*Math.log10(eff * (Math.PI * diam / wl)**2);
-    gainInput.value = g.toFixed(1);
+  // P.1812-6 sec. 4.3.1: parte Bullington. Usa os pontos 0..n-1 de d (km, d[0] = 0) e g (m amsl).
+  // zeroG = true trata todas as alturas intermediarias como 0 (perfil liso).
+  function bull(d, g, n, hts, hrs, ap, f, zeroG, info) {
+    const Ce = 1 / ap, lam = 0.2998 / f, dtot = d[n - 1];
+    let Stim = -Infinity, iStim = -1;
+    for (let i = 1; i < n - 1; i++) {
+      const di = d[i], gi = zeroG ? 0 : g[i];
+      const s = (gi + 500 * Ce * di * (dtot - di) - hts) / di;
+      if (s > Stim) { Stim = s; iStim = i; }
+    }
+    const Str = (hrs - hts) / dtot;
+    let Luc = 0, los, dbp, nuB;
+    if (Stim < Str) {
+      los = true;
+      let numax = -Infinity, iNu = -1;
+      for (let i = 1; i < n - 1; i++) {
+        const di = d[i], gi = zeroG ? 0 : g[i];
+        const nu = (gi + 500 * Ce * di * (dtot - di) - (hts * (dtot - di) + hrs * di) / dtot) *
+                   Math.sqrt(0.002 * dtot / (lam * di * (dtot - di)));
+        if (nu > numax) { numax = nu; iNu = i; }
+      }
+      Luc = J(numax);
+      nuB = numax; dbp = iNu >= 0 ? d[iNu] : dtot / 2;
+    } else {
+      los = false;
+      let Srim = -Infinity;
+      for (let i = 1; i < n - 1; i++) {
+        const di = d[i], gi = zeroG ? 0 : g[i];
+        const s = (gi + 500 * Ce * di * (dtot - di) - hrs) / (dtot - di);
+        if (s > Srim) Srim = s;
+      }
+      dbp = (hrs - hts + Srim * dtot) / (Stim + Srim);
+      nuB = (hts + Stim * dbp - (hts * (dtot - dbp) + hrs * dbp) / dtot) *
+            Math.sqrt(0.002 * dtot / (lam * dbp * (dtot - dbp)));
+      Luc = J(nuB);
+    }
+    const Lbull = Luc + (1 - Math.exp(-Luc / 6)) * (10 + 0.02 * dtot);
+    if (info) { info.los = los; info.dbp = dbp; info.nu = nuB; info.Luc = Luc; }
+    return Lbull;
   }
+
+  // P.1812-6 sec. 4.3.3 eqs (29-36): primeiro termo da difracao em Terra esferica. Retorna [H, V].
+  function seFtInner(epsr, sigma, d, hte, hre, adft, f) {
+    const out = [0, 0];
+    const K0 = 0.036 * Math.pow(adft * f, -1 / 3) * Math.pow((epsr - 1) ** 2 + (18 * sigma / f) ** 2, -0.25);
+    const Ks = [K0, K0 * Math.sqrt(epsr * epsr + (18 * sigma / f) ** 2)];
+    for (let p = 0; p < 2; p++) {
+      const K = Ks[p], K2 = K * K, K4 = K2 * K2;
+      const beta = (1 + 1.6 * K2 + 0.67 * K4) / (1 + 4.5 * K2 + 1.53 * K4);
+      const X = 21.88 * beta * Math.pow(f / (adft * adft), 1 / 3) * d;
+      const Yt = 0.9575 * beta * Math.pow(f * f / adft, 1 / 3) * hte;
+      const Yr = 0.9575 * beta * Math.pow(f * f / adft, 1 / 3) * hre;
+      const Fx = X >= 1.6 ? 11 + 10 * LOG10(X) - 17.6 * X : -20 * LOG10(X) - 5.6488 * Math.pow(X, 1.425);
+      const Bt = beta * Yt, Br = beta * Yr;
+      const gy = B => (B > 2 ? 17.6 * Math.sqrt(B - 1.1) - 5 * LOG10(B - 1.1) - 8 : 20 * LOG10(B + 0.1 * B * B * B));
+      const gmin = 2 + 20 * LOG10(K);
+      const GYt = Math.max(gy(Bt), gmin), GYr = Math.max(gy(Br), gmin);
+      out[p] = -Fx - GYt - GYr;
+    }
+    return out;
+  }
+
+  function seFt(d, hte, hre, adft, f, omega) {
+    const land = seFtInner(22, 0.003, d, hte, hre, adft, f);
+    const sea = seFtInner(80, 5, d, hte, hre, adft, f);
+    return [omega * sea[0] + (1 - omega) * land[0], omega * sea[1] + (1 - omega) * land[1]];
+  }
+
+  // P.1812-6 sec. 4.3.2: difracao em Terra esferica. Retorna [H, V].
+  function se(d, hte, hre, ap, f, omega) {
+    const lam = 0.2998 / f;
+    const dlos = Math.sqrt(2 * ap) * (Math.sqrt(0.001 * hte) + Math.sqrt(0.001 * hre));
+    if (d >= dlos) return seFt(d, hte, hre, ap, f, omega);
+    const c = (hte - hre) / (hte + hre);
+    const m = 250 * d * d / (ap * (hte + hre));
+    const arg = Math.max(-1, Math.min(1, 1.5 * c * Math.sqrt(3 * m / Math.pow(m + 1, 3))));
+    const b = 2 * Math.sqrt((m + 1) / (3 * m)) * Math.cos(Math.PI / 3 + Math.acos(arg) / 3);
+    const dse1 = d / 2 * (1 + b), dse2 = d - dse1;
+    const hse = ((hte - 500 * dse1 * dse1 / ap) * dse2 + (hre - 500 * dse2 * dse2 / ap) * dse1) / d;
+    const hreq = 17.456 * Math.sqrt(dse1 * dse2 * lam / d);
+    if (hse > hreq) return [0, 0];
+    const aem = 500 * (d / (Math.sqrt(hte) + Math.sqrt(hre))) ** 2;
+    const Ldft = seFt(d, hte, hre, aem, f, omega);
+    return [(1 - hse / hreq) * Math.max(0, Ldft[0]), (1 - hse / hreq) * Math.max(0, Ldft[1])];
+  }
+
+  // P.1812-6 Att. 1 sec. 5.6: alturas efetivas (Terra lisa) e angulos de horizonte. Usa h (sem clutter).
+  function smoothEarth(d, h, n, htg, hrg, ae, f) {
+    const dtot = d[n - 1];
+    const hts = h[0] + htg, hrs = h[n - 1] + hrg;
+    let v1 = 0, v2 = 0;
+    for (let i = 1; i < n; i++) {
+      const dd = d[i] - d[i - 1];
+      v1 += dd * (h[i] + h[i - 1]);
+      v2 += dd * (h[i] * (2 * d[i] + d[i - 1]) + h[i - 1] * (d[i] + 2 * d[i - 1]));
+    }
+    const hst = (2 * v1 * dtot - v2) / (dtot * dtot);
+    const hsr = (v2 - v1 * dtot) / (dtot * dtot);
+    let hobs = -Infinity, aobt = -Infinity, aobr = -Infinity;
+    let tMax = -Infinity, iT = -1;
+    for (let i = 1; i < n - 1; i++) {
+      const di = d[i];
+      const HH = h[i] - (hts * (dtot - di) + hrs * di) / dtot;
+      if (HH > hobs) hobs = HH;
+      if (HH / di > aobt) aobt = HH / di;
+      if (HH / (dtot - di) > aobr) aobr = HH / (dtot - di);
+      const t = (h[i] - hts) / (1000 * di) - di / (2 * ae);
+      if (t > tMax) { tMax = t; iT = i; }
+    }
+    let hstp = hst, hsrp = hsr;
+    if (hobs > 0) {
+      const gt = aobt / (aobt + aobr), gr = aobr / (aobt + aobr);
+      hstp = hst - hobs * gt; hsrp = hsr - hobs * gr;
+    }
+    const hstd = hstp >= h[0] ? h[0] : hstp;
+    const hsrd = hsrp > h[n - 1] ? h[n - 1] : hsrp;
+
+    const thetaMax = iT >= 0 ? 1000 * Math.atan(tMax) : -Infinity;
+    const thetaTd = 1000 * Math.atan((hrs - hts) / (1000 * dtot) - dtot / (2 * ae));
+    const thetaRd = 1000 * Math.atan((hts - hrs) / (1000 * dtot) - dtot / (2 * ae));
+    let pathtype, thetaT, thetaR, dlt, dlr;
+    if (thetaMax > thetaTd) {
+      pathtype = 2; thetaT = thetaMax; dlt = d[iT];
+      let rMax = -Infinity, iR = -1;
+      for (let i = 1; i < n - 1; i++) {
+        const dr = dtot - d[i];
+        const t = (h[i] - hrs) / (1000 * dr) - dr / (2 * ae);
+        if (t >= rMax) { rMax = t; iR = i; }
+      }
+      thetaR = 1000 * Math.atan(rMax); dlr = dtot - d[iR];
+    } else {
+      pathtype = 1; thetaT = thetaTd; thetaR = thetaRd;
+      const lam = 0.2998 / f, Ce = 1 / ae;
+      let numax = -Infinity, iN = -1;
+      for (let i = 1; i < n - 1; i++) {
+        const di = d[i];
+        const nu = (h[i] + 500 * Ce * di * (dtot - di) - (hts * (dtot - di) + hrs * di) / dtot) *
+                   Math.sqrt(0.002 * dtot / (lam * di * (dtot - di)));
+        if (nu >= numax) { numax = nu; iN = i; }
+      }
+      dlt = iN >= 0 ? d[iN] : dtot / 2; dlr = dtot - dlt;
+    }
+    const theta = 1e3 * dtot / ae + thetaT + thetaR;
+    return { hst, hsr, hstd, hsrd, thetaT, thetaR, theta, dlt, dlr, pathtype, hts, hrs };
+  }
+
+  // P.1812-6 sec. 4.3.4: delta-Bullington completo
+  function deltaBull(d, g, n, hts, hrs, hstd, hsrd, ap, f, omega, info) {
+    const Lbulla = bull(d, g, n, hts, hrs, ap, f, false, info);
+    const hts1 = hts - hstd, hrs1 = hrs - hsrd;
+    const Lbulls = bull(d, g, n, hts1, hrs1, ap, f, true, null);
+    const Ldsph = se(d[n - 1], hts1, hrs1, ap, f, omega);
+    return {
+      Ld: [Lbulla + Math.max(Ldsph[0] - Lbulls, 0), Lbulla + Math.max(Ldsph[1] - Lbulls, 0)],
+      Lbulla, Lbulls, Ldsph
+    };
+  }
+
+  // P.1812-6 sec. 4.4: tropodifusao
+  function tropo(dtot, theta, f, p, N0) {
+    const Lf = 25 * LOG10(f) - 2.5 * (LOG10(f / 2)) ** 2;
+    return 190.1 + Lf + 20 * LOG10(dtot) + 0.573 * theta - 0.15 * N0 - 10.125 * Math.pow(LOG10(50 / p), 0.7);
+  }
+
+  // Perda basica de transmissao para p = 50 % do tempo (sem dutos/reflexao em camadas, irrelevantes em p = 50 %).
+  // o = {d, h, R, n, htg, hrg, f (GHz), ae (km), omega, N0, pol (1 = H, 2 = V)}; R pode ser numero (uniforme) ou array.
+  const _g = { buf: new Float64Array(0) };
+  function core(o) {
+    const n = o.n || o.d.length, d = o.d, h = o.h;
+    if (_g.buf.length < n) _g.buf = new Float64Array(Math.max(n, 2 * _g.buf.length));
+    const g = _g.buf;
+    const Rarr = typeof o.R === 'number' ? null : o.R;
+    for (let i = 0; i < n; i++) g[i] = h[i] + (i === 0 || i === n - 1 ? 0 : (Rarr ? Rarr[i] : (o.R || 0)));
+    const seh = smoothEarth(d, h, n, o.htg, o.hrg, o.ae, o.f);
+    const dtot = d[n - 1];
+    const Lbfs = 92.4 + 20 * LOG10(o.f) + 10 * LOG10(dtot * dtot + ((seh.hts - seh.hrs) / 1000) ** 2);
+    const info = o.info ? {} : null;
+    const db = deltaBull(d, g, n, seh.hts, seh.hrs, seh.hstd, seh.hsrd, o.ae, o.f, o.omega || 0, info);
+    const pi = (o.pol || 2) - 1;
+    const Ld = db.Ld[pi];
+    const Lbd = Lbfs + Ld;
+    const Lbs = tropo(dtot, seh.theta, o.f, 50, o.N0 || 325);
+    const Lb = -5 * LOG10(Math.pow(10, -0.2 * Lbs) + Math.pow(10, -0.2 * Lbd));
+    return {
+      Lb, Lbfs, Ld, Lbd, Lbs, Lbulla: db.Lbulla, Lbulls: db.Lbulls, Ldsph: db.Ldsph[pi],
+      los: info ? info.los : seh.pathtype === 1, dbp: info ? info.dbp : null, nu: info ? info.nu : null,
+      pathtype: seh.pathtype, hstd: seh.hstd, hsrd: seh.hsrd, theta: seh.theta,
+      thetaT: seh.thetaT, thetaR: seh.thetaR, dlt: seh.dlt, dlr: seh.dlr, hts: seh.hts, hrs: seh.hrs
+    };
+  }
+
+  return { J, bull, seFtInner, seFt, se, smoothEarth, deltaBull, tropo, core };
+})();
+
+/* ===== ITU-R P.2108 (perda por clutter no terminal) ===== */
+const P2108 = (function () {
+  // sec. 3.1 modelo de correcao de ganho de altura (0,03 a 3 GHz). cls: 'water'|'rural'|'suburban'|'urban'|'forest'|'urban-dense'
+  const R_DEF = { water: 10, rural: 10, suburban: 10, urban: 15, forest: 15, 'urban-dense': 20 };
+  function heightGain(fGHz, h, cls, ws) {
+    const R = R_DEF[cls];
+    if (R === undefined || h >= R) return 0;
+    ws = ws || 27;
+    const hdif = R - h;
+    const thetaClut = Math.atan(hdif / ws) * 180 / Math.PI;
+    if (cls === 'water' || cls === 'rural') {
+      const Kh2 = 21.8 + 6.2 * Math.log10(fGHz);
+      return -Kh2 * Math.log10(h / R);                 // eq (2b)
+    }
+    const Knu = 0.342 * Math.sqrt(fGHz);
+    const nu = Knu * Math.sqrt(hdif * thetaClut);      // eq (2c)
+    return P1812.J(nu) - 6.03;                         // eq (2a)
+  }
+  // sec. 3.2 modelo estatistico para enlaces terrestres (0,5 a 67 GHz), p = % de locais
+  function invQ(q) { // inversa da distribuicao normal complementar (Abramowitz & Stegun 26.2.23)
+    if (q > 0.5) return -invQ(1 - q);
+    const t = Math.sqrt(-2 * Math.log(q));
+    return t - (2.515517 + 0.802853 * t + 0.010328 * t * t) / (1 + 1.432788 * t + 0.189269 * t * t + 0.001308 * t * t * t);
+  }
+  function terrHelper(f, d, p) {
+    const sl = 4, ss = 6;
+    const Ll = -2 * Math.log10(Math.pow(10, -5 * Math.log10(f) - 12.5) + Math.pow(10, -16.5));
+    const Ls = 32.98 + 23.9 * Math.log10(d) + 3 * Math.log10(f);
+    const a = Math.pow(10, -0.2 * Ll), b = Math.pow(10, -0.2 * Ls);
+    const scb = Math.sqrt((sl * sl * a + ss * ss * b) / (a + b));
+    return -5 * Math.log10(a + b) - scb * invQ(p / 100);
+  }
+  function terrestrial(fGHz, dKm, p) {
+    p = p || 50;
+    const d = Math.max(0.25, dKm);
+    return Math.min(terrHelper(fGHz, 2, p), terrHelper(fGHz, d, p));
+  }
+  return { R_DEF, heightGain, terrestrial, invQ };
+})();
+</script>
+
+<script>
+'use strict';
+// =====================================================================
+// RF LAB v2.0 | relevo real (ITU-R P.1812-6), morfologia (P.1812/P.2108),
+// mancha de cobertura radial e presets de servicos VHF/UHF
+// =====================================================================
+
+// ===== CONSTANTES =====
+// Morfologia: R = altura representativa de clutter do P.1812-6 (aplicada aos pontos
+// intermediarios do perfil); P.2108 usa seus proprios R (P2108.R_DEF); hata/sui/n = categorias
+// nativas dos modelos empiricos; omega = fracao do percurso sobre o mar (P.1812).
+const MORPH = {
+  'water':       { label: 'Agua / Mar',      R: 0,  hata: 'open',     sui: 'C', n: 2.0, omega: 1, desc: 'superficie de agua, percurso maritimo.' },
+  'rural':       { label: 'Aberto / Rural',  R: 0,  hata: 'open',     sui: 'C', n: 2.4, omega: 0, desc: 'campos, pastagens, vegetacao rasteira.' },
+  'suburban':    { label: 'Suburbano',       R: 10, hata: 'suburban', sui: 'B', n: 2.8, omega: 0, desc: 'casas de 1 a 3 pavimentos, arborizacao esparsa.' },
+  'urban':       { label: 'Urbano',          R: 15, hata: 'medium',   sui: 'A', n: 3.2, omega: 0, desc: 'edificacoes continuas de medio porte.' },
+  'forest':      { label: 'Floresta / Mata', R: 15, hata: 'medium',   sui: 'A', n: 3.5, omega: 0, desc: 'cobertura arborea densa.' },
+  'urban-dense': { label: 'Urbano denso',    R: 20, hata: 'large',    sui: 'A', n: 3.8, omega: 0, desc: 'centro de cidade grande, predios altos.' },
+};
+const HATA_LABEL = { open: 'area aberta', suburban: 'suburbana', medium: 'cidade media/pequena', large: 'cidade grande' };
+const NATIVE_MORPH = new Set(['okumura-hata', 'cost231', 'itu-r-p1546', 'longley-rice', 'sui', 'log-distance']);
+const MODEL_INFO = {
+  'terrain':      { name: 'P.1812 Relevo', fmin: 30, fmax: 6000 },
+  'fspl':         { name: 'Free Space' },
+  'two-ray':      { name: 'Two-Ray' },
+  'okumura-hata': { name: 'Okumura-Hata', fmin: 150, fmax: 1500, dmax: 20 },
+  'cost231':      { name: 'COST-231', fmin: 1500, fmax: 2000, dmax: 20 },
+  'itu-r-p1546':  { name: 'ITU-R P.1546', fmin: 30, fmax: 4000 },
+  'egli':         { name: 'Egli', fmin: 40, fmax: 900 },
+  'itu-r-p676':   { name: 'ITU-R P.676' },
+  'itu-r-p530':   { name: 'ITU-R P.530' },
+  'longley-rice': { name: 'Longley-Rice', fmin: 20, fmax: 20000 },
+  'sui':          { name: 'SUI', fmin: 2000, fmax: 11000 },
+  'log-distance': { name: 'Log-Distance' },
+};
+
+// Servicos (descida: repetidora/ERB -> terminal). Sensibilidades: valores tipicos de folha de dados.
+const SERVICES = {
+  'svc-vhf-fm': {
+    name: 'VHF Servicos | FM analogico', band: [148, 174], spacing: 12.5, f: 155.0, bw: 12.5,
+    txW: 50, txG: 6, txL: 3, txH: 40, sens: -118, fade: 10, env: 'suburban', dist: 15, cov: 40,
+    tech: [['Faixa', '148 a 174 MHz'], ['Canalizacao', '12,5 kHz (banda estreita)'], ['Modulacao', 'FM analogica, desvio +/-2,5 kHz'],
+           ['Acesso', 'FDMA convencional, repetidora local'], ['Sensib. ref.', '-118 dBm (~0,28 uV, 12 dB SINAD)'],
+           ['Uso tipico', 'saude, defesa civil e servicos municipais no interior; cobertura geografica ampla'], ['Normas', 'ETSI EN 300 086 / TIA-603']]
+  },
+  'svc-vhf-dmr': {
+    name: 'VHF DMR Tier II', band: [148, 174], spacing: 12.5, f: 155.0, bw: 12.5,
+    txW: 45, txG: 6, txL: 3, txH: 40, sens: -120, fade: 10, env: 'suburban', dist: 15, cov: 40,
+    tech: [['Faixa', '148 a 174 MHz'], ['Canalizacao', '12,5 kHz'], ['Modulacao', '4FSK, 9,6 kbit/s brutos'],
+           ['Acesso', 'TDMA 2 slots (2 canais de voz por portadora), repetidora convencional'], ['Sensib. ref.', '-120 dBm (~0,22 uV, BER 5%)'],
+           ['Uso tipico', 'redes publicas de saude e defesa civil, migracao do FM analogico'], ['Normas', 'ETSI TS 102 361 (Tier II)']]
+  },
+  'svc-uhf-fm': {
+    name: 'UHF Servicos | FM analogico', band: [450, 470], spacing: 12.5, f: 460.0, bw: 12.5,
+    txW: 40, txG: 6, txL: 3.5, txH: 35, sens: -118, fade: 10, env: 'urban', dist: 8, cov: 20,
+    tech: [['Faixa', '450 a 470 MHz'], ['Canalizacao', '12,5 kHz'], ['Modulacao', 'FM analogica, desvio +/-2,5 kHz'],
+           ['Acesso', 'FDMA convencional, repetidora'], ['Sensib. ref.', '-118 dBm (~0,28 uV, 12 dB SINAD)'],
+           ['Uso tipico', 'regioes metropolitanas; melhor penetracao em areas urbanas densas e edificios'], ['Normas', 'ETSI EN 300 086 / TIA-603']]
+  },
+  'svc-uhf-dmr': {
+    name: 'UHF DMR Tier III', band: [450, 470], spacing: 12.5, f: 460.5, bw: 12.5,
+    txW: 40, txG: 6, txL: 3.5, txH: 35, sens: -120, fade: 10, env: 'urban', dist: 8, cov: 20,
+    tech: [['Faixa', '450 a 470 MHz'], ['Canalizacao', '12,5 kHz'], ['Modulacao', '4FSK, 9,6 kbit/s brutos'],
+           ['Acesso', 'TDMA 2 slots, troncalizado (canal de controle dedicado)'], ['Sensib. ref.', '-120 dBm (~0,22 uV, BER 5%)'],
+           ['Uso tipico', 'sistemas troncalizados metropolitanos'], ['Normas', 'ETSI TS 102 361-4 (Tier III)']]
+  },
+  'svc-uhf-p25': {
+    name: 'UHF APCO P25', band: [450, 470], spacing: 12.5, f: 460.5, bw: 12.5,
+    txW: 50, txG: 6, txL: 3.5, txH: 35, sens: -119, fade: 10, env: 'urban', dist: 8, cov: 20,
+    tech: [['Faixa', '450 a 470 MHz'], ['Canalizacao', '12,5 kHz'], ['Modulacao', 'Fase 1: C4FM 9,6 kbit/s | Fase 2: H-DQPSK 12 kbit/s'],
+           ['Acesso', 'Fase 1 FDMA | Fase 2 TDMA 2 slots; troncalizado'], ['Vocoder', 'IMBE (Fase 1) / AMBE+2 (Fase 2)'],
+           ['Sensib. ref.', '-119 dBm (~0,25 uV, BER 5%)'], ['Uso tipico', 'seguranca publica em capitais e regioes metropolitanas'], ['Normas', 'TIA-102 (APCO Project 25)']]
+  },
+  'svc-uhf-tetra': {
+    name: 'UHF TETRA', band: [450, 470], spacing: 25, f: 465.0, bw: 25,
+    txW: 40, txG: 6, txL: 4, txH: 35, sens: -112, fade: 10, env: 'urban', dist: 8, cov: 20,
+    tech: [['Faixa', '450 a 470 MHz'], ['Canalizacao', '25 kHz'], ['Modulacao', 'pi/4-DQPSK, 36 kbit/s brutos'],
+           ['Acesso', 'TDMA 4 slots, troncalizado'], ['Sensib. ref.', '-112 dBm estatica (MS) | -103 dBm dinamica'],
+           ['Uso tipico', 'seguranca publica metropolitana, grandes eventos'], ['Normas', 'ETSI EN 300 392-2']]
+  },
+};
+const TERMINALS = {
+  portatil: { h: 1.5, gV: -4, gU: -1, loss: 3, note: 'Portatil a 1,5 m: antena helicoidal (-4 dBi VHF / -1 dBi UHF) e perda de corpo de 3 dB em Perdas RX.' },
+  veicular: { h: 1.5, gV: 2.15, gU: 2.15, loss: 1, note: 'Veicular: monopolo lambda/4 no teto (2,15 dBi), cabo de 1 dB.' },
+  fixo:     { h: 10,  gV: 7.1, gU: 7.1, loss: 2, note: 'Estacao fixa: Yagi 3 elementos a 10 m (7,1 dBi), cabo de 2 dB.' },
+};
+const PRESETS = {
+  'fm-broadcast':  { freq: 98, txPow: 50000, txGain: 6, txH: 100, rxGain: 0, rxH: 3, rxSens: -90, dist: 50, bw: 200, env: 'suburban', cov: 80 },
+  'vhf-marine':    { freq: 156.8, txPow: 25, txGain: 3, txH: 15, rxGain: 3, rxH: 5, rxSens: -107, dist: 30, bw: 25, env: 'water', cov: 40 },
+  'vhf-air':       { freq: 121.5, txPow: 5, txGain: 0, txH: 10, rxGain: 3, rxH: 300, rxSens: -107, dist: 100, bw: 25, env: 'rural', cov: 100 },
+  'uhf-pmr':       { freq: 446, txPow: 0.5, txGain: 0, txH: 1.5, rxGain: 0, rxH: 1.5, rxSens: -118, dist: 3, bw: 12.5, env: 'urban', cov: 5 },
+  'uhf-tv':        { freq: 600, txPow: 100000, txGain: 14, txH: 200, rxGain: 10, rxH: 10, rxSens: -80, dist: 60, bw: 6000, env: 'suburban', cov: 80 },
+  'cell-900':      { freq: 900, txPow: 20, txGain: 15, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -104, dist: 5, bw: 200, env: 'urban', cov: 10 },
+  'cell-1800':     { freq: 1800, txPow: 20, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -102, dist: 3, bw: 200, env: 'urban', cov: 8 },
+  'cell-2100':     { freq: 2100, txPow: 20, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -105, dist: 2, bw: 5000, env: 'urban', cov: 6 },
+  'lte-2600':      { freq: 2600, txPow: 40, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -100, dist: 2, bw: 20000, env: 'urban', cov: 6 },
+  'wifi-24':       { freq: 2400, txPow: 0.1, txGain: 3, txH: 3, rxGain: 3, rxH: 1.5, rxSens: -85, dist: 0.1, bw: 22000, env: 'suburban', cov: 1 },
+  'wifi-5':        { freq: 5200, txPow: 0.2, txGain: 5, txH: 3, rxGain: 5, rxH: 1.5, rxSens: -82, dist: 0.05, bw: 40000, env: 'suburban', cov: 1 },
+  'micro-7':       { freq: 7000, txPow: 1, txGain: 34, txH: 40, rxGain: 34, rxH: 40, rxSens: -75, dist: 30, bw: 28000, env: 'rural', model: 'itu-r-p530', cov: 40 },
+  'micro-15':      { freq: 15000, txPow: 0.5, txGain: 38, txH: 30, rxGain: 38, rxH: 30, rxSens: -72, dist: 15, bw: 28000, env: 'rural', model: 'itu-r-p530', cov: 20 },
+  'micro-23':      { freq: 23000, txPow: 0.3, txGain: 40, txH: 25, rxGain: 40, rxH: 25, rxSens: -70, dist: 10, bw: 28000, env: 'rural', model: 'itu-r-p530', cov: 15 },
+  'micro-38':      { freq: 38000, txPow: 0.2, txGain: 42, txH: 20, rxGain: 42, rxH: 20, rxSens: -65, dist: 5, bw: 28000, env: 'rural', model: 'itu-r-p530', cov: 8 },
+  'sat-ku':        { freq: 12000, txPow: 100, txGain: 40, txH: 35786000, rxGain: 35, rxH: 2, rxSens: -80, dist: 36000, bw: 36000, env: 'rural', model: 'fspl' },
+  'sat-ka':        { freq: 20000, txPow: 50, txGain: 45, txH: 35786000, rxGain: 40, rxH: 2, rxSens: -75, dist: 36000, bw: 500000, env: 'rural', model: 'fspl' },
+  'hf-sw':         { freq: 7, txPow: 100, txGain: 6, txH: 15, rxGain: 6, rxH: 10, rxSens: -120, dist: 500, bw: 3, env: 'rural', model: 'fspl' },
+  'hf-cb':         { freq: 27, txPow: 4, txGain: 3, txH: 8, rxGain: 3, rxH: 5, rxSens: -110, dist: 20, bw: 10, env: 'rural', model: 'fspl', cov: 30 },
+  '5g-mmwave':     { freq: 28000, txPow: 1, txGain: 24, txH: 15, rxGain: 12, rxH: 1.5, rxSens: -90, dist: 0.5, bw: 400000, env: 'urban', model: 'fspl', cov: 1 },
+};
+const COV_COLORS = [[74, 222, 128], [45, 212, 191], [251, 191, 36]];
+const TSRC_LABEL = {
+  'srtm': 'SRTM 30 m (AWS Terrarium)', 'cop90': 'Copernicus GLO-90 (Open-Meteo)', 'partial': 'SRTM parcial (lacunas interpoladas)',
+  'flat': 'Terra lisa (relevo desligado)', 'flat-fail': 'Terra lisa (relevo indisponivel)', 'none': 'sem perfil (enlace desacoplado)'
+};
+
+// ===== ESTADO =====
+const S = {
+  map: null, hill: null, txMarker: null, rxMarker: null, linkLine: null, fresnelGroup: null, covGroup: null,
+  service: null, terminal: 'portatil', decoupled: false,
+  cov: null, covKey: '', covJob: 0, lastP: null, lastLink: null,
+  calcTimer: null, calcSeq: 0, charts: null,
+};
+
+// ===== HELPERS =====
+const $ = id => document.getElementById(id);
+const num = (id, def) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : def; };
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const fmt = (x, d = 1) => (Number.isFinite(x) ? x.toFixed(d) : '--');
+const sgn = (x, d = 1) => (Number.isFinite(x) ? (x >= 0 ? '+' : '') + x.toFixed(d) : '--');
+const U = u => '<span class="unit">' + u + '</span>';
+const yieldUI = () => new Promise(r => setTimeout(r, 0));
+
+// ===== GEODESIA =====
+const DEG = Math.PI / 180, R_KM = 6371.0088;
+function haversine(lat1, lon1, lat2, lon2) {
+  const dLat = (lat2 - lat1) * DEG, dLon = (lon2 - lon1) * DEG;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * DEG) * Math.cos(lat2 * DEG) * Math.sin(dLon / 2) ** 2;
+  return R_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+function bearing(lat1, lon1, lat2, lon2) {
+  const p1 = lat1 * DEG, p2 = lat2 * DEG, dl = (lon2 - lon1) * DEG;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  return (Math.atan2(y, x) / DEG + 360) % 360;
+}
+function destPoint(lat, lon, brg, dKm) {
+  const dl = dKm / R_KM, th = brg * DEG, p1 = lat * DEG, l1 = lon * DEG;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(dl) + Math.cos(p1) * Math.sin(dl) * Math.cos(th));
+  const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(dl) * Math.cos(p1), Math.cos(dl) - Math.sin(p1) * Math.sin(p2));
+  return [p2 / DEG, ((l2 / DEG + 540) % 360) - 180];
+}
+const mercY = lat => Math.log(Math.tan(Math.PI / 4 + lat * DEG / 2));
+const mercLat = y => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / DEG;
+
+// ===== RELEVO (tiles Terrarium: SRTM/ETOPO via AWS Open Data) =====
+const TERRAIN = {
+  urls: ['https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png',
+         'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+  urlIdx: 0, tiles: new Map(), maxTiles: 300, okCount: 0, errCount: 0,
+};
+function terrainTile(z, x, y) {
+  const n = 1 << z;
+  x = ((x % n) + n) % n;
+  if (y < 0 || y >= n) return Promise.resolve(null);
+  const key = z + '/' + x + '/' + y;
+  let t = TERRAIN.tiles.get(key);
+  if (t) { TERRAIN.tiles.delete(key); TERRAIN.tiles.set(key, t); return t.promise; }
+  t = { data: null, status: 'loading' };
+  t.promise = new Promise(resolve => {
+    const next = (i, tries) => {
+      if (tries + 1 < TERRAIN.urls.length) attempt((i + 1) % TERRAIN.urls.length, tries + 1);
+      else { t.status = 'err'; TERRAIN.errCount++; resolve(null); }
+    };
+    const attempt = (i, tries) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas'); c.width = c.height = 256;
+          const ctx = c.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0);
+          const px = ctx.getImageData(0, 0, 256, 256).data;
+          const out = new Int16Array(65536);
+          for (let k = 0, j = 0; k < 65536; k++, j += 4) out[k] = Math.round(px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768);
+          t.data = out; t.status = 'ok'; TERRAIN.urlIdx = i; TERRAIN.okCount++;
+          resolve(out);
+        } catch (e) { next(i, tries); }
+      };
+      img.onerror = () => next(i, tries);
+      img.src = TERRAIN.urls[i].replace('{z}', z).replace('{x}', x).replace('{y}', y);
+    };
+    attempt(TERRAIN.urlIdx, 0);
+  });
+  TERRAIN.tiles.set(key, t);
+  if (TERRAIN.tiles.size > TERRAIN.maxTiles) {
+    for (const [k, v] of TERRAIN.tiles) { if (v.status !== 'loading') { TERRAIN.tiles.delete(k); break; } }
+  }
+  return t.promise;
+}
+function globalPx(lat, lon, z) {
+  const n = 256 * (1 << z);
+  const s = Math.sin(clamp(lat, -85.05, 85.05) * DEG);
+  return [(lon + 180) / 360 * n, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n];
+}
+function tileRange(latS, latN, lonW, lonE, z) {
+  const a = globalPx(latN, lonW, z), b = globalPx(latS, lonE, z);
+  const x0 = Math.floor(a[0] / 256), x1 = Math.floor(b[0] / 256), y0 = Math.floor(a[1] / 256), y1 = Math.floor(b[1] / 256);
+  return { x0, x1, y0, y1, count: (x1 - x0 + 1) * (y1 - y0 + 1) };
+}
+function chooseZoom(bb, maxTiles, zMax) {
+  for (let z = zMax; z >= 7; z--) if (tileRange(bb[0], bb[1], bb[2], bb[3], z).count <= maxTiles) return z;
+  return 7;
+}
+async function loadSampler(bb, z) {
+  const r = tileRange(bb[0], bb[1], bb[2], bb[3], z), tiles = new Map(), jobs = [];
+  for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) {
+    jobs.push(terrainTile(z, x, y).then(d => { if (d) tiles.set(x + '/' + y, d); }));
+  }
+  await Promise.all(jobs);
+  return { z, tiles, total: r.count, ok: tiles.size };
+}
+function samplerPix(sm, gx, gy) {
+  const tx = Math.floor(gx / 256), ty = Math.floor(gy / 256);
+  const d = sm.tiles.get(tx + '/' + ty);
+  if (!d) return NaN;
+  return d[(gy - ty * 256) * 256 + (gx - tx * 256)];
+}
+function sampleElev(sm, lat, lon) {
+  const g = globalPx(lat, lon, sm.z);
+  const X = g[0] - 0.5, Y = g[1] - 0.5, x0 = Math.floor(X), y0 = Math.floor(Y), fx = X - x0, fy = Y - y0;
+  const v00 = samplerPix(sm, x0, y0), v10 = samplerPix(sm, x0 + 1, y0), v01 = samplerPix(sm, x0, y0 + 1), v11 = samplerPix(sm, x0 + 1, y0 + 1);
+  const v = v00 * (1 - fx) * (1 - fy) + v10 * fx * (1 - fy) + v01 * (1 - fx) * fy + v11 * fx * fy;
+  return Number.isFinite(v) ? v : samplerPix(sm, Math.round(X), Math.round(Y));
+}
+function bboxOf(lats, lons, padDeg) {
+  let s = Infinity, n = -Infinity, w = Infinity, e = -Infinity;
+  for (let i = 0; i < lats.length; i++) { s = Math.min(s, lats[i]); n = Math.max(n, lats[i]); w = Math.min(w, lons[i]); e = Math.max(e, lons[i]); }
+  return [s - padDeg, n + padDeg, w - padDeg, e + padDeg];
+}
+// Elevacao para o leitor do cursor: usa qualquer tile ja carregado
+function elevFromCache(lat, lon) {
+  for (const z of [12, 11, 13, 14, 10, 15, 9, 8]) {
+    const g = globalPx(lat, lon, z), tx = Math.floor(g[0] / 256), ty = Math.floor(g[1] / 256);
+    const t = TERRAIN.tiles.get(z + '/' + tx + '/' + ty);
+    if (t && t.data) return t.data[Math.min(255, Math.floor(g[1] - ty * 256)) * 256 + Math.min(255, Math.floor(g[0] - tx * 256))];
+  }
+  return null;
+}
+// Fallback: Open-Meteo Elevation API (Copernicus GLO-90), ate 100 pontos por requisicao
+const OM_CACHE = new Map();
+async function openMeteoProfile(lat, lon, n) {
+  try {
+    const m = Math.min(n, 300), idx = [];
+    for (let k = 0; k < m; k++) idx.push(Math.round(k * (n - 1) / (m - 1)));
+    const vals = [];
+    for (let s = 0; s < m; s += 100) {
+      const part = idx.slice(s, s + 100);
+      const url = 'https://api.open-meteo.com/v1/elevation?latitude=' + part.map(i => lat[i].toFixed(5)).join(',') +
+                  '&longitude=' + part.map(i => lon[i].toFixed(5)).join(',');
+      let res = OM_CACHE.get(url);
+      if (!res) {
+        const r = await fetch(url);
+        if (!r.ok) return null;
+        res = (await r.json()).elevation;
+        if (!Array.isArray(res) || res.length !== part.length) return null;
+        OM_CACHE.set(url, res);
+      }
+      vals.push(...res);
+    }
+    const out = new Float64Array(n);
+    for (let k = 0; k < m - 1; k++) {
+      const i0 = idx[k], i1 = idx[k + 1];
+      for (let i = i0; i <= i1; i++) out[i] = Math.max(0, vals[k] + (vals[k + 1] - vals[k]) * (i1 > i0 ? (i - i0) / (i1 - i0) : 0));
+    }
+    return out;
+  } catch (e) { return null; }
+}
+// Perfil ao longo de um radial (grande circulo) a partir de (lat0, lon0)
+async function buildProfile(lat0, lon0, brg, totalKm, nSeg, useTerrain) {
+  const n = nSeg + 1;
+  const d = new Float64Array(n), h = new Float64Array(n), lat = new Float64Array(n), lon = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    d[i] = totalKm * i / nSeg;
+    const p = destPoint(lat0, lon0, brg, d[i]); lat[i] = p[0]; lon[i] = p[1];
+  }
+  let src = 'flat', z = null, tiles = 0;
+  if (useTerrain) {
+    const bb = bboxOf(lat, lon, 0.004);
+    z = chooseZoom(bb, 40, 12);
+    const sm = await loadSampler(bb, z);
+    tiles = sm.ok;
+    let miss = 0;
+    for (let i = 0; i < n; i++) {
+      const v = sm.ok ? sampleElev(sm, lat[i], lon[i]) : NaN;
+      if (Number.isFinite(v)) h[i] = Math.max(0, v); else { h[i] = NaN; miss++; }
+    }
+    if (miss === 0) src = 'srtm';
+    else {
+      const om = await openMeteoProfile(lat, lon, n);
+      if (om) { h.set(om); src = 'cop90'; }
+      else if (miss < n) {
+        // interpola lacunas
+        let last = -1;
+        for (let i = 0; i < n; i++) {
+          if (Number.isFinite(h[i])) {
+            if (last < i - 1) for (let k = last + 1; k < i; k++) h[k] = last < 0 ? h[i] : h[last] + (h[i] - h[last]) * (k - last) / (i - last);
+            last = i;
+          }
+        }
+        for (let k = last + 1; k < n; k++) h[k] = h[last];
+        src = 'partial';
+      } else { h.fill(0); src = 'flat-fail'; }
+    }
+  }
+  return { d, h, lat, lon, n, src, z, tiles };
 }
 
-function onModelChange() {
-  const m = document.getElementById('prop-model').value;
-  const names = {
-    'fspl': 'Free Space', 'two-ray': 'Two-Ray', 'okumura-hata': 'Okumura-Hata',
-    'cost231': 'COST-231', 'itu-r-p1546': 'ITU-R P.1546', 'egli': 'Egli',
-    'itu-r-p676': 'ITU-R P.676', 'itu-r-p530': 'ITU-R P.530',
-    'longley-rice': 'Longley-Rice', 'sui': 'SUI', 'log-distance': 'Log-Distance'
-  };
-  document.getElementById('hdr-model').textContent = names[m] || m;
+// ===== RELEVO SOMBREADO (camada propria a partir dos tiles Terrarium) =====
+function drawHillshade(canvas, E, z, ty) {
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(256, 256), px = img.data;
+  const n = 1 << z;
+  const latC = Math.atan(Math.sinh(Math.PI * (1 - 2 * (ty + 0.5) / n))) / DEG;
+  const cell = 40075016.686 * Math.cos(latC * DEG) / (256 * n);
+  const exag = z >= 13 ? 1.6 : 1.6 * Math.pow(1.45, 13 - z);
+  const cz = Math.cos(45 * DEG), sz = Math.sin(45 * DEG), az = (360 - 315 + 90) * DEG;
+  const at = (x, y) => E[(y < 0 ? 0 : y > 255 ? 255 : y) * 256 + (x < 0 ? 0 : x > 255 ? 255 : x)];
+  for (let y = 0; y < 256; y++) {
+    for (let x = 0; x < 256; x++) {
+      const k = (y * 256 + x) * 4;
+      const a = at(x - 1, y - 1), b = at(x, y - 1), c = at(x + 1, y - 1), d = at(x - 1, y), f = at(x + 1, y);
+      const g = at(x - 1, y + 1), hh = at(x, y + 1), i = at(x + 1, y + 1), e0 = at(x, y);
+      if (e0 <= 0 && a <= 0 && i <= 0 && c <= 0 && g <= 0) { px[k + 3] = 0; continue; }
+      const dzdx = ((c + 2 * f + i) - (a + 2 * d + g)) / (8 * cell) * exag;
+      const dzdy = ((g + 2 * hh + i) - (a + 2 * b + c)) / (8 * cell) * exag;
+      const slope = Math.atan(Math.sqrt(dzdx * dzdx + dzdy * dzdy));
+      const aspect = Math.atan2(dzdy, -dzdx);
+      const v = cz * Math.cos(slope) + sz * Math.sin(slope) * Math.cos(az - aspect) - cz;
+      if (v >= 0) { px[k] = 215; px[k + 1] = 236; px[k + 2] = 255; px[k + 3] = Math.min(120, 16 + v * 300); }
+      else { px[k] = 0; px[k + 1] = 0; px[k + 2] = 0; px[k + 3] = Math.min(180, 16 - v * 360); }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+let HillshadeLayer = null;
+function makeHillshadeLayer() {
+  HillshadeLayer = L.GridLayer.extend({
+    createTile(coords, done) {
+      const tile = document.createElement('canvas');
+      tile.width = tile.height = 256;
+      terrainTile(coords.z, coords.x, coords.y).then(data => {
+        if (data) drawHillshade(tile, data, coords.z, coords.y);
+        done(null, tile);
+      });
+      return tile;
+    }
+  });
+  return new HillshadeLayer({ maxNativeZoom: 15, maxZoom: 19, minZoom: 7, zIndex: 5, opacity: 0.9,
+    attribution: 'Relevo: SRTM/Terrarium (AWS Open Data)' });
 }
 
-// ===== PRESETS =====
-function applyPreset() {
-  const p = document.getElementById('preset').value;
-  const presets = {
-    'fm-broadcast':  { freq: 98, txPow: 50000, txGain: 6, txH: 100, rxGain: 0, rxH: 3, rxSens: -90, dist: 50, bw: 200, env: 'suburban' },
-    'vhf-marine':    { freq: 156.8, txPow: 25, txGain: 3, txH: 15, rxGain: 3, rxH: 5, rxSens: -107, dist: 30, bw: 25, env: 'maritime' },
-    'vhf-air':       { freq: 121.5, txPow: 5, txGain: 0, txH: 10, rxGain: 3, rxH: 300, rxSens: -107, dist: 100, bw: 25, env: 'open' },
-    'uhf-pmr':       { freq: 446, txPow: 0.5, txGain: 0, txH: 1.5, rxGain: 0, rxH: 1.5, rxSens: -118, dist: 3, bw: 12.5, env: 'urban' },
-    'uhf-tv':        { freq: 600, txPow: 100000, txGain: 14, txH: 200, rxGain: 10, rxH: 10, rxSens: -80, dist: 60, bw: 8000, env: 'suburban' },
-    'cell-900':      { freq: 900, txPow: 20, txGain: 15, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -104, dist: 5, bw: 200, env: 'urban' },
-    'cell-1800':     { freq: 1800, txPow: 20, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -102, dist: 3, bw: 200, env: 'urban' },
-    'cell-2100':     { freq: 2100, txPow: 20, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -105, dist: 2, bw: 5000, env: 'urban' },
-    'lte-2600':      { freq: 2600, txPow: 40, txGain: 18, txH: 30, rxGain: 0, rxH: 1.5, rxSens: -100, dist: 2, bw: 20000, env: 'urban' },
-    'wifi-24':       { freq: 2400, txPow: 0.1, txGain: 3, txH: 3, rxGain: 3, rxH: 1.5, rxSens: -85, dist: 0.1, bw: 22000, env: 'suburban' },
-    'wifi-5':        { freq: 5200, txPow: 0.2, txGain: 5, txH: 3, rxGain: 5, rxH: 1.5, rxSens: -82, dist: 0.05, bw: 40000, env: 'suburban' },
-    'micro-7':       { freq: 7000, txPow: 1, txGain: 34, txH: 40, rxGain: 34, rxH: 40, rxSens: -75, dist: 30, bw: 28000, env: 'open' },
-    'micro-15':      { freq: 15000, txPow: 0.5, txGain: 38, txH: 30, rxGain: 38, rxH: 30, rxSens: -72, dist: 15, bw: 28000, env: 'open' },
-    'micro-23':      { freq: 23000, txPow: 0.3, txGain: 40, txH: 25, rxGain: 40, rxH: 25, rxSens: -70, dist: 10, bw: 28000, env: 'open' },
-    'micro-38':      { freq: 38000, txPow: 0.2, txGain: 42, txH: 20, rxGain: 42, rxH: 20, rxSens: -65, dist: 5, bw: 28000, env: 'open' },
-    'sat-ku':        { freq: 12000, txPow: 100, txGain: 40, txH: 35786000, rxGain: 35, rxH: 2, rxSens: -80, dist: 36000, bw: 36000, env: 'open' },
-    'sat-ka':        { freq: 20000, txPow: 50, txGain: 45, txH: 35786000, rxGain: 40, rxH: 2, rxSens: -75, dist: 36000, bw: 500000, env: 'open' },
-    'hf-sw':         { freq: 7, txPow: 100, txGain: 6, txH: 15, rxGain: 6, rxH: 10, rxSens: -120, dist: 500, bw: 3, env: 'rural' },
-    'hf-cb':         { freq: 27, txPow: 4, txGain: 3, txH: 8, rxGain: 3, rxH: 5, rxSens: -110, dist: 20, bw: 10, env: 'rural' },
-    '5g-mmwave':     { freq: 28000, txPow: 1, txGain: 24, txH: 15, rxGain: 12, rxH: 1.5, rxSens: -90, dist: 0.5, bw: 400000, env: 'urban' },
-  };
-  const c = presets[p];
-  if (!c) return;
-  document.getElementById('freq').value = c.freq;
-  document.getElementById('tx-power-w').value = c.txPow;
-  syncTxPower('w');
-  document.getElementById('tx-gain').value = c.txGain;
-  document.getElementById('tx-height').value = c.txH;
-  document.getElementById('rx-gain').value = c.rxGain;
-  document.getElementById('rx-height').value = c.rxH;
-  document.getElementById('rx-sens').value = c.rxSens;
-  document.getElementById('distance').value = c.dist;
-  document.getElementById('bandwidth').value = c.bw;
-  document.getElementById('environment').value = c.env;
-  document.getElementById('tx-ant-type').value = 'custom';
-  document.getElementById('rx-ant-type').value = 'custom';
-  updateWavelength();
-}
-
-// ===== PROPAGATION MODELS =====
+// ===== MODELOS DE PROPAGACAO =====
 function calcFSPL(fMHz, dKm) {
   if (fMHz <= 0 || dKm <= 0) return 0;
-  return 32.45 + 20*Math.log10(fMHz) + 20*Math.log10(dKm);
+  return 32.45 + 20 * Math.log10(fMHz) + 20 * Math.log10(dKm);
 }
-
 function calcTwoRay(fMHz, dKm, hTx, hRx) {
-  const dM = dKm * 1000;
-  const wl = 299.792458 / fMHz;
+  const dM = dKm * 1000, wl = 299.792458 / fMHz;
   const crossover = (4 * hTx * hRx) / wl;
-  if (dM < crossover) {
-    return calcFSPL(fMHz, dKm);
-  }
-  // PL = 40*log10(d) - 20*log10(hTx) - 20*log10(hRx) (in m)
-  return 40*Math.log10(dM) - 20*Math.log10(hTx) - 20*Math.log10(hRx);
+  if (dM < crossover) return calcFSPL(fMHz, dKm);
+  return Math.max(calcFSPL(fMHz, dKm), 40 * Math.log10(dM) - 20 * Math.log10(hTx) - 20 * Math.log10(hRx));
 }
-
+// Okumura-Hata: categoria da morfologia (cidade grande/media, suburbana, area aberta).
+// d < 1 km: inclinacao de espaco livre a partir de 1 km; d > 20 km: extrapolado (aviso na conformidade).
 function calcOkumuraHata(fMHz, dKm, hTx, hRx, env) {
-  // Valid: 150-1500 MHz
-  const f = Math.max(150, Math.min(1500, fMHz));
-  const hb = Math.max(30, Math.min(200, hTx));
-  const hm = Math.max(1, Math.min(10, hRx));
-  const d = Math.max(1, Math.min(20, dKm));
-
-  // a(hm) correction for mobile
+  const f = clamp(fMHz, 150, 1500), hb = clamp(hTx, 30, 200), hm = clamp(hRx, 1, 10);
+  const cat = MORPH[env].hata, lf = Math.log10(f), lhb = Math.log10(hb);
   let ahm;
-  if (env === 'urban-dense' || env === 'urban') {
-    if (f >= 400) {
-      ahm = 3.2 * (Math.log10(11.75*hm))**2 - 4.97;
-    } else {
-      ahm = 8.29 * (Math.log10(1.54*hm))**2 - 1.1;
-    }
-  } else {
-    ahm = (1.1*Math.log10(f) - 0.7)*hm - (1.56*Math.log10(f) - 0.8);
-  }
-
-  let PL = 69.55 + 26.16*Math.log10(f) - 13.82*Math.log10(hb)
-           - ahm + (44.9 - 6.55*Math.log10(hb))*Math.log10(d);
-
-  if (env === 'suburban') {
-    PL -= 2*(Math.log10(f/28))**2 - 5.4;
-  } else if (env === 'rural' || env === 'open') {
-    PL -= 4.78*(Math.log10(f))**2 + 18.33*Math.log10(f) - 40.94;
-  }
-  return PL;
+  if (cat === 'large') ahm = f < 300 ? 8.29 * Math.log10(1.54 * hm) ** 2 - 1.1 : 3.2 * Math.log10(11.75 * hm) ** 2 - 4.97;
+  else ahm = (1.1 * lf - 0.7) * hm - (1.56 * lf - 0.8);
+  const pl = d => {
+    let L = 69.55 + 26.16 * lf - 13.82 * lhb - ahm + (44.9 - 6.55 * lhb) * Math.log10(d);
+    if (cat === 'suburban') L -= 2 * Math.log10(f / 28) ** 2 + 5.4;
+    else if (cat === 'open') L -= 4.78 * lf * lf - 18.33 * lf + 40.94;
+    return L;
+  };
+  const L = dKm >= 1 ? pl(dKm) : pl(1) + 20 * Math.log10(dKm);
+  return Math.max(L, calcFSPL(fMHz, dKm));
 }
-
+// COST-231 Hata: Cm = 3 dB em centros metropolitanos, 0 em cidades medias e suburbios; area aberta usa a correcao de Hata
 function calcCOST231(fMHz, dKm, hTx, hRx, env) {
-  // Valid: 1500-2000 MHz
-  const f = Math.max(1500, Math.min(2000, fMHz));
-  const hb = Math.max(30, Math.min(200, hTx));
-  const hm = Math.max(1, Math.min(10, hRx));
-  const d = Math.max(1, Math.min(20, dKm));
-
-  const ahm = (1.1*Math.log10(f) - 0.7)*hm - (1.56*Math.log10(f) - 0.8);
-  const Cm = (env === 'urban-dense') ? 3 : 0;
-
-  return 46.3 + 33.9*Math.log10(f) - 13.82*Math.log10(hb) - ahm
-         + (44.9 - 6.55*Math.log10(hb))*Math.log10(d) + Cm;
+  const f = clamp(fMHz, 1500, 2000), hb = clamp(hTx, 30, 200), hm = clamp(hRx, 1, 10);
+  const cat = MORPH[env].hata, lf = Math.log10(f), lhb = Math.log10(hb);
+  const ahm = (1.1 * lf - 0.7) * hm - (1.56 * lf - 0.8);
+  const Cm = cat === 'large' ? 3 : 0;
+  const pl = d => {
+    let L = 46.3 + 33.9 * lf - 13.82 * lhb - ahm + (44.9 - 6.55 * lhb) * Math.log10(d) + Cm;
+    if (cat === 'open') L -= 4.78 * lf * lf - 18.33 * lf + 40.94;
+    return L;
+  };
+  const L = dKm >= 1 ? pl(dKm) : pl(1) + 20 * Math.log10(dKm);
+  return Math.max(L, calcFSPL(fMHz, dKm));
 }
-
 function calcEgli(fMHz, dKm, hTx, hRx) {
-  const f = fMHz;
-  const d = dKm * 1000;
-  // Egli: PL = 76.3 + 20*log10(f) - 20*log10(hTx) - 10*log10(hRx) + 40*log10(d/1000)
-  return 76.3 + 20*Math.log10(f) - 20*Math.log10(hTx) - 10*Math.log10(hRx) + 40*Math.log10(dKm);
+  const hr = hRx <= 10 ? 76.3 - 10 * Math.log10(hRx) : 85.9 - 20 * Math.log10(hRx);
+  const L = hr + 20 * Math.log10(fMHz) - 20 * Math.log10(hTx) + 40 * Math.log10(dKm);
+  return Math.max(L, calcFSPL(fMHz, dKm));
 }
-
 function calcSUI(fMHz, dKm, hTx, hRx, env) {
-  // SUI model for 2-11 GHz
-  const d0 = 0.1; // reference distance 100m
-  const f = fMHz;
-  const d = Math.max(0.1, dKm);
-
-  let a, b, c_sui;
-  if (env === 'urban-dense' || env === 'urban') {
-    a = 4.6; b = 0.0075; c_sui = 12.6; // Category A (hilly/dense)
-  } else if (env === 'suburban') {
-    a = 4.0; b = 0.0065; c_sui = 17.1; // Category B
-  } else {
-    a = 3.6; b = 0.005; c_sui = 20.0;  // Category C (flat/rural)
-  }
-
-  const gamma = a - b*hTx + c_sui/hTx;
-  const Xf = 6*Math.log10(f/2000);
-  const Xh = -10.8*Math.log10(hRx/2);
-
-  const A0 = 20*Math.log10(4*Math.PI*d0*1000/(299.792458/f));
-  return A0 + 10*gamma*Math.log10(d/d0) + Xf + Xh;
+  const d0 = 0.1, hb = clamp(hTx, 10, 80);
+  if (dKm <= d0) return calcFSPL(fMHz, dKm);
+  const cat = MORPH[env].sui;
+  const p = cat === 'A' ? [4.6, 0.0075, 12.6] : cat === 'B' ? [4.0, 0.0065, 17.1] : [3.6, 0.005, 20.0];
+  const gamma = p[0] - p[1] * hb + p[2] / hb;
+  const Xf = 6 * Math.log10(fMHz / 2000);
+  const Xh = (cat === 'C' ? -20 : -10.8) * Math.log10(hRx / 2);
+  const A0 = 20 * Math.log10(4 * Math.PI * d0 * 1000 / (299.792458 / fMHz));
+  return Math.max(A0 + 10 * gamma * Math.log10(dKm / d0) + Xf + Xh, calcFSPL(fMHz, dKm));
 }
-
 function calcLogDistance(fMHz, dKm, env) {
-  const n_map = { 'open': 2.0, 'rural': 2.4, 'suburban': 2.8, 'urban': 3.2, 'urban-dense': 3.8, 'maritime': 2.0, 'forest': 3.5 };
-  const n = n_map[env] || 2.5;
-  const d0 = 0.001; // 1m ref in km
-  const PL0 = calcFSPL(fMHz, d0);
-  return PL0 + 10*n*Math.log10(dKm/d0);
+  const n = MORPH[env].n, d0 = 0.001;
+  if (dKm <= d0) return calcFSPL(fMHz, dKm);
+  return calcFSPL(fMHz, d0) + 10 * n * Math.log10(dKm / d0);
 }
-
+// Percurso efetivo nos gases: enlaces terrestres usam d; acima de 500 km (satelite) usa a espessura equivalente de ~10 km
+const atmPathKm = dKm => (dKm <= 500 ? dKm : 10);
 function calcAtmosphericAtten(fMHz) {
-  // Simplified ITU-R P.676 atmospheric attenuation dB/km
-  const f = fMHz / 1000; // GHz
+  const f = fMHz / 1000;
   if (f < 1) return 0.005;
   if (f < 10) return 0.01;
-  if (f < 15) return 0.02 + 0.002*(f-10);
-  if (f < 22) return 0.03 + 0.01*(f-15); // water vapor peak near 22 GHz
+  if (f < 15) return 0.02 + 0.002 * (f - 10);
+  if (f < 22) return 0.03 + 0.01 * (f - 15);
   if (f < 30) return 0.1;
-  if (f < 60) return 0.15 + (f-30)*0.005; // O2 absorption peak near 60 GHz
-  if (f < 65) return 15; // 60 GHz oxygen absorption
+  if (f < 60) return 0.15 + (f - 30) * 0.005;
+  if (f < 65) return 15;
   if (f < 100) return 0.5;
   return 1.0;
 }
+// ITU-R P.2108 no terminal: sec. 3.1 (0,03 a 3 GHz); acima de 3 GHz sec. 3.2 (urbano/suburbano, p = 50 %)
+function clutterP2108(fMHz, h, env, dKm) {
+  if (fMHz < 30) return 0;
+  const f = fMHz / 1000;
+  if (f <= 3) return P2108.heightGain(f, h, env);
+  if ((env === 'suburban' || env === 'urban' || env === 'urban-dense') && h < P2108.R_DEF[env] && f <= 67) return P2108.terrestrial(f, dKm, 50);
+  return 0;
+}
+function earthAe() { return 6371 * clamp(num('k-factor', 4 / 3), 0.5, 4); }
+// P.1812 sobre Terra lisa (sem perfil): usado quando o enlace esta desacoplado do mapa
+function terrainFlatLoss(fMHz, dKm, hTx, hRx, env) {
+  if (dKm > 3000) return calcFSPL(fMHz, dKm);
+  const n = 61, d = new Float64Array(n), h = new Float64Array(n);
+  for (let i = 0; i < n; i++) d[i] = dKm * i / (n - 1);
+  return P1812.core({ d, h, R: MORPH[env].R, n, htg: hTx, hrg: hRx, f: fMHz / 1000, ae: earthAe(), omega: MORPH[env].omega, N0: num('n0', 330), pol: 2 }).Lb;
+}
+function getPathLossDetail(fMHz, dKm, hTx, hRx, model, env) {
+  let base;
+  switch (model) {
+    case 'fspl': base = calcFSPL(fMHz, dKm); break;
+    case 'two-ray': base = calcTwoRay(fMHz, dKm, hTx, hRx); break;
+    case 'okumura-hata': base = calcOkumuraHata(fMHz, dKm, hTx, hRx, env); break;
+    case 'cost231': base = calcCOST231(fMHz, dKm, hTx, hRx, env); break;
+    case 'egli': base = calcEgli(fMHz, dKm, hTx, hRx); break;
+    case 'itu-r-p1546': base = Math.max(calcOkumuraHata(fMHz, dKm, hTx, hRx, env) - 3, calcFSPL(fMHz, dKm)); break;
+    case 'itu-r-p676':
+    case 'itu-r-p530': base = calcFSPL(fMHz, dKm) + calcAtmosphericAtten(fMHz) * atmPathKm(dKm); break;
+    case 'longley-rice': base = calcLogDistance(fMHz, dKm, env) + 5; break;
+    case 'sui': base = calcSUI(fMHz, dKm, hTx, hRx, env); break;
+    case 'log-distance': base = calcLogDistance(fMHz, dKm, env); break;
+    case 'terrain': { const t = terrainFlatLoss(fMHz, dKm, hTx, hRx, env); return { base: t, clutter: 0, total: t, native: true }; }
+    default: base = calcFSPL(fMHz, dKm);
+  }
+  const native = NATIVE_MORPH.has(model);
+  const clutter = native ? 0 : clutterP2108(fMHz, hRx, env, dKm) + clutterP2108(fMHz, hTx, env, dKm);
+  return { base, clutter, total: base + clutter, native };
+}
+function getPathLoss(fMHz, dKm, hTx, hRx, model, env) { return getPathLossDetail(fMHz, dKm, hTx, hRx, model, env).total; }
+function fresnelRadiusMid(n, dKm, fMHz) { return Math.sqrt(n * (299.792458 / fMHz) * dKm * 1000 / 4); }
+function radioHorizon(h) { return 4.12 * Math.sqrt(Math.max(0, h)); }
+function modelValidFor(model, f) {
+  const mi = MODEL_INFO[model] || {};
+  return !(mi.fmin && f < mi.fmin) && !(mi.fmax && f > mi.fmax);
+}
 
-function getPathLoss(fMHz, dKm, hTx, hRx, model, env) {
-  switch(model) {
-    case 'fspl': return calcFSPL(fMHz, dKm);
-    case 'two-ray': return calcTwoRay(fMHz, dKm, hTx, hRx);
-    case 'okumura-hata': return calcOkumuraHata(fMHz, dKm, hTx, hRx, env);
-    case 'cost231': return calcCOST231(fMHz, dKm, hTx, hRx, env);
-    case 'egli': return calcEgli(fMHz, dKm, hTx, hRx);
-    case 'itu-r-p1546': return calcOkumuraHata(fMHz, dKm, hTx, hRx, env) - 3; // simplified P.1546
-    case 'itu-r-p676': return calcFSPL(fMHz, dKm) + calcAtmosphericAtten(fMHz)*dKm;
-    case 'itu-r-p530': return calcFSPL(fMHz, dKm) + calcAtmosphericAtten(fMHz)*dKm;
-    case 'longley-rice': return calcLogDistance(fMHz, dKm, env) + 5; // simplified
-    case 'sui': return calcSUI(fMHz, dKm, hTx, hRx, env);
-    case 'log-distance': return calcLogDistance(fMHz, dKm, env);
-    default: return calcFSPL(fMHz, dKm);
+// ===== MAPA =====
+function initMap() {
+  S.map = L.map('map', { center: [-27.595, -48.517], zoom: 12, zoomControl: true, preferCanvas: false });
+  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 });
+  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)', subdomains: 'abc', maxZoom: 17 });
+  const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Imagens &copy; Esri', maxZoom: 19 });
+  dark.addTo(S.map);
+  S.hill = makeHillshadeLayer().addTo(S.map);
+  S.covGroup = L.layerGroup().addTo(S.map);
+  S.fresnelGroup = L.layerGroup().addTo(S.map);
+  L.control.layers(
+    { 'Escuro (CARTO)': dark, 'Topografico (OpenTopoMap)': topo, 'Satelite (Esri)': sat },
+    { 'Relevo sombreado (SRTM)': S.hill, 'Mancha de cobertura': S.covGroup, 'Zona de Fresnel': S.fresnelGroup },
+    { position: 'topleft' }).addTo(S.map);
+  L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(S.map);
+
+  const icon = color => L.divIcon({ className: '',
+    html: '<div style="width:14px;height:14px;background:' + color + ';border-radius:50%;box-shadow:0 0 12px ' + color + ',0 0 4px ' + color + ';border:2px solid rgba(255,255,255,0.35);"></div>',
+    iconSize: [14, 14], iconAnchor: [7, 7] });
+  S.txMarker = L.marker([num('tx-lat', -27.6008), num('tx-lon', -48.5242)], { icon: icon('#f97316'), draggable: true, zIndexOffset: 1000 })
+    .addTo(S.map).bindTooltip('TX', { permanent: true, direction: 'top', offset: [0, -10] });
+  S.rxMarker = L.marker([num('rx-lat', -27.59), num('rx-lon', -48.51)], { icon: icon('#38bdf8'), draggable: true, zIndexOffset: 1000 })
+    .addTo(S.map).bindTooltip('RX', { permanent: true, direction: 'top', offset: [0, -10] });
+  S.linkLine = L.polyline([S.txMarker.getLatLng(), S.rxMarker.getLatLng()], { color: '#4ade80', weight: 2, opacity: 0.8, dashArray: '8,6' }).addTo(S.map);
+
+  const onDrag = () => { S.linkLine.setLatLngs([S.txMarker.getLatLng(), S.rxMarker.getLatLng()]); syncCoordFields(); };
+  S.txMarker.on('drag', onDrag);
+  S.rxMarker.on('drag', onDrag);
+  S.txMarker.on('dragend', () => { S.decoupled = false; scheduleCalc(30); });
+  S.rxMarker.on('dragend', () => { S.decoupled = false; scheduleCalc(30); });
+  S.map.on('click', e => {
+    S.rxMarker.setLatLng(e.latlng); S.decoupled = false;
+    S.linkLine.setLatLngs([S.txMarker.getLatLng(), e.latlng]);
+    syncCoordFields(); scheduleCalc(30);
+  });
+  let rafPending = false, lastEv = null;
+  S.map.on('mousemove', e => {
+    lastEv = e;
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; updateReadout(lastEv.latlng); });
+  });
+  S.map.on('mouseout', () => { $('readout').innerHTML = READOUT_HINT; });
+
+  if (window.ResizeObserver) new ResizeObserver(() => S.map.invalidateSize()).observe($('map-wrap'));
+  setTimeout(() => S.map.invalidateSize(), 200);
+}
+function syncCoordFields() {
+  const t = S.txMarker.getLatLng(), r = S.rxMarker.getLatLng();
+  $('tx-lat').value = t.lat.toFixed(5); $('tx-lon').value = t.lng.toFixed(5);
+  $('rx-lat').value = r.lat.toFixed(5); $('rx-lon').value = r.lng.toFixed(5);
+  if (!S.decoupled) $('distance').value = haversine(t.lat, t.lng, r.lat, r.lng).toFixed(2);
+}
+function moveRxTo(dKm) {
+  const t = S.txMarker.getLatLng(), r = S.rxMarker.getLatLng();
+  let brg = bearing(t.lat, t.lng, r.lat, r.lng);
+  if (!Number.isFinite(brg) || haversine(t.lat, t.lng, r.lat, r.lng) < 1e-4) brg = 45;
+  const p = destPoint(t.lat, t.lng, brg, dKm);
+  S.rxMarker.setLatLng(p);
+  S.linkLine.setLatLngs([t, S.rxMarker.getLatLng()]);
+  syncCoordFields();
+}
+function onCoordInput() {
+  const tl = num('tx-lat', NaN), tn = num('tx-lon', NaN), rl = num('rx-lat', NaN), rn = num('rx-lon', NaN);
+  if ([tl, tn, rl, rn].some(v => !Number.isFinite(v))) return;
+  S.txMarker.setLatLng([tl, tn]); S.rxMarker.setLatLng([rl, rn]);
+  S.decoupled = false; syncCoordFields();
+  scheduleCalc(30, { fit: 'link' });
+}
+function onDistanceInput() {
+  const dKm = num('distance', 10);
+  if (dKm > 500) S.decoupled = true;
+  else { S.decoupled = false; moveRxTo(Math.max(0.02, dKm)); }
+  scheduleCalc(30, { fit: 'link' });
+}
+function fitTo(kind) {
+  const t = S.txMarker.getLatLng(), r = S.rxMarker.getLatLng();
+  if (kind === 'cov') {
+    const R = clamp(num('cov-radius', 20), 1, 120);
+    const n = destPoint(t.lat, t.lng, 0, R), s = destPoint(t.lat, t.lng, 180, R), e = destPoint(t.lat, t.lng, 90, R), w = destPoint(t.lat, t.lng, 270, R);
+    S.map.fitBounds([[s[0], w[1]], [n[0], e[1]]], { paddingTopLeft: [20, 40], paddingBottomRight: [20, 40] });
+  } else if (!S.decoupled) {
+    S.map.fitBounds([t, r], { paddingTopLeft: [60, 140], paddingBottomRight: [60, 120], maxZoom: 15 });
   }
 }
-
-// ===== FRESNEL ZONE =====
-function fresnelRadius(n, dKm, fMHz) {
-  const wl = 299.792458 / fMHz; // meters
-  const d = dKm * 1000; // meters
-  return Math.sqrt(n * wl * (d/2) * (d/2) / d); // at midpoint: sqrt(n*lambda*d1*d2/d)
-  // simplified for midpoint: d1 = d2 = d/2 => r = sqrt(n*wl*d/4)
-}
-function fresnelRadiusMid(n, dKm, fMHz) {
-  const wl = 299.792458 / fMHz;
-  const d = dKm * 1000;
-  return Math.sqrt(n * wl * d / 4);
+function updateReadout(ll) {
+  const t = S.txMarker.getLatLng();
+  const d = haversine(t.lat, t.lng, ll.lat, ll.lng), az = bearing(t.lat, t.lng, ll.lat, ll.lng);
+  const el = elevFromCache(ll.lat, ll.lng);
+  let s = 'cursor: <b>' + ll.lat.toFixed(4) + ', ' + ll.lng.toFixed(4) + '</b>';
+  s += ' | cota <b>' + (el === null ? '--' : Math.max(0, el).toFixed(0) + ' m') + '</b>';
+  s += ' | TX <b>' + d.toFixed(2) + ' km</b> @ <b>' + az.toFixed(0) + '°</b>';
+  const pr = coveragePrAt(ll.lat, ll.lng);
+  if (pr !== null) s += ' | Pr <b>' + pr.toFixed(1) + ' dBm</b>';
+  $('readout').innerHTML = s;
 }
 
-// ===== RADIO HORIZON =====
-function radioHorizon(h) {
-  // d (km) = sqrt(2 * Re * k * h) where k = 4/3 (refraction), Re = 6371 km
-  // d (km) ≈ 4.12 * sqrt(h in meters)
-  return 4.12 * Math.sqrt(Math.max(0, h));
+const READOUT_HINT = 'clique no mapa para posicionar o RX | arraste TX e RX';
+// ===== UI HELPERS =====
+function toggleSection(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
 }
-
-// ===== MAIN CALCULATION =====
-function runCalculation() {
-  const freq = parseFloat(document.getElementById('freq').value);
-  const txPowDbm = parseFloat(document.getElementById('tx-power-dbm').value);
-  const txGain = parseFloat(document.getElementById('tx-gain').value);
-  const txCable = parseFloat(document.getElementById('tx-cable-loss').value);
-  const txHeight = parseFloat(document.getElementById('tx-height').value);
-  const rxSens = parseFloat(document.getElementById('rx-sens').value);
-  const rxGain = parseFloat(document.getElementById('rx-gain').value);
-  const rxCable = parseFloat(document.getElementById('rx-cable-loss').value);
-  const rxHeight = parseFloat(document.getElementById('rx-height').value);
-  const rxNF = parseFloat(document.getElementById('rx-nf').value);
-  const dist = parseFloat(document.getElementById('distance').value);
-  const model = document.getElementById('prop-model').value;
-  const env = document.getElementById('environment').value;
-  const bw = parseFloat(document.getElementById('bandwidth').value);
-  const noiseTemp = parseFloat(document.getElementById('noise-temp').value);
-  const extraLoss = parseFloat(document.getElementById('extra-loss').value);
-  const rainAtten = parseFloat(document.getElementById('rain-atten').value);
-  const fadeMarginReq = parseFloat(document.getElementById('fade-margin-req').value);
-  const wl = 299.792458 / freq;
-
-  // EIRP
-  const eirpDbm = txPowDbm + txGain - txCable;
-  const eirpW = Math.pow(10, eirpDbm/10) / 1000;
-
-  // Path loss
-  const fspl = calcFSPL(freq, dist);
-  const pathLossModel = getPathLoss(freq, dist, txHeight, rxHeight, model, env);
-  const modelExtra = pathLossModel - fspl;
-  const atmAtten = calcAtmosphericAtten(freq) * dist;
-  const totalPathLoss = pathLossModel + rainAtten + extraLoss + (model !== 'itu-r-p676' && model !== 'itu-r-p530' ? atmAtten : 0);
-
-  // Received power
-  const prx = eirpDbm - totalPathLoss + rxGain - rxCable;
-
-  // Margin
-  const margin = prx - rxSens;
-
-  // Noise floor
-  const k = 1.380649e-23; // Boltzmann
-  const bwHz = bw * 1000;
-  const noiseFloor = 10*Math.log10(k * noiseTemp * bwHz * 1000); // dBm
-  const noiseFloorRx = noiseFloor + rxNF;
-
-  // SNR, C/N
-  const snr = prx - noiseFloorRx;
-  const cn = prx - noiseFloor;
-  const ebno = snr + 10*Math.log10(bwHz / (bwHz * 0.8)); // simplified
-
-  // Fresnel zones
-  const f1 = fresnelRadiusMid(1, dist, freq);
-  const f2 = fresnelRadiusMid(2, dist, freq);
-  const f60 = f1 * 0.6;
-
-  // Radio horizon
-  const horTx = radioHorizon(txHeight);
-  const horRx = radioHorizon(rxHeight);
-  const horTotal = horTx + horRx;
-
-  // Max range estimate (where margin = 0)
-  let maxRange = dist;
-  for (let d = 0.1; d < 1000; d += 0.1) {
-    const pl = getPathLoss(freq, d, txHeight, rxHeight, model, env) + rainAtten + extraLoss;
-    const pr = eirpDbm - pl + rxGain - rxCable;
-    if (pr < rxSens) { maxRange = d; break; }
-    maxRange = d;
-  }
-
-  // ===== UPDATE UI =====
-  document.getElementById('res-time').textContent = new Date().toLocaleTimeString();
-
-  // Header
-  document.getElementById('hdr-status').textContent = margin >= fadeMarginReq ? 'LINK OK' : (margin >= 0 ? 'MARGINAL' : 'NO LINK');
-  document.getElementById('hdr-status').style.color = margin >= fadeMarginReq ? '#4ade80' : (margin >= 0 ? '#fbbf24' : '#fb7185');
-  document.getElementById('hdr-dist').innerHTML = dist.toFixed(1) + '<span class="unit">km</span>';
-
-  // Link Budget
-  document.getElementById('r-eirp').innerHTML = eirpDbm.toFixed(1) + '<span class="unit">dBm</span>';
-  document.getElementById('r-ptx').innerHTML = txPowDbm.toFixed(1) + '<span class="unit">dBm</span>';
-  document.getElementById('r-gtx').innerHTML = '+' + txGain.toFixed(1) + '<span class="unit">dBi</span>';
-  document.getElementById('r-ltx').innerHTML = '-' + txCable.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-pl').innerHTML = totalPathLoss.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-pl').className = 'v';
-  document.getElementById('r-fspl').innerHTML = fspl.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-model-extra').innerHTML = (modelExtra > 0 ? '+' : '') + modelExtra.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-rain').innerHTML = rainAtten.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-extra').innerHTML = extraLoss.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-grx').innerHTML = '+' + rxGain.toFixed(1) + '<span class="unit">dBi</span>';
-  document.getElementById('r-lrx').innerHTML = '-' + rxCable.toFixed(1) + '<span class="unit">dB</span>';
-
-  const prxEl = document.getElementById('r-prx');
-  prxEl.innerHTML = prx.toFixed(1) + '<span class="unit">dBm</span>';
-  prxEl.className = 'v ' + (prx > rxSens + fadeMarginReq ? 'good' : (prx > rxSens ? 'warn' : 'bad'));
-  document.getElementById('r-sens').innerHTML = rxSens.toFixed(0) + '<span class="unit">dBm</span>';
-
-  const marEl = document.getElementById('r-margin');
-  marEl.innerHTML = (margin >= 0 ? '+' : '') + margin.toFixed(1) + '<span class="unit">dB</span>';
-  marEl.className = 'v ' + (margin >= fadeMarginReq ? 'good' : (margin >= 0 ? 'warn' : 'bad'));
-
-  // Margin gauge
-  const mPct = Math.min(100, Math.max(0, (margin + 20) / 60 * 100));
-  const mFill = document.getElementById('margin-fill');
-  mFill.style.width = mPct + '%';
-  mFill.className = 'gauge-fill ' + (margin >= fadeMarginReq ? 'good' : (margin >= 0 ? 'warn' : 'bad'));
-  document.getElementById('margin-label').textContent = (margin >= 0 ? '+' : '') + margin.toFixed(1) + ' dB';
-
-  // Map badge
-  const mapMar = document.getElementById('map-margin');
-  mapMar.textContent = (margin >= 0 ? '+' : '') + margin.toFixed(1) + ' dB';
-  mapMar.className = 'big ' + (margin >= fadeMarginReq ? 'good' : (margin >= 0 ? 'warn' : 'bad'));
-  document.getElementById('map-status-text').textContent = margin >= fadeMarginReq ? 'Enlace confiavel' : (margin >= 0 ? 'Margem insuficiente' : 'Enlace inviavel');
-
-  // Signal quality
-  document.getElementById('r-noise').innerHTML = noiseFloorRx.toFixed(1) + '<span class="unit">dBm</span>';
-  const snrEl = document.getElementById('r-snr');
-  snrEl.innerHTML = snr.toFixed(1) + '<span class="unit">dB</span>';
-  snrEl.className = 'v ' + (snr > 20 ? 'good' : (snr > 10 ? 'warn' : 'bad'));
-  document.getElementById('r-cn').innerHTML = cn.toFixed(1) + '<span class="unit">dB</span>';
-  document.getElementById('r-ebno').innerHTML = ebno.toFixed(1) + '<span class="unit">dB</span>';
-
-  const snrPct = Math.min(100, Math.max(0, (snr + 10) / 50 * 100));
-  const snrFill = document.getElementById('snr-fill');
-  snrFill.style.width = snrPct + '%';
-  snrFill.className = 'gauge-fill ' + (snr > 20 ? 'good' : (snr > 10 ? 'warn' : 'bad'));
-  document.getElementById('snr-label').textContent = snr.toFixed(1) + ' dB SNR';
-
-  // Fresnel
-  document.getElementById('r-f1').innerHTML = f1.toFixed(2) + '<span class="unit">m</span>';
-  document.getElementById('r-f2').innerHTML = f2.toFixed(2) + '<span class="unit">m</span>';
-  document.getElementById('r-f60').innerHTML = f60.toFixed(2) + '<span class="unit">m</span>';
-
-  // RF Info
-  document.getElementById('r-wl').innerHTML = (wl >= 1 ? wl.toFixed(3) + '<span class="unit">m</span>' : (wl*100).toFixed(2) + '<span class="unit">cm</span>');
-  document.getElementById('r-eirp2').innerHTML = eirpW.toFixed(2) + '<span class="unit">W</span>';
-  document.getElementById('r-hor-tx').innerHTML = horTx.toFixed(1) + '<span class="unit">km</span>';
-  document.getElementById('r-hor-rx').innerHTML = horRx.toFixed(1) + '<span class="unit">km</span>';
-  document.getElementById('r-hor-total').innerHTML = horTotal.toFixed(1) + '<span class="unit">km</span>';
-  document.getElementById('r-max-range').innerHTML = maxRange.toFixed(1) + '<span class="unit">km</span>';
-  document.getElementById('r-atm').innerHTML = calcAtmosphericAtten(freq).toFixed(4) + '<span class="unit">dB/km</span>';
-
-  // ITU compliance
-  let ituHtml = '';
-  if (dist > horTotal) {
-    ituHtml += '<div class="info-box bad-box"><strong>Aviso:</strong> Distancia (' + dist.toFixed(1) + ' km) excede o horizonte radio (' + horTotal.toFixed(1) + ' km). Enlace NLOS.</div>';
-  }
-  if (margin < fadeMarginReq) {
-    ituHtml += '<div class="info-box warn-box"><strong>ITU-R P.530:</strong> Margem (' + margin.toFixed(1) + ' dB) abaixo do requerido (' + fadeMarginReq + ' dB) para a disponibilidade especificada.</div>';
+function selectBand(band) {
+  const freqs = { hf: 14, vhf: 150, uhf: 450, shf: 7000, ehf: 38000 };
+  $('freq').value = freqs[band] || 150;
+  updateWavelength();
+  scheduleCalc(60);
+}
+function bandOf(f) { return f < 30 ? 'hf' : f < 300 ? 'vhf' : f < 3000 ? 'uhf' : f < 30000 ? 'shf' : 'ehf'; }
+function updateWavelength() {
+  const f = parseFloat($('freq').value);
+  if (!f || f <= 0) return;
+  const wl = 299.792458 / f;
+  $('wavelength').value = wl >= 1 ? wl.toFixed(3) + ' m' : wl >= 0.01 ? (wl * 100).toFixed(2) + ' cm' : (wl * 1000).toFixed(2) + ' mm';
+  $('hdr-freq').innerHTML = (Math.abs(f * 1000 - Math.round(f * 1000)) > 1e-6 ? f.toFixed(4) : f >= 100 ? f.toFixed(3) : f.toFixed(2)) + U('MHz');
+  const band = bandOf(f);
+  $('hdr-band').textContent = band.toUpperCase();
+  document.querySelectorAll('#band-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.band === band));
+  updateServiceChannel();
+}
+function syncTxPower(from) {
+  if (from === 'w') {
+    const w = parseFloat($('tx-power-w').value);
+    if (w > 0) $('tx-power-dbm').value = (10 * Math.log10(w * 1000)).toFixed(1);
   } else {
-    ituHtml += '<div class="info-box ok"><strong>ITU-R P.530:</strong> Margem de ' + margin.toFixed(1) + ' dB atende ao requisito de ' + fadeMarginReq + ' dB.</div>';
+    const dbm = parseFloat($('tx-power-dbm').value);
+    if (Number.isFinite(dbm)) $('tx-power-w').value = +(Math.pow(10, dbm / 10) / 1000).toPrecision(4);
   }
-  if (freq > 10000) {
-    ituHtml += '<div class="info-box"><strong>ITU-R P.838:</strong> Acima de 10 GHz, atenuacao por chuva e significativa. Atenuacao configurada: ' + rainAtten.toFixed(1) + ' dB.</div>';
-    ituHtml += '<div class="info-box"><strong>ITU-R P.676:</strong> Atenuacao atmosferica estimada: ' + (atmAtten).toFixed(2) + ' dB no enlace.</div>';
+}
+function setAntennaGain(side) {
+  const sel = $(side === 'tx' ? 'tx-ant-type' : 'rx-ant-type');
+  const gainInput = $(side === 'tx' ? 'tx-gain' : 'rx-gain');
+  const freq = num('freq', 150), v = sel.value;
+  const gains = { 'dipole': 2.15, 'yagi-3': 7.1, 'yagi-5': 10.2, 'yagi-10': 13.1, 'omni-0': 0, 'omni-3': 3, 'omni-6': 6, 'omni-9': 9,
+    'patch-8': 8, 'horn-15': 15, 'horn-20': 20, 'sector-90': 14, 'sector-120': 12 };
+  if (gains[v] !== undefined) gainInput.value = gains[v];
+  else if (v.startsWith('parabolic-')) {
+    const diam = parseFloat(v.split('-')[1]) / 10, wl = 299.792458 / freq;
+    gainInput.value = (10 * Math.log10(0.55 * (Math.PI * diam / wl) ** 2)).toFixed(1);
   }
-  if (freq < 30) {
-    ituHtml += '<div class="info-box"><strong>ITU-R P.533 / HF:</strong> Propagacao ionosferica (sky-wave) pode estender alcance muito alem do horizonte. Modelos de perda no solo tem validade limitada em HF.</div>';
-  }
-  const modelName = document.getElementById('prop-model').selectedOptions[0].text;
-  ituHtml += '<div class="info-box"><strong>Modelo:</strong> ' + modelName + '</div>';
-  document.getElementById('itu-compliance').innerHTML = ituHtml;
-
-  // Update map
-  updateMapMarkers();
-  drawCoverageOnMap(maxRange);
-
-  // Draw charts
-  drawPropChart(freq, txHeight, rxHeight, model, env, eirpDbm, rxGain, rxCable, rxSens, rainAtten, extraLoss, dist);
-  drawFresnelChart(freq, dist, txHeight, rxHeight);
-
-  // Update chart meta
-  document.getElementById('chart1-meta').textContent = modelName;
-  document.getElementById('chart2-meta').textContent = 'F1=' + f1.toFixed(1) + 'm';
+  scheduleCalc(60);
+}
+function onModelChange() {
+  const m = $('prop-model').value;
+  $('hdr-model').textContent = (MODEL_INFO[m] || {}).name || m;
+}
+function updateMorphInfo() {
+  const env = $('environment').value, m = MORPH[env];
+  const eq = (env === 'water' || env === 'rural') ? '(2b)' : '(2a)';
+  $('morph-info').innerHTML = '<strong>' + m.label + '</strong>: ' + m.desc +
+    '<div class="morph-grid">' +
+    '<span class="k">P.1812-6</span><span>clutter R = ' + m.R + ' m nos pontos do perfil</span>' +
+    '<span class="k">P.2108 3.1</span><span>R = ' + P2108.R_DEF[env] + ' m, eq. ' + eq + ' no terminal</span>' +
+    '<span class="k">Hata/COST</span><span>' + HATA_LABEL[m.hata] + '</span>' +
+    '<span class="k">SUI / log-d</span><span>cat. ' + m.sui + ' / n = ' + m.n.toFixed(1) + '</span></div>';
 }
 
-function drawCoverageOnMap(maxRange) {
-  const txLat = parseFloat(document.getElementById('tx-lat').value);
-  const txLon = parseFloat(document.getElementById('tx-lon').value);
-
-  if (coverageCircle) map.removeLayer(coverageCircle);
-  coverageCircle = L.circle([txLat, txLon], {
-    radius: maxRange * 1000,
-    color: '#f97316', weight: 1, opacity: 0.5,
-    fillColor: '#f97316', fillOpacity: 0.06,
-    dashArray: '6,4'
-  }).addTo(map);
-
-  // Fresnel zone on map (simplified as thick line)
-  if (fresnelPoly) map.removeLayer(fresnelPoly);
-  // We just keep the link line for simplicity
+// ===== PRESETS & SERVICOS =====
+function applyPreset() {
+  const p = $('preset').value;
+  if (SERVICES[p]) { applyService(p); return; }
+  S.service = null;
+  $('svc-panel').hidden = true;
+  const c = PRESETS[p];
+  if (!c) return;
+  $('freq').value = c.freq;
+  $('tx-power-w').value = c.txPow; syncTxPower('w');
+  $('tx-gain').value = c.txGain; $('tx-height').value = c.txH;
+  $('rx-gain').value = c.rxGain; $('rx-height').value = c.rxH; $('rx-sens').value = c.rxSens;
+  $('bandwidth').value = c.bw; $('environment').value = c.env;
+  $('tx-ant-type').value = 'custom'; $('rx-ant-type').value = 'custom';
+  if (c.cov) $('cov-radius').value = c.cov;
+  if (!modelValidFor($('prop-model').value, c.freq)) $('prop-model').value = c.model || 'fspl';
+  onModelChange(); updateMorphInfo(); updateWavelength();
+  $('distance').value = c.dist;
+  if (c.dist > 500) S.decoupled = true; else { S.decoupled = false; moveRxTo(c.dist); }
+  runCalculation({ fit: S.decoupled ? null : (c.cov ? 'cov' : 'link') });
+}
+function applyService(key) {
+  const s = SERVICES[key];
+  S.service = key;
+  $('freq').value = s.f.toFixed(4);
+  $('tx-power-w').value = s.txW; syncTxPower('w');
+  $('tx-gain').value = s.txG; $('tx-cable-loss').value = s.txL; $('tx-height').value = s.txH;
+  $('rx-sens').value = s.sens; $('bandwidth').value = s.bw; $('fade-margin-req').value = s.fade;
+  $('environment').value = s.env; $('prop-model').value = 'terrain'; $('cov-radius').value = s.cov;
+  $('tx-ant-type').value = 'custom'; $('rx-ant-type').value = 'custom';
+  $('svc-name').textContent = s.name;
+  $('svc-band').textContent = s.band[0] + '-' + s.band[1] + ' MHz';
+  $('svc-step').textContent = 'passo ' + s.spacing + ' kHz';
+  const sl = $('svc-freq');
+  sl.min = s.band[0]; sl.max = s.band[1]; sl.step = s.spacing / 1000; sl.value = s.f;
+  $('svc-min').textContent = s.band[0].toFixed(3); $('svc-max').textContent = s.band[1].toFixed(3);
+  $('svc-tech').innerHTML = s.tech.map(r => '<span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span>').join('');
+  $('svc-panel').hidden = false;
+  applyTerminal(S.terminal);
+  onModelChange(); updateMorphInfo(); updateWavelength();
+  $('distance').value = s.dist; S.decoupled = false; moveRxTo(s.dist);
+  runCalculation({ fit: 'cov' });
+}
+function applyTerminal(t) {
+  const T = TERMINALS[t], f = num('freq', 150);
+  $('rx-gain').value = f < 300 ? T.gV : T.gU;
+  $('rx-height').value = T.h; $('rx-cable-loss').value = T.loss;
+  $('svc-term-note').textContent = T.note;
+  document.querySelectorAll('#svc-term .chip').forEach(c => c.classList.toggle('active', c.dataset.term === t));
+}
+function selectTerminal(t) { S.terminal = t; applyTerminal(t); scheduleCalc(30); }
+function updateServiceChannel() {
+  if (!S.service) return;
+  const s = SERVICES[S.service], f = num('freq', s.f), sp = s.spacing / 1000;
+  const nCh = Math.round((s.band[1] - s.band[0]) / sp);
+  const ch = Math.round((f - s.band[0]) / sp);
+  const el = $('svc-ch');
+  if (f < s.band[0] || f > s.band[1]) {
+    el.textContent = f.toFixed(4) + ' MHz fora da faixa'; el.classList.add('out');
+  } else {
+    el.textContent = 'canal ' + ch + ' de ' + nCh + ' | ' + f.toFixed(4) + ' MHz'; el.classList.remove('out');
+    $('svc-freq').value = f;
+  }
+}
+function onServiceSlider() {
+  const s = SERVICES[S.service]; if (!s) return;
+  const sp = s.spacing / 1000, v = parseFloat($('svc-freq').value);
+  const f = s.band[0] + Math.round((v - s.band[0]) / sp) * sp;
+  $('freq').value = f.toFixed(4);
+  updateWavelength();
 }
 
-// ===== CHARTS =====
-function drawPropChart(freq, hTx, hRx, model, env, eirpDbm, rxGain, rxCable, rxSens, rain, extra, currentDist) {
-  const canvas = document.getElementById('propChart');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.parentElement.clientWidth - 16;
-  const H = Math.max(canvas.parentElement.clientHeight, 220);
-  canvas.width = W * 2; canvas.height = H * 2;
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  ctx.scale(2, 2);
+// ===== CALCULO PRINCIPAL =====
+function readParams() {
+  const t = S.txMarker.getLatLng();
+  return {
+    f: num('freq', 150), txDbm: num('tx-power-dbm', 40), txG: num('tx-gain', 0), txL: num('tx-cable-loss', 0),
+    hTx: Math.max(0.5, num('tx-height', 30)), sens: num('rx-sens', -100), rxG: num('rx-gain', 0), rxL: num('rx-cable-loss', 0),
+    hRx: Math.max(0.5, num('rx-height', 1.5)), nf: num('rx-nf', 6), model: $('prop-model').value, env: $('environment').value,
+    distField: num('distance', 10), fade: num('fade-margin-req', 10), bw: num('bandwidth', 25), T: num('noise-temp', 290),
+    extra: num('extra-loss', 0), rain: num('rain-atten', 0), useTerrain: $('use-terrain').checked,
+    k: clamp(num('k-factor', 4 / 3), 0.5, 4), N0: clamp(num('n0', 330), 250, 400),
+    covRadius: clamp(num('cov-radius', 20), 1, 120), radials: parseInt($('cov-radials').value, 10) || 180,
+    txLat: t.lat, txLon: t.lng,
+  };
+}
+function scheduleCalc(delay, opts) {
+  clearTimeout(S.calcTimer);
+  S.calcTimer = setTimeout(() => runCalculation(opts || {}), delay === undefined ? 350 : delay);
+}
+function setTerrainStatus(txt) { $('terrain-status').textContent = 'Relevo: ' + txt; }
 
-  ctx.fillStyle = '#0e131b';
-  ctx.fillRect(0, 0, W, H);
+async function runCalculation(opts) {
+  opts = opts || {};
+  const seq = ++S.calcSeq;
+  const P = readParams();
+  const t = S.txMarker.getLatLng(), r = S.rxMarker.getLatLng();
+  const brg = bearing(t.lat, t.lng, r.lat, r.lng);
+  let dist = S.decoupled ? P.distField : haversine(t.lat, t.lng, r.lat, r.lng);
+  dist = Math.max(dist, 0.02);
+  if (!S.decoupled) $('distance').value = dist.toFixed(2);
+  if (opts.fit) fitTo(opts.fit);
 
-  const pad = { l: 55, r: 20, t: 15, b: 30 };
-  const gW = W - pad.l - pad.r;
-  const gH = H - pad.t - pad.b;
+  const f = P.f, ae = 6371 * P.k, m = MORPH[P.env];
+  const eirpDbm = P.txDbm + P.txG - P.txL;
+  const eirpW = Math.pow(10, eirpDbm / 10) / 1000;
 
-  // Generate data for multiple models
-  const maxDist = Math.max(currentDist * 2, 5);
-  const steps = 200;
-  const models = [
-    { id: model, color: '#f97316', label: 'Selecionado' },
-    { id: 'fspl', color: '#38bdf8', label: 'FSPL' },
-  ];
-  if (model !== 'fspl') models.push(models.splice(0, 1)[0]); // reorder
+  // ---- perfil do enlace (ate 2d no mesmo azimute) ----
+  let prof = null;
+  if (!S.decoupled && dist <= 300) {
+    const nLink = clamp(Math.round(dist * 1000 / 30), 40, 500);
+    setTerrainStatus(P.useTerrain ? 'carregando perfil...' : 'desligado (Terra lisa).');
+    prof = await buildProfile(t.lat, t.lng, Number.isFinite(brg) ? brg : 45, 2 * dist, 2 * nLink, P.useTerrain);
+    if (seq !== S.calcSeq) return;
+    prof.nLink = nLink + 1;
+  }
 
-  let allPL = [];
-  const datasets = models.map(m => {
-    const pts = [];
-    for (let i = 0; i <= steps; i++) {
-      const d = (i / steps) * maxDist;
-      if (d < 0.01) { pts.push(null); continue; }
-      const pl = getPathLoss(freq, d, hTx, hRx, m.id, env);
-      pts.push(pl);
-      allPL.push(pl);
+  // ---- perda no enlace ----
+  const coreBase = prof ? { d: prof.d, h: prof.h, R: m.R, n: prof.nLink, htg: P.hTx, hrg: P.hRx, f: f / 1000, ae, omega: m.omega, N0: P.N0, pol: 2 } : null;
+  let full = null, ter = null, sph = null;
+  if (prof) {
+    full = P1812.core(Object.assign({}, coreBase, { info: true }));
+    ter = P1812.core(Object.assign({}, coreBase, { R: 0 }));
+    sph = P1812.core(Object.assign({}, coreBase, { h: new Float64Array(prof.n), R: 0 }));
+  }
+  let fsplRow, extraRow, clutterRow, plModel;
+  if (P.model === 'terrain') {
+    if (full) { fsplRow = full.Lbfs; extraRow = ter.Lb - full.Lbfs; clutterRow = full.Lb - ter.Lb; plModel = full.Lb; }
+    else { plModel = terrainFlatLoss(f, dist, P.hTx, P.hRx, P.env); fsplRow = calcFSPL(f, dist); extraRow = plModel - fsplRow; clutterRow = 0; }
+  } else {
+    const det = getPathLossDetail(f, dist, P.hTx, P.hRx, P.model, P.env);
+    fsplRow = calcFSPL(f, dist); extraRow = det.base - fsplRow; clutterRow = det.native ? null : det.clutter; plModel = det.total;
+  }
+  const atmIncluded = P.model === 'itu-r-p676' || P.model === 'itu-r-p530';
+  const atmAtten = calcAtmosphericAtten(f) * atmPathKm(dist);
+  const totalPathLoss = plModel + P.rain + P.extra + (atmIncluded ? 0 : atmAtten);
+  const prx = eirpDbm - totalPathLoss + P.rxG - P.rxL;
+  const margin = prx - P.sens;
+
+  // ---- ruido ----
+  const bwHz = P.bw * 1000;
+  const noiseFloor = 10 * Math.log10(1.380649e-23 * P.T * bwHz * 1000);
+  const noiseFloorRx = noiseFloor + P.nf;
+  const snr = prx - noiseFloorRx, cn = prx - noiseFloor;
+  const ebno = snr + 10 * Math.log10(1 / 0.8);
+
+  // ---- Fresnel / horizonte ----
+  const wl = 299.792458 / f;
+  const f1 = fresnelRadiusMid(1, dist, f), f2 = fresnelRadiusMid(2, dist, f), f60 = 0.6 * f1;
+  const gTx = prof ? prof.h[0] : 0, gRx = prof ? prof.h[prof.nLink - 1] : 0;
+  const horTx = radioHorizon(P.hTx), horRx = radioHorizon(P.hRx), horTotal = horTx + horRx;
+
+  // ---- folga minima sobre relevo + clutter ----
+  let clearMin = null, clearAt = null;
+  if (prof) {
+    const n = prof.nLink, D = prof.d[n - 1], hts = gTx + P.hTx, hrs = gRx + P.hRx;
+    for (let i = 1; i < n - 1; i++) {
+      const di = prof.d[i], bulge = di * (D - di) / (2 * ae) * 1000;
+      const los = hts + (hrs - hts) * di / D;
+      const top = prof.h[i] + m.R + bulge;
+      const F1 = Math.sqrt(wl * di * 1000 * (D - di) * 1000 / (D * 1000));
+      const c = (los - top) / F1;
+      if (clearMin === null || c < clearMin) { clearMin = c; clearAt = di; }
     }
-    return { ...m, pts };
-  });
-
-  // Received power line
-  const rxPts = [];
-  for (let i = 0; i <= steps; i++) {
-    const d = (i / steps) * maxDist;
-    if (d < 0.01) { rxPts.push(null); continue; }
-    const pl = getPathLoss(freq, d, hTx, hRx, model, env) + rain + extra;
-    rxPts.push(eirpDbm - pl + rxGain - rxCable);
   }
 
-  // Y axis range for path loss
-  const minPL = Math.floor((Math.min(...allPL.filter(x=>x!==null)) - 10) / 10) * 10;
-  const maxPL = Math.ceil((Math.max(...allPL.filter(x=>x!==null)) + 10) / 10) * 10;
-
-  // Grid
-  ctx.strokeStyle = '#1e283820';
-  ctx.lineWidth = 0.5;
-  const ySteps = 6;
-  for (let i = 0; i <= ySteps; i++) {
-    const y = pad.t + (i / ySteps) * gH;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
-    const val = maxPL - (i / ySteps) * (maxPL - minPL);
-    ctx.fillStyle = '#6b7889'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right';
-    ctx.fillText(val.toFixed(0), pad.l - 5, y + 3);
+  // ---- curvas ao longo do azimute ----
+  const curves = [];
+  let maxRange = null, maxRangeNote = '';
+  const plMaxAllowed = eirpDbm + P.rxG - P.rxL - P.sens - P.rain - P.extra;
+  if (prof) {
+    const nTot = prof.n, step = Math.max(1, Math.ceil(nTot / 320));
+    const ptsT = [], ptsS = [];
+    const hz = new Float64Array(nTot);
+    for (let j = 1; j < nTot; j += step) {
+      const lt = P1812.core(Object.assign({}, coreBase, { n: j + 1 })).Lb;
+      ptsT.push([prof.d[j], lt]);
+      if (P.model === 'terrain') ptsS.push([prof.d[j], P1812.core(Object.assign({}, coreBase, { h: hz, n: j + 1 })).Lb]);
+    }
+    if (P.model === 'terrain') {
+      curves.push({ label: 'P.1812 relevo (azimute do enlace)', color: '#f97316', width: 2, pts: ptsT });
+      curves.push({ label: 'P.1812 Terra lisa', color: '#a78bfa', width: 1, alpha: 0.75, dash: [4, 3], pts: ptsS });
+      let last = null, firstOut = null;
+      for (const p of ptsT) { if (p[1] <= plMaxAllowed) last = p[0]; else if (firstOut === null) firstOut = p[0]; }
+      maxRange = last; maxRangeNote = (last !== null && firstOut === null) ? '> ' : '';
+    } else if (P.useTerrain) {
+      curves.push({ label: 'P.1812 relevo', color: '#2dd4bf', width: 1.2, alpha: 0.8, dash: [5, 3], pts: ptsT });
+    }
   }
-  const xSteps = 5;
-  for (let i = 0; i <= xSteps; i++) {
-    const x = pad.l + (i / xSteps) * gW;
-    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gH); ctx.stroke();
-    const val = (i / xSteps) * maxDist;
-    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center';
-    ctx.fillText(val.toFixed(1), x, pad.t + gH + 14);
+  const maxDist = prof ? prof.d[prof.n - 1] : Math.max(dist * 2, 5);
+  if (P.model !== 'terrain' || !prof) {
+    const pts = [];
+    for (let i = 1; i <= 220; i++) { const d = maxDist * i / 220; pts.push([d, getPathLoss(f, d, P.hTx, P.hRx, P.model, P.env)]); }
+    curves.unshift({ label: (MODEL_INFO[P.model] || {}).name || P.model, color: '#f97316', width: 2, pts });
+    let d = 0.05, last = null;
+    while (d < 3000) {
+      const pl = getPathLoss(f, d, P.hTx, P.hRx, P.model, P.env) + P.rain + P.extra;
+      if (eirpDbm - pl + P.rxG - P.rxL < P.sens) break;
+      last = d; d *= 1.01;
+    }
+    maxRange = last; maxRangeNote = (last !== null && d >= 3000) ? '> ' : '';
+  }
+  const fsplPts = [];
+  for (let i = 1; i <= 120; i++) { const d = maxDist * i / 120; fsplPts.push([d, calcFSPL(f, d)]); }
+  curves.push({ label: 'FSPL', color: '#38bdf8', width: 1, alpha: 0.5, pts: fsplPts });
+
+  // ===== ATUALIZA UI =====
+  S.lastP = Object.assign({}, P, { eirpDbm });
+  const good = margin >= P.fade, ok = margin >= 0;
+  const cls = good ? 'good' : ok ? 'warn' : 'bad';
+  $('res-time').textContent = new Date().toLocaleTimeString();
+  $('hdr-status').textContent = good ? 'LINK OK' : ok ? 'MARGINAL' : 'NO LINK';
+  $('hdr-status').style.color = good ? '#4ade80' : ok ? '#fbbf24' : '#fb7185';
+  $('hdr-dist').innerHTML = (dist >= 100 ? dist.toFixed(0) : dist.toFixed(2)) + U('km');
+  onModelChange();
+
+  $('r-eirp').innerHTML = eirpDbm.toFixed(1) + U('dBm');
+  $('r-ptx').innerHTML = P.txDbm.toFixed(1) + U('dBm');
+  $('r-gtx').innerHTML = sgn(P.txG) + U('dBi');
+  $('r-ltx').innerHTML = '-' + P.txL.toFixed(1) + U('dB');
+  $('r-pl').innerHTML = totalPathLoss.toFixed(1) + U('dB');
+  $('r-fspl').innerHTML = fsplRow.toFixed(1) + U('dB');
+  $('r-model-extra').innerHTML = sgn(extraRow) + U('dB');
+  $('r-clutter').innerHTML = clutterRow === null ? 'nativo no modelo' : sgn(clutterRow) + U('dB');
+  $('r-rain').innerHTML = P.rain.toFixed(1) + U('dB');
+  $('r-extra').innerHTML = (P.extra + (atmIncluded ? 0 : atmAtten)).toFixed(2) + U('dB');
+  $('r-grx').innerHTML = sgn(P.rxG) + U('dBi');
+  $('r-lrx').innerHTML = '-' + P.rxL.toFixed(1) + U('dB');
+  const prxEl = $('r-prx');
+  prxEl.innerHTML = prx.toFixed(1) + U('dBm'); prxEl.className = 'v ' + cls;
+  $('r-sens').innerHTML = P.sens.toFixed(0) + U('dBm');
+  const marEl = $('r-margin');
+  marEl.innerHTML = sgn(margin) + U('dB'); marEl.className = 'v ' + cls;
+  const mFill = $('margin-fill');
+  mFill.style.width = clamp((margin + 20) / 60 * 100, 0, 100) + '%';
+  mFill.className = 'gauge-fill ' + cls;
+  $('margin-label').textContent = sgn(margin) + ' dB';
+  const mapMar = $('map-margin');
+  mapMar.textContent = sgn(margin) + ' dB'; mapMar.className = 'big ' + cls;
+  $('map-status-text').textContent = (good ? 'Enlace confiavel' : ok ? 'Margem insuficiente' : 'Enlace inviavel') + (S.decoupled ? ' (desacoplado do mapa)' : '');
+
+  $('r-noise').innerHTML = noiseFloorRx.toFixed(1) + U('dBm');
+  const snrEl = $('r-snr');
+  snrEl.innerHTML = snr.toFixed(1) + U('dB'); snrEl.className = 'v ' + (snr > 20 ? 'good' : snr > 10 ? 'warn' : 'bad');
+  $('r-cn').innerHTML = cn.toFixed(1) + U('dB');
+  $('r-ebno').innerHTML = ebno.toFixed(1) + U('dB');
+  const snrFill = $('snr-fill');
+  snrFill.style.width = clamp((snr + 10) / 50 * 100, 0, 100) + '%';
+  snrFill.className = 'gauge-fill ' + (snr > 20 ? 'good' : snr > 10 ? 'warn' : 'bad');
+  $('snr-label').textContent = snr.toFixed(1) + ' dB SNR';
+
+  $('r-f1').innerHTML = f1.toFixed(2) + U('m');
+  $('r-f2').innerHTML = f2.toFixed(2) + U('m');
+  $('r-f60').innerHTML = f60.toFixed(2) + U('m');
+  const fi = $('fresnel-info');
+  if (clearMin === null) { fi.className = 'info-box'; fi.innerHTML = 'Para LOS desimpedido, manter 60% da 1a zona livre de obstaculos (ITU-R P.530).'; }
+  else if (clearMin >= 0.6) { fi.className = 'info-box ok'; fi.innerHTML = 'Folga minima de <strong>' + (clearMin * 100).toFixed(0) + '% de F1</strong> a ' + clearAt.toFixed(2) + ' km: criterio de 60% atendido (relevo + clutter).'; }
+  else if (clearMin >= 0) { fi.className = 'info-box warn-box'; fi.innerHTML = 'Folga minima de <strong>' + (clearMin * 100).toFixed(0) + '% de F1</strong> a ' + clearAt.toFixed(2) + ' km: abaixo dos 60% recomendados. Ha perda por difracao.'; }
+  else { fi.className = 'info-box bad-box'; fi.innerHTML = 'Visada obstruida: o obstaculo dominante invade <strong>' + (-clearMin).toFixed(2) + ' F1</strong> acima da linha de visada a ' + clearAt.toFixed(2) + ' km.'; }
+
+  $('r-wl').innerHTML = wl >= 1 ? wl.toFixed(3) + U('m') : (wl * 100).toFixed(2) + U('cm');
+  $('r-eirp2').innerHTML = (eirpW >= 1000 ? (eirpW / 1000).toFixed(2) + U('kW') : eirpW.toFixed(2) + U('W'));
+  $('r-hor-tx').innerHTML = horTx.toFixed(1) + U('km');
+  $('r-hor-rx').innerHTML = horRx.toFixed(1) + U('km');
+  $('r-hor-total').innerHTML = horTotal.toFixed(1) + U('km');
+  $('r-max-range').innerHTML = maxRange === null ? '--' : maxRangeNote + maxRange.toFixed(maxRange < 10 ? 2 : 1) + U('km');
+  $('r-atm').innerHTML = calcAtmosphericAtten(f).toFixed(4) + U('dB/km');
+
+  // relevo & morfologia
+  const tsrc = prof ? prof.src : 'none';
+  $('r-tsrc').textContent = TSRC_LABEL[tsrc] || tsrc;
+  $('tx-ground').value = prof ? gTx.toFixed(0) : '--';
+  $('rx-ground').value = prof ? gRx.toFixed(0) : '--';
+  $('tx-amsl').value = prof ? (gTx + P.hTx).toFixed(0) : '--';
+  $('rx-amsl').value = prof ? (gRx + P.hRx).toFixed(0) : '--';
+  if (full) {
+    const losEl = $('r-los');
+    losEl.textContent = full.los ? 'LOS' : 'NLOS (difracao)';
+    losEl.className = 'v ' + (full.los ? 'good' : 'warn');
+    const cEl = $('r-clear');
+    cEl.textContent = clearMin.toFixed(2) + ' F1 @ ' + clearAt.toFixed(2) + ' km';
+    cEl.className = 'v ' + (clearMin >= 0.6 ? 'good' : clearMin >= 0 ? 'warn' : 'bad');
+    $('r-ld').innerHTML = full.Ld.toFixed(1) + U('dB');
+    $('r-dec-sph').innerHTML = sgn(sph.Lb - sph.Lbfs) + U('dB');
+    $('r-dec-ter').innerHTML = sgn(ter.Lb - sph.Lb) + U('dB');
+    $('r-dec-mor').innerHTML = sgn(full.Lb - ter.Lb) + U('dB');
+    setTerrainStatus(TSRC_LABEL[tsrc] + ((tsrc === 'srtm' || tsrc === 'partial') ? ' | z' + prof.z + ', ' + prof.tiles + ' tiles' : '') + ' | cota TX ' + gTx.toFixed(0) + ' m, RX ' + gRx.toFixed(0) + ' m');
+  } else {
+    ['r-los', 'r-clear'].forEach(id => { $(id).textContent = '--'; $(id).className = 'v'; });
+    ['r-ld', 'r-dec-sph', 'r-dec-ter', 'r-dec-mor'].forEach(id => { $(id).innerHTML = '--' + U('dB'); });
+    setTerrainStatus(S.decoupled ? 'enlace desacoplado do mapa (sem perfil).' : 'sem perfil.');
   }
 
-  // Labels
-  ctx.fillStyle = '#3f4a5b'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
-  ctx.fillText('Distancia (km)', pad.l + gW / 2, H - 2);
-  ctx.save(); ctx.translate(10, pad.t + gH / 2); ctx.rotate(-Math.PI / 2);
-  ctx.fillText('Path Loss (dB)', 0, 0); ctx.restore();
+  // conformidade ITU
+  $('itu-compliance').innerHTML = buildCompliance(P, dist, margin, horTotal, full, atmAtten, prof);
 
-  // Draw lines
-  datasets.forEach(ds => {
-    ctx.strokeStyle = ds.color; ctx.lineWidth = ds.id === model ? 2 : 1;
-    ctx.globalAlpha = ds.id === model ? 1 : 0.4;
-    ctx.beginPath();
-    let started = false;
-    ds.pts.forEach((val, i) => {
-      if (val === null) return;
-      const x = pad.l + (i / steps) * gW;
-      const y = pad.t + ((maxPL - val) / (maxPL - minPL)) * gH;
-      if (!started) { ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  });
+  // mapa
+  S.lastLink = { prof, full, brg, dist, f, ae };
+  updateMapLink(prof, full, f, brg);
 
-  // Sensitivity threshold line
-  // Show as horizontal conceptual line (received power = sensitivity)
-  // => path loss where Pr = sens => PL_max = EIRP + rxGain - rxCable - sens
-  const plMax = eirpDbm + rxGain - rxCable - rxSens - rain - extra;
-  if (plMax >= minPL && plMax <= maxPL) {
-    const yThresh = pad.t + ((maxPL - plMax) / (maxPL - minPL)) * gH;
-    ctx.strokeStyle = '#fb7185'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
-    ctx.beginPath(); ctx.moveTo(pad.l, yThresh); ctx.lineTo(pad.l + gW, yThresh); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = '#fb7185'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
-    ctx.fillText('PL max (' + plMax.toFixed(0) + ' dB)', pad.l + 4, yThresh - 4);
-  }
+  // graficos
+  const modelName = $('prop-model').selectedOptions[0].text;
+  S.charts = {
+    prop: { curves, plMax: plMaxAllowed, curDist: dist, maxDist },
+    prof: prof ? { d: prof.d, h: prof.h, n: prof.nLink, R: m.R, hts: gTx + P.hTx, hrs: gRx + P.hRx, hTx: P.hTx, hRx: P.hRx,
+                   fMHz: f, ae, los: full.los, dbp: full.dbp, clearMin, clearAt, src: tsrc }
+                 : { d: [0, dist], h: [0, 0], n: 2, R: 0, hts: P.hTx, hrs: P.hRx, hTx: P.hTx, hRx: P.hRx, fMHz: f, ae, los: true, dbp: null, src: 'none' },
+  };
+  drawCharts();
+  $('chart1-meta').textContent = P.model === 'terrain' ? 'ITU-R P.1812-6' : modelName.replace(/\s*\(.*$/, '');
+  $('chart2-meta').textContent = 'F1 = ' + f1.toFixed(1) + ' m | k = ' + P.k.toFixed(2) + (m.R ? ' | clutter ' + m.R + ' m' : '');
 
-  // Current distance marker
-  const xCur = pad.l + (currentDist / maxDist) * gW;
-  ctx.strokeStyle = '#4ade8060'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(xCur, pad.t); ctx.lineTo(xCur, pad.t + gH); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#4ade80'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
-  ctx.fillText(currentDist.toFixed(1) + ' km', xCur, pad.t - 3);
-
-  // Legend
-  let lx = pad.l + 5, ly = pad.t + 12;
-  datasets.forEach(ds => {
-    ctx.fillStyle = ds.color; ctx.fillRect(lx, ly - 4, 12, 2);
-    ctx.fillStyle = '#b6c2d4'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
-    ctx.fillText(ds.label, lx + 16, ly);
-    lx += ctx.measureText(ds.label).width + 30;
-  });
+  // mancha de cobertura
+  updateCoverage(P);
 }
 
-function drawFresnelChart(freq, dKm, hTx, hRx) {
-  const canvas = document.getElementById('fresnelChart');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.parentElement.clientWidth - 16;
-  const H = Math.max(canvas.parentElement.clientHeight, 220);
-  canvas.width = W * 2; canvas.height = H * 2;
+function buildCompliance(P, dist, margin, horTotal, full, atmAtten, prof) {
+  const box = (cls, html) => '<div class="info-box ' + cls + '">' + html + '</div>';
+  const f = P.f, m = MORPH[P.env];
+  let h = '';
+  if (P.model === 'terrain') {
+    h += box('teal-box', '<strong>ITU-R P.1812-6</strong> (p = 50% do tempo e dos locais, pol. vertical): espaco livre + difracao delta-Bullington + tropodifusao. ae = ' + (6371 * P.k).toFixed(0) +
+      ' km (k = ' + P.k.toFixed(2) + '). Morfologia: clutter R = ' + m.R + ' m nos pontos intermediarios do perfil.' + (prof ? '' : ' Sem perfil: Terra lisa.'));
+    if (f < 30 || f > 6000) h += box('warn-box', '<strong>Fora da validade:</strong> P.1812 cobre 30 MHz a 6 GHz.');
+  } else if (NATIVE_MORPH.has(P.model)) {
+    h += box('teal-box', '<strong>Morfologia</strong> aplicada pela categoria nativa do modelo (Hata/COST: ' + HATA_LABEL[m.hata] + '; SUI cat. ' + m.sui + '; n = ' + m.n.toFixed(1) + ').');
+  } else if (f >= 30) {
+    const cr = clutterP2108(f, P.hRx, P.env, dist);
+    h += box('teal-box', '<strong>ITU-R P.2108</strong>: perda de clutter no terminal RX (h = ' + P.hRx + ' m, ' + m.label + '): ' + cr.toFixed(1) + ' dB' +
+      (f > 3000 ? ' (sec. 3.2, estatistico, p = 50%).' : ' (sec. 3.1, ganho de altura).'));
+  }
+  const mi = MODEL_INFO[P.model] || {};
+  if (P.model !== 'terrain' && !modelValidFor(P.model, f)) h += box('warn-box', '<strong>' + mi.name + ':</strong> frequencia fora da faixa de validade (' + mi.fmin + ' a ' + mi.fmax + ' MHz); valores limitados a faixa.');
+  if (mi.dmax && dist > mi.dmax) h += box('warn-box', '<strong>' + mi.name + ':</strong> distancia acima de ' + mi.dmax + ' km, resultado extrapolado.');
+  if (full) {
+    h += box(full.los ? 'ok' : 'warn-box', '<strong>Perfil (Bullington):</strong> ' + (full.los ? 'visada livre com clutter' : 'percurso obstruido; ponto de Bullington a ' + fmt(full.dbp, 2) + ' km') + '. Ld = ' + full.Ld.toFixed(1) + ' dB.');
+  } else if (dist > horTotal) {
+    h += box('bad-box', '<strong>Aviso:</strong> distancia (' + dist.toFixed(1) + ' km) excede o horizonte radio (' + horTotal.toFixed(1) + ' km). Enlace NLOS.');
+  }
+  if (margin < P.fade) h += box('warn-box', '<strong>ITU-R P.530:</strong> margem (' + margin.toFixed(1) + ' dB) abaixo do requerido (' + P.fade + ' dB) para a disponibilidade especificada.');
+  else h += box('ok', '<strong>ITU-R P.530:</strong> margem de ' + margin.toFixed(1) + ' dB atende ao requisito de ' + P.fade + ' dB.');
+  if (f > 10000) {
+    h += box('', '<strong>ITU-R P.838:</strong> acima de 10 GHz a chuva e significativa. Configurado: ' + P.rain.toFixed(1) + ' dB.');
+    h += box('', '<strong>ITU-R P.676:</strong> atenuacao atmosferica estimada: ' + atmAtten.toFixed(2) + ' dB no enlace.');
+  }
+  if (f < 30) h += box('', '<strong>ITU-R P.533 / HF:</strong> propagacao ionosferica pode estender o alcance muito alem do horizonte. Modelos de solo tem validade limitada em HF.');
+  return h;
+}
+
+function updateMapLink(prof, full, f, brg) {
+  const t = S.txMarker.getLatLng(), r = S.rxMarker.getLatLng();
+  S.linkLine.setLatLngs([t, r]);
+  S.linkLine.setStyle({ color: full && !full.los ? '#fbbf24' : '#4ade80' });
+  S.fresnelGroup.clearLayers();
+  if (!prof || S.decoupled) return;
+  const n = prof.nLink, D = prof.d[n - 1] * 1000, wl = 299.792458 / f;
+  const step = Math.max(1, Math.floor(n / 120)), left = [], right = [];
+  for (let i = 0; i < n; i += step) {
+    const di = prof.d[i] * 1000, rad = Math.sqrt(Math.max(0, wl * di * (D - di) / D)) / 1000;
+    left.push(destPoint(prof.lat[i], prof.lon[i], brg - 90, rad));
+    right.push(destPoint(prof.lat[i], prof.lon[i], brg + 90, rad));
+  }
+  left.push([prof.lat[n - 1], prof.lon[n - 1]]);
+  L.polygon(left.concat(right.reverse()), { color: '#4ade80', weight: 1, opacity: 0.55, fillColor: '#4ade80', fillOpacity: 0.12, interactive: false }).addTo(S.fresnelGroup);
+}
+
+// ===== MANCHA DE COBERTURA =====
+function coverageKey(P) {
+  return [P.txLat.toFixed(5), P.txLon.toFixed(5), P.f, P.hTx, P.hRx, P.model, P.env, P.useTerrain, P.k, P.N0, P.covRadius, P.radials].join('|');
+}
+function setCovProgress(frac, txt) {
+  const pb = $('cov-progress');
+  if (frac === null) pb.style.visibility = 'hidden';
+  else { pb.style.visibility = 'visible'; $('cov-progress-bar').style.width = (frac * 100).toFixed(0) + '%'; }
+  if (txt) $('cov-status').innerHTML = txt;
+}
+async function updateCoverage(P) {
+  const key = coverageKey(P);
+  if (key === S.covKey && S.cov) { renderCoverage(); return; }
+  S.covKey = key;
+  const job = ++S.covJob;
+  setCovProgress(0, 'Mancha: calculando...');
+  const cov = await computeCoverage(P, job);
+  if (!cov || job !== S.covJob) return;
+  S.cov = cov;
+  setCovProgress(null);
+  renderCoverage();
+}
+async function computeCoverage(P, job) {
+  const N = P.radials, Rk = P.covRadius;
+  const stepM = Math.max(30, Rk * 1000 / 240), M = Math.ceil(Rk * 1000 / stepM), step = Rk / M;
+  const d = new Float64Array(M + 1);
+  for (let j = 0; j <= M; j++) d[j] = j * step;
+  const pl = new Float32Array(N * (M + 1));
+  const atm = (P.model === 'itu-r-p676' || P.model === 'itu-r-p530') ? 0 : calcAtmosphericAtten(P.f);
+  const m = MORPH[P.env];
+  const out = { N, M, step, pl, lat0: P.txLat, lon0: P.txLon, R: Rk, src: 'none', model: P.model };
+  if (P.model !== 'terrain') {
+    const row = new Float32Array(M + 1);
+    for (let j = 1; j <= M; j++) row[j] = getPathLoss(P.f, d[j], P.hTx, P.hRx, P.model, P.env) + atm * d[j];
+    row[0] = row[1];
+    for (let r = 0; r < N; r++) pl.set(row, r * (M + 1));
+    out.src = 'model';
+    return out;
+  }
+  let sm = null;
+  if (P.useTerrain) {
+    const pN = destPoint(P.txLat, P.txLon, 0, Rk), pS = destPoint(P.txLat, P.txLon, 180, Rk);
+    const pE = destPoint(P.txLat, P.txLon, 90, Rk), pW = destPoint(P.txLat, P.txLon, 270, Rk);
+    const bb = [pS[0] - 0.01, pN[0] + 0.01, pW[1] - 0.01, pE[1] + 0.01];
+    const z = chooseZoom(bb, 64, 12);
+    setCovProgress(0, 'Mancha: carregando relevo (z' + z + ')...');
+    sm = await loadSampler(bb, z);
+    if (job !== S.covJob) return null;
+    out.src = sm.ok === sm.total ? 'srtm' : sm.ok > 0 ? 'partial' : 'flat-fail';
+    out.z = z;
+    if (!sm.ok) sm = null;
+  } else out.src = 'flat';
+  const h = new Float64Array(M + 1);
+  const base = { d, h, R: m.R, n: 2, htg: P.hTx, hrg: P.hRx, f: P.f / 1000, ae: 6371 * P.k, omega: m.omega, N0: P.N0, pol: 2 };
+  let tLast = performance.now();
+  for (let r = 0; r < N; r++) {
+    const o = r * (M + 1);
+    if (!sm && r > 0) { pl.set(pl.subarray(0, M + 1), o); continue; }
+    if (sm) {
+      const brg = r * 360 / N;
+      for (let j = 0; j <= M; j++) {
+        const p = destPoint(P.txLat, P.txLon, brg, d[j]);
+        const v = sampleElev(sm, p[0], p[1]);
+        h[j] = Number.isFinite(v) ? Math.max(0, v) : (j ? h[j - 1] : 0);
+      }
+    } else h.fill(0);
+    for (let j = 1; j <= M; j++) { base.n = j + 1; pl[o + j] = P1812.core(base).Lb + atm * d[j]; }
+    pl[o] = pl[o + 1];
+    if (performance.now() - tLast > 40) {
+      setCovProgress((r + 1) / N, 'Mancha: ' + Math.round((r + 1) / N * 100) + '%');
+      await yieldUI();
+      if (job !== S.covJob) return null;
+      tLast = performance.now();
+    }
+  }
+  return out;
+}
+function covPL(cov, lat, lon) {
+  const dist = haversine(cov.lat0, cov.lon0, lat, lon);
+  if (dist > cov.R) return null;
+  const rf = bearing(cov.lat0, cov.lon0, lat, lon) / (360 / cov.N);
+  const r0 = Math.floor(rf) % cov.N, r1 = (r0 + 1) % cov.N, a = rf - Math.floor(rf);
+  const jf = dist / cov.step, j0 = Math.min(Math.floor(jf), cov.M), j1 = Math.min(j0 + 1, cov.M), b = jf - Math.floor(jf);
+  const W = cov.M + 1, p = cov.pl;
+  const v0 = p[r0 * W + j0] * (1 - b) + p[r0 * W + j1] * b;
+  const v1 = p[r1 * W + j0] * (1 - b) + p[r1 * W + j1] * b;
+  return v0 * (1 - a) + v1 * a;
+}
+function prOffset(P) { return P.eirpDbm + P.rxG - P.rxL - P.rain - P.extra; }
+function coveragePrAt(lat, lon) {
+  if (!S.cov || !S.lastP) return null;
+  const v = covPL(S.cov, lat, lon);
+  return v === null ? null : prOffset(S.lastP) - v;
+}
+function renderCoverage() {
+  const cov = S.cov, P = S.lastP;
+  if (!cov || !P) return;
+  const off = prOffset(P), thr = [P.sens + P.fade + 10, P.sens + P.fade, P.sens];
+  const pN = destPoint(cov.lat0, cov.lon0, 0, cov.R)[0], pS = destPoint(cov.lat0, cov.lon0, 180, cov.R)[0];
+  const pE = destPoint(cov.lat0, cov.lon0, 90, cov.R)[1], pW = destPoint(cov.lat0, cov.lon0, 270, cov.R)[1];
+  const yN = mercY(pN), yS = mercY(pS);
+  const W = 560, H = Math.max(10, Math.round(W * (yN - yS) / ((pE - pW) * DEG)));
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), px = img.data;
+  for (let j = 0; j < H; j++) {
+    const lat = mercLat(yN - (j + 0.5) / H * (yN - yS));
+    for (let i = 0; i < W; i++) {
+      const lon = pW + (i + 0.5) / W * (pE - pW);
+      const v = covPL(cov, lat, lon);
+      if (v === null) continue;
+      const pr = off - v;
+      const c = pr >= thr[0] ? 0 : pr >= thr[1] ? 1 : pr >= thr[2] ? 2 : -1;
+      if (c < 0) continue;
+      const k = (j * W + i) * 4, col = COV_COLORS[c];
+      px[k] = col[0]; px[k + 1] = col[1]; px[k + 2] = col[2]; px[k + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  S.covGroup.clearLayers();
+  L.imageOverlay(cv.toDataURL(), [[pS, pW], [pN, pE]], { opacity: 0.5, interactive: false }).addTo(S.covGroup);
+  L.circle([cov.lat0, cov.lon0], { radius: cov.R * 1000, color: '#f97316', weight: 1, opacity: 0.55, fill: false, dashArray: '6,5', interactive: false }).addTo(S.covGroup);
+  // legenda
+  $('lg-c1').textContent = '>= ' + thr[0].toFixed(0) + ' dBm';
+  $('lg-c2').textContent = thr[1].toFixed(0) + ' a ' + thr[0].toFixed(0);
+  $('lg-c3').textContent = thr[2].toFixed(0) + ' a ' + thr[1].toFixed(0);
+  // estatistica ponderada por area (anel ~ d)
+  let A = 0, Ac = 0, Ar = 0;
+  const Wd = cov.M + 1;
+  for (let r = 0; r < cov.N; r++) for (let j = 1; j <= cov.M; j++) {
+    const w = j, pr = off - cov.pl[r * Wd + j];
+    A += w; if (pr >= P.sens) Ac += w; if (pr >= P.sens + P.fade) Ar += w;
+  }
+  const pc = 100 * Ac / A, pr2 = 100 * Ar / A;
+  $('r-cov-area').innerHTML = pc.toFixed(1) + U('% de ' + cov.R + ' km');
+  $('r-cov-rel').innerHTML = pr2.toFixed(1) + U('%');
+  $('r-cov-area').className = 'v ' + (pc >= 90 ? 'good' : pc >= 50 ? 'warn' : 'bad');
+  $('r-cov-rel').className = 'v ' + (pr2 >= 90 ? 'good' : pr2 >= 50 ? 'warn' : 'bad');
+  const srcTxt = cov.src === 'model' ? 'modelo (radialmente simetrica)' : (TSRC_LABEL[cov.src] || cov.src) + ((cov.src === 'srtm' || cov.src === 'partial') ? ' z' + cov.z : '');
+  $('cov-status').innerHTML = 'Mancha <b>' + cov.R + ' km</b> | cobre <b>' + pc.toFixed(0) + '%</b><br>' + cov.N + ' radiais | ' + srcTxt;
+}
+
+// ===== GRAFICOS =====
+function setupCanvas(canvas) {
+  const parent = canvas.parentElement;
+  const W = Math.max(220, parent.clientWidth - 16), H = Math.max(150, parent.clientHeight - 12);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
   canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  ctx.scale(2, 2);
-
-  ctx.fillStyle = '#0e131b';
-  ctx.fillRect(0, 0, W, H);
-
-  const pad = { l: 50, r: 20, t: 20, b: 28 };
-  const gW = W - pad.l - pad.r;
-  const gH = H - pad.t - pad.b;
-  const wl = 299.792458 / freq;
-  const dM = dKm * 1000;
-  const steps = 200;
-
-  // Compute Fresnel radii along the path
-  const fresnelPts = [];
-  let maxR = 0;
-  for (let i = 0; i <= steps; i++) {
-    const d1 = (i / steps) * dM;
-    const d2 = dM - d1;
-    if (d1 <= 0 || d2 <= 0) { fresnelPts.push(0); continue; }
-    const r = Math.sqrt(wl * d1 * d2 / dM);
-    fresnelPts.push(r);
-    if (r > maxR) maxR = r;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#0e131b'; ctx.fillRect(0, 0, W, H);
+  return { ctx, W, H };
+}
+function niceStep(range, target) {
+  const raw = range / target, p = Math.pow(10, Math.floor(Math.log10(raw))), r = raw / p;
+  return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * p;
+}
+function drawCharts() {
+  if (!S.charts) return;
+  drawPropChart(S.charts.prop);
+  drawProfileChart(S.charts.prof);
+}
+function drawPropChart(cfg) {
+  const { ctx, W, H } = setupCanvas($('propChart'));
+  const pad = { l: 44, r: 12, t: 16, b: 26 }, gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+  let lo = Infinity, hi = -Infinity;
+  cfg.curves.forEach(c => c.pts.forEach(p => { if (Number.isFinite(p[1])) { lo = Math.min(lo, p[1]); hi = Math.max(hi, p[1]); } }));
+  if (!Number.isFinite(lo)) return;
+  if (cfg.plMax > lo - 10 && cfg.plMax < hi + 25) hi = Math.max(hi, cfg.plMax);
+  const ys = niceStep(hi - lo + 10, 5);
+  const yMin = Math.floor((lo - 3) / ys) * ys, yMax = Math.ceil((hi + 3) / ys) * ys;
+  const X = d => pad.l + d / cfg.maxDist * gW, Y = v => pad.t + (yMax - v) / (yMax - yMin) * gH;
+  ctx.font = '9px JetBrains Mono'; ctx.lineWidth = 0.5;
+  for (let v = yMin; v <= yMax + 1e-9; v += ys) {
+    ctx.strokeStyle = '#1e2838'; ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(pad.l + gW, Y(v)); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'right'; ctx.fillText(v.toFixed(0), pad.l - 5, Y(v) + 3);
   }
-
-  // Line of sight height profile
-  const losH = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    losH.push(hTx * (1 - t) + hRx * t);
+  const xs = niceStep(cfg.maxDist, 5);
+  for (let d = 0; d <= cfg.maxDist + 1e-9; d += xs) {
+    ctx.strokeStyle = '#1e2838'; ctx.beginPath(); ctx.moveTo(X(d), pad.t); ctx.lineTo(X(d), pad.t + gH); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center'; ctx.fillText(d.toFixed(xs < 1 ? 1 : 0), X(d), pad.t + gH + 13);
   }
-
-  // Earth curvature correction
-  const Re = 6371000 * 4 / 3; // effective earth radius
-  const curvature = [];
-  for (let i = 0; i <= steps; i++) {
-    const d1 = (i / steps) * dM;
-    const d2 = dM - d1;
-    curvature.push((d1 * d2) / (2 * Re));
+  ctx.fillStyle = '#3f4a5b'; ctx.font = '8px JetBrains Mono';
+  ctx.fillText('Distancia (km)', pad.l + gW / 2, H - 3);
+  ctx.save(); ctx.translate(9, pad.t + gH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('Path Loss (dB)', 0, 0); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, gW, gH); ctx.clip();
+  for (let k = cfg.curves.length - 1; k >= 0; k--) {
+    const c = cfg.curves[k];
+    ctx.strokeStyle = c.color; ctx.lineWidth = c.width || 1; ctx.globalAlpha = c.alpha || 1; ctx.setLineDash(c.dash || []);
+    ctx.beginPath();
+    c.pts.forEach((p, i) => { if (i === 0) ctx.moveTo(X(p[0]), Y(p[1])); else ctx.lineTo(X(p[0]), Y(p[1])); });
+    ctx.stroke();
   }
-
-  // Y range
-  const allY = [];
-  for (let i = 0; i <= steps; i++) {
-    allY.push(losH[i] + fresnelPts[i]);
-    allY.push(losH[i] - fresnelPts[i]);
-    allY.push(-curvature[i]);
+  ctx.globalAlpha = 1; ctx.setLineDash([]);
+  if (cfg.plMax >= yMin && cfg.plMax <= yMax) {
+    ctx.strokeStyle = '#fb7185'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(cfg.plMax)); ctx.lineTo(pad.l + gW, Y(cfg.plMax)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#fb7185'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'right';
+    ctx.fillText('PL max ' + cfg.plMax.toFixed(0) + ' dB (Pr = S)', pad.l + gW - 4, Y(cfg.plMax) - 4);
   }
-  const yMax = Math.max(...allY) + 5;
-  const yMin = Math.min(...allY, 0) - 5;
-
-  function mapX(i) { return pad.l + (i / steps) * gW; }
-  function mapY(v) { return pad.t + ((yMax - v) / (yMax - yMin)) * gH; }
-
-  // Grid
-  ctx.strokeStyle = '#1e283818'; ctx.lineWidth = 0.5;
-  for (let i = 0; i <= 5; i++) {
-    const y = pad.t + (i / 5) * gH;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
-    const val = yMax - (i / 5) * (yMax - yMin);
-    ctx.fillStyle = '#6b7889'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'right';
-    ctx.fillText(val.toFixed(0) + 'm', pad.l - 4, y + 3);
+  ctx.strokeStyle = '#4ade8070'; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(X(cfg.curDist), pad.t); ctx.lineTo(X(cfg.curDist), pad.t + gH); ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore();
+  ctx.fillStyle = '#4ade80'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'center';
+  ctx.fillText('RX ' + cfg.curDist.toFixed(2) + ' km', X(cfg.curDist), pad.t - 4);
+  let lx = pad.l + 6, ly = pad.t + 11;
+  cfg.curves.forEach(c => {
+    const w = ctx.measureText(c.label).width + 30;
+    if (lx + w > pad.l + gW) { lx = pad.l + 6; ly += 11; }
+    ctx.fillStyle = c.color; ctx.globalAlpha = c.alpha || 1; ctx.fillRect(lx, ly - 4, 12, 2); ctx.globalAlpha = 1;
+    ctx.fillStyle = '#b6c2d4'; ctx.textAlign = 'left'; ctx.fillText(c.label, lx + 16, ly);
+    lx += w;
+  });
+}
+function drawProfileChart(pc) {
+  const { ctx, W, H } = setupCanvas($('fresnelChart'));
+  const pad = { l: 44, r: 12, t: 18, b: 26 }, gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
+  const n = pc.n, D = pc.d[n - 1], wl = 299.792458 / pc.fMHz;
+  const ground = new Float64Array(n), top = new Float64Array(n), los = new Float64Array(n), f1 = new Float64Array(n);
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const di = pc.d[i], bulge = di * (D - di) / (2 * pc.ae) * 1000;
+    ground[i] = pc.h[i] + bulge;
+    top[i] = ground[i] + (i > 0 && i < n - 1 ? pc.R : 0);
+    los[i] = pc.hts + (pc.hrs - pc.hts) * di / D;
+    f1[i] = Math.sqrt(Math.max(0, wl * di * 1000 * (D - di) * 1000 / (D * 1000)));
+    lo = Math.min(lo, ground[i]); hi = Math.max(hi, top[i], los[i] + f1[i]);
   }
-  for (let i = 0; i <= 5; i++) {
-    const x = pad.l + (i / 5) * gW;
-    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gH); ctx.stroke();
-    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center';
-    ctx.fillText(((i / 5) * dKm).toFixed(1) + 'km', x, pad.t + gH + 14);
+  const span = Math.max(20, hi - lo);
+  const yMin = lo - 0.08 * span, yMax = hi + 0.12 * span;
+  const X = d => pad.l + d / D * gW, Y = v => pad.t + (yMax - v) / (yMax - yMin) * gH;
+  ctx.font = '8px JetBrains Mono'; ctx.lineWidth = 0.5;
+  const ys = niceStep(yMax - yMin, 5);
+  for (let v = Math.ceil(yMin / ys) * ys; v <= yMax; v += ys) {
+    ctx.strokeStyle = '#1e2838'; ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(pad.l + gW, Y(v)); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'right'; ctx.fillText(v.toFixed(0) + 'm', pad.l - 4, Y(v) + 3);
   }
-
-  // Earth curvature fill
-  ctx.beginPath();
-  ctx.moveTo(mapX(0), mapY(0));
-  for (let i = 0; i <= steps; i++) {
-    ctx.lineTo(mapX(i), mapY(-curvature[i]));
+  const xs = niceStep(D, 5);
+  for (let d = 0; d <= D + 1e-9; d += xs) {
+    ctx.strokeStyle = '#1e2838'; ctx.beginPath(); ctx.moveTo(X(d), pad.t); ctx.lineTo(X(d), pad.t + gH); ctx.stroke();
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'center'; ctx.fillText(d.toFixed(xs < 1 ? 1 : 0) + 'km', X(d), pad.t + gH + 13);
   }
-  ctx.lineTo(mapX(steps), mapY(yMin));
-  ctx.lineTo(mapX(0), mapY(yMin));
-  ctx.closePath();
-  ctx.fillStyle = '#1a2636';
-  ctx.fill();
-
-  // Curvature line
-  ctx.strokeStyle = '#3f4a5b'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let i = 0; i <= steps; i++) {
-    const x = mapX(i), y = mapY(-curvature[i]);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  ctx.save(); ctx.beginPath(); ctx.rect(pad.l, pad.t, gW, gH); ctx.clip();
+  // Fresnel 1 e 60%
+  const band = (k, fill, stroke, dash) => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) ctx.lineTo(X(pc.d[i]), Y(los[i] + k * f1[i]));
+    for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(pc.d[i]), Y(los[i] - k * f1[i]));
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+    ctx.strokeStyle = stroke; ctx.lineWidth = 0.8; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]);
+  };
+  band(1, 'rgba(74,222,128,0.08)', 'rgba(74,222,128,0.35)');
+  band(0.6, 'rgba(74,222,128,0.05)', 'rgba(74,222,128,0.18)', [3, 3]);
+  // clutter
+  if (pc.R > 0) {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) ctx.lineTo(X(pc.d[i]), Y(top[i]));
+    for (let i = n - 1; i >= 0; i--) ctx.lineTo(X(pc.d[i]), Y(ground[i]));
+    ctx.closePath(); ctx.fillStyle = 'rgba(167,139,250,0.22)'; ctx.fill();
   }
+  // terreno
+  const grd = ctx.createLinearGradient(0, pad.t, 0, pad.t + gH);
+  grd.addColorStop(0, '#22324a'); grd.addColorStop(1, '#111824');
+  ctx.beginPath(); ctx.moveTo(X(0), Y(yMin));
+  for (let i = 0; i < n; i++) ctx.lineTo(X(pc.d[i]), Y(ground[i]));
+  ctx.lineTo(X(D), Y(yMin)); ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
+  ctx.strokeStyle = '#7d8ca3'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let i = 0; i < n; i++) ctx.lineTo(X(pc.d[i]), Y(ground[i]));
   ctx.stroke();
-
-  // Fresnel zone 1 (fill)
-  ctx.beginPath();
-  for (let i = 0; i <= steps; i++) {
-    ctx.lineTo(mapX(i), mapY(losH[i] + fresnelPts[i]));
+  // obstrucoes (invadem 60% F1)
+  ctx.strokeStyle = '#fb7185'; ctx.lineWidth = 2;
+  for (let i = 1; i < n - 1; i++) {
+    if (top[i] > los[i] - 0.6 * f1[i]) {
+      ctx.beginPath(); ctx.moveTo(X(pc.d[i - 1]), Y(top[i - 1])); ctx.lineTo(X(pc.d[i]), Y(top[i])); ctx.stroke();
+    }
   }
-  for (let i = steps; i >= 0; i--) {
-    ctx.lineTo(mapX(i), mapY(losH[i] - fresnelPts[i]));
+  // linha de visada
+  ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.5; ctx.setLineDash(pc.los ? [] : [6, 4]);
+  ctx.beginPath(); ctx.moveTo(X(0), Y(pc.hts)); ctx.lineTo(X(D), Y(pc.hrs)); ctx.stroke(); ctx.setLineDash([]);
+  // ponto de Bullington
+  if (!pc.los && pc.dbp !== null && pc.dbp > 0 && pc.dbp < D) {
+    ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(X(pc.dbp), pad.t); ctx.lineTo(X(pc.dbp), pad.t + gH); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#fbbf24'; ctx.textAlign = pc.dbp > D * 0.8 ? 'right' : 'left';
+    ctx.fillText('pto. Bullington ' + pc.dbp.toFixed(2) + ' km', X(pc.dbp) + (pc.dbp > D * 0.8 ? -4 : 4), pad.t + gH - 6);
   }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)'; ctx.lineWidth = 0.8;
-  ctx.stroke();
-
-  // 60% Fresnel
-  ctx.beginPath();
-  for (let i = 0; i <= steps; i++) {
-    ctx.lineTo(mapX(i), mapY(losH[i] + fresnelPts[i] * 0.6));
+  // mastros
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(X(0), Y(ground[0])); ctx.lineTo(X(0), Y(pc.hts)); ctx.stroke();
+  ctx.strokeStyle = '#38bdf8'; ctx.beginPath(); ctx.moveTo(X(D), Y(ground[n - 1])); ctx.lineTo(X(D), Y(pc.hrs)); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(X(0), Y(pc.hts), 3.5, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(X(D), Y(pc.hrs), 3.5, 0, 2 * Math.PI); ctx.fill();
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillStyle = '#f97316'; ctx.textAlign = 'left'; ctx.fillText('TX ' + pc.hTx + ' m', X(0) + 6, Y(pc.hts) - 4);
+  ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'right'; ctx.fillText('RX ' + pc.hRx + ' m', X(D) - 6, Y(pc.hrs) - 4);
+  // legenda
+  ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
+  const items = [['#7d8ca3', 'Terreno'], ['rgba(167,139,250,0.6)', 'Clutter'], ['rgba(74,222,128,0.6)', '1a Fresnel'], ['#f97316', 'Visada'], ['#fb7185', 'Obstrucao 60%']];
+  let lx = pad.l + 6;
+  items.forEach(it => {
+    if (it[1] === 'Clutter' && !(pc.R > 0)) return;
+    ctx.fillStyle = it[0]; ctx.fillRect(lx, pad.t - 10, 10, 6);
+    ctx.fillStyle = '#b6c2d4'; ctx.fillText(it[1], lx + 13, pad.t - 4);
+    lx += ctx.measureText(it[1]).width + 26;
+  });
+  if (pc.src === 'flat' || pc.src === 'flat-fail' || pc.src === 'none') {
+    ctx.fillStyle = '#6b7889'; ctx.textAlign = 'right';
+    ctx.fillText(pc.src === 'none' ? 'sem perfil' : 'Terra lisa', pad.l + gW - 4, pad.t + gH - 6);
   }
-  for (let i = steps; i >= 0; i--) {
-    ctx.lineTo(mapX(i), mapY(losH[i] - fresnelPts[i] * 0.6));
-  }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(74, 222, 128, 0.05)';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(74, 222, 128, 0.15)'; ctx.lineWidth = 0.5;
-  ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
-
-  // LOS line
-  ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(mapX(0), mapY(losH[0]));
-  ctx.lineTo(mapX(steps), mapY(losH[steps]));
-  ctx.stroke();
-
-  // TX / RX markers
-  ctx.fillStyle = '#f97316';
-  ctx.beginPath(); ctx.arc(mapX(0), mapY(hTx), 4, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#38bdf8';
-  ctx.beginPath(); ctx.arc(mapX(steps), mapY(hRx), 4, 0, Math.PI * 2); ctx.fill();
-
-  // Labels
-  ctx.fillStyle = '#f97316'; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'left';
-  ctx.fillText('TX ' + hTx + 'm', mapX(0) + 7, mapY(hTx) + 3);
-  ctx.fillStyle = '#38bdf8'; ctx.textAlign = 'right';
-  ctx.fillText('RX ' + hRx + 'm', mapX(steps) - 7, mapY(hRx) + 3);
-
-  // Legend
-  ctx.fillStyle = '#4ade8060'; ctx.fillRect(pad.l + 5, pad.t + 4, 10, 8);
-  ctx.fillStyle = '#b6c2d4'; ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
-  ctx.fillText('1ª Zona Fresnel', pad.l + 18, pad.t + 11);
 }
 
 // ===== RESET =====
 function resetAll() {
-  document.getElementById('freq').value = 150;
-  document.getElementById('tx-power-w').value = 10;
-  document.getElementById('tx-power-dbm').value = 40;
-  document.getElementById('tx-gain').value = 6;
-  document.getElementById('tx-height').value = 30;
-  document.getElementById('tx-cable-loss').value = 2;
-  document.getElementById('rx-sens').value = -100;
-  document.getElementById('rx-gain').value = 3;
-  document.getElementById('rx-cable-loss').value = 1;
-  document.getElementById('rx-height').value = 10;
-  document.getElementById('rx-nf').value = 6;
-  document.getElementById('distance').value = 10;
-  document.getElementById('bandwidth').value = 200;
-  document.getElementById('noise-temp').value = 290;
-  document.getElementById('extra-loss').value = 0;
-  document.getElementById('rain-atten').value = 0;
-  document.getElementById('fade-margin-req').value = 10;
-  document.getElementById('prop-model').value = 'fspl';
-  document.getElementById('environment').value = 'rural';
-  document.getElementById('preset').value = '';
-  document.getElementById('availability').value = '99.9';
-  document.getElementById('tx-ant-type').value = 'custom';
-  document.getElementById('rx-ant-type').value = 'custom';
-  selectBand('vhf');
-  updateWavelength();
-  onModelChange();
-  document.getElementById('hdr-status').textContent = 'STANDBY';
-  document.getElementById('hdr-status').style.color = '';
-  document.getElementById('map-margin').textContent = '-- dB';
-  document.getElementById('map-margin').className = 'big good';
-  document.getElementById('map-status-text').textContent = 'Aguardando calculo';
+  const vals = { 'freq': 150, 'tx-power-w': 10, 'tx-power-dbm': 40, 'tx-gain': 6, 'tx-height': 30, 'tx-cable-loss': 2, 'rx-sens': -100,
+    'rx-gain': 3, 'rx-cable-loss': 1, 'rx-height': 10, 'rx-nf': 6, 'bandwidth': 200, 'noise-temp': 290, 'extra-loss': 0,
+    'rain-atten': 0, 'fade-margin-req': 10, 'k-factor': 1.333, 'n0': 330, 'cov-radius': 20,
+    'tx-lat': -27.6008, 'tx-lon': -48.5242, 'rx-lat': -27.59, 'rx-lon': -48.51 };
+  for (const k in vals) $(k).value = vals[k];
+  $('prop-model').value = 'terrain'; $('environment').value = 'suburban'; $('preset').value = '';
+  $('availability').value = '99.9'; $('tx-ant-type').value = 'custom'; $('rx-ant-type').value = 'custom';
+  $('cov-radials').value = '180'; $('use-terrain').checked = true;
+  S.service = null; $('svc-panel').hidden = true;
+  S.txMarker.setLatLng([vals['tx-lat'], vals['tx-lon']]); S.rxMarker.setLatLng([vals['rx-lat'], vals['rx-lon']]);
+  S.decoupled = false; moveRxTo(10);
+  updateWavelength(); onModelChange(); updateMorphInfo();
+  runCalculation({ fit: 'cov' });
 }
 
-// Run initial
-window.addEventListener('resize', () => {
-  if (results) runCalculation();
+// ===== INIT =====
+function updateFooterTime() { $('footer-ts').textContent = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; }
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  updateWavelength(); onModelChange(); updateMorphInfo();
+  updateFooterTime(); setInterval(updateFooterTime, 1000);
+  $('freq').addEventListener('input', updateWavelength);
+  $('svc-freq').addEventListener('input', onServiceSlider);
+  $('svc-freq').addEventListener('change', () => scheduleCalc(30));
+  ['tx-lat', 'tx-lon', 'rx-lat', 'rx-lon'].forEach(id => $(id).addEventListener('change', onCoordInput));
+  $('distance').addEventListener('change', onDistanceInput);
+  const handled = new Set(['preset', 'tx-lat', 'tx-lon', 'rx-lat', 'rx-lon', 'distance', 'svc-freq', 'tx-ant-type', 'rx-ant-type']);
+  $('cfg-panel').addEventListener('change', e => { if (e.target && !handled.has(e.target.id)) scheduleCalc(250); });
+  const strip = document.querySelector('.bottom-strip');
+  if (window.ResizeObserver) new ResizeObserver(() => drawCharts()).observe(strip);
+  else window.addEventListener('resize', drawCharts);
+  moveRxTo(10);
+  runCalculation({ fit: 'cov' });
 });
 </script>
 
