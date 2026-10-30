@@ -1921,11 +1921,41 @@ function modelValidFor(model, f) {
   return !(mi.fmin && f < mi.fmin) && !(mi.fmax && f > mi.fmax);
 }
 
+// ===== Mapa base: CARTO Dark Matter (chave restrita ao domínio do site) com fallback automático =====
+const CARTO_KEY = 'cb1_4ymi_1_78f1fc9f2c47987a08510312';
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+function cartoDarkLayer(opts) {
+  return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=' + CARTO_KEY,
+    Object.assign({ subdomains: 'abcd', maxZoom: 20, attribution: OSM_ATTR + ' &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' }, opts || {}));
+}
+function osmDarkLayer(opts) {
+  if (!document.getElementById('tl-osm-dark-css')) {
+    const st = document.createElement('style'); st.id = 'tl-osm-dark-css';
+    st.textContent = '.tl-osm-dark{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.6)}';
+    document.head.appendChild(st);
+  }
+  return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    Object.assign({ maxZoom: 19, className: 'tl-osm-dark', attribution: OSM_ATTR }, opts || {}));
+}
+// se a CARTO recusar os tiles (chave, domínio fora da restrição, cota ou rede), troca para a camada alternativa
+function baseWithFallback(map, primary, fallback) {
+  let ok = 0, err = 0;
+  primary.on('tileload', () => { ok++; });
+  primary.on('tileerror', () => {
+    err++;
+    if (ok === 0 && err === 4 && map.hasLayer(primary)) {
+      map.removeLayer(primary); fallback.addTo(map);
+      console.warn('[mapa] CARTO indisponível; usando OpenStreetMap escurecido');
+    }
+  });
+}
+
 // ===== MAPA =====
 function initMap() {
   S.map = L.map('map', { center: [-27.595, -48.517], zoom: 12, zoomControl: true, preferCanvas: false });
-  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19 });
+  const dark = cartoDarkLayer({ maxZoom: 19 });
+  const osmDark = osmDarkLayer({ maxZoom: 19 });
+  baseWithFallback(S.map, dark, osmDark);
   const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)', subdomains: 'abc', maxZoom: 17 });
   const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -1935,7 +1965,7 @@ function initMap() {
   S.covGroup = L.layerGroup().addTo(S.map);
   S.fresnelGroup = L.layerGroup().addTo(S.map);
   L.control.layers(
-    { 'Escuro (CARTO)': dark, 'Topografico (OpenTopoMap)': topo, 'Satelite (Esri)': sat },
+    { 'Escuro (CARTO)': dark, 'Escuro (OpenStreetMap)': osmDark, 'Topografico (OpenTopoMap)': topo, 'Satelite (Esri)': sat },
     { 'Relevo sombreado (SRTM)': S.hill, 'Mancha de cobertura': S.covGroup, 'Zona de Fresnel': S.fresnelGroup },
     { position: 'topleft' }).addTo(S.map);
   L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(S.map);
