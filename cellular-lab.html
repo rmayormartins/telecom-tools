@@ -988,6 +988,35 @@ let ueMarkers = [];
 let lastCellRadius = 1;      // km, from last sim
 let lastChartArgs = null;    // para redesenhar graficos no resize
 
+// ===== Mapa base: CARTO Dark Matter (chave restrita ao domínio do site) com fallback automático =====
+const CARTO_KEY = 'cb1_4ymi_1_78f1fc9f2c47987a08510312';
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+function cartoDarkLayer(opts) {
+  return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=' + CARTO_KEY,
+    Object.assign({ subdomains: 'abcd', maxZoom: 20, attribution: OSM_ATTR + ' &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' }, opts || {}));
+}
+function osmDarkLayer(opts) {
+  if (!document.getElementById('tl-osm-dark-css')) {
+    const st = document.createElement('style'); st.id = 'tl-osm-dark-css';
+    st.textContent = '.tl-osm-dark{filter:invert(1) hue-rotate(180deg) brightness(.82) contrast(.9) saturate(.6)}';
+    document.head.appendChild(st);
+  }
+  return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    Object.assign({ maxZoom: 19, className: 'tl-osm-dark', attribution: OSM_ATTR }, opts || {}));
+}
+// se a CARTO recusar os tiles (chave, domínio fora da restrição, cota ou rede), troca para a camada alternativa
+function baseWithFallback(map, primary, fallback) {
+  let ok = 0, err = 0;
+  primary.on('tileload', () => { ok++; });
+  primary.on('tileerror', () => {
+    err++;
+    if (ok === 0 && err === 4 && map.hasLayer(primary)) {
+      map.removeLayer(primary); fallback.addTo(map);
+      console.warn('[mapa] CARTO indisponível; usando OpenStreetMap escurecido');
+    }
+  });
+}
+
 // ---- Map init ----
 const map = L.map('map', {
   center: [-27.6003, -48.5190], // Sao Jose / Florianopolis
@@ -995,11 +1024,8 @@ const map = L.map('map', {
   zoomControl: true
 });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd',
-  maxZoom: 19
-}).addTo(map);
+const baseCarto = cartoDarkLayer({ maxZoom: 19 }).addTo(map);
+baseWithFallback(map, baseCarto, osmDarkLayer({ maxZoom: 19 }));
 
 // ---- UI helpers ----
 function toggleSection(el) {
